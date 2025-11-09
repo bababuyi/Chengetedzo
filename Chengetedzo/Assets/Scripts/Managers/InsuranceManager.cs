@@ -127,6 +127,33 @@ public class InsuranceManager : MonoBehaviour
             Debug.Log($"[Insurance] Canceled: {plan.planName}");
         }
     }
+    public float HandleEvent(InsuranceType type, float lossPercent)
+    {
+        // Convert % loss into a dollar value
+        float estimatedLoss = 1000f * (lossPercent / 100f);
+        totalLoss += estimatedLoss;
+
+        // Check if player has active coverage of this type
+        InsurancePlan plan = allPlans.Find(p => p.type == type && p.isActive);
+
+        if (plan != null)
+        {
+            float deductible = estimatedLoss * (plan.deductiblePercent / 100f);
+            float payout = Mathf.Min(estimatedLoss - deductible, plan.coverageLimit);
+
+            // Add payout to player’s money
+            playerMoney += payout;
+            totalPayout += payout;
+
+            Debug.Log($"[Insurance] {plan.planName} covered loss of ${estimatedLoss:F0}, paid out ${payout:F0}.");
+            UIManager.Instance?.UpdateMoneyText(playerMoney);
+            return payout;
+        }
+
+        Debug.Log($"[Insurance] No active policy to cover {type} event.");
+        return 0f; // no payout
+    }
+
 
     public void ProcessPremiums()
     {

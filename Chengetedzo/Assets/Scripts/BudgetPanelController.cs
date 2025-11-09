@@ -28,9 +28,6 @@ public class BudgetPanelController : MonoBehaviour
     public TMP_Text schoolFeesValueText;
 
     [Header("Allocation Sliders")]
-    public Slider insuranceSlider;
-    public TMP_Text insuranceValueText;
-
     public Slider savingsSlider;
     public TMP_Text savingsValueText;
 
@@ -63,7 +60,6 @@ public class BudgetPanelController : MonoBehaviour
         groceriesSlider.onValueChanged.AddListener(_ => UpdateSliderText());
         transportSlider.onValueChanged.AddListener(_ => UpdateSliderText());
         schoolFeesSlider.onValueChanged.AddListener(_ => UpdateSliderText());
-        insuranceSlider.onValueChanged.AddListener(_ => UpdateSliderText());
         savingsSlider.onValueChanged.AddListener(_ => UpdateSliderText());
         loanRepaymentSlider.onValueChanged.AddListener(_ => UpdateSliderText());
     }
@@ -95,7 +91,6 @@ public class BudgetPanelController : MonoBehaviour
         groceriesValueText.text = $"${groceriesSlider.value:F0}";
         transportValueText.text = $"${transportSlider.value:F0}";
         schoolFeesValueText.text = $"${schoolFeesSlider.value:F0}";
-        insuranceValueText.text = $"${insuranceSlider.value:F0}";
         savingsValueText.text = $"${savingsSlider.value:F0}";
         loanRepaymentValueText.text = $"${loanRepaymentSlider.value:F0}";
 
@@ -103,7 +98,7 @@ public class BudgetPanelController : MonoBehaviour
         if (float.TryParse(incomeInput.text, out totalIncome))
         {
             float totalExpenses = rentSlider.value + groceriesSlider.value + transportSlider.value + schoolFeesSlider.value;
-            float totalAllocations = insuranceSlider.value + savingsSlider.value + loanRepaymentSlider.value;
+            float totalAllocations = savingsSlider.value + loanRepaymentSlider.value;
             float totalOutflow = totalExpenses + totalAllocations;
             float remaining = totalIncome - totalOutflow;
 
@@ -131,7 +126,7 @@ public class BudgetPanelController : MonoBehaviour
         if (float.TryParse(incomeInput.text, out totalIncome))
         {
             float totalExpenses = rentSlider.value + groceriesSlider.value + transportSlider.value + schoolFeesSlider.value;
-            float totalAllocations = insuranceSlider.value + savingsSlider.value + loanRepaymentSlider.value;
+            float totalAllocations = savingsSlider.value + loanRepaymentSlider.value;
             float totalOutflow = totalExpenses + totalAllocations;
             float remaining = totalIncome - totalOutflow;
 
@@ -142,7 +137,7 @@ public class BudgetPanelController : MonoBehaviour
                 return;
             }
 
-            summaryText.text = $" Budget confirmed!\nOutflow: ${totalOutflow:F0}\nRemaining: ${remaining:F0}";
+            summaryText.text = $"Budget confirmed!\nOutflow: ${totalOutflow:F0}\nRemaining: ${remaining:F0}";
             summaryText.color = Color.green;
 
             // Apply to FinanceManager
@@ -150,10 +145,10 @@ public class BudgetPanelController : MonoBehaviour
             if (finance != null)
                 finance.ApplyBudget(totalIncome, totalExpenses, totalAllocations);
 
-            // Start simulation
-            Debug.Log("Budget confirmed — starting simulation...");
+            // Show Forecast before starting simulation
+            Debug.Log("Budget confirmed — showing forecast...");
             gameObject.SetActive(false);
-            GameManager.Instance.BeginSimulation();
+            FindFirstObjectByType<ForecastManager>()?.GenerateForecast();
         }
         else
         {

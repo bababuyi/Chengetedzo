@@ -4,17 +4,21 @@ using System.Collections.Generic;
 public class EventManager : MonoBehaviour
 {
     [System.Serializable]
-    public class EventData
+    public class MonthlyEvent
     {
         public string eventName;
         public string description;
-        public float minCost;           // monetary loss
-        public float maxCost;
-        public bool coveredByInsurance; // whether it triggers an insurance claim
+        public float impactAmount;               // how much it costs or affects income
+        public bool affectsIncome;               // true = income reduction, false = extra expense
+        public InsuranceManager.InsuranceType coveredBy;  // insurance protection type
+        public float baseProbability;            // 0–100 chance each month
     }
 
     [Header("Possible Monthly Events")]
-    public List<EventData> allEvents = new List<EventData>();
+    public List<MonthlyEvent> allEvents = new List<MonthlyEvent>();
+
+    [Header("Event Balancing")]
+    [Range(0, 1)] public float eventChanceMultiplier = 1.0f;
 
     private UIManager uiManager;
     private FinanceManager financeManager;
@@ -26,97 +30,109 @@ public class EventManager : MonoBehaviour
         financeManager = FindFirstObjectByType<FinanceManager>();
         insuranceManager = FindFirstObjectByType<InsuranceManager>();
 
-        // Preload default events if none exist in Inspector
+        // Default events (for quick testing)
         if (allEvents.Count == 0)
-            PopulateDefaultEvents();
+        {
+            allEvents.Add(new MonthlyEvent
+            {
+                eventName = "Drought",
+                description = "Low rainfall affects your crop yields this month.",
+                impactAmount = 100f,
+                affectsIncome = true,
+                coveredBy = InsuranceManager.InsuranceType.Funeral, // placeholder
+                baseProbability = 40f
+            });
+
+            allEvents.Add(new MonthlyEvent
+            {
+                eventName = "Livestock Disease",
+                description = "An outbreak reduces livestock health and output.",
+                impactAmount = 80f,
+                affectsIncome = false,
+                coveredBy = InsuranceManager.InsuranceType.MicroMedical,
+                baseProbability = 30f
+            });
+
+            allEvents.Add(new MonthlyEvent
+            {
+                eventName = "Medical Emergency",
+                description = "A family member fell ill. Medical expenses increase.",
+                impactAmount = 50f,
+                affectsIncome = false,
+                coveredBy = InsuranceManager.InsuranceType.Hospital,
+                baseProbability = 50f
+            });
+
+            allEvents.Add(new MonthlyEvent
+            {
+                eventName = "Equipment Breakdown",
+                description = "You had to repair key farming equipment.",
+                impactAmount = 70f,
+                affectsIncome = false,
+                coveredBy = InsuranceManager.InsuranceType.MicroMedical,
+                baseProbability = 25f
+            });
+
+            allEvents.Add(new MonthlyEvent
+            {
+                eventName = "Community Illness",
+                description = "Productivity dropped due to illness in the community.",
+                impactAmount = 60f,
+                affectsIncome = true,
+                coveredBy = InsuranceManager.InsuranceType.MicroMedical,
+                baseProbability = 45f
+            });
+        }
     }
 
-    private void PopulateDefaultEvents()
-    {
-        allEvents.Add(new EventData
-        {
-            eventName = "Medical Emergency",
-            description = "A family member fell ill and required urgent care.",
-            minCost = 30f,
-            maxCost = 80f,
-            coveredByInsurance = true
-        });
-
-        allEvents.Add(new EventData
-        {
-            eventName = "School Fees Due",
-            description = "It’s time to pay this term’s school fees.",
-            minCost = 100f,
-            maxCost = 100f,
-            coveredByInsurance = false
-        });
-
-        allEvents.Add(new EventData
-        {
-            eventName = "Food Price Hike",
-            description = "Prices at the market have increased this month.",
-            minCost = 20f,
-            maxCost = 50f,
-            coveredByInsurance = false
-        });
-
-        allEvents.Add(new EventData
-        {
-            eventName = "Death of Dependent",
-            description = "A dependent has passed away — funeral and support needed.",
-            minCost = 100f,
-            maxCost = 200f,
-            coveredByInsurance = true
-        });
-
-        allEvents.Add(new EventData
-        {
-            eventName = "Income Boost",
-            description = "You earned some unexpected income this month!",
-            minCost = -60f,
-            maxCost = -120f,
-            coveredByInsurance = false
-        });
-    }
-
-    // Called by GameManager once per month
     public void CheckForMonthlyEvent(int month)
     {
-        float roll = Random.value;
-        if (roll > 0.65f) // 35% chance each month
+        if (allEvents.Count == 0) return;
+
+        foreach (var e in allEvents)
         {
-            EventData chosen = allEvents[Random.Range(0, allEvents.Count)];
-            TriggerEvent(chosen);
+            float chance = e.baseProbability * eventChanceMultiplier;
+            if (Random.Range(0f, 100f) <= chance)
+            {
+                TriggerEvent(e, month);
+                return; // trigger one event per month max
+            }
         }
-        else
-        {
-            Debug.Log($"[Month {month}] No event this month.");
-        }
+
+        // No event this month
+        Debug.Log($"[Month {month}] No major event occurred.");
     }
 
-    private void TriggerEvent(EventData e)
+    private void TriggerEvent(MonthlyEvent e, int month)
     {
-        float impact = Random.Range(e.minCost, e.maxCost);
-        string logText;
+        Debug.Log($"[Event] {e.eventName} — {e.description}");
 
-        if (impact > 0)
+        // Base impact
+        float loss = e.impactAmount;
+
+        // Apply to finances
+        if (e.affectsIncome)
         {
-            financeManager.cashOnHand -= impact;
-            logText = $"Event: {e.eventName} — Lost ${impact:F0}";
+            financeManager.currentIncome -= loss;
+            Debug.Log($"Income reduced by ${loss} due to {e.eventName}");
         }
         else
         {
-            financeManager.cashOnHand += Mathf.Abs(impact);
-            logText = $"Event: {e.eventName} — Gained ${Mathf.Abs(impact):F0}";
+            financeManager.cashOnHand -= loss;
+            Debug.Log($"Unexpected expense of ${loss} due to {e.eventName}");
         }
 
-        Debug.Log(logText);
+        // Attempt insurance coverage
+        float payout = insuranceManager.HandleEvent(e.coveredBy, Random.Range(10f, 40f));
 
-        if (e.coveredByInsurance)
-        {
-            insuranceManager.ProcessClaims(); // run claim handler if active insurance applies
-        }
+        // Feedback to player
+        string msg = $"<b>{e.eventName}</b>\n{e.description}\n" +
+                     $"Impact: -${loss:F0}\n" +
+                     (payout > 0 ? $"Insurance covered ${payout:F0}!" : "No coverage available.");
 
-        uiManager.ShowEventPopup($"{e.eventName}\n{e.description}\nImpact: {impact:F0}");
+        uiManager?.ShowEventPopup(msg);
+        uiManager?.UpdateMoneyText(financeManager.cashOnHand);
+
+        Debug.Log($"[EventManager] {e.eventName} processed (Month {month}).");
     }
 }
