@@ -8,7 +8,7 @@ public class GameManager : MonoBehaviour
     [Header("Simulation Settings")]
     public int currentMonth = 1;
     public int totalMonths = 12;
-    public float monthDuration = 10f; // seconds per "month" in simulation
+    public float monthDuration = 5f; // seconds per "month"
 
     [Header("Manager References")]
     public FinanceManager financeManager;
@@ -27,7 +27,7 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         Debug.Log("Game Ready — Awaiting Start of Simulation.");
-        uiManager.ShowBudgetPanel(); // start on budget
+        uiManager.ShowBudgetPanel(); // starts on the budget screen
         uiManager.UpdateMoneyText(financeManager.cashOnHand);
         uiManager.UpdateMonthText(currentMonth, totalMonths);
     }
@@ -35,6 +35,7 @@ public class GameManager : MonoBehaviour
     public void BeginSimulation()
     {
         Debug.Log("Starting Life-Cycle Simulation...");
+        uiManager.HideAllPanels();
         StartCoroutine(RunLifeCycle());
     }
 
@@ -44,25 +45,23 @@ public class GameManager : MonoBehaviour
 
         while (currentMonth <= totalMonths)
         {
-            Debug.Log($"Month {currentMonth}/{totalMonths} begins");
-
-            // 1? Update UI top info
             uiManager.UpdateMonthText(currentMonth, totalMonths);
             uiManager.UpdateMoneyText(financeManager.cashOnHand);
 
-            // 2? Process core monthly systems
+            // Process monthly systems
             financeManager.ProcessMonthlyBudget();
             insuranceManager.ProcessPremiums();
-            loanManager.ProcessContribution();
-            eventManager.CheckForMonthlyEvent(currentMonth);
+            loanManager?.ProcessContribution();
+            eventManager?.CheckForMonthlyEvent(currentMonth);
             insuranceManager.ProcessClaims();
-            savingsManager.AccrueInterest();
-            loanManager.UpdateLoans();
+            savingsManager?.AccrueInterest();
+            loanManager?.UpdateLoans();
 
-            // 3? Generate report
+            // Show visual feedback
             string monthlyReport = financeManager.GetMonthlySummary(currentMonth);
-            uiManager.ShowReportPanel(monthlyReport);
+            uiManager.ShowReportPanel($"<b>Month {currentMonth}</b>\n\n{monthlyReport}");
 
+            // Wait before moving to next month
             yield return new WaitForSeconds(monthDuration);
             currentMonth++;
         }

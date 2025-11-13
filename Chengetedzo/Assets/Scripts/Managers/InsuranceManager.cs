@@ -154,7 +154,6 @@ public class InsuranceManager : MonoBehaviour
         return 0f; // no payout
     }
 
-
     public void ProcessPremiums()
     {
         float totalPremium = 0f;

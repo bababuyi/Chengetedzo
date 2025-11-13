@@ -26,7 +26,9 @@ public class ForecastManager : MonoBehaviour
 
     private void Start()
     {
-        forecastPanel.SetActive(false);
+        // Hide forecast screen until needed
+        if (forecastPanel != null)
+            forecastPanel.SetActive(false);
     }
 
     public void GenerateForecast()
@@ -47,13 +49,13 @@ public class ForecastManager : MonoBehaviour
     private void ShowForecast()
     {
         forecastPanel.SetActive(true);
-        forecastHeaderText.text = " Seasonal Forecast";
+        forecastHeaderText.text = "Seasonal Forecast";
 
-        // Clear old UI items
+        // Clear old forecast UI items
         foreach (Transform child in forecastListParent)
             Destroy(child.gameObject);
 
-        // Spawn forecast entries
+        // Spawn forecast entries dynamically
         foreach (var forecast in selectedForecasts)
         {
             GameObject item = Instantiate(forecastItemPrefab, forecastListParent);
@@ -68,16 +70,18 @@ public class ForecastManager : MonoBehaviour
 
     public void ContinueToInsuranceSelection()
     {
-        forecastPanel.SetActive(false);
-        var insuranceUI = FindFirstObjectByType<InsuranceSelectionUI>();
-        if (insuranceUI != null)
+        if (forecastPanel != null)
+            forecastPanel.SetActive(false);
+
+        // Transition handled by UIManager instead of FindFirstObjectByType
+        if (UIManager.Instance != null)
         {
-            insuranceUI.gameObject.SetActive(true);
-            Debug.Log("Forecast complete — moving to insurance selection.");
+            UIManager.Instance.ShowInsurancePanel();
+            Debug.Log("[Forecast] Showing Insurance Panel via UIManager ");
         }
         else
         {
-            Debug.LogWarning("InsuranceSelectionUI not found! Starting simulation instead.");
+            Debug.LogWarning("[Forecast] UIManager not found — starting simulation instead.");
             GameManager.Instance.BeginSimulation();
         }
     }
