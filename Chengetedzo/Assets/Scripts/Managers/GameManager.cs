@@ -8,7 +8,7 @@ public class GameManager : MonoBehaviour
     [Header("Simulation Settings")]
     public int currentMonth = 1;
     public int totalMonths = 12;
-    public float monthDuration = 5f; // seconds per "month"
+    public float monthDuration = 5f; // seconds per "month" (real-time)
 
     [Header("Manager References")]
     public FinanceManager financeManager;
@@ -27,7 +27,7 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         Debug.Log("Game Ready — Awaiting Start of Simulation.");
-        uiManager.ShowBudgetPanel(); // starts on the budget screen
+        uiManager.ShowBudgetPanel();
         uiManager.UpdateMoneyText(financeManager.cashOnHand);
         uiManager.UpdateMonthText(currentMonth, totalMonths);
     }
@@ -45,10 +45,11 @@ public class GameManager : MonoBehaviour
 
         while (currentMonth <= totalMonths)
         {
+            // --- UI TOP BAR ---
             uiManager.UpdateMonthText(currentMonth, totalMonths);
             uiManager.UpdateMoneyText(financeManager.cashOnHand);
 
-            // Process monthly systems
+            // --- PROCESS MONTH ---
             financeManager.ProcessMonthlyBudget();
             insuranceManager.ProcessPremiums();
             loanManager?.ProcessContribution();
@@ -57,16 +58,27 @@ public class GameManager : MonoBehaviour
             savingsManager?.AccrueInterest();
             loanManager?.UpdateLoans();
 
-            // Show visual feedback
+            // --- MONTHLY REPORT ---
             string monthlyReport = financeManager.GetMonthlySummary(currentMonth);
             uiManager.ShowReportPanel($"<b>Month {currentMonth}</b>\n\n{monthlyReport}");
 
-            // Wait before moving to next month
-            yield return new WaitForSeconds(monthDuration);
+            // — Wait for popup to close BEFORE continuing
+            yield return new WaitUntil(() => !UIManager.Instance.IsPopupActive);
+
+            // — Wait for real time (not affected by timeScale)
+            yield return new WaitForSecondsRealtime(monthDuration);
+
             currentMonth++;
         }
 
+        // --- END OF YEAR ---
         uiManager.ShowEndOfYearSummary();
         Debug.Log("Simulation Ended - Year Complete");
+    }
+
+    public void OnEventPopupClosed()
+    {
+        Debug.Log("[GameManager] Event popup closed — resuming simulation.");
+        // You may add extra logic later if needed.
     }
 }

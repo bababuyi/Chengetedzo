@@ -1,6 +1,7 @@
-using TMPro;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class UIManager : MonoBehaviour
 {
@@ -18,23 +19,34 @@ public class UIManager : MonoBehaviour
     public GameObject reportPanel;
 
     [Header("Other Screens")]
-    public GameObject eventPopup;
     public GameObject endOfYearScreen;
-    public TextMeshProUGUI eventText;
     public TextMeshProUGUI resultsText;
+
+    [Header("Event Popup")]
+    public GameObject eventPopup;
+    public Image eventIcon;
+    public TextMeshProUGUI eventTitleText;
+    public TextMeshProUGUI eventDescriptionText;
+    public Button continueButton;
+
+    // Popup state property (correct, single version)
+    public bool IsPopupActive { get; private set; } = false;
 
     private void Awake()
     {
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
+
+        if (eventPopup != null)
+            eventPopup.SetActive(false);
     }
 
     private void Start()
     {
-        ShowBudgetPanel(); // start on the budget screen
+        ShowBudgetPanel();
     }
 
-    // ===== Basic Updates =====
+    // ===== Basic UI Updates =====
     public void UpdateMonthText(int currentMonth, int totalMonths)
     {
         monthText.text = $"Month: {currentMonth}/{totalMonths}";
@@ -61,18 +73,6 @@ public class UIManager : MonoBehaviour
         budgetPanel.SetActive(true);
     }
 
-    public void ShowSavingsPanel()
-    {
-        HideAllPanels();
-        savingsPanel.SetActive(true);
-    }
-
-    public void ShowLoanPanel()
-    {
-        HideAllPanels();
-        loanPanel.SetActive(true);
-    }
-
     public void ShowInsurancePanel()
     {
         HideAllPanels();
@@ -86,19 +86,36 @@ public class UIManager : MonoBehaviour
         resultsText.text = reportText;
     }
 
-    // ===== Events & End-Year =====
-    public void ShowEventPopup(string message)
+    // ===== Event Popup =====
+    public void ShowEventPopup(string title, string description, Sprite icon = null)
     {
+        if (IsPopupActive) return;
+
         eventPopup.SetActive(true);
-        eventText.text = message;
-        Invoke(nameof(HideEventPopup), 3f);
+        eventTitleText.text = title;
+        eventDescriptionText.text = description;
+
+        eventIcon.sprite = icon;
+        eventIcon.enabled = icon != null;
+
+        Time.timeScale = 0f;
+        IsPopupActive = true;
+
+        continueButton.onClick.RemoveAllListeners();
+        continueButton.onClick.AddListener(CloseEventPopup);
     }
 
-    private void HideEventPopup()
+    private void CloseEventPopup()
     {
         eventPopup.SetActive(false);
+        IsPopupActive = false;
+
+        Time.timeScale = 1f;
+
+        GameManager.Instance.OnEventPopupClosed();
     }
 
+    // ===== End-of-Year Screen =====
     public void ShowEndOfYearSummary()
     {
         endOfYearScreen.SetActive(true);

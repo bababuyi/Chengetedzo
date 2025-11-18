@@ -25,8 +25,12 @@ public class EventManager : MonoBehaviour
 
             float payout = GameManager.Instance.insuranceManager.HandleEvent(e.relatedInsurance, lossPercent);
 
-            string message = $"{e.eventName}\n{e.description}\nLoss: {lossPercent}%\nPayout: ${payout:F2}";
-            UIManager.Instance.ShowEventPopup(message);
+            // Separate title and description for the popup
+            string title = e.eventName;
+            string description = $"{e.description}\n\nLoss: {lossPercent}%\nPayout: ${payout:F2}";
+
+            // Correct method call — 3 parameters (last one optional)
+            UIManager.Instance.ShowEventPopup(title, description, null);
 
             Debug.Log($"[Event] {e.eventName} occurred. Loss: {lossPercent}% | Payout: ${payout}");
         }

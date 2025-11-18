@@ -45,23 +45,20 @@ public class BudgetPanelController : MonoBehaviour
     {
         confirmButton.onClick.AddListener(OnConfirmAndStartSimulation);
 
-        // Get FinanceManager safely
-        FinanceManager finance = FindFirstObjectByType<FinanceManager>();
-        if (finance != null)
-            incomeInput.text = finance.currentIncome.ToString("F0");
-
+        // Always begin at Step 1 (Income)
         ShowStep(1);
 
-        // Recalculate live if user edits income manually
-        incomeInput.onValueChanged.AddListener(_ => UpdateSliderText());
+        // Add listeners
+        incomeInput.onValueChanged.AddListener(_ => UpdateCalculations());
+        rentSlider.onValueChanged.AddListener(_ => UpdateCalculations());
+        groceriesSlider.onValueChanged.AddListener(_ => UpdateCalculations());
+        transportSlider.onValueChanged.AddListener(_ => UpdateCalculations());
+        schoolFeesSlider.onValueChanged.AddListener(_ => UpdateCalculations());
+        savingsSlider.onValueChanged.AddListener(_ => UpdateCalculations());
+        loanRepaymentSlider.onValueChanged.AddListener(_ => UpdateCalculations());
 
-        // Add listeners for sliders
-        rentSlider.onValueChanged.AddListener(_ => UpdateSliderText());
-        groceriesSlider.onValueChanged.AddListener(_ => UpdateSliderText());
-        transportSlider.onValueChanged.AddListener(_ => UpdateSliderText());
-        schoolFeesSlider.onValueChanged.AddListener(_ => UpdateSliderText());
-        savingsSlider.onValueChanged.AddListener(_ => UpdateSliderText());
-        loanRepaymentSlider.onValueChanged.AddListener(_ => UpdateSliderText());
+        warningText.gameObject.SetActive(false);
+        summaryText.text = "";
     }
 
     public void ShowStep(int step)
@@ -74,6 +71,16 @@ public class BudgetPanelController : MonoBehaviour
 
     public void NextStep()
     {
+        if (currentStep == 1)
+        {
+            if (!float.TryParse(incomeInput.text, out totalIncome) || totalIncome <= 0)
+            {
+                warningText.text = "Please enter a valid income.";
+                warningText.gameObject.SetActive(true);
+                return;
+            }
+        }
+
         if (currentStep < 3)
             ShowStep(currentStep + 1);
     }
@@ -84,9 +91,8 @@ public class BudgetPanelController : MonoBehaviour
             ShowStep(currentStep - 1);
     }
 
-    private void UpdateSliderText()
+    private void UpdateCalculations()
     {
-        // Update slider value labels
         rentValueText.text = $"${rentSlider.value:F0}";
         groceriesValueText.text = $"${groceriesSlider.value:F0}";
         transportValueText.text = $"${transportSlider.value:F0}";
@@ -94,66 +100,68 @@ public class BudgetPanelController : MonoBehaviour
         savingsValueText.text = $"${savingsSlider.value:F0}";
         loanRepaymentValueText.text = $"${loanRepaymentSlider.value:F0}";
 
-        // --- Live total calculation ---
-        if (float.TryParse(incomeInput.text, out totalIncome))
+        if (!float.TryParse(incomeInput.text, out totalIncome))
+            return;
+
+        float totalExpenses = rentSlider.value + groceriesSlider.value + transportSlider.value + schoolFeesSlider.value;
+        float totalAllocations = savingsSlider.value + loanRepaymentSlider.value;
+        float totalOutflow = totalExpenses + totalAllocations;
+        float remaining = totalIncome - totalOutflow;
+
+        summaryText.text = $"Total Outflow: ${totalOutflow:F0}\nRemaining: ${remaining:F0}";
+
+        if (remaining < 0)
         {
-            float totalExpenses = rentSlider.value + groceriesSlider.value + transportSlider.value + schoolFeesSlider.value;
-            float totalAllocations = savingsSlider.value + loanRepaymentSlider.value;
-            float totalOutflow = totalExpenses + totalAllocations;
-            float remaining = totalIncome - totalOutflow;
-
-            summaryText.text = $"Total Outflow: ${totalOutflow:F0}\nRemaining: ${remaining:F0}";
-
-            // --- Warning & visual feedback ---
-            if (remaining < 0)
-            {
-                summaryText.color = Color.red;
-                warningText.gameObject.SetActive(true);
-                warningText.text = "Your allocations exceed your income!";
-                confirmButton.interactable = false;
-            }
-            else
-            {
-                summaryText.color = Color.green;
-                warningText.gameObject.SetActive(false);
-                confirmButton.interactable = true;
-            }
+            summaryText.color = Color.red;
+            warningText.text = "Your budget exceeds your income!";
+            warningText.gameObject.SetActive(true);
+            confirmButton.interactable = false;
+        }
+        else
+        {
+            summaryText.color = Color.green;
+            warningText.gameObject.SetActive(false);
+            confirmButton.interactable = true;
         }
     }
 
     private void OnConfirmAndStartSimulation()
     {
-        if (float.TryParse(incomeInput.text, out totalIncome))
+        if (!float.TryParse(incomeInput.text, out totalIncome) || totalIncome <= 0)
         {
-            float totalExpenses = rentSlider.value + groceriesSlider.value + transportSlider.value + schoolFeesSlider.value;
-            float totalAllocations = savingsSlider.value + loanRepaymentSlider.value;
-            float totalOutflow = totalExpenses + totalAllocations;
-            float remaining = totalIncome - totalOutflow;
-
-            if (remaining < 0)
-            {
-                summaryText.text = "Your allocations exceed your income.";
-                summaryText.color = Color.red;
-                return;
-            }
-
-            summaryText.text = $"Budget confirmed!\nOutflow: ${totalOutflow:F0}\nRemaining: ${remaining:F0}";
-            summaryText.color = Color.green;
-
-            // Apply to FinanceManager
-            FinanceManager finance = FindFirstObjectByType<FinanceManager>();
-            if (finance != null)
-                finance.ApplyBudget(totalIncome, totalExpenses, totalAllocations);
-
-            // Show Forecast before starting simulation
-            Debug.Log("Budget confirmed — showing forecast...");
-            gameObject.SetActive(false);
-            FindFirstObjectByType<ForecastManager>()?.GenerateForecast();
-        }
-        else
-        {
-            summaryText.text = "Please enter a valid income amount.";
+            summaryText.text = "Please enter a valid income.";
             summaryText.color = Color.red;
+            return;
         }
+
+        float totalExpenses = rentSlider.value + groceriesSlider.value + transportSlider.value + schoolFeesSlider.value;
+        float totalAllocations = savingsSlider.value + loanRepaymentSlider.value;
+        float totalOutflow = totalExpenses + totalAllocations;
+
+        float remaining = totalIncome - totalOutflow;
+
+        if (remaining < 0)
+        {
+            summaryText.text = "Your budget exceeds your income.";
+            summaryText.color = Color.red;
+            return;
+        }
+
+        summaryText.text = $"Budget Confirmed!\nOutflow: ${totalOutflow:F0}\nRemaining: ${remaining:F0}";
+        summaryText.color = Color.green;
+
+        // Apply the budget to FinanceManager
+        FinanceManager finance = FindFirstObjectByType<FinanceManager>();
+        if (finance != null)
+        {
+            finance.SetPlayerIncome(totalIncome);
+            finance.ApplyBudget(totalIncome, totalExpenses, totalAllocations);
+        }
+
+        Debug.Log("Budget confirmed — showing forecast...");
+
+        // Move to forecast
+        gameObject.SetActive(false);
+        FindFirstObjectByType<ForecastManager>()?.GenerateForecast();
     }
 }
