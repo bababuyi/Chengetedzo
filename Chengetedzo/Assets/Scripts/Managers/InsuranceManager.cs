@@ -89,6 +89,10 @@ public class InsuranceManager : MonoBehaviour
         }
     }
 
+    // ============================
+    // BUY / CANCEL WITH REFUND FIX
+    // ============================
+
     public void BuyInsurance(InsuranceType type)
     {
         InsurancePlan plan = allPlans.Find(p => p.type == type);
@@ -109,7 +113,8 @@ public class InsuranceManager : MonoBehaviour
         {
             playerMoney -= plan.premium;
             plan.isActive = true;
-            Debug.Log($"[Insurance] Bought: {plan.planName}");
+
+            Debug.Log($"[Insurance] Bought: {plan.planName} (-${plan.premium})");
             UIManager.Instance?.UpdateMoneyText(playerMoney);
         }
         else
@@ -121,19 +126,27 @@ public class InsuranceManager : MonoBehaviour
     public void CancelInsurance(InsuranceType type)
     {
         InsurancePlan plan = allPlans.Find(p => p.type == type);
-        if (plan != null && plan.isActive)
-        {
-            plan.isActive = false;
-            Debug.Log($"[Insurance] Canceled: {plan.planName}");
-        }
+
+        if (plan == null) return;
+        if (!plan.isActive) return;
+
+        // Refund the up-front premium
+        playerMoney += plan.premium;
+        plan.isActive = false;
+
+        Debug.Log($"[Insurance] Canceled: {plan.planName} (+${plan.premium} refunded)");
+        UIManager.Instance?.UpdateMoneyText(playerMoney);
     }
+
+    // ============================
+    // INSURANCE EVENT PROCESSING
+    // ============================
+
     public float HandleEvent(InsuranceType type, float lossPercent)
     {
-        // Convert % loss into a dollar value
         float estimatedLoss = 1000f * (lossPercent / 100f);
         totalLoss += estimatedLoss;
 
-        // Check if player has active coverage of this type
         InsurancePlan plan = allPlans.Find(p => p.type == type && p.isActive);
 
         if (plan != null)
@@ -141,7 +154,6 @@ public class InsuranceManager : MonoBehaviour
             float deductible = estimatedLoss * (plan.deductiblePercent / 100f);
             float payout = Mathf.Min(estimatedLoss - deductible, plan.coverageLimit);
 
-            // Add payout to player’s money
             playerMoney += payout;
             totalPayout += payout;
 
@@ -151,19 +163,23 @@ public class InsuranceManager : MonoBehaviour
         }
 
         Debug.Log($"[Insurance] No active policy to cover {type} event.");
-        return 0f; // no payout
+        return 0f;
     }
+
+    // ============================
+    // MONTHLY PREMIUMS
+    // ============================
 
     public void ProcessPremiums()
     {
         float totalPremium = 0f;
+
         foreach (var plan in allPlans)
-        {
             if (plan.isActive)
                 totalPremium += plan.premium;
-        }
 
         playerMoney -= totalPremium;
+
         if (totalPremium > 0)
             Debug.Log($"[Insurance] Monthly premiums deducted: ${totalPremium}");
 

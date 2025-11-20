@@ -1,6 +1,7 @@
-using UnityEngine;
 using System.Collections.Generic;
 using TMPro;
+using UnityEngine;
+using static GameManager;
 
 public class ForecastManager : MonoBehaviour
 {
@@ -11,6 +12,7 @@ public class ForecastManager : MonoBehaviour
         public string description;
         [Range(0, 100)] public int probability;
         public Sprite icon;
+        public Season season;
     }
 
     [Header("Forecast Data")]
@@ -35,13 +37,24 @@ public class ForecastManager : MonoBehaviour
     {
         selectedForecasts.Clear();
 
-        // Randomly pick 3–5 likely events for this season
-        int numForecasts = Random.Range(3, 6);
-        List<ForecastEvent> shuffled = new List<ForecastEvent>(allPossibleEvents);
-        shuffled.Sort((a, b) => Random.Range(-1, 2));
+        // Forecast season = first month of simulation
+        Season upcomingSeason = GameManager.Instance.GetSeasonForMonth(GameManager.Instance.currentMonth);
 
-        for (int i = 0; i < numForecasts && i < shuffled.Count; i++)
-            selectedForecasts.Add(shuffled[i]);
+        // Filter to correct season
+        List<ForecastEvent> seasonal = allPossibleEvents.FindAll(e => e.season == upcomingSeason);
+
+        if (seasonal.Count == 0)
+        {
+            Debug.LogWarning($"[Forecast] No events defined for {upcomingSeason}.");
+            return;
+        }
+
+        // Random 3–5 items
+        int numForecasts = Random.Range(3, Mathf.Min(6, seasonal.Count + 1));
+        seasonal.Sort((a, b) => Random.Range(-1, 2));
+
+        for (int i = 0; i < numForecasts; i++)
+            selectedForecasts.Add(seasonal[i]);
 
         ShowForecast();
     }

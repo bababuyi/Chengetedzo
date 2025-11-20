@@ -81,4 +81,20 @@ public class GameManager : MonoBehaviour
         Debug.Log("[GameManager] Event popup closed — resuming simulation.");
         // You may add extra logic later if needed.
     }
+
+    public enum Season
+    {
+        Summer,
+        Winter
+    }
+
+    public Season GetSeasonForMonth(int month)
+    {
+        // Summer = Nov–Apr = months 1–6
+        if (month >= 1 && month <= 6)
+            return Season.Summer;
+
+        // Winter = May–Oct = months 7–12
+        return Season.Winter;
+    }
 }

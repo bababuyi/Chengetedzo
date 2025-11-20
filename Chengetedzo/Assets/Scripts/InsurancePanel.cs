@@ -64,26 +64,22 @@ public class InsurancePanel : MonoBehaviour
 
     private void UpdateSummary()
     {
-        string activePlans = "";
         float totalPremium = 0f;
 
         foreach (var plan in insuranceManager.allPlans)
         {
             if (plan.isActive)
-            {
-                activePlans += $"• {plan.planName} (${plan.premium:F2}/mo)\n";
                 totalPremium += plan.premium;
-            }
         }
 
-        if (string.IsNullOrEmpty(activePlans))
+        if (totalPremium <= 0f)
         {
             summaryText.text = "No insurance plans selected.";
             confirmButton.gameObject.SetActive(false);
         }
         else
         {
-            summaryText.text = $"Active Plans:\n{activePlans}\nTotal Monthly Premium: ${totalPremium:F2}";
+            summaryText.text = $"Total Monthly Premium: ${totalPremium:F2}";
             confirmButton.gameObject.SetActive(true);
         }
     }
