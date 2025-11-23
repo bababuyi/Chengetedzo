@@ -27,6 +27,9 @@ public class BudgetPanelController : MonoBehaviour
     public Slider schoolFeesSlider;
     public TMP_Text schoolFeesValueText;
 
+    public Slider utilitiesSlider;
+    public TMP_Text utilitiesValueText;
+
     [Header("Allocation Sliders")]
     public Slider savingsSlider;
     public TMP_Text savingsValueText;
@@ -40,6 +43,18 @@ public class BudgetPanelController : MonoBehaviour
     public TMP_Text warningText;
 
     private float totalIncome;
+
+    [Header("Dependents")]
+    public TMP_InputField adultsInput;
+    public TMP_InputField childrenInput;
+    public TMP_Text dependentsSummaryText;
+
+    private int adults;
+    private int children;
+
+    [Header("School Fees Savings")]
+    public Slider schoolFeeSavingsSlider;
+    public TMP_Text schoolFeeSavingsValueText;
 
     private void Start()
     {
@@ -56,6 +71,8 @@ public class BudgetPanelController : MonoBehaviour
         schoolFeesSlider.onValueChanged.AddListener(_ => UpdateCalculations());
         savingsSlider.onValueChanged.AddListener(_ => UpdateCalculations());
         loanRepaymentSlider.onValueChanged.AddListener(_ => UpdateCalculations());
+        utilitiesSlider.onValueChanged.AddListener(_ => UpdateCalculations());
+        schoolFeeSavingsSlider.onValueChanged.AddListener(_ => UpdateCalculations());
 
         warningText.gameObject.SetActive(false);
         summaryText.text = "";
@@ -99,12 +116,14 @@ public class BudgetPanelController : MonoBehaviour
         schoolFeesValueText.text = $"${schoolFeesSlider.value:F0}";
         savingsValueText.text = $"${savingsSlider.value:F0}";
         loanRepaymentValueText.text = $"${loanRepaymentSlider.value:F0}";
+        utilitiesValueText.text = $"${utilitiesSlider.value:F0}";
+        schoolFeeSavingsValueText.text = $"${schoolFeeSavingsSlider.value:F0}";
 
         if (!float.TryParse(incomeInput.text, out totalIncome))
             return;
 
-        float totalExpenses = rentSlider.value + groceriesSlider.value + transportSlider.value + schoolFeesSlider.value;
-        float totalAllocations = savingsSlider.value + loanRepaymentSlider.value;
+        float totalExpenses = rentSlider.value + groceriesSlider.value + transportSlider.value + schoolFeesSlider.value + utilitiesSlider.value;
+        float totalAllocations = savingsSlider.value + loanRepaymentSlider.value + schoolFeeSavingsSlider.value; ;
         float totalOutflow = totalExpenses + totalAllocations;
         float remaining = totalIncome - totalOutflow;
 
@@ -123,6 +142,12 @@ public class BudgetPanelController : MonoBehaviour
             warningText.gameObject.SetActive(false);
             confirmButton.interactable = true;
         }
+
+        int.TryParse(adultsInput.text, out adults);
+        int.TryParse(childrenInput.text, out children);
+
+        dependentsSummaryText.text = $"Family: {adults} adults, {children} children";
+
     }
 
     private void OnConfirmAndStartSimulation()
@@ -136,6 +161,7 @@ public class BudgetPanelController : MonoBehaviour
 
         float totalExpenses = rentSlider.value + groceriesSlider.value + transportSlider.value + schoolFeesSlider.value;
         float totalAllocations = savingsSlider.value + loanRepaymentSlider.value;
+        float schoolFeeSavings = schoolFeeSavingsSlider.value;
         float totalOutflow = totalExpenses + totalAllocations;
 
         float remaining = totalIncome - totalOutflow;
@@ -155,7 +181,12 @@ public class BudgetPanelController : MonoBehaviour
         if (finance != null)
         {
             finance.SetPlayerIncome(totalIncome);
+            finance.rent = rentSlider.value;
+            finance.groceries = groceriesSlider.value;
+            finance.transport = transportSlider.value;
+            finance.utilities = utilitiesSlider.value;
             finance.ApplyBudget(totalIncome, totalExpenses, totalAllocations);
+            finance.SetSchoolFeeSavings(schoolFeeSavings);
         }
 
         Debug.Log("Budget confirmed — showing forecast...");
@@ -163,5 +194,11 @@ public class BudgetPanelController : MonoBehaviour
         // Move to forecast
         gameObject.SetActive(false);
         FindFirstObjectByType<ForecastManager>()?.GenerateForecast();
+
+        PlayerDataManager.Instance.adults = adults;
+        PlayerDataManager.Instance.children = children;
+
+        Debug.Log($"[Player] Dependents saved: {adults} adults, {children} children");
+
     }
 }

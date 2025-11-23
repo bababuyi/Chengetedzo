@@ -57,6 +57,8 @@ public class GameManager : MonoBehaviour
             insuranceManager.ProcessClaims();
             savingsManager?.AccrueInterest();
             loanManager?.UpdateLoans();
+            financeManager.ProcessSchoolFees(currentMonth);
+
 
             // --- MONTHLY REPORT ---
             string monthlyReport = financeManager.GetMonthlySummary(currentMonth);
@@ -90,11 +92,15 @@ public class GameManager : MonoBehaviour
 
     public Season GetSeasonForMonth(int month)
     {
-        // Summer = Nov–Apr = months 1–6
-        if (month >= 1 && month <= 6)
+        // Summer = Nov (11), Dec (12), Jan–Apr (1–4)
+        if (month == 11 || month == 12 || (month >= 1 && month <= 4))
             return Season.Summer;
 
-        // Winter = May–Oct = months 7–12
+        // Winter = May–Oct = 5–10
         return Season.Winter;
+    }
+    public Season GetCurrentSeason()
+    {
+        return GetSeasonForMonth(currentMonth);
     }
 }

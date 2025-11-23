@@ -22,6 +22,7 @@ public class InsuranceManager : MonoBehaviour
         public float deductiblePercent;
         public string coverageDescription;
         public bool isActive;
+        public int totalDependents => PlayerDataManager.Instance.adults + PlayerDataManager.Instance.children;
     }
 
     [Header("Player Finances")]

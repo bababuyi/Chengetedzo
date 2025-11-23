@@ -28,12 +28,24 @@ public class FinanceManager : MonoBehaviour
     [Tooltip("Total expenses accumulated over the simulation.")]
     public float totalSpent;
 
+    [Header("School Fees Savings")]
+    public float monthlySchoolFeeSavings;
+    public float schoolFeeSavingsBalance;
+    public float schoolFeeInterestRate = 0.02f; // 2%
+    public float schoolFeesPerTerm = 100f; // can be dynamic later
+
+
     /// <summary>
     /// Sets the player’s income at game start or during simulation.
     /// </summary>
     public void SetPlayerIncome(float value)
     {
         currentIncome = value;
+    }
+
+    public void SetSchoolFeeSavings(float amount)
+    {
+        monthlySchoolFeeSavings = amount;
     }
 
     /// <summary>
@@ -47,6 +59,9 @@ public class FinanceManager : MonoBehaviour
 
         totalEarned += currentIncome;
         totalSpent += totalExpenses;
+
+        schoolFeeSavingsBalance += monthlySchoolFeeSavings;
+        schoolFeeSavingsBalance *= 1 + schoolFeeInterestRate;
 
         Debug.Log($"[Finance] Income: {currentIncome}, Expenses: {totalExpenses}, Cash: {cashOnHand}");
     }
@@ -81,4 +96,21 @@ public class FinanceManager : MonoBehaviour
         currentIncome += change;
         Debug.Log($"[Finance] Income adjusted by {percentageChange:+0;-0}% ? New income: {currentIncome}");
     }
+
+    public void ProcessSchoolFees(int month)
+    {
+        if (month == 1 || month == 5 || month == 9)
+        {
+            if (schoolFeeSavingsBalance >= schoolFeesPerTerm)
+            {
+                schoolFeeSavingsBalance -= schoolFeesPerTerm;
+                Debug.Log($"[School Fees] Paid ${schoolFeesPerTerm} from savings.");
+            }
+            else
+            {
+                Debug.LogWarning("[School Fees] Not enough savings! Consider insurance payout or borrowing.");
+            }
+        }
+    }
+
 }
