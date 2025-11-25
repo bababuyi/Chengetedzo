@@ -8,7 +8,7 @@ public class GameManager : MonoBehaviour
     [Header("Simulation Settings")]
     public int currentMonth = 1;
     public int totalMonths = 12;
-    public float monthDuration = 5f; // seconds per "month" (real-time)
+    public float monthDuration = 5f;
 
     [Header("Manager References")]
     public FinanceManager financeManager;
@@ -17,6 +17,7 @@ public class GameManager : MonoBehaviour
     public InsuranceManager insuranceManager;
     public EventManager eventManager;
     public UIManager uiManager;
+    public VisualSimulationManager visualManager;   // <-- Added reference
 
     private void Awake()
     {
@@ -30,12 +31,19 @@ public class GameManager : MonoBehaviour
         uiManager.ShowBudgetPanel();
         uiManager.UpdateMoneyText(financeManager.cashOnHand);
         uiManager.UpdateMonthText(currentMonth, totalMonths);
+
+        // Apply starting visuals
+        visualManager?.UpdateVisuals();
     }
 
     public void BeginSimulation()
     {
         Debug.Log("Starting Life-Cycle Simulation...");
         uiManager.HideAllPanels();
+
+        // Update visuals at the start of simulation
+        visualManager?.UpdateVisuals();
+
         StartCoroutine(RunLifeCycle());
     }
 
@@ -45,13 +53,13 @@ public class GameManager : MonoBehaviour
 
         while (currentMonth <= totalMonths)
         {
-            // --- UI TOP BAR ---
+            // UI
             uiManager.UpdateMonthText(currentMonth, totalMonths);
             uiManager.UpdateMoneyText(financeManager.cashOnHand);
 
-            // --- PROCESS MONTH ---
+            // Monthly logic
             financeManager.ProcessMonthlyBudget();
-            insuranceManager.ProcessPremiums();
+            insuranceManager.ProcessMonthlyPremiums();
             loanManager?.ProcessContribution();
             eventManager?.CheckForMonthlyEvent(currentMonth);
             insuranceManager.ProcessClaims();
@@ -59,29 +67,21 @@ public class GameManager : MonoBehaviour
             loanManager?.UpdateLoans();
             financeManager.ProcessSchoolFees(currentMonth);
 
+            // Visuals
+            visualManager?.UpdateVisuals();
 
-            // --- MONTHLY REPORT ---
+            // Report
             string monthlyReport = financeManager.GetMonthlySummary(currentMonth);
             uiManager.ShowReportPanel($"<b>Month {currentMonth}</b>\n\n{monthlyReport}");
 
-            // — Wait for popup to close BEFORE continuing
             yield return new WaitUntil(() => !UIManager.Instance.IsPopupActive);
-
-            // — Wait for real time (not affected by timeScale)
             yield return new WaitForSecondsRealtime(monthDuration);
 
             currentMonth++;
         }
 
-        // --- END OF YEAR ---
         uiManager.ShowEndOfYearSummary();
         Debug.Log("Simulation Ended - Year Complete");
-    }
-
-    public void OnEventPopupClosed()
-    {
-        Debug.Log("[GameManager] Event popup closed — resuming simulation.");
-        // You may add extra logic later if needed.
     }
 
     public enum Season
@@ -92,15 +92,19 @@ public class GameManager : MonoBehaviour
 
     public Season GetSeasonForMonth(int month)
     {
-        // Summer = Nov (11), Dec (12), Jan–Apr (1–4)
         if (month == 11 || month == 12 || (month >= 1 && month <= 4))
             return Season.Summer;
 
-        // Winter = May–Oct = 5–10
         return Season.Winter;
     }
+
     public Season GetCurrentSeason()
     {
         return GetSeasonForMonth(currentMonth);
     }
+    public void OnEventPopupClosed()
+    {
+        Debug.Log("[GameManager] Event popup closed — resuming simulation.");
+    }
+
 }

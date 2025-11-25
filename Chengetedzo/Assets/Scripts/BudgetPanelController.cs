@@ -73,6 +73,8 @@ public class BudgetPanelController : MonoBehaviour
         loanRepaymentSlider.onValueChanged.AddListener(_ => UpdateCalculations());
         utilitiesSlider.onValueChanged.AddListener(_ => UpdateCalculations());
         schoolFeeSavingsSlider.onValueChanged.AddListener(_ => UpdateCalculations());
+        adultsInput.onValueChanged.AddListener(_ => UpdateCalculations());
+        childrenInput.onValueChanged.AddListener(_ => UpdateCalculations());
 
         warningText.gameObject.SetActive(false);
         summaryText.text = "";
@@ -159,7 +161,12 @@ public class BudgetPanelController : MonoBehaviour
             return;
         }
 
-        float totalExpenses = rentSlider.value + groceriesSlider.value + transportSlider.value + schoolFeesSlider.value;
+        float totalExpenses =
+        rentSlider.value +
+        groceriesSlider.value +
+        transportSlider.value +
+        schoolFeesSlider.value +
+        utilitiesSlider.value;
         float totalAllocations = savingsSlider.value + loanRepaymentSlider.value;
         float schoolFeeSavings = schoolFeeSavingsSlider.value;
         float totalOutflow = totalExpenses + totalAllocations;
@@ -192,13 +199,12 @@ public class BudgetPanelController : MonoBehaviour
         Debug.Log("Budget confirmed — showing forecast...");
 
         // Move to forecast
-        gameObject.SetActive(false);
-        FindFirstObjectByType<ForecastManager>()?.GenerateForecast();
-
         PlayerDataManager.Instance.adults = adults;
         PlayerDataManager.Instance.children = children;
 
         Debug.Log($"[Player] Dependents saved: {adults} adults, {children} children");
 
+        gameObject.SetActive(false);
+        FindFirstObjectByType<ForecastManager>()?.GenerateForecast();
     }
 }

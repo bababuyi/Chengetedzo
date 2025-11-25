@@ -29,7 +29,7 @@ public class FinanceManager : MonoBehaviour
     public float totalSpent;
 
     [Header("School Fees Savings")]
-    public float monthlySchoolFeeSavings;
+    public float schoolFeeSavings;
     public float schoolFeeSavingsBalance;
     public float schoolFeeInterestRate = 0.02f; // 2%
     public float schoolFeesPerTerm = 100f; // can be dynamic later
@@ -45,7 +45,8 @@ public class FinanceManager : MonoBehaviour
 
     public void SetSchoolFeeSavings(float amount)
     {
-        monthlySchoolFeeSavings = amount;
+        schoolFeeSavings = amount;
+        Debug.Log($"[Finance] School Fee Savings set to: ${amount}");
     }
 
     /// <summary>
@@ -60,7 +61,7 @@ public class FinanceManager : MonoBehaviour
         totalEarned += currentIncome;
         totalSpent += totalExpenses;
 
-        schoolFeeSavingsBalance += monthlySchoolFeeSavings;
+        schoolFeeSavingsBalance += schoolFeeSavings;
         schoolFeeSavingsBalance *= 1 + schoolFeeInterestRate;
 
         Debug.Log($"[Finance] Income: {currentIncome}, Expenses: {totalExpenses}, Cash: {cashOnHand}");
@@ -112,5 +113,4 @@ public class FinanceManager : MonoBehaviour
             }
         }
     }
-
 }

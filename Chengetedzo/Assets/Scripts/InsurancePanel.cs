@@ -64,13 +64,7 @@ public class InsurancePanel : MonoBehaviour
 
     private void UpdateSummary()
     {
-        float totalPremium = 0f;
-
-        foreach (var plan in insuranceManager.allPlans)
-        {
-            if (plan.isActive)
-                totalPremium += plan.premium;
-        }
+        float totalPremium = insuranceManager.GetTotalMonthlyPremium();
 
         if (totalPremium <= 0f)
         {
