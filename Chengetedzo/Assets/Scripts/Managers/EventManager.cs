@@ -22,7 +22,6 @@ public class EventManager : MonoBehaviour
     {
         Season currentSeason = GameManager.Instance.GetSeasonForMonth(month);
 
-        // Filter events for this season
         var seasonalEvents = allEvents.FindAll(e => e.season == currentSeason);
 
         if (seasonalEvents.Count == 0)
