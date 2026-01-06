@@ -1,5 +1,6 @@
-using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
@@ -10,6 +11,11 @@ public class GameManager : MonoBehaviour
     public int totalMonths = 12;
     public float monthDuration = 5f;
 
+    [Header("Momentum")]
+    private int savingsStreak = 0;
+    private int overBudgetStreak = 0;
+    private Queue<bool> skipHistory = new Queue<bool>(); // last 6 months
+
     [Header("Manager References")]
     public FinanceManager financeManager;
     public SavingsManager savingsManager;
@@ -17,7 +23,7 @@ public class GameManager : MonoBehaviour
     public InsuranceManager insuranceManager;
     public EventManager eventManager;
     public UIManager uiManager;
-    public VisualSimulationManager visualManager;   // <-- Added reference
+    public VisualSimulationManager visualManager;
 
     private void Awake()
     {
@@ -70,6 +76,9 @@ public class GameManager : MonoBehaviour
             // Visuals
             visualManager?.UpdateVisuals();
 
+            // Evaluate long-term behavior (momentum)
+            EvaluateMomentumSignals();
+
             // Report
             string monthlyReport = financeManager.GetMonthlySummary(currentMonth);
             uiManager.ShowReportPanel($"<b>Month {currentMonth}</b>\n\n{monthlyReport}");
@@ -107,4 +116,58 @@ public class GameManager : MonoBehaviour
         Debug.Log("[GameManager] Event popup closed — resuming simulation.");
     }
 
+    private void EvaluateMomentumSignals()
+    {
+        var player = PlayerDataManager.Instance;
+
+        // --- SIGNAL A: Consistency ---
+        bool savedThisMonth = savingsManager.LastMonthSavings > 0f;
+        bool paidInsurance = insuranceManager.PaidPremiumsThisMonth;
+        bool paidLoan = loanManager != null && loanManager.PaidThisMonth;
+
+        if (savedThisMonth || paidInsurance || paidLoan)
+            savingsStreak++;
+        else
+            savingsStreak = 0;
+
+        if (savingsStreak == 3)
+        {
+            player.financialMomentum += 3f;
+            Debug.Log("[Momentum] Consistency streak complete (+3)");
+            savingsStreak = 0;
+        }
+
+        // --- SIGNAL B: Overextension ---
+        if (financeManager.WasOverBudgetThisMonth)
+            overBudgetStreak++;
+        else
+            overBudgetStreak = 0;
+
+        if (overBudgetStreak == 2)
+        {
+            player.financialMomentum -= 5f;
+            Debug.Log("[Momentum] Repeated over-budget (-5)");
+            overBudgetStreak = 0;
+        }
+
+        // --- SIGNAL C: Skipping Habit ---
+        bool skippedImportant = !savedThisMonth || !paidInsurance;
+
+        skipHistory.Enqueue(skippedImportant);
+        if (skipHistory.Count > 6)
+            skipHistory.Dequeue();
+
+        int skipCount = 0;
+        foreach (bool skipped in skipHistory)
+            if (skipped) skipCount++;
+
+        if (skipCount >= 3)
+        {
+            player.financialMomentum -= 4f;
+            Debug.Log("[Momentum] Skipping became a habit (-4)");
+            skipHistory.Clear();
+        }
+
+        player.financialMomentum = Mathf.Clamp(player.financialMomentum, -100f, 100f);
+    }
 }

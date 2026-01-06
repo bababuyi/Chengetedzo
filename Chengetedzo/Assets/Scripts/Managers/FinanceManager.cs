@@ -56,6 +56,7 @@ public class FinanceManager : MonoBehaviour
     {
         totalExpenses = rent + groceries + transport + utilities;
         balance = currentIncome - totalExpenses;
+        WasOverBudgetThisMonth = balance < 0;
         cashOnHand += balance;
 
         totalEarned += currentIncome;

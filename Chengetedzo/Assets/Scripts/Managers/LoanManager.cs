@@ -7,9 +7,11 @@ public class LoanManager : MonoBehaviour
     public float loanBalance;
     public float borrowingPower = 0f;
     public int monthsContributed = 0;
+    public bool PaidThisMonth { get; private set; }
 
     public void ProcessContribution()
     {
+        PaidThisMonth = true;
         totalContributed += contribution;
         monthsContributed++;
         UpdateBorrowingPower();
@@ -43,4 +45,8 @@ public class LoanManager : MonoBehaviour
         else if (monthsContributed == 4) borrowingPower = totalContributed * 1.5f;
         else borrowingPower = totalContributed * 2f;
     }
-   }
+    public void ResetMonthlyFlags()
+    {
+        PaidThisMonth = false;
+    }
+}

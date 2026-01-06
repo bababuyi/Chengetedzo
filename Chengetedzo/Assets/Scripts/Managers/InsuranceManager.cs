@@ -21,6 +21,9 @@ public class InsuranceManager : MonoBehaviour
         MicroMedical
     }
 
+
+    public bool PaidPremiumsThisMonth { get; private set; }
+
     [System.Serializable]
     public class InsurancePlan
     {
@@ -257,6 +260,9 @@ public class InsuranceManager : MonoBehaviour
     /// </summary>
     public void ProcessMonthlyPremiums()
     {
+
+        PaidPremiumsThisMonth = false;
+
         float totalCharged = 0f;
 
         foreach (var plan in allPlans)
