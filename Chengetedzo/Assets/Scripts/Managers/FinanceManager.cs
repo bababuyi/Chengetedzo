@@ -35,13 +35,22 @@ public class FinanceManager : MonoBehaviour
     public float schoolFeeInterestRate = 0.02f; // 2%
     public float schoolFeesPerTerm = 100f; // can be dynamic later
 
+    [Header("Income Variability")]
+    public float minIncome;
+    public float maxIncome;
+    public bool isIncomeStable;
+
 
     /// <summary>
     /// Sets the player’s income at game start or during simulation.
     /// </summary>
-    public void SetPlayerIncome(float value)
+    public void SetIncomeRange(float min, float max, bool stable)
     {
-        currentIncome = value;
+        minIncome = min;
+        maxIncome = max;
+        isIncomeStable = stable;
+
+        currentIncome = Random.Range(minIncome, maxIncome);
     }
 
     public void SetSchoolFeeSavings(float amount)
@@ -114,5 +123,23 @@ public class FinanceManager : MonoBehaviour
                 Debug.LogWarning("[School Fees] Not enough savings! Consider insurance payout or borrowing.");
             }
         }
+    }
+    public void RollMonthlyIncome()
+    {
+        if (minIncome <= 0 || maxIncome <= 0 || maxIncome < minIncome)
+        {
+            Debug.LogWarning("[Finance] Income range not set. Using current income.");
+            return;
+        }
+
+        float variance = isIncomeStable ? 0.1f : 0.3f;
+        float range = maxIncome - minIncome;
+
+        float fluctuation = Random.Range(-range * variance, range * variance);
+        currentIncome = Mathf.Clamp(
+            Random.Range(minIncome, maxIncome) + fluctuation,
+            minIncome,
+            maxIncome
+        );
     }
 }

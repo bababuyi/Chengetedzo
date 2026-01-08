@@ -68,6 +68,7 @@ public class GameManager : MonoBehaviour
             uiManager.UpdateMoneyText(financeManager.cashOnHand);
 
             // Monthly logic
+            financeManager.RollMonthlyIncome();
             financeManager.ProcessMonthlyBudget();
             insuranceManager.ProcessMonthlyPremiums();
             loanManager?.ProcessContribution();
