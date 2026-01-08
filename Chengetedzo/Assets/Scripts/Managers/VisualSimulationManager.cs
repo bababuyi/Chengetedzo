@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using static GameManager;
 
 public class VisualSimulationManager : MonoBehaviour
@@ -26,6 +26,8 @@ public class VisualSimulationManager : MonoBehaviour
 
     public void UpdateVisuals()
     {
+        if (GameManager.Instance == null) return;
+
         Season currentSeason = GameManager.Instance.GetCurrentSeason();
 
         if (currentSeason == Season.Summer)
@@ -34,37 +36,49 @@ public class VisualSimulationManager : MonoBehaviour
             ApplyWinter();
     }
 
+    private void SafeSet(GameObject obj, bool state)
+    {
+        if (obj != null)
+            obj.SetActive(state);
+    }
+
     private void ApplySummer()
     {
-        sunIcon.SetActive(true);
-        winterIcon.SetActive(false);
+        SafeSet(sunIcon, true);
+        SafeSet(winterIcon, false);
 
-        heatHaze.SetActive(true);
-        fogLayer.SetActive(false);
+        SafeSet(heatHaze, true);
+        SafeSet(fogLayer, false);
 
-        whiteClouds.SetActive(true);
-        grayClouds.SetActive(false);
+        SafeSet(whiteClouds, true);
+        SafeSet(grayClouds, false);
 
-        dryGrass.SetActive(true);
-        windLines.SetActive(true);
+        SafeSet(dryGrass, true);
+        SafeSet(windLines, true);
 
-        Debug.Log("Visuals updated ? SUMMER");
+        Debug.Log("Visuals updated SUMMER");
     }
 
     private void ApplyWinter()
     {
-        sunIcon.SetActive(false);
-        winterIcon.SetActive(true);
+        SafeSet(sunIcon, false);
+        SafeSet(winterIcon, true);
 
-        heatHaze.SetActive(false);
-        fogLayer.SetActive(true);
+        SafeSet(heatHaze, false);
+        SafeSet(fogLayer, true);
 
-        whiteClouds.SetActive(false);
-        grayClouds.SetActive(true);
+        SafeSet(whiteClouds, false);
+        SafeSet(grayClouds, true);
 
-        dryGrass.SetActive(false);
-        windLines.SetActive(false);
+        SafeSet(dryGrass, false);
+        SafeSet(windLines, false);
 
-        Debug.Log("Visuals updated ? WINTER");
+        Debug.Log("Visuals updated WINTER");
+    }
+
+    private void SetActiveSafe(GameObject obj, bool state)
+    {
+        if (obj != null)
+            obj.SetActive(state);
     }
 }

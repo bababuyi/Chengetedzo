@@ -15,7 +15,11 @@ public class GameManager : MonoBehaviour
     private int savingsStreak = 0;
     private int overBudgetStreak = 0;
     private Queue<bool> skipHistory = new Queue<bool>(); // last 6 months
-
+    private float previousMomentum = 0f;
+    private bool recoveryAcknowledged = false;
+    private int lastMomentumZone = int.MinValue;
+    private bool patternWarningIssued = false;
+    
     [Header("Manager References")]
     public FinanceManager financeManager;
     public SavingsManager savingsManager;
@@ -77,7 +81,16 @@ public class GameManager : MonoBehaviour
             visualManager?.UpdateVisuals();
 
             // Evaluate long-term behavior (momentum)
-            EvaluateMomentumSignals();
+            EvaluateMomentumSignals(); // math only
+            EvaluateMentor();         // meaning & messaging
+            // Mid-year mentor checkpoint
+            if (currentMonth == 6)
+            {
+                uiManager.ShowMentorMessage(GetMidYearMentorReflection());
+                lastMomentumZone = GetMomentumZone(
+                    PlayerDataManager.Instance.financialMomentum);
+                yield return new WaitUntil(() => !UIManager.Instance.IsPopupActive);
+            }
 
             // Report
             string monthlyReport = financeManager.GetMonthlySummary(currentMonth);
@@ -89,7 +102,8 @@ public class GameManager : MonoBehaviour
             currentMonth++;
         }
 
-        uiManager.ShowEndOfYearSummary();
+        string reflection = GetYearEndMentorReflection();
+        uiManager.ShowEndOfYearSummary(reflection);
         Debug.Log("Simulation Ended - Year Complete");
     }
 
@@ -151,7 +165,7 @@ public class GameManager : MonoBehaviour
         }
 
         // --- SIGNAL C: Skipping Habit ---
-        bool skippedImportant = !savedThisMonth || !paidInsurance;
+        bool skippedImportant = !savedThisMonth && !paidInsurance;
 
         skipHistory.Enqueue(skippedImportant);
         if (skipHistory.Count > 6)
@@ -169,5 +183,134 @@ public class GameManager : MonoBehaviour
         }
 
         player.financialMomentum = Mathf.Clamp(player.financialMomentum, -100f, 100f);
+        
+        float currentMomentum = player.financialMomentum;
+    }
+
+    private void EvaluateMentor()
+    {
+        if (currentMonth <= 1)
+            return;
+
+        float momentum = PlayerDataManager.Instance.financialMomentum;
+        int currentZone = GetMomentumZone(momentum);
+
+        // --- A. Zone Change ---
+        if (currentZone != lastMomentumZone)
+        {
+            ShowZoneMentorLine(currentZone);
+            lastMomentumZone = currentZone;
+        }
+
+        // --- B. Pattern Warning ---
+        if (!patternWarningIssued && IsNegativePatternForming())
+        {
+            uiManager.ShowMentorMessage(
+                MentorLines.PatternWarning[
+                    Random.Range(0, MentorLines.PatternWarning.Length)]);
+            patternWarningIssued = true;
+        }
+
+        // --- C. Recovery Acknowledgment ---
+        CheckRecovery(momentum);
+
+        previousMomentum = momentum;
+    }
+
+
+    private int GetMomentumZone(float momentum)
+    {
+        if (momentum >= 15f) return 2;
+        if (momentum >= 0f) return 1;
+        if (momentum > -15f) return -1;
+        return -2;                        
+    }
+
+    private string GetYearEndMentorReflection()
+    {
+        float momentum = PlayerDataManager.Instance.financialMomentum;
+
+        if (momentum >= 20f)
+            return MentorLines.YearEndStrong[Random.Range(0, MentorLines.YearEndStrong.Length)];
+
+        if (momentum >= 5f)
+            return MentorLines.YearEndPositive[Random.Range(0, MentorLines.YearEndPositive.Length)];
+
+        if (momentum >= -4f)
+            return MentorLines.YearEndNeutral[Random.Range(0, MentorLines.YearEndNeutral.Length)];
+
+        if (momentum >= -19f)
+            return MentorLines.YearEndWarning[Random.Range(0, MentorLines.YearEndWarning.Length)];
+
+        return MentorLines.YearEndNegative[Random.Range(0, MentorLines.YearEndNegative.Length)];
+    }
+
+    private string GetMidYearMentorReflection()
+    {
+        float momentum = PlayerDataManager.Instance.financialMomentum;
+
+        if (momentum >= 15f)
+            return MentorLines.MidYearStrong[Random.Range(0, MentorLines.MidYearStrong.Length)];
+
+        if (momentum >= 5f)
+            return MentorLines.MidYearPositive[Random.Range(0, MentorLines.MidYearPositive.Length)];
+
+        if (momentum >= -4f)
+            return MentorLines.MidYearNeutral[Random.Range(0, MentorLines.MidYearNeutral.Length)];
+
+        if (momentum >= -14f)
+            return MentorLines.MidYearWarning[Random.Range(0, MentorLines.MidYearWarning.Length)];
+
+        return MentorLines.MidYearNegative[Random.Range(0, MentorLines.MidYearNegative.Length)];
+    }
+
+    private void ShowZoneMentorLine(int zone)
+    {
+        string line = "";
+
+        switch (zone)
+        {
+            case 2:
+                line = MentorLines.Positive[Random.Range(0, MentorLines.Positive.Length)];
+                break;
+            case 1:
+                line = MentorLines.Neutral[Random.Range(0, MentorLines.Neutral.Length)];
+                break;
+            case -1:
+                line = MentorLines.Warning[Random.Range(0, MentorLines.Warning.Length)];
+                break;
+            case -2:
+                line = MentorLines.Negative[Random.Range(0, MentorLines.Negative.Length)];
+                break;
+        }
+
+        uiManager.ShowMentorMessage(line);
+    }
+
+    private bool IsNegativePatternForming()
+    {
+        int skipCount = 0;
+        foreach (bool skipped in skipHistory)
+            if (skipped) skipCount++;
+
+        return overBudgetStreak >= 2 || skipCount >= 3;
+    }
+
+    private void CheckRecovery(float currentMomentum)
+    {
+        if (recoveryAcknowledged)
+            return;
+
+        bool wasCritical = previousMomentum <= -15f;
+        bool improving = currentMomentum > previousMomentum;
+        bool escapedDanger = currentMomentum >= -5f;
+
+        if (wasCritical && improving && escapedDanger)
+        {
+            uiManager.ShowMentorMessage(
+                MentorLines.RecoveryLines[
+                    Random.Range(0, MentorLines.RecoveryLines.Length)]);
+            recoveryAcknowledged = true;
+        }
     }
 }

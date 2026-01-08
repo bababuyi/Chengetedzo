@@ -29,6 +29,11 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI eventDescriptionText;
     public Button continueButton;
 
+    [Header("Mentor Popup")]
+    public GameObject mentorPopup;
+    public TextMeshProUGUI mentorText;
+    public Button mentorContinueButton;
+
     // Popup state property (correct, single version)
     public bool IsPopupActive { get; private set; } = false;
 
@@ -39,6 +44,9 @@ public class UIManager : MonoBehaviour
 
         if (eventPopup != null)
             eventPopup.SetActive(false);
+
+        if (mentorPopup != null)
+            mentorPopup.SetActive(false);
     }
 
     private void Start()
@@ -116,9 +124,12 @@ public class UIManager : MonoBehaviour
     }
 
     // ===== End-of-Year Screen =====
-    public void ShowEndOfYearSummary()
+    public void ShowEndOfYearSummary(string mentorReflection)
     {
         endOfYearScreen.SetActive(true);
+        resultsText.text =
+            "<b>Year Complete</b>\n\n" +
+            $"<i>{mentorReflection}</i>";
     }
 
     public void RestartGame()
@@ -126,4 +137,26 @@ public class UIManager : MonoBehaviour
         UnityEngine.SceneManagement.SceneManager.LoadScene(
             UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
     }
+
+    public void ShowMentorMessage(string message)
+    {
+        if (IsPopupActive) return;
+
+        mentorPopup.SetActive(true);
+        mentorText.text = message;
+
+        Time.timeScale = 0f;
+        IsPopupActive = true;
+
+        mentorContinueButton.onClick.RemoveAllListeners();
+        mentorContinueButton.onClick.AddListener(CloseMentorPopup);
+    }
+
+    private void CloseMentorPopup()
+    {
+        mentorPopup.SetActive(false);
+        IsPopupActive = false;
+        Time.timeScale = 1f;
+    }
+
 }

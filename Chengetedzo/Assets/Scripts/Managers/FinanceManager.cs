@@ -27,6 +27,7 @@ public class FinanceManager : MonoBehaviour
     public float totalEarned;
     [Tooltip("Total expenses accumulated over the simulation.")]
     public float totalSpent;
+    public bool WasOverBudgetThisMonth { get; private set; }
 
     [Header("School Fees Savings")]
     public float schoolFeeSavings;
