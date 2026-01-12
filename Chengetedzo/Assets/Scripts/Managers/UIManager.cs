@@ -18,6 +18,13 @@ public class UIManager : MonoBehaviour
     public GameObject insurancePanel;
     public GameObject reportPanel;
 
+    [Header("Setup Flow")]
+    public GameObject setupPanel;
+    public GameObject forecastPanel;
+
+    [Header("Simulation HUD")]
+    public GameObject topHUD; // month + money bar
+
     [Header("Other Screens")]
     public GameObject endOfYearScreen;
     public TextMeshProUGUI resultsText;
@@ -51,10 +58,22 @@ public class UIManager : MonoBehaviour
 
     private void Start()
     {
-        ShowBudgetPanel();
+        ShowSetupPanel();
     }
 
-    // ===== Basic UI Updates =====
+    public void ShowSetupPanel()
+    {
+        // Setup only
+        setupPanel.SetActive(true);
+
+        budgetPanel.SetActive(false);
+        forecastPanel.SetActive(false);
+        endOfYearScreen.SetActive(false);
+
+        HideAllPanels(); // hides sim panels
+        topHUD.SetActive(false);
+    }
+
     public void UpdateMonthText(int currentMonth, int totalMonths)
     {
         monthText.text = $"Month: {currentMonth}/{totalMonths}";
@@ -77,8 +96,25 @@ public class UIManager : MonoBehaviour
 
     public void ShowBudgetPanel()
     {
+        setupPanel.SetActive(false);
+        forecastPanel.SetActive(false);
+
         HideAllPanels();
         budgetPanel.SetActive(true);
+        topHUD.SetActive(true);
+
+        var controller = budgetPanel.GetComponent<BudgetPanelController>();
+        controller?.LoadDefaultsFromSetup();
+    }
+
+    public void ShowForecastPanel()
+    {
+        HideAllPanels();
+        budgetPanel.SetActive(false);
+        setupPanel.SetActive(false);
+
+        forecastPanel.SetActive(true);
+        topHUD.SetActive(true);
     }
 
     public void ShowInsurancePanel()

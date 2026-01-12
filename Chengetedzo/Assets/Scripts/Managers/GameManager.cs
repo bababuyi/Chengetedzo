@@ -28,6 +28,7 @@ public class GameManager : MonoBehaviour
     public EventManager eventManager;
     public UIManager uiManager;
     public VisualSimulationManager visualManager;
+    public PlayerSetupData setupData = new PlayerSetupData();
 
     private void Awake()
     {
@@ -38,7 +39,7 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         Debug.Log("Game Ready — Awaiting Start of Simulation.");
-        uiManager.ShowBudgetPanel();
+        // uiManager.ShowSetupPanel(); //No longer using
         uiManager.UpdateMoneyText(financeManager.cashOnHand);
         uiManager.UpdateMonthText(currentMonth, totalMonths);
 
@@ -48,6 +49,7 @@ public class GameManager : MonoBehaviour
 
     public void BeginSimulation()
     {
+        RollMonthlyIncome();
         Debug.Log("Starting Life-Cycle Simulation...");
         uiManager.HideAllPanels();
 
@@ -68,7 +70,6 @@ public class GameManager : MonoBehaviour
             uiManager.UpdateMoneyText(financeManager.cashOnHand);
 
             // Monthly logic
-            financeManager.RollMonthlyIncome();
             financeManager.ProcessMonthlyBudget();
             insuranceManager.ProcessMonthlyPremiums();
             loanManager?.ProcessContribution();
@@ -184,8 +185,6 @@ public class GameManager : MonoBehaviour
         }
 
         player.financialMomentum = Mathf.Clamp(player.financialMomentum, -100f, 100f);
-        
-        float currentMomentum = player.financialMomentum;
     }
 
     private void EvaluateMentor()
@@ -313,5 +312,26 @@ public class GameManager : MonoBehaviour
                     Random.Range(0, MentorLines.RecoveryLines.Length)]);
             recoveryAcknowledged = true;
         }
+    }
+
+    private float currentMonthlyIncome;
+
+    public float GetCurrentMonthlyIncome()
+    {
+        return currentMonthlyIncome;
+    }
+
+    public void RollMonthlyIncome()
+    {
+        if (setupData.isIncomeStable)
+        {
+            currentMonthlyIncome = (setupData.minIncome + setupData.maxIncome) * 0.5f;
+        }
+        else
+        {
+            currentMonthlyIncome = Random.Range(setupData.minIncome, setupData.maxIncome);
+        }
+
+        Debug.Log($"[Income] Month income set to {currentMonthlyIncome}");
     }
 }

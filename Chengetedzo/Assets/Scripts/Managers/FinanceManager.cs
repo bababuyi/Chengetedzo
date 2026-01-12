@@ -44,6 +44,23 @@ public class FinanceManager : MonoBehaviour
     /// <summary>
     /// Sets the player’s income at game start or during simulation.
     /// </summary>
+    /// 
+    public void InitializeFromSetup()
+    {
+        var setup = GameManager.Instance.setupData;
+
+        minIncome = setup.minIncome;
+        maxIncome = setup.maxIncome;
+        isIncomeStable = setup.isIncomeStable;
+
+        if (setup.hasSchoolFees)
+            schoolFeesPerTerm = setup.schoolFeesAmount;
+        else
+            schoolFeesPerTerm = 0f;
+
+        RollMonthlyIncome();
+    }
+
     public void SetIncomeRange(float min, float max, bool stable)
     {
         minIncome = min;

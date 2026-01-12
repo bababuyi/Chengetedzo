@@ -6,9 +6,9 @@ public class PlayerDataManager : MonoBehaviour
 
     public int adults;
     public int children;
+
     [Range(-100, 100)]
     public float financialMomentum = 0f;
-
 
     private void Awake()
     {

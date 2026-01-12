@@ -4,15 +4,15 @@ using UnityEngine.UI;
 
 public class BudgetPanelController : MonoBehaviour
 {
+    [Header("Income Display")]
+    public TMP_Text incomeDisplayText;
+
     [Header("Step Navigation")]
     public GameObject incomeSection;
     public GameObject expenseSection;
     public GameObject allocationSection;
 
     private int currentStep = 1;
-
-    [Header("Income Input")]
-    public TMP_InputField incomeInput;
 
     [Header("Expense Sliders")]
     public Slider rentSlider;
@@ -23,9 +23,6 @@ public class BudgetPanelController : MonoBehaviour
 
     public Slider transportSlider;
     public TMP_Text transportValueText;
-
-    public Slider schoolFeesSlider;
-    public TMP_Text schoolFeesValueText;
 
     public Slider utilitiesSlider;
     public TMP_Text utilitiesValueText;
@@ -42,19 +39,19 @@ public class BudgetPanelController : MonoBehaviour
     public TMP_Text summaryText;
     public TMP_Text warningText;
 
-    private float totalIncome;
-
-    [Header("Dependents")]
-    public TMP_InputField adultsInput;
-    public TMP_InputField childrenInput;
-    public TMP_Text dependentsSummaryText;
-
-    private int adults;
-    private int children;
-
     [Header("School Fees Savings")]
     public Slider schoolFeeSavingsSlider;
     public TMP_Text schoolFeeSavingsValueText;
+
+    [Header("Read-Only Info")]
+    public TMP_Text householdSummaryText;
+
+    [Header("School Fees (Read Only)")]
+    public GameObject schoolFeesGroup;
+    public TMP_Text schoolFeesAmountText;
+
+
+    private float totalIncome;
 
     private void Start()
     {
@@ -64,17 +61,13 @@ public class BudgetPanelController : MonoBehaviour
         ShowStep(1);
 
         // Add listeners
-        incomeInput.onValueChanged.AddListener(_ => UpdateCalculations());
         rentSlider.onValueChanged.AddListener(_ => UpdateCalculations());
         groceriesSlider.onValueChanged.AddListener(_ => UpdateCalculations());
         transportSlider.onValueChanged.AddListener(_ => UpdateCalculations());
-        schoolFeesSlider.onValueChanged.AddListener(_ => UpdateCalculations());
         savingsSlider.onValueChanged.AddListener(_ => UpdateCalculations());
         loanRepaymentSlider.onValueChanged.AddListener(_ => UpdateCalculations());
         utilitiesSlider.onValueChanged.AddListener(_ => UpdateCalculations());
         schoolFeeSavingsSlider.onValueChanged.AddListener(_ => UpdateCalculations());
-        adultsInput.onValueChanged.AddListener(_ => UpdateCalculations());
-        childrenInput.onValueChanged.AddListener(_ => UpdateCalculations());
 
         warningText.gameObject.SetActive(false);
         summaryText.text = "";
@@ -88,22 +81,6 @@ public class BudgetPanelController : MonoBehaviour
         currentStep = step;
     }
 
-    public void NextStep()
-    {
-        if (currentStep == 1)
-        {
-            if (!float.TryParse(incomeInput.text, out totalIncome) || totalIncome <= 0)
-            {
-                warningText.text = "Please enter a valid income.";
-                warningText.gameObject.SetActive(true);
-                return;
-            }
-        }
-
-        if (currentStep < 3)
-            ShowStep(currentStep + 1);
-    }
-
     public void PrevStep()
     {
         if (currentStep > 1)
@@ -115,16 +92,25 @@ public class BudgetPanelController : MonoBehaviour
         rentValueText.text = $"${rentSlider.value:F0}";
         groceriesValueText.text = $"${groceriesSlider.value:F0}";
         transportValueText.text = $"${transportSlider.value:F0}";
-        schoolFeesValueText.text = $"${schoolFeesSlider.value:F0}";
         savingsValueText.text = $"${savingsSlider.value:F0}";
         loanRepaymentValueText.text = $"${loanRepaymentSlider.value:F0}";
         utilitiesValueText.text = $"${utilitiesSlider.value:F0}";
         schoolFeeSavingsValueText.text = $"${schoolFeeSavingsSlider.value:F0}";
 
-        if (!float.TryParse(incomeInput.text, out totalIncome))
-            return;
+        float schoolFees = 0f;
+        if (GameManager.Instance != null && GameManager.Instance.setupData != null)
+        {
+            schoolFees = GameManager.Instance.setupData.hasSchoolFees
+                ? GameManager.Instance.setupData.schoolFeesAmount
+                : 0f;
+        }
 
-        float totalExpenses = rentSlider.value + groceriesSlider.value + transportSlider.value + schoolFeesSlider.value + utilitiesSlider.value;
+        float totalExpenses =
+            rentSlider.value +
+            groceriesSlider.value +
+            transportSlider.value +
+            utilitiesSlider.value +
+            schoolFees;
         float totalAllocations = savingsSlider.value + loanRepaymentSlider.value + schoolFeeSavingsSlider.value; ;
         float totalOutflow = totalExpenses + totalAllocations;
         float remaining = totalIncome - totalOutflow;
@@ -144,29 +130,27 @@ public class BudgetPanelController : MonoBehaviour
             warningText.gameObject.SetActive(false);
             confirmButton.interactable = true;
         }
-
-        int.TryParse(adultsInput.text, out adults);
-        int.TryParse(childrenInput.text, out children);
-
-        dependentsSummaryText.text = $"Family: {adults} adults, {children} children";
-
     }
 
     private void OnConfirmAndStartSimulation()
     {
-        if (!float.TryParse(incomeInput.text, out totalIncome) || totalIncome <= 0)
+        if (totalIncome <= 0)
         {
-            summaryText.text = "Please enter a valid income.";
+            summaryText.text = "Income not available.";
             summaryText.color = Color.red;
             return;
         }
 
+        float schoolFees = GameManager.Instance.setupData.hasSchoolFees
+    ? GameManager.Instance.setupData.schoolFeesAmount
+    : 0f;
+
         float totalExpenses =
-        rentSlider.value +
-        groceriesSlider.value +
-        transportSlider.value +
-        schoolFeesSlider.value +
-        utilitiesSlider.value;
+            rentSlider.value +
+            groceriesSlider.value +
+            transportSlider.value +
+            utilitiesSlider.value +
+            schoolFees;
         float totalAllocations = savingsSlider.value + loanRepaymentSlider.value;
         float schoolFeeSavings = schoolFeeSavingsSlider.value;
         float totalOutflow = totalExpenses + totalAllocations;
@@ -187,7 +171,7 @@ public class BudgetPanelController : MonoBehaviour
         FinanceManager finance = FindFirstObjectByType<FinanceManager>();
         if (finance != null)
         {
-            finance.SetPlayerIncome(totalIncome);
+            //finance.SetPlayerIncome(totalIncome);
             finance.rent = rentSlider.value;
             finance.groceries = groceriesSlider.value;
             finance.transport = transportSlider.value;
@@ -198,13 +182,45 @@ public class BudgetPanelController : MonoBehaviour
 
         Debug.Log("Budget confirmed — showing forecast...");
 
-        // Move to forecast
-        PlayerDataManager.Instance.adults = adults;
-        PlayerDataManager.Instance.children = children;
-
-        Debug.Log($"[Player] Dependents saved: {adults} adults, {children} children");
-
-        gameObject.SetActive(false);
+        UIManager.Instance.ShowForecastPanel();
         FindFirstObjectByType<ForecastManager>()?.GenerateForecast();
+    }
+
+    public void LoadDefaultsFromSetup()
+    {
+        if (GameManager.Instance == null || GameManager.Instance.setupData == null)
+        {
+            Debug.LogWarning("[BudgetPanel] Setup data not ready.");
+            return;
+        }
+
+        var setup = GameManager.Instance.setupData;
+
+        totalIncome = GameManager.Instance.GetCurrentMonthlyIncome();
+        incomeDisplayText.text = $"Monthly Income: ${totalIncome:F0}";
+
+        int householdSize = setup.adults + setup.children;
+
+        rentSlider.value = Mathf.Clamp(totalIncome * 0.3f, rentSlider.minValue, rentSlider.maxValue);
+        groceriesSlider.value = Mathf.Clamp(40f * householdSize, groceriesSlider.minValue, groceriesSlider.maxValue);
+        transportSlider.value = Mathf.Clamp(25f * setup.adults, transportSlider.minValue, transportSlider.maxValue);
+        utilitiesSlider.value = Mathf.Clamp(20f + householdSize * 10f, utilitiesSlider.minValue, utilitiesSlider.maxValue);
+        savingsSlider.value = Mathf.Clamp(totalIncome * 0.1f, savingsSlider.minValue, savingsSlider.maxValue);
+
+        // 3. School fees
+        schoolFeesGroup.SetActive(setup.hasSchoolFees);
+
+        float schoolFees = setup.hasSchoolFees ? setup.schoolFeesAmount : 0f;
+        schoolFeesAmountText.text = $"${schoolFees:F0}";
+
+        // 4. Default allocations (gentle, not optimal)
+        loanRepaymentSlider.value = 0f;
+        schoolFeeSavingsSlider.value = setup.hasSchoolFees ? setup.schoolFeesAmount / 3f : 0f;
+
+        householdSummaryText.text =
+        $"Household: {setup.adults} adult{(setup.adults != 1 ? "s" : "")}, " +
+        $"{setup.children} child{(setup.children != 1 ? "ren" : "")}";
+
+        UpdateCalculations();
     }
 }
