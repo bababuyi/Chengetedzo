@@ -33,6 +33,10 @@ public class SetupPanelController : MonoBehaviour
 
     public GameObject schoolFeesAmountGroup;
 
+    [Header("Navigation Buttons")]
+    public GameObject nextButton;
+    public GameObject backButton;
+
     private int currentStep = 1;
 
     private void Start()
@@ -47,11 +51,16 @@ public class SetupPanelController : MonoBehaviour
         schoolFeesSection.SetActive(step == 3);
         reviewSection.SetActive(step == 4);
 
+        // Navigation visibility
+        backButton.SetActive(step > 1);
+        nextButton.SetActive(step < 4);
+
         currentStep = step;
 
         if (step == 4)
             BuildReviewSummary();
     }
+
 
     public void NextStep()
     {
@@ -132,6 +141,7 @@ public class SetupPanelController : MonoBehaviour
     {
         GameManager gm = GameManager.Instance;
 
+        // Save setup data
         gm.setupData.minIncome = float.Parse(minIncomeInput.text);
         gm.setupData.maxIncome = float.Parse(maxIncomeInput.text);
         gm.setupData.isIncomeStable = stableIncomeToggle.isOn;
@@ -143,14 +153,17 @@ public class SetupPanelController : MonoBehaviour
         if (schoolFeesToggle.isOn)
             gm.setupData.schoolFeesAmount = float.Parse(schoolFeesAmountInput.text);
 
+        // Initialize finance (income range, school fees)
+        FindFirstObjectByType<FinanceManager>()?.InitializeFromSetup();
+
+        // SHOW BUDGET PANEL (do NOT start simulation yet)
+        UIManager.Instance.HideAllPanels();
         UIManager.Instance.ShowBudgetPanel();
 
-        // Initialize systems
-        FindFirstObjectByType<FinanceManager>()?.InitializeFromSetup();
-        GameManager.Instance.BeginSimulation();
-
+        // Hide setup panel
         gameObject.SetActive(false);
     }
+
     private void BuildReviewSummary()
     {
         float minIncome = float.Parse(minIncomeInput.text);
@@ -199,4 +212,15 @@ public class SetupPanelController : MonoBehaviour
 
         return "A steady base gives you room to adapt.";
     }
+
+    public void OnStableIncomeToggled(bool isStable)
+    {
+        maxIncomeInput.interactable = !isStable;
+
+        if (isStable)
+        {
+            maxIncomeInput.text = minIncomeInput.text;
+        }
+    }
+
 }

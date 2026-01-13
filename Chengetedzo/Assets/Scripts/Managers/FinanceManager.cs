@@ -47,6 +47,9 @@ public class FinanceManager : MonoBehaviour
     /// 
     public void InitializeFromSetup()
     {
+        cashOnHand = Random.Range(
+        GameManager.Instance.setupData.minIncome,
+        GameManager.Instance.setupData.maxIncome);
         var setup = GameManager.Instance.setupData;
 
         minIncome = setup.minIncome;
@@ -159,4 +162,11 @@ public class FinanceManager : MonoBehaviour
             maxIncome
         );
     }
+
+    public void SetMonthlyIncome(float income)
+    {
+        currentIncome = income;
+        Debug.Log($"[Finance] Monthly income set to: {currentIncome}");
+    }
+
 }

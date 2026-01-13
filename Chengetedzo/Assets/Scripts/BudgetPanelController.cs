@@ -54,24 +54,25 @@ public class BudgetPanelController : MonoBehaviour
     private float totalIncome;
 
     private void Start()
-    {
-        confirmButton.onClick.AddListener(OnConfirmAndStartSimulation);
+{
+    confirmButton.onClick.AddListener(OnConfirmAndStartSimulation);
 
-        // Always begin at Step 1 (Income)
-        ShowStep(1);
+    // Allocation-only mode (early game)
+    incomeSection.SetActive(false);
+    expenseSection.SetActive(false);
+    allocationSection.SetActive(true);
 
-        // Add listeners
-        rentSlider.onValueChanged.AddListener(_ => UpdateCalculations());
-        groceriesSlider.onValueChanged.AddListener(_ => UpdateCalculations());
-        transportSlider.onValueChanged.AddListener(_ => UpdateCalculations());
-        savingsSlider.onValueChanged.AddListener(_ => UpdateCalculations());
-        loanRepaymentSlider.onValueChanged.AddListener(_ => UpdateCalculations());
-        utilitiesSlider.onValueChanged.AddListener(_ => UpdateCalculations());
-        schoolFeeSavingsSlider.onValueChanged.AddListener(_ => UpdateCalculations());
+    currentStep = 3;
 
-        warningText.gameObject.SetActive(false);
-        summaryText.text = "";
-    }
+    // Add listeners
+    savingsSlider.onValueChanged.AddListener(_ => UpdateCalculations());
+    schoolFeeSavingsSlider.onValueChanged.AddListener(_ => UpdateCalculations());
+    loanRepaymentSlider.onValueChanged.AddListener(_ => UpdateCalculations());
+
+    warningText.gameObject.SetActive(false);
+    summaryText.text = "";
+}
+
 
     public void ShowStep(int step)
     {
@@ -188,6 +189,13 @@ public class BudgetPanelController : MonoBehaviour
 
     public void LoadDefaultsFromSetup()
     {
+        totalIncome = FindFirstObjectByType<FinanceManager>().currentIncome;
+
+        if (totalIncome <= 0f)
+        {
+            Debug.LogError("[BudgetPanel] totalIncome is 0 — cannot allocate budget.");
+        }
+
         if (GameManager.Instance == null || GameManager.Instance.setupData == null)
         {
             Debug.LogWarning("[BudgetPanel] Setup data not ready.");
@@ -196,7 +204,7 @@ public class BudgetPanelController : MonoBehaviour
 
         var setup = GameManager.Instance.setupData;
 
-        totalIncome = GameManager.Instance.GetCurrentMonthlyIncome();
+        totalIncome = FindFirstObjectByType<FinanceManager>().currentIncome;
         incomeDisplayText.text = $"Monthly Income: ${totalIncome:F0}";
 
         int householdSize = setup.adults + setup.children;

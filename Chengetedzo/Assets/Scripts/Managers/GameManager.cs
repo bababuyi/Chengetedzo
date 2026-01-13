@@ -49,7 +49,7 @@ public class GameManager : MonoBehaviour
 
     public void BeginSimulation()
     {
-        RollMonthlyIncome();
+        financeManager.RollMonthlyIncome();
         Debug.Log("Starting Life-Cycle Simulation...");
         uiManager.HideAllPanels();
 
@@ -312,26 +312,5 @@ public class GameManager : MonoBehaviour
                     Random.Range(0, MentorLines.RecoveryLines.Length)]);
             recoveryAcknowledged = true;
         }
-    }
-
-    private float currentMonthlyIncome;
-
-    public float GetCurrentMonthlyIncome()
-    {
-        return currentMonthlyIncome;
-    }
-
-    public void RollMonthlyIncome()
-    {
-        if (setupData.isIncomeStable)
-        {
-            currentMonthlyIncome = (setupData.minIncome + setupData.maxIncome) * 0.5f;
-        }
-        else
-        {
-            currentMonthlyIncome = Random.Range(setupData.minIncome, setupData.maxIncome);
-        }
-
-        Debug.Log($"[Income] Month income set to {currentMonthlyIncome}");
     }
 }
