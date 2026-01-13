@@ -157,8 +157,8 @@ public class SetupPanelController : MonoBehaviour
         FindFirstObjectByType<FinanceManager>()?.InitializeFromSetup();
 
         // SHOW BUDGET PANEL (do NOT start simulation yet)
-        UIManager.Instance.HideAllPanels();
         UIManager.Instance.ShowBudgetPanel();
+        gameObject.SetActive(false);
 
         // Hide setup panel
         gameObject.SetActive(false);

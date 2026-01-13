@@ -194,5 +194,4 @@ public class UIManager : MonoBehaviour
         IsPopupActive = false;
         Time.timeScale = 1f;
     }
-
 }
