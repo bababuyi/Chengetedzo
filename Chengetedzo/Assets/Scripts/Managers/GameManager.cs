@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -27,6 +27,7 @@ public class GameManager : MonoBehaviour
     public InsuranceManager insuranceManager;
     public EventManager eventManager;
     public UIManager uiManager;
+    public ForecastManager forecastManager;
     public VisualSimulationManager visualManager;
     public PlayerSetupData setupData = new PlayerSetupData();
 
@@ -38,76 +39,81 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-        Debug.Log("Game Ready � Awaiting Start of Simulation.");
-        // uiManager.ShowSetupPanel(); //No longer using
+        Debug.Log("Game Ready — Awaiting Start of Simulation.");
+        
         uiManager.UpdateMoneyText(financeManager.cashOnHand);
         uiManager.UpdateMonthText(currentMonth, totalMonths);
 
-        // Apply starting visuals
         visualManager?.UpdateVisuals();
     }
 
-    public void BeginSimulation()
+    public void StartNewMonth()
     {
-        financeManager.RollMonthlyIncome();
-        Debug.Log("Starting Life-Cycle Simulation...");
+        Debug.Log($"=== Month {currentMonth} START ===");
+
+        CurrentPhase = GamePhase.Forecast;
+
+        uiManager.ShowForecastPanel();
+        forecastManager.GenerateForecast();
+    }
+
+    public void BeginMonthlySimulation()
+    {
+        CurrentPhase = GamePhase.Simulation;
+
+        Debug.Log($"[Simulation] Running Month {currentMonth}");
+
         uiManager.HideAllPanels();
 
-        // Update visuals at the start of simulation
+        financeManager.ProcessMonthlyBudget();
+        insuranceManager.ProcessMonthlyPremiums();
+        loanManager?.ProcessContribution();
+        eventManager?.CheckForMonthlyEvent(currentMonth);
+        insuranceManager.ProcessClaims();
+        savingsManager?.AccrueInterest();
+        loanManager?.UpdateLoans();
+        financeManager.ProcessSchoolFees(currentMonth);
+
         visualManager?.UpdateVisuals();
 
-        StartCoroutine(RunLifeCycle());
+        EvaluateMomentumSignals();
+        EvaluateMentor();
+
+        StartCoroutine(SimulationRoutine());
     }
 
-    private IEnumerator RunLifeCycle()
+    public void EndMonthlySimulation()
     {
-        Debug.Log("Simulation Running...");
+        Debug.Log($"[Simulation] Month {currentMonth} complete");
 
-        while (currentMonth <= totalMonths)
-        {
-            // UI
-            uiManager.UpdateMonthText(currentMonth, totalMonths);
-            uiManager.UpdateMoneyText(financeManager.cashOnHand);
+        CurrentPhase = GamePhase.Report;
 
-            // Monthly logic
-            financeManager.ProcessMonthlyBudget();
-            insuranceManager.ProcessMonthlyPremiums();
-            loanManager?.ProcessContribution();
-            eventManager?.CheckForMonthlyEvent(currentMonth);
-            insuranceManager.ProcessClaims();
-            savingsManager?.AccrueInterest();
-            loanManager?.UpdateLoans();
-            financeManager.ProcessSchoolFees(currentMonth);
-
-            // Visuals
-            visualManager?.UpdateVisuals();
-
-            // Evaluate long-term behavior (momentum)
-            EvaluateMomentumSignals(); // math only
-            EvaluateMentor();         // meaning & messaging
-            // Mid-year mentor checkpoint
-            if (currentMonth == 6)
-            {
-                uiManager.ShowMentorMessage(GetMidYearMentorReflection());
-                lastMomentumZone = GetMomentumZone(
-                    PlayerDataManager.Instance.financialMomentum);
-                yield return new WaitUntil(() => !UIManager.Instance.IsPopupActive);
-            }
-
-            // Report
-            string monthlyReport = financeManager.GetMonthlySummary(currentMonth);
-            uiManager.ShowReportPanel($"<b>Month {currentMonth}</b>\n\n{monthlyReport}");
-
-            yield return new WaitUntil(() => !UIManager.Instance.IsPopupActive);
-            yield return new WaitForSecondsRealtime(monthDuration);
-
-            currentMonth++;
-        }
-
-        string reflection = GetYearEndMentorReflection();
-        uiManager.ShowEndOfYearSummary(reflection);
-        Debug.Log("Simulation Ended - Year Complete");
+        uiManager.ShowReportPanel(financeManager.GetMonthlySummary(currentMonth));
     }
+
+    private IEnumerator SimulationRoutine()
+    {
+        yield return new WaitForSeconds(monthDuration);
+
+        EndMonthlySimulation();
+    }
+
+    public enum GamePhase
+    {
+        Idle,
+        Forecast,
+        Insurance,
+        Simulation,
+        Report
+    }
+
+    public void SetPhase(GamePhase phase)
+    {
+        CurrentPhase = phase;
+        Debug.Log($"[GamePhase] → {phase}");
+    }
+
+    public GamePhase CurrentPhase { get; private set; } = GamePhase.Idle;
 
     public enum Season
     {
@@ -129,7 +135,7 @@ public class GameManager : MonoBehaviour
     }
     public void OnEventPopupClosed()
     {
-        Debug.Log("[GameManager] Event popup closed � resuming simulation.");
+        Debug.Log("[GameManager] Event popup closed — resuming simulation.");
     }
 
     private void EvaluateMomentumSignals()
@@ -311,6 +317,33 @@ public class GameManager : MonoBehaviour
                 MentorLines.RecoveryLines[
                     Random.Range(0, MentorLines.RecoveryLines.Length)]);
             recoveryAcknowledged = true;
+        }
+    }
+
+    public void EndMonthAndAdvance()
+    {
+        Debug.Log($"=== Month {currentMonth} END ===");
+
+        currentMonth++;
+
+        if (currentMonth <= totalMonths)
+        {
+            uiManager.UpdateMonthText(currentMonth, totalMonths);
+            StartNewMonth();
+        }
+        else
+        {
+            uiManager.ShowEndOfYearSummary(GetYearEndMentorReflection());
+        }
+
+
+        if (currentMonth <= totalMonths)
+        {
+            StartNewMonth();
+        }
+        else
+        {
+            uiManager.ShowEndOfYearSummary(GetYearEndMentorReflection());
         }
     }
 }

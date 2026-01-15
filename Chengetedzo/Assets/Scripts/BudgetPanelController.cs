@@ -22,8 +22,6 @@ public class BudgetPanelController : MonoBehaviour
 
     private void Start()
     {
-        finance = FindFirstObjectByType<FinanceManager>();
-
         confirmButton.onClick.AddListener(ConfirmAndStart);
 
         savingsSlider.onValueChanged.AddListener(_ => UpdateValues());
@@ -32,17 +30,25 @@ public class BudgetPanelController : MonoBehaviour
         UpdateValues();
     }
 
+    private void Awake()
+    {
+        finance = FindFirstObjectByType<FinanceManager>();
+    }
+
+
     public void LoadDefaultsFromSetup()
     {
+        if (finance == null)
+        {
+            Debug.LogError("[BudgetPanelController] FinanceManager not found.");
+            return;
+        }
+
         var setup = GameManager.Instance.setupData;
 
-        // Income (read-only)
         incomeDisplayText.text = $"Monthly Income: ${finance.currentIncome:F0}";
-
-        // Savings default
         savingsSlider.value = finance.currentIncome * 0.1f;
 
-        // School fees
         schoolFeesGroup.SetActive(setup.hasSchoolFees);
 
         if (setup.hasSchoolFees)
@@ -68,6 +74,8 @@ public class BudgetPanelController : MonoBehaviour
         finance.SetSchoolFeeSavings(schoolFeeSavingsSlider.value);
 
         UIManager.Instance.ShowForecastPanel();
+        // Show forecast instead of starting simulation
+        GameManager.Instance.forecastManager.GenerateForecast();
         gameObject.SetActive(false);
     }
 }

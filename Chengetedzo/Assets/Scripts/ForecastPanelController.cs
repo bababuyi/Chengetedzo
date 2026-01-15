@@ -12,7 +12,11 @@ public class ForecastPanelController : MonoBehaviour
 
     private void ContinueToInsurance()
     {
+        if (GameManager.Instance.CurrentPhase != GameManager.GamePhase.Forecast)
+            return;
+
+        UIManager.Instance.HideAllPanels();
+        GameManager.Instance.SetPhase(GameManager.GamePhase.Insurance);
         UIManager.Instance.ShowInsurancePanel();
-        gameObject.SetActive(false);
     }
 }

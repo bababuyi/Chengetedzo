@@ -92,6 +92,7 @@ public class UIManager : MonoBehaviour
         loanPanel.SetActive(false);
         insurancePanel.SetActive(false);
         reportPanel.SetActive(false);
+        forecastPanel.SetActive(false);
     }
 
     public void ShowBudgetPanel()
@@ -115,12 +116,16 @@ public class UIManager : MonoBehaviour
 
         forecastPanel.SetActive(true);
         topHUD.SetActive(true);
+
+        GameManager.Instance.SetPhase(GameManager.GamePhase.Forecast);
     }
 
     public void ShowInsurancePanel()
     {
         HideAllPanels();
         insurancePanel.SetActive(true);
+
+        GameManager.Instance.SetPhase(GameManager.GamePhase.Insurance);
     }
 
     public void ShowReportPanel(string reportText)
@@ -128,6 +133,8 @@ public class UIManager : MonoBehaviour
         HideAllPanels();
         reportPanel.SetActive(true);
         resultsText.text = reportText;
+
+        GameManager.Instance.SetPhase(GameManager.GamePhase.Report);
     }
 
     // ===== Event Popup =====

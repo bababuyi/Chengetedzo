@@ -18,7 +18,7 @@ public class InsurancePanel : MonoBehaviour
 
     private InsuranceManager insuranceManager;
 
-    private void Start()
+    private void OnEnable()
     {
         insuranceManager = FindFirstObjectByType<InsuranceManager>();
 
@@ -28,18 +28,29 @@ public class InsurancePanel : MonoBehaviour
             return;
         }
 
-        // Hook up toggle listeners
+        // Clear old listeners
+        funeralToggle.onValueChanged.RemoveAllListeners();
+        educationToggle.onValueChanged.RemoveAllListeners();
+        groceryToggle.onValueChanged.RemoveAllListeners();
+        hospitalToggle.onValueChanged.RemoveAllListeners();
+        microMedicalToggle.onValueChanged.RemoveAllListeners();
+        confirmButton.onClick.RemoveAllListeners();
+
+        // Rebind listeners
         funeralToggle.onValueChanged.AddListener(isOn => OnPlanToggled(isOn, InsuranceManager.InsuranceType.Funeral));
         educationToggle.onValueChanged.AddListener(isOn => OnPlanToggled(isOn, InsuranceManager.InsuranceType.Education));
         groceryToggle.onValueChanged.AddListener(isOn => OnPlanToggled(isOn, InsuranceManager.InsuranceType.Grocery));
         hospitalToggle.onValueChanged.AddListener(isOn => OnPlanToggled(isOn, InsuranceManager.InsuranceType.Hospital));
         microMedicalToggle.onValueChanged.AddListener(isOn => OnPlanToggled(isOn, InsuranceManager.InsuranceType.MicroMedical));
 
-        confirmButton.onClick.AddListener(ConfirmSelection);
-        confirmButton.gameObject.SetActive(false);
+        confirmButton.onClick.AddListener(ConfirmInsurance);
+        confirmButton.gameObject.SetActive(true);
+
+        UpdateSummary();
+
         planInfoText.text = "Select one or more insurance plans to see their details.";
-        summaryText.text = "";
     }
+
 
     private void OnPlanToggled(bool isOn, InsuranceManager.InsuranceType type)
     {
@@ -66,22 +77,18 @@ public class InsurancePanel : MonoBehaviour
     {
         float totalPremium = insuranceManager.GetTotalMonthlyPremium();
 
-        if (totalPremium <= 0f)
-        {
-            summaryText.text = "No insurance plans selected.";
-            confirmButton.gameObject.SetActive(false);
-        }
-        else
-        {
-            summaryText.text = $"Total Monthly Premium: ${totalPremium:F2}";
-            confirmButton.gameObject.SetActive(true);
-        }
+        summaryText.text = totalPremium > 0f
+            ? $"Total Monthly Premium: ${totalPremium:F2}"
+            : "No insurance selected. You proceed at your own risk.";
     }
 
-    private void ConfirmSelection()
+    public void ConfirmInsurance()
     {
-        Debug.Log("[Insurance] Selection confirmed — proceeding to simulation...");
-        gameObject.SetActive(false);
-        GameManager.Instance.BeginSimulation();
+        Debug.Log($"[Insurance] Confirm clicked. Phase = {GameManager.Instance.CurrentPhase}");
+
+        if (GameManager.Instance.CurrentPhase != GameManager.GamePhase.Insurance)
+            return;
+
+        GameManager.Instance.BeginMonthlySimulation();
     }
 }

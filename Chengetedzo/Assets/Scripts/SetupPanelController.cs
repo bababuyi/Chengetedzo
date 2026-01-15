@@ -36,13 +36,32 @@ public class SetupPanelController : MonoBehaviour
     [Header("Navigation Buttons")]
     public GameObject nextButton;
     public GameObject backButton;
+    
+    [Header("Panels")]
+    public ExpensesPanelController expensesPanelController;
+
 
     private int currentStep = 1;
 
     private void Start()
     {
         ShowStep(1);
+
+        stableIncomeToggle.onValueChanged.RemoveAllListeners();
+        stableIncomeToggle.onValueChanged.AddListener(OnStableIncomeToggled);
+        OnStableIncomeToggled(stableIncomeToggle.isOn);
+
+        schoolFeesToggle.onValueChanged.RemoveAllListeners();
+        schoolFeesToggle.onValueChanged.AddListener(OnSchoolFeesToggled);
+        OnSchoolFeesToggled(schoolFeesToggle.isOn);
+
+        minIncomeInput.onValueChanged.AddListener(_ =>
+        {
+            if (stableIncomeToggle.isOn)
+                maxIncomeInput.text = minIncomeInput.text;
+        });
     }
+
 
     public void ShowStep(int step)
     {
@@ -51,16 +70,26 @@ public class SetupPanelController : MonoBehaviour
         schoolFeesSection.SetActive(step == 3);
         reviewSection.SetActive(step == 4);
 
-        // Navigation visibility
         backButton.SetActive(step > 1);
         nextButton.SetActive(step < 4);
 
         currentStep = step;
 
-        if (step == 4)
-            BuildReviewSummary();
-    }
+        if (step == 2)
+        {
+            expensesPanelController.Init();
+        }
 
+        if (step == 3)
+        {
+            OnSchoolFeesToggled(schoolFeesToggle.isOn);
+        }
+
+        if (step == 4)
+        {
+            BuildReviewSummary();
+        }
+    }
 
     public void NextStep()
     {
@@ -97,10 +126,18 @@ public class SetupPanelController : MonoBehaviour
 
     private bool ValidateIncome()
     {
-        if (!float.TryParse(minIncomeInput.text, out float min) ||
-            !float.TryParse(maxIncomeInput.text, out float max))
+        if (!float.TryParse(minIncomeInput.text, out float min))
         {
-            ShowWarning("Please enter valid income amounts.");
+            ShowWarning("Please enter a valid minimum income.");
+            return false;
+        }
+
+        if (stableIncomeToggle.isOn)
+            return min > 0;
+
+        if (!float.TryParse(maxIncomeInput.text, out float max))
+        {
+            ShowWarning("Please enter a valid maximum income.");
             return false;
         }
 
@@ -112,6 +149,7 @@ public class SetupPanelController : MonoBehaviour
 
         return true;
     }
+
     private bool ValidateSchoolFees()
     {
         if (!schoolFeesToggle.isOn)
@@ -215,12 +253,11 @@ public class SetupPanelController : MonoBehaviour
 
     public void OnStableIncomeToggled(bool isStable)
     {
-        maxIncomeInput.interactable = !isStable;
+        maxIncomeInput.gameObject.SetActive(!isStable);
 
         if (isStable)
         {
             maxIncomeInput.text = minIncomeInput.text;
         }
     }
-
 }

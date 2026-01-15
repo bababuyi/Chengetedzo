@@ -1,3 +1,4 @@
+using System.Text;
 using UnityEngine;
 
 /// <summary>
@@ -108,20 +109,6 @@ public class FinanceManager : MonoBehaviour
         Debug.Log($"[Finance] Budget Applied — New Balance: ${cashOnHand}");
     }
 
-    /// <summary>
-    /// Returns a text summary of the player’s monthly financial state.
-    /// </summary>
-    public string GetMonthlySummary(int month)
-    {
-        return $"Month {month}\n" +
-               $"Income: ${currentIncome}\n" +
-               $"Expenses: ${totalExpenses}\n" +
-               $"Cash Remaining: ${cashOnHand}";
-    }
-
-    /// <summary>
-    /// Optional helper for income fluctuation events.
-    /// </summary>
     public void AdjustIncome(float percentageChange)
     {
         float change = currentIncome * (percentageChange / 100f);
@@ -168,5 +155,54 @@ public class FinanceManager : MonoBehaviour
         currentIncome = income;
         Debug.Log($"[Finance] Monthly income set to: {currentIncome}");
     }
+    public string GetMonthlySummary(int month)
+    {
+        StringBuilder sb = new StringBuilder();
 
+        sb.AppendLine($"<b>Month {month} Financial Report</b>\n");
+
+        // ===== Income =====
+        sb.AppendLine("<b>Income</b>");
+        sb.AppendLine($"+ Monthly Income: ${currentIncome:F2}\n");
+
+        // ===== Expenses =====
+        sb.AppendLine("<b>Expenses</b>");
+        sb.AppendLine($"- Total Expenses: ${totalExpenses:F2}\n");
+
+        // ===== Budget Result =====
+        sb.AppendLine("<b>Monthly Result</b>");
+        float net = currentIncome - totalExpenses;
+
+        if (net >= 0)
+            sb.AppendLine($"+ Surplus: ${net:F2}\n");
+        else
+            sb.AppendLine($"- Deficit: ${Mathf.Abs(net):F2}\n");
+
+        // ===== Savings =====
+        if (schoolFeeSavings > 0)
+        {
+            sb.AppendLine("<b>Savings</b>");
+            sb.AppendLine($"+ School Fees Saved: ${schoolFeeSavings:F2}");
+            sb.AppendLine($"Total Savings Balance: ${schoolFeeSavingsBalance:F2}\n");
+        }
+
+        // ===== End Balance =====
+        sb.AppendLine("<b>End of Month Balance</b>");
+        sb.AppendLine($"${cashOnHand:F2}");
+
+        // ===== Warnings (NO mentor) =====
+        if (WasOverBudgetThisMonth)
+        {
+            sb.AppendLine(
+                "\n<size=90%><color=#C94A4A>You spent more than your income this month.</color></size>");
+        }
+
+        if (cashOnHand <= 0)
+        {
+            sb.AppendLine(
+                "<size=90%><color=#C94A4A>You have no remaining cash.</color></size>");
+        }
+
+        return sb.ToString();
+    }
 }

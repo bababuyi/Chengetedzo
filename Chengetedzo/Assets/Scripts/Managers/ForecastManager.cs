@@ -35,6 +35,8 @@ public class ForecastManager : MonoBehaviour
 
     public void GenerateForecast()
     {
+        Debug.Log("[Forecast] GenerateForecast called");
+
         selectedForecasts.Clear();
 
         // Forecast season = first month of simulation
@@ -86,16 +88,10 @@ public class ForecastManager : MonoBehaviour
         if (forecastPanel != null)
             forecastPanel.SetActive(false);
 
-        // Transition handled by UIManager instead of FindFirstObjectByType
         if (UIManager.Instance != null)
         {
             UIManager.Instance.ShowInsurancePanel();
-            Debug.Log("[Forecast] Showing Insurance Panel via UIManager ");
-        }
-        else
-        {
-            Debug.LogWarning("[Forecast] UIManager not found — starting simulation instead.");
-            GameManager.Instance.BeginSimulation();
+            Debug.Log("[Forecast] Showing Insurance Panel via UIManager");
         }
     }
 }
