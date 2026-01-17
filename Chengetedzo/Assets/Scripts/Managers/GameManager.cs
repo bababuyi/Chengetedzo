@@ -84,6 +84,7 @@ public class GameManager : MonoBehaviour
 
     public void EndMonthlySimulation()
     {
+        uiManager.UpdateMoneyText(financeManager.cashOnHand);
         Debug.Log($"[Simulation] Month {currentMonth} complete");
 
         CurrentPhase = GamePhase.Report;
@@ -325,17 +326,6 @@ public class GameManager : MonoBehaviour
         Debug.Log($"=== Month {currentMonth} END ===");
 
         currentMonth++;
-
-        if (currentMonth <= totalMonths)
-        {
-            uiManager.UpdateMonthText(currentMonth, totalMonths);
-            StartNewMonth();
-        }
-        else
-        {
-            uiManager.ShowEndOfYearSummary(GetYearEndMentorReflection());
-        }
-
 
         if (currentMonth <= totalMonths)
         {

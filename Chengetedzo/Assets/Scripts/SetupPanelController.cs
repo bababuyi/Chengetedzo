@@ -191,8 +191,13 @@ public class SetupPanelController : MonoBehaviour
         if (schoolFeesToggle.isOn)
             gm.setupData.schoolFeesAmount = float.Parse(schoolFeesAmountInput.text);
 
-        // Initialize finance (income range, school fees)
-        FindFirstObjectByType<FinanceManager>()?.InitializeFromSetup();
+        FinanceManager finance = FindFirstObjectByType<FinanceManager>();
+
+        // Apply expense choices FIRST
+        expensesPanelController.ApplyExpensesToFinance(finance);
+
+        // Initialize finance (income, starting cash)
+        finance.InitializeFromSetup();
 
         // SHOW BUDGET PANEL (do NOT start simulation yet)
         UIManager.Instance.ShowBudgetPanel();

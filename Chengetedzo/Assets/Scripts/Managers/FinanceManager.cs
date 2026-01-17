@@ -31,7 +31,7 @@ public class FinanceManager : MonoBehaviour
     public bool WasOverBudgetThisMonth { get; private set; }
 
     [Header("School Fees Savings")]
-    public float schoolFeeSavings;
+    public float schoolFeeSavingsMonthly;
     public float schoolFeeSavingsBalance;
     public float schoolFeeInterestRate = 0.02f; // 2%
     public float schoolFeesPerTerm = 100f; // can be dynamic later
@@ -41,6 +41,10 @@ public class FinanceManager : MonoBehaviour
     public float maxIncome;
     public bool isIncomeStable;
 
+    [Header("General Savings")]
+    public float generalSavingsMonthly;
+    public float generalSavingsBalance;
+    public float generalSavingsInterestRate = 0f; // optional later
 
     /// <summary>
     /// Sets the player’s income at game start or during simulation.
@@ -48,9 +52,6 @@ public class FinanceManager : MonoBehaviour
     /// 
     public void InitializeFromSetup()
     {
-        cashOnHand = Random.Range(
-        GameManager.Instance.setupData.minIncome,
-        GameManager.Instance.setupData.maxIncome);
         var setup = GameManager.Instance.setupData;
 
         minIncome = setup.minIncome;
@@ -63,7 +64,10 @@ public class FinanceManager : MonoBehaviour
             schoolFeesPerTerm = 0f;
 
         RollMonthlyIncome();
+        // Starting cash (choose ONE philosophy)
+        cashOnHand = currentIncome * 0.5f;
     }
+
 
     public void SetIncomeRange(float min, float max, bool stable)
     {
@@ -73,11 +77,10 @@ public class FinanceManager : MonoBehaviour
 
         currentIncome = Random.Range(minIncome, maxIncome);
     }
-
     public void SetSchoolFeeSavings(float amount)
     {
-        schoolFeeSavings = amount;
-        Debug.Log($"[Finance] School Fee Savings set to: ${amount}");
+        schoolFeeSavingsMonthly = amount;
+        Debug.Log($"[Finance] School Fee Savings (monthly) set to: ${amount}");
     }
 
     /// <summary>
@@ -85,18 +88,43 @@ public class FinanceManager : MonoBehaviour
     /// </summary>
     public void ProcessMonthlyBudget()
     {
+        // 1. Income arrives
+        cashOnHand += currentIncome;
+
+        // 2. Expenses
         totalExpenses = rent + groceries + transport + utilities;
+        cashOnHand -= totalExpenses;
+
         balance = currentIncome - totalExpenses;
         WasOverBudgetThisMonth = balance < 0;
-        cashOnHand += balance;
 
+        // 3. General savings (flexible)
+        if (generalSavingsMonthly > 0)
+        {
+            cashOnHand -= generalSavingsMonthly;
+            generalSavingsBalance += generalSavingsMonthly;
+            generalSavingsBalance *= 1 + generalSavingsInterestRate;
+        }
+
+        // 4. School fee savings (restricted)
+        if (schoolFeeSavingsMonthly > 0)
+        {
+            cashOnHand -= schoolFeeSavingsMonthly;
+            schoolFeeSavingsBalance += schoolFeeSavingsMonthly;
+            schoolFeeSavingsBalance *= 1 + schoolFeeInterestRate;
+        }
+
+        // 5. Lifetime tracking
         totalEarned += currentIncome;
         totalSpent += totalExpenses;
 
-        schoolFeeSavingsBalance += schoolFeeSavings;
-        schoolFeeSavingsBalance *= 1 + schoolFeeInterestRate;
-
-        Debug.Log($"[Finance] Income: {currentIncome}, Expenses: {totalExpenses}, Cash: {cashOnHand}");
+        Debug.Log(
+            $"[Finance] Income: {currentIncome}, " +
+            $"Expenses: {totalExpenses}, " +
+            $"Gen Savings: {generalSavingsMonthly}, " +
+            $"School Savings: {schoolFeeSavingsMonthly}, " +
+            $"End Cash: {cashOnHand}"
+        );
     }
 
     /// <summary>
@@ -179,12 +207,22 @@ public class FinanceManager : MonoBehaviour
             sb.AppendLine($"- Deficit: ${Mathf.Abs(net):F2}\n");
 
         // ===== Savings =====
-        if (schoolFeeSavings > 0)
+        sb.AppendLine("<b>Savings</b>");
+
+        if (generalSavingsMonthly > 0)
         {
-            sb.AppendLine("<b>Savings</b>");
-            sb.AppendLine($"+ School Fees Saved: ${schoolFeeSavings:F2}");
-            sb.AppendLine($"Total Savings Balance: ${schoolFeeSavingsBalance:F2}\n");
+            sb.AppendLine($"- General Savings: ${generalSavingsMonthly:F2}");
+            sb.AppendLine($"  Balance: ${generalSavingsBalance:F2}");
         }
+
+        if (schoolFeeSavingsMonthly > 0)
+        {
+            sb.AppendLine($"- School Fee Savings: ${schoolFeeSavingsMonthly:F2}");
+            sb.AppendLine($"  Balance: ${schoolFeeSavingsBalance:F2}");
+        }
+
+        sb.AppendLine("");
+
 
         // ===== End Balance =====
         sb.AppendLine("<b>End of Month Balance</b>");

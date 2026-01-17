@@ -29,6 +29,9 @@ public class UIManager : MonoBehaviour
     public GameObject endOfYearScreen;
     public TextMeshProUGUI resultsText;
 
+    [Header("Monthly Report")]
+    public TextMeshProUGUI monthlyReportText;
+
     [Header("Event Popup")]
     public GameObject eventPopup;
     public Image eventIcon;
@@ -132,7 +135,9 @@ public class UIManager : MonoBehaviour
     {
         HideAllPanels();
         reportPanel.SetActive(true);
-        resultsText.text = reportText;
+
+        if (monthlyReportText != null)
+            monthlyReportText.text = reportText;
 
         GameManager.Instance.SetPhase(GameManager.GamePhase.Report);
     }

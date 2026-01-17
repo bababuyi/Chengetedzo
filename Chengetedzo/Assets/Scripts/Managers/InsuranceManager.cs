@@ -12,6 +12,8 @@ using System.Collections.Generic;
 /// </summary>
 public class InsuranceManager : MonoBehaviour
 {
+    private FinanceManager finance;
+
     public enum InsuranceType
     {
         Funeral,
@@ -68,9 +70,6 @@ public class InsuranceManager : MonoBehaviour
         }
     }
 
-    [Header("Player Finances")]
-    public float playerMoney = 2000f;
-
     [Header("Available Insurance Plans")]
     public List<InsurancePlan> allPlans = new List<InsurancePlan>();
 
@@ -80,6 +79,7 @@ public class InsuranceManager : MonoBehaviour
 
     private void Awake()
     {
+        finance = FindFirstObjectByType<FinanceManager>();
         // Default plans if none provided in inspector
         if (allPlans == null || allPlans.Count == 0)
             CreateDefaultPlans();
@@ -212,16 +212,15 @@ public class InsuranceManager : MonoBehaviour
         }
 
         float firstPremium = CalculateMonthlyPremiumForPlan(plan);
-        if (playerMoney >= firstPremium)
+        if (finance.cashOnHand >= firstPremium)
         {
-            playerMoney -= firstPremium;
+            finance.cashOnHand -= firstPremium;
             plan.isSubscribed = true;
             plan.monthsPaid = 1;
             plan.missedPayments = 0;
             plan.isLapsed = false;
 
             Debug.Log($"[Insurance] Subscribed to {plan.planName}. Charged first premium ${firstPremium:F2}");
-            UIManager.Instance?.UpdateMoneyText(playerMoney);
         }
         else
         {
@@ -239,7 +238,7 @@ public class InsuranceManager : MonoBehaviour
         if (!plan.isSubscribed) return;
 
         float refund = CalculateMonthlyPremiumForPlan(plan);
-        playerMoney += refund;
+        finance.cashOnHand += refund;
 
         // Reset tracking
         plan.isSubscribed = false;
@@ -248,7 +247,6 @@ public class InsuranceManager : MonoBehaviour
         plan.missedPayments = 0;
 
         Debug.Log($"[Insurance] Canceled {plan.planName}. Refunded ${refund:F2}");
-        UIManager.Instance?.UpdateMoneyText(playerMoney);
     }
 
     // ------------------------------
@@ -272,16 +270,17 @@ public class InsuranceManager : MonoBehaviour
 
             float premium = CalculateMonthlyPremiumForPlan(plan);
 
-            if (playerMoney >= premium)
+            if (finance.cashOnHand >= premium)
             {
-                // pay premium
-                playerMoney -= premium;
+                finance.cashOnHand -= premium;
                 totalCharged += premium;
 
-                // successful payment resets missedPayments and increments monthsPaid
                 plan.missedPayments = 0;
                 plan.monthsPaid++;
+
+                PaidPremiumsThisMonth = true;
             }
+
             else
             {
                 // failed to pay
@@ -304,8 +303,6 @@ public class InsuranceManager : MonoBehaviour
 
         if (totalCharged > 0f)
             Debug.Log($"[Insurance] Monthly premiums charged: ${totalCharged:F2}");
-
-        UIManager.Instance?.UpdateMoneyText(playerMoney);
     }
 
     // ------------------------------
@@ -354,11 +351,10 @@ public class InsuranceManager : MonoBehaviour
         float payout = Mathf.Min(estimatedLoss - deductible, plan.coverageLimit);
         payout = Mathf.Max(0f, payout);
 
-        playerMoney += payout;
+        finance.cashOnHand += payout;
         totalPayout += payout;
 
         Debug.Log($"[Insurance] {plan.planName} covered loss of ${estimatedLoss:F2}, paid out ${payout:F2}.");
-        UIManager.Instance?.UpdateMoneyText(playerMoney);
 
         return payout;
     }
@@ -375,7 +371,7 @@ public class InsuranceManager : MonoBehaviour
 
     public void CalculateSeasonResults()
     {
-        float resilienceScore = (playerMoney + totalPayout) - totalLoss;
+        float resilienceScore = (finance.cashOnHand + totalPayout) - totalLoss;
         Debug.Log($"[Insurance] Resilience Score: {resilienceScore}");
     }
 

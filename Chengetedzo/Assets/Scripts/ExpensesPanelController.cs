@@ -96,4 +96,19 @@ public class ExpensesPanelController : MonoBehaviour
         if (value <= tier.mediumMax) return "Medium";
         return "High";
     }
+
+    public void ApplyExpensesToFinance(FinanceManager finance)
+    {
+        finance.rent = rentSlider.value;
+        finance.groceries = groceriesSlider.value;
+        finance.transport = transportSlider.value;
+        finance.utilities = utilitiesSlider.value;
+
+        Debug.Log(
+            $"[Expenses Applied] Rent={finance.rent}, " +
+            $"Groceries={finance.groceries}, " +
+            $"Transport={finance.transport}, " +
+            $"Utilities={finance.utilities}"
+        );
+    }
 }
