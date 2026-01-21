@@ -14,14 +14,41 @@ public class InsuranceManager : MonoBehaviour
 {
     private FinanceManager finance;
 
+    private bool PlayerOwnsCar()
+    {
+        return GameManager.Instance.setupData.ownsCar;
+    }
+
+    private bool PlayerOwnsHouse()
+    {
+        return GameManager.Instance.setupData.housing == HousingType.OwnsHouse;
+    }
+
+    private bool PlayerOwnsFarm()
+    {
+        return GameManager.Instance.setupData.ownsFarm;
+    }
+
     public enum InsuranceType
     {
         Funeral,
+        Health,
         Education,
-        Grocery,
-        Hospital,
-        MicroMedical
+        HospitalCash,
+        PersonalAccident,
+        Motor,
+        Home,
+        Crop
     }
+
+    public enum AssetRequirement
+    {
+        None,
+        Car,
+        House,
+        Farm
+    }
+
 
 
     public bool PaidPremiumsThisMonth { get; private set; }
@@ -68,6 +95,9 @@ public class InsuranceManager : MonoBehaviour
             if (!CanClaim()) return $"Active (Waiting: {monthsPaid}/{waitingPeriodMonths})";
             return "Active";
         }
+
+        public AssetRequirement requiredAsset = AssetRequirement.None;
+
     }
 
     [Header("Available Insurance Plans")]
@@ -89,71 +119,123 @@ public class InsuranceManager : MonoBehaviour
     {
         allPlans = new List<InsurancePlan>();
 
-        // Serious plans: waiting 0
         allPlans.Add(new InsurancePlan
         {
             planName = "Funeral Cover",
             type = InsuranceType.Funeral,
-            premium = 3f,
+            premium = 1f,
             coverageLimit = 1000f,
-            deductiblePercent = 0f,
-            coverageDescription = "Covers funeral expenses for insured family members.",
-            waitingPeriodMonths = 0
+            waitingPeriodMonths = 3,
+            coverageDescription = "Provides funeral expense cover for the family in the event of death."
+        });
+
+
+        allPlans.Add(new InsurancePlan
+        {
+            planName = "Health Insurance",
+            type = InsuranceType.Health,
+            premium = 7f,
+            coverageLimit = 10000f, // per year (logic later)
+            waitingPeriodMonths = 3,
+            coverageDescription = "Covers medical expenses due to illness or hospitalization up to an annual limit."
         });
 
         allPlans.Add(new InsurancePlan
         {
             planName = "Education Rider",
             type = InsuranceType.Education,
-            premium = 2f,
-            coverageLimit = 300f,
-            deductiblePercent = 0f,
-            coverageDescription = "Pays school fees after qualifying events.",
-            waitingPeriodMonths = 0
-        });
-
-        // Non-serious: waiting 1
-        allPlans.Add(new InsurancePlan
-        {
-            planName = "Grocery Support Plan",
-            type = InsuranceType.Grocery,
-            premium = 2f,
-            coverageLimit = 300f,
-            deductiblePercent = 0f,
-            coverageDescription = "Provides grocery support after emergencies.",
-            waitingPeriodMonths = 1
+            premium = 1f, // PER CHILD (logic later)
+            coverageLimit = 1000f, // per year
+            waitingPeriodMonths = 3,
+            coverageDescription = "Pays for children's education in the event of death of a parent, up to tertiary level."
         });
 
         allPlans.Add(new InsurancePlan
         {
-            planName = "Hospital Cash Plan",
-            type = InsuranceType.Hospital,
-            premium = 5f,
-            coverageLimit = 700f,
-            deductiblePercent = 0f,
-            coverageDescription = "Covers hospitalization costs and medical expenses.",
-            waitingPeriodMonths = 1
+            planName = "Hospital Cash Back",
+            type = InsuranceType.HospitalCash,
+            premium = 1f,
+            coverageLimit = 3000f, // 100 × 30 days
+            waitingPeriodMonths = 3,
+            coverageDescription = "Provides daily cash support during hospitalization, up to 30 days per month."
         });
 
         allPlans.Add(new InsurancePlan
         {
-            planName = "MicroMedical Assist",
-            type = InsuranceType.MicroMedical,
-            premium = 5f,
-            coverageLimit = 500f,
-            deductiblePercent = 10f,
-            coverageDescription = "Provides outpatient and medicine support for minor illnesses.",
-            waitingPeriodMonths = 1
+            planName = "Personal Accident Cover",
+            type = InsuranceType.PersonalAccident,
+            premium = 1f,
+            coverageLimit = 10000f,
+            deductiblePercent = 0f,
+            waitingPeriodMonths = 3,
+            coverageDescription = "Pays a lump sum in the event of accidental death of the breadwinner."
+        });
+
+        allPlans.Add(new InsurancePlan
+        {
+            planName = "Motor Insurance",
+            type = InsuranceType.Motor,
+            premium = 26.25f,
+            coverageLimit = 3000f,
+            waitingPeriodMonths = 0,
+            requiredAsset = AssetRequirement.Car,
+            coverageDescription = "Covers damage caused to third-party vehicles in a motor accident."
+        });
+
+        allPlans.Add(new InsurancePlan
+        {
+            planName = "Home Insurance",
+            type = InsuranceType.Home,
+            premium = 0f, // calculated later
+            coverageLimit = 0f,
+            waitingPeriodMonths = 0,
+            requiredAsset = AssetRequirement.House,
+            coverageDescription = "Covers damage to your home up to its full value."
+        });
+
+        allPlans.Add(new InsurancePlan
+        {
+            planName = "Crop Insurance",
+            type = InsuranceType.Crop,
+            premium = 0f,
+            coverageLimit = 0f,
+            waitingPeriodMonths = 0,
+            requiredAsset = AssetRequirement.Farm,
+            coverageDescription = "Covers crop input costs in the event of crop loss."
         });
     }
+
 
     // ------------------------------
     // Helper accessors
     // ------------------------------
 
-    private InsurancePlan GetPlan(InsuranceType t)
+    public InsurancePlan GetPlan(InsuranceType t)
     {
         return allPlans.Find(p => p.type == t);
+    }
+    private bool PlayerMeetsRequirement(InsurancePlan plan)
+    {
+        if (plan == null)
+            return false;
+
+        switch (plan.requiredAsset)
+        {
+            case AssetRequirement.None:
+                return true;
+
+            case AssetRequirement.Car:
+                return PlayerOwnsCar();
+
+            case AssetRequirement.House:
+                return PlayerOwnsHouse();
+
+            case AssetRequirement.Farm:
+                return PlayerOwnsFarm();
+
+            default:
+                return true;
+        }
     }
 
     /// <summary>
@@ -196,16 +278,21 @@ public class InsuranceManager : MonoBehaviour
             return;
         }
 
+        if (!PlayerMeetsRequirement(plan))
+        {
+            Debug.LogWarning($"[Insurance] Cannot buy {plan.planName}: asset requirement not met.");
+            return;
+        }
+
         if (plan.isSubscribed && !plan.isLapsed)
         {
             Debug.Log($"[Insurance] {plan.planName} already subscribed.");
             return;
         }
 
-        // If lapsed, require re-subscribe (player must re-buy)
+        // If lapsed, require re-subscribe
         if (plan.isLapsed)
         {
-            // Reset tracking for a new subscription
             plan.isLapsed = false;
             plan.missedPayments = 0;
             plan.monthsPaid = 0;

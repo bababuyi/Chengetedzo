@@ -1,13 +1,14 @@
-using UnityEngine;
+//using UnityEngine;
 
-public class InsurancePolicy : MonoBehaviour
-{
-    public string policyName;
-    public float premiumAmount;
-    public int waitingPeriodMonths;
-    public int monthsPaid = 0;
-    public int missedPayments = 0;
-    public bool isActive => monthsPaid >= waitingPeriodMonths;
-    public bool isLapsed => missedPayments >= 2;
-}
+//public class InsurancePolicy : MonoBehaviour
+//{
+  //  public string policyName;
+    //public float premiumAmount;
+    //public float coverageLimit;
+    //public int waitingPeriodMonths;
+    //public int monthsPaid = 0;
+    //public int missedPayments = 0;
+    //public bool isActive => monthsPaid >= waitingPeriodMonths;
+    //public bool isLapsed => missedPayments >= 2;
+//}
 

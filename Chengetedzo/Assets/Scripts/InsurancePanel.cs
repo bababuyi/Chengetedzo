@@ -1,6 +1,7 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
+using static InsuranceManager;
 
 public class InsurancePanel : MonoBehaviour
 {
@@ -39,16 +40,32 @@ public class InsurancePanel : MonoBehaviour
         // Rebind listeners
         funeralToggle.onValueChanged.AddListener(isOn => OnPlanToggled(isOn, InsuranceManager.InsuranceType.Funeral));
         educationToggle.onValueChanged.AddListener(isOn => OnPlanToggled(isOn, InsuranceManager.InsuranceType.Education));
-        groceryToggle.onValueChanged.AddListener(isOn => OnPlanToggled(isOn, InsuranceManager.InsuranceType.Grocery));
-        hospitalToggle.onValueChanged.AddListener(isOn => OnPlanToggled(isOn, InsuranceManager.InsuranceType.Hospital));
-        microMedicalToggle.onValueChanged.AddListener(isOn => OnPlanToggled(isOn, InsuranceManager.InsuranceType.MicroMedical));
+        groceryToggle.onValueChanged.AddListener(isOn => OnPlanToggled(isOn, InsuranceManager.InsuranceType.Health));
+        hospitalToggle.onValueChanged.AddListener(isOn => OnPlanToggled(isOn, InsuranceManager.InsuranceType.HospitalCash));
+        microMedicalToggle.onValueChanged.AddListener(isOn => OnPlanToggled(isOn, InsuranceManager.InsuranceType.PersonalAccident));
 
         confirmButton.onClick.AddListener(ConfirmInsurance);
         confirmButton.gameObject.SetActive(true);
 
         UpdateSummary();
 
+        funeralToggle.gameObject.SetActive(PlayerMeetsRequirement(insuranceManager.GetPlan(InsuranceType.Funeral)));
+
         planInfoText.text = "Select one or more insurance plans to see their details.";
+    }
+
+    private bool PlayerMeetsRequirement(InsuranceManager.InsurancePlan plan)
+    {
+        var setup = GameManager.Instance.setupData;
+
+        return plan.requiredAsset switch
+        {
+            AssetRequirement.None => true,
+            AssetRequirement.Car => setup.ownsCar,
+            AssetRequirement.House => setup.housing == HousingType.OwnsHouse,
+            AssetRequirement.Farm => setup.ownsFarm,
+            _ => true
+        };
     }
 
 
@@ -62,7 +79,7 @@ public class InsurancePanel : MonoBehaviour
             insuranceManager.BuyInsurance(type);
             planInfoText.text = $"<b>{plan.planName}</b>\n\n" +
                                 $"{plan.coverageDescription}\n\n" +
-                                $"Premium: ${plan.premium:F2}\nCoverage: ${plan.coverageLimit:F0}\nDeductible: {plan.deductiblePercent}%";
+                                $"float actualPremium = insuranceManager.GetTotalMonthlyPremium();\r\n\nCoverage: ${plan.coverageLimit:F0}\nDeductible: {plan.deductiblePercent}%";
         }
         else
         {

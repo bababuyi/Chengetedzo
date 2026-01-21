@@ -56,8 +56,6 @@ public class ExportHierarchyToText : EditorWindow
         string indent = new string('-', level * 2);
 
         sb.AppendLine($"{indent}{transform.name}");
-
-        // Transform data
         sb.AppendLine($"{indent}  Transform:");
         sb.AppendLine($"{indent}    Position: {transform.localPosition}");
         sb.AppendLine($"{indent}    Rotation: {transform.localEulerAngles}");
@@ -119,15 +117,12 @@ public class ExportHierarchyToText : EditorWindow
 
         Type type = value.GetType();
 
-        // Primitive, string, enum
         if (type.IsPrimitive || value is string || type.IsEnum)
             return value.ToString();
 
-        // Unity Object reference
         if (value is UnityEngine.Object unityObj)
             return unityObj.name + $" ({type.Name})";
 
-        // Arrays & Lists
         if (value is IEnumerable enumerable)
         {
             int count = 0;

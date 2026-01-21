@@ -5517,7 +5517,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0.0046081543, y: 0}
   m_SizeDelta: {x: -18.592855, y: 0}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &710781136
@@ -6798,7 +6798,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 2063945345}
   m_Direction: 0
   m_MinValue: 0
-  m_MaxValue: 400
+  m_MaxValue: 600
   m_WholeNumbers: 1
   m_Value: 0
   m_OnValueChanged:
@@ -7137,7 +7137,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 663849106}
   m_Direction: 0
   m_MinValue: 0
-  m_MaxValue: 80
+  m_MaxValue: 400
   m_WholeNumbers: 1
   m_Value: 0
   m_OnValueChanged:
@@ -8662,7 +8662,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 136533455}
   m_Direction: 0
   m_MinValue: 0
-  m_MaxValue: 150
+  m_MaxValue: 400
   m_WholeNumbers: 1
   m_Value: 0
   m_OnValueChanged:
@@ -13609,7 +13609,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1552810409}
   m_Direction: 0
   m_Value: 0
-  m_Size: 0.9999882
+  m_Size: 0.9999714
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -15556,7 +15556,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 889dfe7dd3e50d04cacdb4549b5d48b9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerMoney: 2000
   allPlans: []
 --- !u!114 &1855952292
 MonoBehaviour:
@@ -15632,6 +15631,9 @@ MonoBehaviour:
     children: 0
     hasSchoolFees: 0
     schoolFeesAmount: 0
+    housing: 0
+    ownsCar: 0
+    ownsFarm: 0
 --- !u!4 &1855952294
 Transform:
   m_ObjectHideFlags: 0
@@ -15734,13 +15736,16 @@ MonoBehaviour:
   balance: 0
   totalEarned: 0
   totalSpent: 0
-  schoolFeeSavings: 0
+  schoolFeeSavingsMonthly: 0
   schoolFeeSavingsBalance: 0
   schoolFeeInterestRate: 0.02
   schoolFeesPerTerm: 100
   minIncome: 0
   maxIncome: 0
   isIncomeStable: 0
+  generalSavingsMonthly: 0
+  generalSavingsBalance: 0
+  generalSavingsInterestRate: 0
 --- !u!114 &1855952299
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17975,17 +17980,17 @@ MonoBehaviour:
   transportTierText: {fileID: 89004616}
   utilitiesTierText: {fileID: 1980675217}
   rentTier:
-    lowMax: 100
-    mediumMax: 500
+    lowMax: 200
+    mediumMax: 800
   groceriesTier:
     lowMax: 100
-    mediumMax: 200
+    mediumMax: 400
   transportTier:
-    lowMax: 20
-    mediumMax: 100
+    lowMax: 60
+    mediumMax: 200
   utilitiesTier:
-    lowMax: 20
-    mediumMax: 50
+    lowMax: 30
+    mediumMax: 200
 --- !u!1 &2036149917
 GameObject:
   m_ObjectHideFlags: 0

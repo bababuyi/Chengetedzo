@@ -33,9 +33,14 @@ public class GameManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null) Instance = this;
-        else Destroy(gameObject);
+        if (setupData == null)
+            setupData = new PlayerSetupData();
+
+        setupData.housing = HousingType.Renting;
+        setupData.ownsCar = false;
+        setupData.ownsFarm = false;
     }
+
 
     private void Start()
     {
@@ -45,6 +50,10 @@ public class GameManager : MonoBehaviour
         uiManager.UpdateMonthText(currentMonth, totalMonths);
 
         visualManager?.UpdateVisuals();
+        Debug.Log(
+    $"[Setup] Housing: {setupData.housing}, " +
+    $"Car: {setupData.ownsCar}, Farm: {setupData.ownsFarm}");
+
     }
 
     public void StartNewMonth()
