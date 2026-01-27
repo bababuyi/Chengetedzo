@@ -147,23 +147,25 @@ public class ExpensesPanelController : MonoBehaviour
 
     public void ApplyExpensesToFinance(FinanceManager finance)
     {
+        // HOUSE OWNED — value is for insurance ONLY
         if (finance.assets.hasHouse)
         {
-            if (float.TryParse(houseCostInput.text, out float houseCost))
-                finance.houseMaintenanceCost = Mathf.Max(houseCost, MIN_HOUSE_COST);
-            else
-                finance.houseMaintenanceCost = MIN_HOUSE_COST;
+            if (float.TryParse(houseCostInput.text, out float houseValue))
+            {
+                finance.houseInsuredValue = houseValue; // rename later if possible
+            }
         }
-
         else
         {
             finance.rentCost = rentSlider.value;
         }
 
+        // Monthly living costs
         finance.groceries = groceriesSlider.value;
         finance.transport = transportSlider.value;
         finance.utilities = utilitiesSlider.value;
     }
+
 
     public void SetHousingMode(bool ownsHouse)
     {

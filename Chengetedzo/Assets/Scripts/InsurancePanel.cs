@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -36,6 +37,8 @@ public class InsurancePanel : MonoBehaviour
                plan != null &&
                insuranceManager.PlayerMeetsRequirement(plan);
     }
+
+    private List<InsuranceToggleItem> toggleItems = new();
 
     public void OnPlanToggled(bool isOn, InsuranceManager.InsuranceType type)
     {

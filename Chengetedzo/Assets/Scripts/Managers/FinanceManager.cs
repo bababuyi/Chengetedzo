@@ -257,6 +257,7 @@ public class FinanceManager : MonoBehaviour
     }
 
     public float rentCost;
+    public float houseInsuredValue;
     public float houseMaintenanceCost;
 
     public float GetHousingCost()

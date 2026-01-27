@@ -50,9 +50,10 @@ public class InsuranceToggleItem : MonoBehaviour
 
     public void Refresh()
     {
+        bool allowed = panel.PlayerMeetsRequirement(plan);
+        toggle.interactable = allowed;
         UpdatePremium();
         UpdateStatus();
-        toggle.isOn = plan.isSubscribed && !plan.isLapsed;
     }
 
     private void UpdatePremium()

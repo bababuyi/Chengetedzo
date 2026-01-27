@@ -14,19 +14,22 @@ public class InsuranceManager : MonoBehaviour
 {
     private FinanceManager finance;
 
+    private PlayerAssets Assets =>
+    GameManager.Instance.financeManager.assets;
+
     private bool PlayerOwnsCar()
     {
-        return GameManager.Instance.setupData.ownsCar;
+        return Assets.hasMotor;
     }
 
     private bool PlayerOwnsHouse()
     {
-        return GameManager.Instance.setupData.housing == HousingType.OwnsHouse;
+        return Assets.hasHouse;
     }
 
     private bool PlayerOwnsFarm()
     {
-        return GameManager.Instance.setupData.ownsFarm;
+        return Assets.hasCrops;
     }
 
     public enum InsuranceType

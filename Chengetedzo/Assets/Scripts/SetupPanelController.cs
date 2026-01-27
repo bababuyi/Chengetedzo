@@ -175,8 +175,14 @@ public class SetupPanelController : MonoBehaviour
             return false;
         }
 
+        if (min <= 0)
+        {
+            ShowWarning("Income must be greater than zero.");
+            return false;
+        }
+
         if (stableIncomeToggle.isOn)
-            return min > 0;
+            return true;
 
         if (!float.TryParse(maxIncomeInput.text, out float max))
         {
@@ -184,9 +190,9 @@ public class SetupPanelController : MonoBehaviour
             return false;
         }
 
-        if (min <= 0 || max <= 0 || max < min)
+        if (max < min)
         {
-            ShowWarning("Income range must be positive and logical.");
+            ShowWarning("Maximum income cannot be less than minimum income.");
             return false;
         }
 
@@ -227,6 +233,8 @@ public class SetupPanelController : MonoBehaviour
     public void ConfirmAndStart()
     {
         GameManager gm = GameManager.Instance;
+
+        ConfirmSetup();
 
         // Save setup data
         gm.setupData.minIncome = float.Parse(minIncomeInput.text);
