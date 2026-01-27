@@ -128,6 +128,10 @@ public class UIManager : MonoBehaviour
         HideAllPanels();
         insurancePanel.SetActive(true);
 
+        GameManager.Instance.insuranceManager.RefreshEligibility();
+
+        insurancePanel.GetComponent<InsurancePanel>()?.RefreshUI();
+
         GameManager.Instance.SetPhase(GameManager.GamePhase.Insurance);
     }
 

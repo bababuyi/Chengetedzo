@@ -33,6 +33,14 @@ public class GameManager : MonoBehaviour
 
     private void Awake()
     {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        Instance = this;
+
         if (setupData == null)
             setupData = new PlayerSetupData();
 
@@ -40,7 +48,6 @@ public class GameManager : MonoBehaviour
         setupData.ownsCar = false;
         setupData.ownsFarm = false;
     }
-
 
     private void Start()
     {

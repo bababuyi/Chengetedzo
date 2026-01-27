@@ -22,6 +22,14 @@ public class BudgetPanelController : MonoBehaviour
 
     private void Start()
     {
+        finance = GameManager.Instance?.financeManager;
+
+        if (finance == null)
+        {
+            Debug.LogError("[BudgetPanelController] FinanceManager not ready.");
+            return;
+        }
+
         confirmButton.onClick.AddListener(ConfirmAndStart);
 
         savingsSlider.onValueChanged.AddListener(_ => UpdateValues());
@@ -29,12 +37,6 @@ public class BudgetPanelController : MonoBehaviour
 
         UpdateValues();
     }
-
-    private void Awake()
-    {
-        finance = FindFirstObjectByType<FinanceManager>();
-    }
-
 
     public void LoadDefaultsFromSetup()
     {

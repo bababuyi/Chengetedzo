@@ -33,6 +33,11 @@ public class CloudSpawner : MonoBehaviour
         StartCoroutine(SpawnCloud());
     }
 
+    private void Awake()
+    {
+        cloudCount = 0;
+    }
+
     private System.Collections.IEnumerator SpawnCloud()
     {
         while (true)

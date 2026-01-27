@@ -107,10 +107,31 @@ public class InsuranceManager : MonoBehaviour
     private float totalLoss;
     private float totalPayout;
 
+    public static InsuranceManager Instance;
+
+    private void Start()
+    {
+        if (finance == null)
+            finance = GameManager.Instance.financeManager;
+    }
+
     private void Awake()
     {
-        finance = FindFirstObjectByType<FinanceManager>();
-        // Default plans if none provided in inspector
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        Instance = this;
+
+        //finance = GameManager.Instance?.financeManager;
+
+        //if (finance == null)
+        {
+        //    Debug.LogWarning("[InsuranceManager] FinanceManager not ready yet.");
+        }
+
         if (allPlans == null || allPlans.Count == 0)
             CreateDefaultPlans();
     }
@@ -214,7 +235,7 @@ public class InsuranceManager : MonoBehaviour
     {
         return allPlans.Find(p => p.type == t);
     }
-    private bool PlayerMeetsRequirement(InsurancePlan plan)
+    public bool PlayerMeetsRequirement(InsurancePlan plan)
     {
         if (plan == null)
             return false;
@@ -244,7 +265,7 @@ public class InsuranceManager : MonoBehaviour
     /// - children pay 50% premium
     /// Uses PlayerDataManager.Instance.adults / children.
     /// </summary>
-    private float CalculateMonthlyPremiumForPlan(InsurancePlan plan)
+    public float CalculateMonthlyPremiumForPlan(InsurancePlan plan)
     {
         if (plan == null) return 0f;
 
@@ -261,14 +282,11 @@ public class InsuranceManager : MonoBehaviour
         return adultCost + childCost;
     }
 
-    // ------------------------------
-    // Buying / Cancelling policies
-    // ------------------------------
+    public float CalculateMonthlyPremiumForUI(InsurancePlan plan)
+    {
+        return CalculateMonthlyPremiumForPlan(plan);
+    }
 
-    /// <summary>
-    /// Attempt to subscribe to a plan. Charges the first premium immediately if possible.
-    /// If the player cannot pay the initial premium, subscription fails.
-    /// </summary>
     public void BuyInsurance(InsuranceType type)
     {
         var plan = GetPlan(type);
@@ -482,4 +500,34 @@ public class InsuranceManager : MonoBehaviour
         }
         return sb.ToString();
     }
+
+    public void RefreshEligibility()
+    {
+        foreach (var plan in allPlans)
+        {
+            bool eligible = PlayerMeetsRequirement(plan);
+
+            // If player no longer meets requirements
+            if (!eligible)
+            {
+                // If they had this insurance, force cancel it
+                if (plan.isSubscribed)
+                {
+                    plan.isSubscribed = false;
+                    plan.isLapsed = false;
+                    plan.monthsPaid = 0;
+                    plan.missedPayments = 0;
+
+                    Debug.Log($"[Insurance] {plan.planName} canceled due to unmet asset requirement.");
+                }
+            }
+
+            // NOTE:
+            // If eligible again later, player must manually re-buy.
+        }
+
+        Debug.Log("[Insurance] Eligibility refreshed.");
+    }
+
+
 }

@@ -1,10 +1,9 @@
-using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
 [System.Serializable]
-public class ExpenseTier
+public struct ExpenseTier
 {
     public float lowMax;
     public float mediumMax;
@@ -17,6 +16,10 @@ public class ExpensesPanelController : MonoBehaviour
     public Slider groceriesSlider;
     public Slider transportSlider;
     public Slider utilitiesSlider;
+
+    [Header("House Cost (Input)")]
+    public TMP_InputField houseCostInput;
+    public TMP_Text houseCostValueText;
 
     [Header("Value Texts")]
     public TMP_Text rentValueText;
@@ -36,6 +39,14 @@ public class ExpensesPanelController : MonoBehaviour
     public ExpenseTier transportTier;
     public ExpenseTier utilitiesTier;
 
+    [Header("Housing UI")]
+    public GameObject rentSliderGroup;
+    public GameObject houseCostInputGroup;
+    public TMP_Text houseCostWarningText;
+
+
+    private const float MIN_HOUSE_COST = 15000f;
+
     public void Init()
     {
         // Clear old listeners
@@ -43,14 +54,27 @@ public class ExpensesPanelController : MonoBehaviour
         groceriesSlider.onValueChanged.RemoveAllListeners();
         transportSlider.onValueChanged.RemoveAllListeners();
         utilitiesSlider.onValueChanged.RemoveAllListeners();
+        houseCostInput.onValueChanged.RemoveAllListeners();
 
-        // Wire fresh listeners
+        // Sliders
         rentSlider.onValueChanged.AddListener(_ => UpdateRent());
         groceriesSlider.onValueChanged.AddListener(_ => UpdateGroceries());
         transportSlider.onValueChanged.AddListener(_ => UpdateTransport());
         utilitiesSlider.onValueChanged.AddListener(_ => UpdateUtilities());
 
+        // Input field
+        houseCostInput.onValueChanged.AddListener(_ => UpdateHouseCost());
+
+        if (string.IsNullOrEmpty(houseCostInput.text))
+            houseCostInput.text = MIN_HOUSE_COST.ToString("F0");
+
         RefreshAll();
+    }
+
+    private void Awake()
+    {
+        rentSliderGroup.SetActive(true);
+        houseCostInputGroup.SetActive(false);
     }
 
     private void RefreshAll()
@@ -59,6 +83,7 @@ public class ExpensesPanelController : MonoBehaviour
         UpdateGroceries();
         UpdateTransport();
         UpdateUtilities();
+        UpdateHouseCost();
     }
 
     private void UpdateRent()
@@ -89,9 +114,32 @@ public class ExpensesPanelController : MonoBehaviour
         utilitiesTierText.text = GetTierLabel(value, utilitiesTier);
     }
 
+    private void UpdateHouseCost()
+    {
+        if (float.TryParse(houseCostInput.text, out float value))
+        {
+            houseCostValueText.text = $"${value:F0}";
+
+            if (value < MIN_HOUSE_COST)
+            {
+                houseCostWarningText.gameObject.SetActive(true);
+                houseCostWarningText.text =
+                    $"Suggested minimum is ${MIN_HOUSE_COST:F0}";
+            }
+            else
+            {
+                houseCostWarningText.gameObject.SetActive(false);
+            }
+        }
+        else
+        {
+            houseCostValueText.text = "$—";
+            houseCostWarningText.gameObject.SetActive(false);
+        }
+    }
+
     private string GetTierLabel(float value, ExpenseTier tier)
     {
-        if (tier == null) return "—";
         if (value <= tier.lowMax) return "Low";
         if (value <= tier.mediumMax) return "Medium";
         return "High";
@@ -99,16 +147,27 @@ public class ExpensesPanelController : MonoBehaviour
 
     public void ApplyExpensesToFinance(FinanceManager finance)
     {
-        finance.rent = rentSlider.value;
+        if (finance.assets.hasHouse)
+        {
+            if (float.TryParse(houseCostInput.text, out float houseCost))
+                finance.houseMaintenanceCost = Mathf.Max(houseCost, MIN_HOUSE_COST);
+            else
+                finance.houseMaintenanceCost = MIN_HOUSE_COST;
+        }
+
+        else
+        {
+            finance.rentCost = rentSlider.value;
+        }
+
         finance.groceries = groceriesSlider.value;
         finance.transport = transportSlider.value;
         finance.utilities = utilitiesSlider.value;
+    }
 
-        Debug.Log(
-            $"[Expenses Applied] Rent={finance.rent}, " +
-            $"Groceries={finance.groceries}, " +
-            $"Transport={finance.transport}, " +
-            $"Utilities={finance.utilities}"
-        );
+    public void SetHousingMode(bool ownsHouse)
+    {
+        rentSliderGroup.SetActive(!ownsHouse);
+        houseCostInputGroup.SetActive(ownsHouse);
     }
 }

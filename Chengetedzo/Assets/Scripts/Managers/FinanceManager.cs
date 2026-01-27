@@ -1,12 +1,23 @@
 using System.Text;
 using UnityEngine;
 
+[System.Serializable]
+public struct PlayerAssets
+{
+    public bool hasHouse;
+    public bool hasLivestock;
+    public bool hasMotor;
+    public bool hasCrops;
+}
+
 /// <summary>
 /// Handles all financial calculations and tracking for the player,
 /// including income, expenses, cash flow, and monthly summaries.
 /// </summary>
 public class FinanceManager : MonoBehaviour
 {
+    public PlayerAssets assets;
+
     [Header("Base Budget")]
     [Tooltip("The player's current monthly income (can change with events).")]
     public float currentIncome = 400f;
@@ -92,7 +103,8 @@ public class FinanceManager : MonoBehaviour
         cashOnHand += currentIncome;
 
         // 2. Expenses
-        totalExpenses = rent + groceries + transport + utilities;
+        float housingCost = GetHousingCost();
+        totalExpenses = housingCost + groceries + transport + utilities;
         cashOnHand -= totalExpenses;
 
         balance = currentIncome - totalExpenses;
@@ -243,4 +255,13 @@ public class FinanceManager : MonoBehaviour
 
         return sb.ToString();
     }
+
+    public float rentCost;
+    public float houseMaintenanceCost;
+
+    public float GetHousingCost()
+    {
+        return assets.hasHouse ? houseMaintenanceCost : rentCost;
+    }
+
 }

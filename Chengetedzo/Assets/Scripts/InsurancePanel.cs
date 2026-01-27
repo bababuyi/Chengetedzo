@@ -6,11 +6,8 @@ using static InsuranceManager;
 public class InsurancePanel : MonoBehaviour
 {
     [Header("UI References")]
-    public Toggle funeralToggle;
-    public Toggle educationToggle;
-    public Toggle groceryToggle;
-    public Toggle hospitalToggle;
-    public Toggle microMedicalToggle;
+    public Transform toggleContainer;
+    public InsuranceToggleItem togglePrefab;
 
     [Header("Info Display")]
     public TMP_Text planInfoText;
@@ -18,10 +15,9 @@ public class InsurancePanel : MonoBehaviour
     public Button confirmButton;
 
     private InsuranceManager insuranceManager;
-
-    private void OnEnable()
+    private void Awake()
     {
-        insuranceManager = FindFirstObjectByType<InsuranceManager>();
+        insuranceManager = GameManager.Instance.insuranceManager;
 
         if (insuranceManager == null)
         {
@@ -29,47 +25,19 @@ public class InsurancePanel : MonoBehaviour
             return;
         }
 
-        // Clear old listeners
-        funeralToggle.onValueChanged.RemoveAllListeners();
-        educationToggle.onValueChanged.RemoveAllListeners();
-        groceryToggle.onValueChanged.RemoveAllListeners();
-        hospitalToggle.onValueChanged.RemoveAllListeners();
-        microMedicalToggle.onValueChanged.RemoveAllListeners();
-        confirmButton.onClick.RemoveAllListeners();
-
-        // Rebind listeners
-        funeralToggle.onValueChanged.AddListener(isOn => OnPlanToggled(isOn, InsuranceManager.InsuranceType.Funeral));
-        educationToggle.onValueChanged.AddListener(isOn => OnPlanToggled(isOn, InsuranceManager.InsuranceType.Education));
-        groceryToggle.onValueChanged.AddListener(isOn => OnPlanToggled(isOn, InsuranceManager.InsuranceType.Health));
-        hospitalToggle.onValueChanged.AddListener(isOn => OnPlanToggled(isOn, InsuranceManager.InsuranceType.HospitalCash));
-        microMedicalToggle.onValueChanged.AddListener(isOn => OnPlanToggled(isOn, InsuranceManager.InsuranceType.PersonalAccident));
-
+        planInfoText.text = "Select one or more insurance plans to see their details.";
         confirmButton.onClick.AddListener(ConfirmInsurance);
         confirmButton.gameObject.SetActive(true);
-
-        UpdateSummary();
-
-        funeralToggle.gameObject.SetActive(PlayerMeetsRequirement(insuranceManager.GetPlan(InsuranceType.Funeral)));
-
-        planInfoText.text = "Select one or more insurance plans to see their details.";
     }
 
-    private bool PlayerMeetsRequirement(InsuranceManager.InsurancePlan plan)
+    public bool PlayerMeetsRequirement(InsuranceManager.InsurancePlan plan)
     {
-        var setup = GameManager.Instance.setupData;
-
-        return plan.requiredAsset switch
-        {
-            AssetRequirement.None => true,
-            AssetRequirement.Car => setup.ownsCar,
-            AssetRequirement.House => setup.housing == HousingType.OwnsHouse,
-            AssetRequirement.Farm => setup.ownsFarm,
-            _ => true
-        };
+        return insuranceManager != null &&
+               plan != null &&
+               insuranceManager.PlayerMeetsRequirement(plan);
     }
 
-
-    private void OnPlanToggled(bool isOn, InsuranceManager.InsuranceType type)
+    public void OnPlanToggled(bool isOn, InsuranceManager.InsuranceType type)
     {
         var plan = insuranceManager.allPlans.Find(p => p.type == type);
         if (plan == null) return;
@@ -77,17 +45,21 @@ public class InsurancePanel : MonoBehaviour
         if (isOn)
         {
             insuranceManager.BuyInsurance(type);
-            planInfoText.text = $"<b>{plan.planName}</b>\n\n" +
-                                $"{plan.coverageDescription}\n\n" +
-                                $"float actualPremium = insuranceManager.GetTotalMonthlyPremium();\r\n\nCoverage: ${plan.coverageLimit:F0}\nDeductible: {plan.deductiblePercent}%";
+
+            float premium = insuranceManager.GetTotalMonthlyPremium();
+
+            planInfoText.text =
+                $"<b>{plan.planName}</b>\n\n" +
+                $"{plan.coverageDescription}\n\n" +
+                $"Coverage: ${plan.coverageLimit:F0}\n" +
+                $"Deductible: {plan.deductiblePercent}%";
         }
         else
         {
             insuranceManager.CancelInsurance(type);
             planInfoText.text = $"Removed {plan.planName} from your active plans.";
         }
-
-        UpdateSummary();
+        RefreshUI();
     }
 
     private void UpdateSummary()
@@ -107,5 +79,21 @@ public class InsurancePanel : MonoBehaviour
             return;
 
         GameManager.Instance.BeginMonthlySimulation();
+    }
+
+    public void RefreshUI()
+    {
+        // Clear existing toggle items
+        foreach (Transform child in toggleContainer)
+            Destroy(child.gameObject);
+
+        // Rebuild from current insurance state
+        foreach (var plan in insuranceManager.allPlans)
+        {
+            var item = Instantiate(togglePrefab, toggleContainer);
+            item.Init(plan, this, insuranceManager);
+        }
+
+        UpdateSummary();
     }
 }

@@ -40,11 +40,24 @@ public class SetupPanelController : MonoBehaviour
     [Header("Panels")]
     public ExpensesPanelController expensesPanelController;
 
+    [Header("Asset Toggles")]
+    public Toggle hasHouseToggle;
+    public Toggle hasLivestockToggle;
+    public Toggle hasMotorToggle;
+    public Toggle hasCropsToggle;
 
     private int currentStep = 1;
 
     private void Start()
     {
+        finance = GameManager.Instance?.financeManager;
+
+        if (finance == null)
+        {
+            Debug.LogError("[SetupPanelController] FinanceManager not ready.");
+            return;
+        }
+
         ShowStep(1);
 
         stableIncomeToggle.onValueChanged.RemoveAllListeners();
@@ -55,6 +68,11 @@ public class SetupPanelController : MonoBehaviour
         schoolFeesToggle.onValueChanged.AddListener(OnSchoolFeesToggled);
         OnSchoolFeesToggled(schoolFeesToggle.isOn);
 
+        hasHouseToggle.onValueChanged.RemoveAllListeners();
+        hasHouseToggle.onValueChanged.AddListener(OnHouseToggleChanged);
+
+        OnHouseToggleChanged(hasHouseToggle.isOn);
+
         minIncomeInput.onValueChanged.AddListener(_ =>
         {
             if (stableIncomeToggle.isOn)
@@ -63,6 +81,29 @@ public class SetupPanelController : MonoBehaviour
     }
 
 
+    private FinanceManager finance;
+
+    public void ConfirmSetup()
+    {
+        finance.assets = new PlayerAssets
+        {
+            hasHouse = hasHouseToggle.isOn,
+            hasLivestock = hasLivestockToggle.isOn,
+            hasMotor = hasMotorToggle.isOn,
+            hasCrops = hasCropsToggle.isOn
+        };
+
+        InsuranceManager.Instance.RefreshEligibility();
+
+        LockSetupUI();
+    }
+    private void LockSetupUI()
+    {
+        hasHouseToggle.interactable = false;
+        hasLivestockToggle.interactable = false;
+        hasMotorToggle.interactable = false;
+        hasCropsToggle.interactable = false;
+    }
     public void ShowStep(int step)
     {
         incomeSection.SetActive(step == 1);
@@ -78,10 +119,12 @@ public class SetupPanelController : MonoBehaviour
         if (step == 2)
         {
             expensesPanelController.Init();
+            expensesPanelController.SetHousingMode(hasHouseToggle.isOn);
         }
 
         if (step == 3)
         {
+            schoolFeesSection.SetActive(true);
             OnSchoolFeesToggled(schoolFeesToggle.isOn);
         }
 
@@ -172,6 +215,12 @@ public class SetupPanelController : MonoBehaviour
 
     public void OnSchoolFeesToggled(bool enabled)
     {
+        if (schoolFeesAmountGroup == schoolFeesSection)
+        {
+            Debug.LogError("[SetupPanelController] schoolFeesAmountGroup is incorrectly assigned!");
+            return;
+        }
+
         schoolFeesAmountGroup.SetActive(enabled);
     }
 
@@ -191,7 +240,7 @@ public class SetupPanelController : MonoBehaviour
         if (schoolFeesToggle.isOn)
             gm.setupData.schoolFeesAmount = float.Parse(schoolFeesAmountInput.text);
 
-        FinanceManager finance = FindFirstObjectByType<FinanceManager>();
+        FinanceManager finance = GameManager.Instance.financeManager;
 
         // Apply expense choices FIRST
         expensesPanelController.ApplyExpensesToFinance(finance);
@@ -256,6 +305,11 @@ public class SetupPanelController : MonoBehaviour
         return "A steady base gives you room to adapt.";
     }
 
+    public void OnHouseToggleChanged(bool ownsHouse)
+    {
+        expensesPanelController.SetHousingMode(ownsHouse);
+    }
+
     public void OnStableIncomeToggled(bool isStable)
     {
         maxIncomeInput.gameObject.SetActive(!isStable);
@@ -265,4 +319,5 @@ public class SetupPanelController : MonoBehaviour
             maxIncomeInput.text = minIncomeInput.text;
         }
     }
+
 }
