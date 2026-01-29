@@ -430,25 +430,43 @@ public class InsuranceManager : MonoBehaviour
     /// Returns the payout amount (0 if no payout).
     /// This checks waiting period and lapse rules.
     /// </summary>
-    public float HandleEvent(InsuranceType type, float finalLoss)
+    public float HandleEvent(InsuranceType type, float lossPercent)
     {
-        var plan = GetPlan(type);
+        float baseValue = finance.GetAssetValue(type);
+        float rawLoss = baseValue * (lossPercent / 100f);
 
-        if (plan == null || !plan.CanClaim())
+        float cappedLoss = GameManager.Instance.ApplyMonthlyDamage(rawLoss);
+
+        if (cappedLoss <= 0f)
+        {
+            Debug.Log("[Insurance] Monthly damage cap reached. No further loss applied.");
             return 0f;
+        }
 
-        float deductible = finalLoss * (plan.deductiblePercent / 100f);
+        finance.cashOnHand -= cappedLoss;
+        totalLoss += cappedLoss;
+
+        var plan = GetPlan(type);
+        if (plan == null || !plan.CanClaim())
+        {
+            Debug.Log($"[Insurance] No valid coverage for {type}.");
+            return 0f;
+        }
+
+        float deductible = cappedLoss * (plan.deductiblePercent / 100f);
 
         float coverageLimit =
             plan.premiumIsAssetBased
                 ? finance.GetAssetValue(type)
                 : plan.coverageLimit;
 
-        float payout = Mathf.Min(finalLoss - deductible, coverageLimit);
+        float payout = Mathf.Min(cappedLoss - deductible, coverageLimit);
         payout = Mathf.Max(0f, payout);
 
         finance.cashOnHand += payout;
         totalPayout += payout;
+
+        Debug.Log($"[Insurance] {plan.planName} reduced loss. Paid ${payout:F2}.");
 
         return payout;
     }

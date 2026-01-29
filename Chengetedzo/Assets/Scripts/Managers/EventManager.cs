@@ -22,56 +22,43 @@ public class EventManager : MonoBehaviour
     [Header("Possible Events")]
     public List<MonthlyEvent> allEvents = new List<MonthlyEvent>();
 
-    public void CheckForMonthlyEvent(int month)
+    public List<ResolvedEvent> GenerateMonthlyEvents(int month)
     {
+        List<ResolvedEvent> results = new();
+
         Season currentSeason = GameManager.Instance.GetSeasonForMonth(month);
 
-        var seasonalEvents = allEvents.FindAll(e =>
-        e.season == currentSeason &&
-        GameManager.Instance.insuranceManager.PlayerMeetsRequirement(
-        GameManager.Instance.insuranceManager.GetPlan(e.relatedInsurance)
-        )
+        var eligibleEvents = allEvents.FindAll(e =>
+            e.season == currentSeason &&
+            GameManager.Instance.insuranceManager.PlayerMeetsRequirement(
+                GameManager.Instance.insuranceManager.GetPlan(e.relatedInsurance)
+            )
         );
 
-        if (seasonalEvents.Count == 0)
+        foreach (var ev in eligibleEvents)
         {
-            Debug.Log($"[Event] No events defined for {currentSeason}.");
-            return;
-        }
+            int roll = Random.Range(0, 100);
+            if (roll > ev.probability)
+                continue;
 
-        var selectedEvent = seasonalEvents[Random.Range(0, seasonalEvents.Count)];
+            float lossPercent =
+                Random.Range(ev.minLossPercent, ev.maxLossPercent + 1);
 
-        int roll = Random.Range(0, 100);
-
-        if (roll <= selectedEvent.probability)
-        {
-            Debug.Log($"[Event] {selectedEvent.eventName} OCCURRED!");
-
-            int lossPercent = Random.Range(
-                selectedEvent.minLossPercent,
-                selectedEvent.maxLossPercent + 1
-            );
-
-            Debug.Log($"[Event] Loss severity: {lossPercent}%");
-
-            if (UIManager.Instance != null)
+            results.Add(new ResolvedEvent
             {
-                UIManager.Instance.ShowEventPopup(
-                    selectedEvent.eventName,
-                    selectedEvent.description
-                );
-            }
+                title = ev.eventName,
+                description = ev.description,
+                type = ev.relatedInsurance,
+                lossPercent = lossPercent
+            });
 
-            // Apply loss + insurance
-            GameManager.Instance.insuranceManager.HandleEvent(
-                selectedEvent.relatedInsurance,
-                lossPercent
-            );
+            Debug.Log($"[Event] Queued: {ev.eventName} ({lossPercent}%)");
+
+            if (GameManager.Instance.monthlyDamageTaken >=
+                GameManager.Instance.maxMonthlyDamagePercent)
+                break;
         }
-        else
-        {
-            Debug.Log($"[Event] Month {month} ({currentSeason}): No major incidents.");
-        }
-        Debug.Log($"[Event] Checking for events in month {month}");
+
+        return results;
     }
 }

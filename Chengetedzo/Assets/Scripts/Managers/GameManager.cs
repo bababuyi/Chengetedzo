@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.PackageManager;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
@@ -35,6 +36,11 @@ public class GameManager : MonoBehaviour
     public float monthlyDamageTaken = 0f;
     public float maxMonthlyDamagePercent = 0.35f;
 
+    [Header("Event Timing")]
+    public float delayBetweenEvents = 1.5f;
+
+    private bool mentorCommentPending = false;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -52,6 +58,17 @@ public class GameManager : MonoBehaviour
         setupData.ownsCar = false;
         setupData.ownsFarm = false;
     }
+
+    public class ResolvedEvent
+    {
+        public string title;
+        public string description;
+        public InsuranceManager.InsuranceType type;
+        public float lossPercent;
+    }
+
+    private Queue<ResolvedEvent> pendingEvents = new();
+    private ResolvedEvent currentEvent;
 
     private void Start()
     {
@@ -90,7 +107,13 @@ public class GameManager : MonoBehaviour
         financeManager.ProcessMonthlyBudget();
         insuranceManager.ProcessMonthlyPremiums();
         loanManager?.ProcessContribution();
-        eventManager?.CheckForMonthlyEvent(currentMonth);
+        var events = eventManager.GenerateMonthlyEvents(currentMonth);
+
+        pendingEvents.Clear();
+        foreach (var ev in events)
+            pendingEvents.Enqueue(ev);
+
+        ProcessNextEvent();
         insuranceManager.ProcessClaims();
         savingsManager?.AccrueInterest();
         loanManager?.UpdateLoans();
@@ -100,8 +123,6 @@ public class GameManager : MonoBehaviour
 
         EvaluateMomentumSignals();
         EvaluateMentor();
-
-        StartCoroutine(SimulationRoutine());
     }
 
     public void EndMonthlySimulation()
@@ -156,9 +177,20 @@ public class GameManager : MonoBehaviour
     {
         return GetSeasonForMonth(currentMonth);
     }
+
     public void OnEventPopupClosed()
     {
-        Debug.Log("[GameManager] Event popup closed — resuming simulation.");
+        Debug.Log("[GameManager] Event popup closed");
+
+        // Inject mentor commentary once
+        if (mentorCommentPending)
+        {
+            mentorCommentPending = false;
+            StartCoroutine(ShowMentorBetweenEvents());
+            return;
+        }
+
+        ProcessNextEvent();
     }
 
     private void EvaluateMomentumSignals()
@@ -374,4 +406,79 @@ public class GameManager : MonoBehaviour
         return finalLoss;
     }
 
+    public float ApplyMonthlyDamage(float intendedLoss)
+    {
+        float maxAllowedLoss = financeManager.cashOnHand * maxMonthlyDamagePercent;
+        float remainingCap = maxAllowedLoss - monthlyDamageTaken;
+
+        float actualLoss = Mathf.Max(0f, Mathf.Min(intendedLoss, remainingCap));
+
+        monthlyDamageTaken += actualLoss;
+
+        return actualLoss;
+    }
+
+    private void ProcessNextEvent()
+    {
+        if (pendingEvents.Count == 0)
+        {
+            // No more events → resume month flow
+            StartCoroutine(SimulationRoutine());
+            return;
+        }
+
+        pendingEvents.Clear();
+        foreach (var ev in events)
+            pendingEvents.Enqueue(ev);
+
+        // If multiple events, allow mentor commentary
+        mentorCommentPending = pendingEvents.Count >= 2;
+
+        StartCoroutine(ShowNextEventWithDelay());
+    }
+
+    private IEnumerator ShowNextEventWithDelay()
+    {
+        // Small pause between events (real-time, unaffected by Time.timeScale)
+        yield return new WaitForSecondsRealtime(delayBetweenEvents);
+
+        currentEvent = pendingEvents.Dequeue();
+
+        // Apply damage before showing
+        insuranceManager.HandleEvent(
+            currentEvent.type,
+            currentEvent.lossPercent
+        );
+
+        uiManager.ShowEventPopup(
+            currentEvent.title,
+            currentEvent.description
+        );
+    }
+
+    private IEnumerator ShowMentorBetweenEvents()
+    {
+        // Small breathing pause
+        yield return new WaitForSecondsRealtime(1f);
+
+        string line = PickEventMentorLine();
+        uiManager.ShowMentorMessage(line);
+
+        // Wait until mentor popup is closed
+        while (uiManager.IsPopupActive)
+            yield return null;
+
+        // Small pause after mentor
+        yield return new WaitForSecondsRealtime(0.5f);
+
+        ProcessNextEvent();
+    }
+
+    private string PickEventMentorLine()
+    {
+        // You can expand this later with insurance awareness etc.
+        return MentorLines.Warning[
+            Random.Range(0, MentorLines.Warning.Length)
+        ];
+    }
 }
