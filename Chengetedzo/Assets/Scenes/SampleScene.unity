@@ -5746,7 +5746,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0.0007324219, y: 0}
+  m_AnchoredPosition: {x: 0.00018310547, y: 0}
   m_SizeDelta: {x: -18.592855, y: 0}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &710781136
@@ -14088,7 +14088,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1552810409}
   m_Direction: 0
   m_Value: 0
-  m_Size: 1
+  m_Size: 0.99999714
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -16168,30 +16168,35 @@ MonoBehaviour:
   allEvents:
   - eventName: Drought
     description: A severe dry spell has affected your crops this month.
+    probability: 100
     relatedInsurance: 2
     minLossPercent: 5
     maxLossPercent: 50
     season: 0
   - eventName: Medical Emergency
     description: You or a family member required urgent hospital treatment this month.
+    probability: 100
     relatedInsurance: 3
     minLossPercent: 10
     maxLossPercent: 35
     season: 0
   - eventName: Funeral Expenses
     description: A close relative passed away and the family needed financial support.
+    probability: 100
     relatedInsurance: 0
     minLossPercent: 10
     maxLossPercent: 75
     season: 0
   - eventName: Grocery Price Surge
     description: Food prices increased sharply due to transport shortages.
+    probability: 100
     relatedInsurance: 2
     minLossPercent: 2
     maxLossPercent: 20
     season: 0
   - eventName: Livestock Disease
     description: 'Several livestock fell ill this month, affecting your income. '
+    probability: 100
     relatedInsurance: 2
     minLossPercent: 10
     maxLossPercent: 50
@@ -16230,6 +16235,8 @@ MonoBehaviour:
     housing: 0
     ownsCar: 0
     ownsFarm: 0
+  monthlyDamageTaken: 0
+  maxMonthlyDamagePercent: 0.35
 --- !u!4 &1855952294
 Transform:
   m_ObjectHideFlags: 0
@@ -16348,6 +16355,7 @@ MonoBehaviour:
   generalSavingsBalance: 0
   generalSavingsInterestRate: 0
   rentCost: 0
+  houseInsuredValue: 0
   houseMaintenanceCost: 0
 --- !u!114 &1855952299
 MonoBehaviour:
@@ -16364,34 +16372,58 @@ MonoBehaviour:
   allPossibleEvents:
   - eventName: Drought Warning
     description: Low rainfall may affect crop yield
+    relatedInsurance: 0
+    requiredAsset: 0
     probability: 70
-    icon: {fileID: 0}
+    minLossPercent: 0
+    maxLossPercent: 0
     season: 0
+    icon: {fileID: 0}
   - eventName: Livestock Disease Risk
     description: Regional outbreak risk for cattle
+    relatedInsurance: 0
+    requiredAsset: 0
     probability: 50
-    icon: {fileID: 0}
+    minLossPercent: 0
+    maxLossPercent: 0
     season: 0
+    icon: {fileID: 0}
   - eventName: Market Price Drop
     description: Crop prices expected to fall mid-season.
+    relatedInsurance: 0
+    requiredAsset: 0
     probability: 30
-    icon: {fileID: 0}
+    minLossPercent: 0
+    maxLossPercent: 0
     season: 0
+    icon: {fileID: 0}
   - eventName: Heavy Rainfall
     description: Risk of flooding in low areas
+    relatedInsurance: 0
+    requiredAsset: 0
     probability: 40
-    icon: {fileID: 0}
+    minLossPercent: 0
+    maxLossPercent: 0
     season: 0
+    icon: {fileID: 0}
   - eventName: Community Illness
     description: Increased clinic visits expected
+    relatedInsurance: 0
+    requiredAsset: 0
     probability: 60
-    icon: {fileID: 0}
+    minLossPercent: 0
+    maxLossPercent: 0
     season: 0
+    icon: {fileID: 0}
   - eventName: Equipment Breakdown
     description: Aging machinery may fail unexpectadely
+    relatedInsurance: 0
+    requiredAsset: 0
     probability: 25
-    icon: {fileID: 0}
+    minLossPercent: 0
+    maxLossPercent: 0
     season: 0
+    icon: {fileID: 0}
   forecastPanel: {fileID: 1799183104}
   forecastListParent: {fileID: 710781135}
   forecastItemPrefab: {fileID: 3974805500194630959, guid: 26e6bd24cde4a5647bb02e91c2894df0, type: 3}

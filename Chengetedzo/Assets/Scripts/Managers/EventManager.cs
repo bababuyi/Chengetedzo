@@ -9,6 +9,10 @@ public class EventManager : MonoBehaviour
     {
         public string eventName;
         public string description;
+
+        [Range(0, 100)]
+        public int probability;
+
         public InsuranceManager.InsuranceType relatedInsurance;
         public int minLossPercent;
         public int maxLossPercent;
@@ -22,7 +26,12 @@ public class EventManager : MonoBehaviour
     {
         Season currentSeason = GameManager.Instance.GetSeasonForMonth(month);
 
-        var seasonalEvents = allEvents.FindAll(e => e.season == currentSeason);
+        var seasonalEvents = allEvents.FindAll(e =>
+        e.season == currentSeason &&
+        GameManager.Instance.insuranceManager.PlayerMeetsRequirement(
+        GameManager.Instance.insuranceManager.GetPlan(e.relatedInsurance)
+        )
+        );
 
         if (seasonalEvents.Count == 0)
         {
@@ -30,27 +39,39 @@ public class EventManager : MonoBehaviour
             return;
         }
 
-        if (Random.value < 0.4f)
+        var selectedEvent = seasonalEvents[Random.Range(0, seasonalEvents.Count)];
+
+        int roll = Random.Range(0, 100);
+
+        if (roll <= selectedEvent.probability)
         {
-            var e = seasonalEvents[Random.Range(0, seasonalEvents.Count)];
-            float lossPercent = Random.Range(e.minLossPercent, e.maxLossPercent + 1);
+            Debug.Log($"[Event] {selectedEvent.eventName} OCCURRED!");
 
-            float payout = GameManager.Instance.insuranceManager.HandleEvent(e.relatedInsurance, lossPercent);
+            int lossPercent = Random.Range(
+                selectedEvent.minLossPercent,
+                selectedEvent.maxLossPercent + 1
+            );
 
-            string title = e.eventName;
-            string description =
-                $"{e.description}\n\n" +
-                $"Season: {currentSeason}\n" +
-                $"Loss: {lossPercent}%\n" +
-                $"Payout: ${payout:F2}";
+            Debug.Log($"[Event] Loss severity: {lossPercent}%");
 
-            UIManager.Instance.ShowEventPopup(title, description);
+            if (UIManager.Instance != null)
+            {
+                UIManager.Instance.ShowEventPopup(
+                    selectedEvent.eventName,
+                    selectedEvent.description
+                );
+            }
 
-            Debug.Log($"[Event] {e.eventName} ({currentSeason}). Loss: {lossPercent}% | Payout: ${payout}");
+            // Apply loss + insurance
+            GameManager.Instance.insuranceManager.HandleEvent(
+                selectedEvent.relatedInsurance,
+                lossPercent
+            );
         }
         else
         {
             Debug.Log($"[Event] Month {month} ({currentSeason}): No major incidents.");
         }
+        Debug.Log($"[Event] Checking for events in month {month}");
     }
 }

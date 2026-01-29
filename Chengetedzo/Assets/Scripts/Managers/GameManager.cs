@@ -31,6 +31,10 @@ public class GameManager : MonoBehaviour
     public VisualSimulationManager visualManager;
     public PlayerSetupData setupData = new PlayerSetupData();
 
+    [Header("Monthly Damage")]
+    public float monthlyDamageTaken = 0f;
+    public float maxMonthlyDamagePercent = 0.35f;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -76,6 +80,8 @@ public class GameManager : MonoBehaviour
     public void BeginMonthlySimulation()
     {
         CurrentPhase = GamePhase.Simulation;
+
+        monthlyDamageTaken = 0f;
 
         Debug.Log($"[Simulation] Running Month {currentMonth}");
 
@@ -352,4 +358,20 @@ public class GameManager : MonoBehaviour
             uiManager.ShowEndOfYearSummary(GetYearEndMentorReflection());
         }
     }
+
+    public float ApplyMonthlyDamageCap(float proposedLoss)
+    {
+        float maxAllowed =
+            financeManager.cashOnHand * maxMonthlyDamagePercent;
+
+        float remaining =
+            maxAllowed - (monthlyDamageTaken * financeManager.cashOnHand);
+
+        float finalLoss = Mathf.Min(proposedLoss, remaining);
+
+        monthlyDamageTaken += finalLoss / financeManager.cashOnHand;
+
+        return finalLoss;
+    }
+
 }

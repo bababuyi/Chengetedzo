@@ -265,4 +265,30 @@ public class FinanceManager : MonoBehaviour
         return assets.hasHouse ? houseMaintenanceCost : rentCost;
     }
 
+    public float GetAssetValue(InsuranceManager.InsuranceType type)
+    {
+        switch (type)
+        {
+            case InsuranceManager.InsuranceType.Home:
+                return houseInsuredValue;
+
+            case InsuranceManager.InsuranceType.Motor:
+                return assets.hasMotor ? 3000f : 0f; // placeholder
+
+            case InsuranceManager.InsuranceType.Crop:
+                return assets.hasCrops ? 2000f : 0f; // placeholder
+
+            case InsuranceManager.InsuranceType.Education:
+                return schoolFeesPerTerm * 3f;
+
+            case InsuranceManager.InsuranceType.Health:
+            case InsuranceManager.InsuranceType.HospitalCash:
+            case InsuranceManager.InsuranceType.PersonalAccident:
+            case InsuranceManager.InsuranceType.Funeral:
+                return 1000f; // abstract loss baseline
+
+            default:
+                return 0f;
+        }
+    }
 }

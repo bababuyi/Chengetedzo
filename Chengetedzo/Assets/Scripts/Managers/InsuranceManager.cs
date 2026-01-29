@@ -84,6 +84,9 @@ public class InsuranceManager : MonoBehaviour
         public int missedPayments = 0;      // consecutive missed payments
         public bool inGrace => missedPayments == 1; // first missed payment => grace
 
+        public float premiumRate = 0f; // % of asset value per month
+        public bool premiumIsAssetBased = false;
+
         // Helper: whether policy currently allows claims
         public bool CanClaim()
         {
@@ -210,25 +213,26 @@ public class InsuranceManager : MonoBehaviour
         {
             planName = "Home Insurance",
             type = InsuranceType.Home,
-            premium = 0f, // calculated later
-            coverageLimit = 0f,
+            premiumIsAssetBased = true,
+            premiumRate = 0.015f, // 1.5%
+            deductiblePercent = 0f,
             waitingPeriodMonths = 0,
             requiredAsset = AssetRequirement.House,
-            coverageDescription = "Covers damage to your home up to its full value."
+            coverageDescription = "In the event of an incident, covers damage up to the value of the house."
         });
 
         allPlans.Add(new InsurancePlan
         {
             planName = "Crop Insurance",
             type = InsuranceType.Crop,
-            premium = 0f,
-            coverageLimit = 0f,
+            premiumIsAssetBased = true,
+            premiumRate = 0.005f, // 0.5%
+            deductiblePercent = 0f,
             waitingPeriodMonths = 0,
             requiredAsset = AssetRequirement.Farm,
-            coverageDescription = "Covers crop input costs in the event of crop loss."
+            coverageDescription = "In the event of crop loss, covers the cost of inputs."
         });
     }
-
 
     // ------------------------------
     // Helper accessors
@@ -272,16 +276,20 @@ public class InsuranceManager : MonoBehaviour
     {
         if (plan == null) return 0f;
 
-        int adults = 0;
-        int children = 0;
-        if (PlayerDataManager.Instance != null)
+        // Asset-based premium (Home / Crop)
+        if (plan.premiumIsAssetBased)
         {
-            adults = PlayerDataManager.Instance.adults;
-            children = PlayerDataManager.Instance.children;
+            float assetValue = finance.GetAssetValue(plan.type);
+            return assetValue * plan.premiumRate;
         }
+
+        // Per-person premium (existing logic)
+        int adults = PlayerDataManager.Instance?.adults ?? 0;
+        int children = PlayerDataManager.Instance?.children ?? 0;
 
         float adultCost = adults * plan.premium;
         float childCost = children * plan.premium * 0.5f;
+
         return adultCost + childCost;
     }
 
@@ -422,47 +430,25 @@ public class InsuranceManager : MonoBehaviour
     /// Returns the payout amount (0 if no payout).
     /// This checks waiting period and lapse rules.
     /// </summary>
-    public float HandleEvent(InsuranceType type, float lossPercent)
+    public float HandleEvent(InsuranceType type, float finalLoss)
     {
-        // estimatedLoss is a simple conversion here (you can change to tie to player assets)
-        float estimatedLoss = 1000f * (lossPercent / 100f);
-        totalLoss += estimatedLoss;
-
         var plan = GetPlan(type);
-        if (plan == null)
-        {
-            Debug.LogWarning($"[Insurance] No plan for {type}");
-            return 0f;
-        }
 
-        // Eligibility checks
-        if (!plan.isSubscribed)
-        {
-            Debug.Log($"[Insurance] {plan.planName} - claim denied: not subscribed.");
+        if (plan == null || !plan.CanClaim())
             return 0f;
-        }
 
-        if (plan.isLapsed)
-        {
-            Debug.Log($"[Insurance] {plan.planName} - claim denied: policy lapsed.");
-            return 0f;
-        }
+        float deductible = finalLoss * (plan.deductiblePercent / 100f);
 
-        if (plan.monthsPaid < plan.waitingPeriodMonths)
-        {
-            Debug.Log($"[Insurance] {plan.planName} - claim denied: waiting period ({plan.monthsPaid}/{plan.waitingPeriodMonths}).");
-            return 0f;
-        }
+        float coverageLimit =
+            plan.premiumIsAssetBased
+                ? finance.GetAssetValue(type)
+                : plan.coverageLimit;
 
-        // Passed checks -> calculate payout
-        float deductible = estimatedLoss * (plan.deductiblePercent / 100f);
-        float payout = Mathf.Min(estimatedLoss - deductible, plan.coverageLimit);
+        float payout = Mathf.Min(finalLoss - deductible, coverageLimit);
         payout = Mathf.Max(0f, payout);
 
         finance.cashOnHand += payout;
         totalPayout += payout;
-
-        Debug.Log($"[Insurance] {plan.planName} covered loss of ${estimatedLoss:F2}, paid out ${payout:F2}.");
 
         return payout;
     }
@@ -528,9 +514,6 @@ public class InsuranceManager : MonoBehaviour
             // NOTE:
             // If eligible again later, player must manually re-buy.
         }
-
         Debug.Log("[Insurance] Eligibility refreshed.");
     }
-
-
 }
