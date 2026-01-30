@@ -40,6 +40,7 @@ public class GameManager : MonoBehaviour
     public float delayBetweenEvents = 1.5f;
 
     private bool mentorCommentPending = false;
+    private List<ResolvedEvent> monthlyEvents = new();
 
     private void Awake()
     {
@@ -107,11 +108,10 @@ public class GameManager : MonoBehaviour
         financeManager.ProcessMonthlyBudget();
         insuranceManager.ProcessMonthlyPremiums();
         loanManager?.ProcessContribution();
-        var events = eventManager.GenerateMonthlyEvents(currentMonth);
+        monthlyEvents = eventManager.GenerateMonthlyEvents(currentMonth);
 
         pendingEvents.Clear();
-        foreach (var ev in events)
-            pendingEvents.Enqueue(ev);
+        foreach (var ev in monthlyEvents)pendingEvents.Enqueue(ev);
 
         ProcessNextEvent();
         insuranceManager.ProcessClaims();
@@ -426,10 +426,6 @@ public class GameManager : MonoBehaviour
             StartCoroutine(SimulationRoutine());
             return;
         }
-
-        pendingEvents.Clear();
-        foreach (var ev in events)
-            pendingEvents.Enqueue(ev);
 
         // If multiple events, allow mentor commentary
         mentorCommentPending = pendingEvents.Count >= 2;

@@ -210,4 +210,13 @@ public class UIManager : MonoBehaviour
         IsPopupActive = false;
         Time.timeScale = 1f;
     }
+
+    public void ShowLoanPanel()
+    {
+        HideAllPanels();
+        loanPanel.SetActive(true);
+        topHUD.SetActive(true);
+
+        GameManager.Instance.SetPhase(GameManager.GamePhase.Insurance); // or new Loan phase
+    }
 }
