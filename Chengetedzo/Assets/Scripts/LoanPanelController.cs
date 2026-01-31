@@ -14,9 +14,12 @@ public class LoanPanelController : MonoBehaviour
     public Slider repaymentSlider;
     public TextMeshProUGUI repaymentValueText;
 
+    [Header("UI Buttons")]
     public Button borrow100Button;
     public Button borrow250Button;
     public Button borrow500Button;
+
+    public Button continueButton;
 
     private void Start()
     {
@@ -31,6 +34,7 @@ public class LoanPanelController : MonoBehaviour
         borrow100Button.onClick.AddListener(() => TryBorrow(100));
         borrow250Button.onClick.AddListener(() => TryBorrow(250));
         borrow500Button.onClick.AddListener(() => TryBorrow(500));
+        continueButton.onClick.AddListener(OnContinueClicked);
 
         RefreshUI();
     }
@@ -56,5 +60,26 @@ public class LoanPanelController : MonoBehaviour
         borrow100Button.interactable = loanManager.borrowingPower >= 100;
         borrow250Button.interactable = loanManager.borrowingPower >= 250;
         borrow500Button.interactable = loanManager.borrowingPower >= 500;
+        repaymentValueText.text = $"{loanManager.repaymentRate * 100f:F0}%";
+
+        bool canBorrow =
+        !loanManager.BorrowedThisMonth &&
+        loanManager.borrowingPower >= 100;
+
+        borrow100Button.interactable = canBorrow;
+        borrow250Button.interactable =
+            !loanManager.BorrowedThisMonth &&
+            loanManager.borrowingPower >= 250;
+
+        borrow500Button.interactable =
+            !loanManager.BorrowedThisMonth &&
+            loanManager.borrowingPower >= 500;
+    }
+
+    private void OnContinueClicked()
+    {
+        UIManager.Instance.HideAllPanels();
+
+        GameManager.Instance.BeginMonthlySimulation();
     }
 }

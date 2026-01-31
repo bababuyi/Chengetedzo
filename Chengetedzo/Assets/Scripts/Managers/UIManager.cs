@@ -11,6 +11,9 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI monthText;
     public TextMeshProUGUI moneyText;
 
+    [Header("Top HUD Buttons")]
+    public GameObject loanButton;
+
     [Header("Panels")]
     public GameObject budgetPanel;
     public GameObject savingsPanel;
@@ -52,11 +55,10 @@ public class UIManager : MonoBehaviour
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
 
-        if (eventPopup != null)
-            eventPopup.SetActive(false);
+        eventPopup?.SetActive(false);
+        mentorPopup?.SetActive(false);
 
-        if (mentorPopup != null)
-            mentorPopup.SetActive(false);
+        HideLoanTopButton();
     }
 
     private void Start()
@@ -217,6 +219,32 @@ public class UIManager : MonoBehaviour
         loanPanel.SetActive(true);
         topHUD.SetActive(true);
 
-        GameManager.Instance.SetPhase(GameManager.GamePhase.Insurance); // or new Loan phase
+        loanPanel.GetComponent<LoanPanelController>()?.RefreshUI();
+
+        GameManager.Instance.SetPhase(GameManager.GamePhase.Loan);
+    }
+
+    public void ShowLoanTopButton()
+    {
+        if (loanButton != null)
+            loanButton.SetActive(true);
+    }
+
+    public void HideLoanTopButton()
+    {
+        if (loanButton != null)
+            loanButton.SetActive(false);
+    }
+
+    public void OnLoanButtonClicked()
+    {
+        UIManager.Instance.ShowLoanPanel();
+    }
+
+    public void CloseLoanPanel()
+    {
+        HideAllPanels();
+        topHUD.SetActive(true);
+        GameManager.Instance.OnLoanDecisionFinished();
     }
 }

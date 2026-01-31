@@ -17,23 +17,38 @@ public class LoanManager : MonoBehaviour
 
     public bool PaidThisMonth { get; private set; }
     private bool loanUnlocked = false;
+    public bool BorrowedThisMonth { get; private set; }
+    public bool IsLoanUnlocked => borrowingPower > 0f;
+
 
     public void ProcessContribution()
     {
+        Debug.Log("[Loan] ProcessContribution CALLED");
+
         PaidThisMonth = true;
         totalContributed += contribution;
         monthsContributed++;
         UpdateBorrowingPower();
 
-        Debug.Log($"[Loan] Contributed ${contribution}, Power: ${borrowingPower}");
+        Debug.Log($"[Loan] Contributed ${contribution}, Total: ${totalContributed}, Months: {monthsContributed}");
     }
 
     public void Borrow(float amount)
     {
+        if (BorrowedThisMonth)
+        {
+            Debug.Log("Already borrowed this month.");
+            return;
+        }
+
         if (amount <= borrowingPower)
         {
             loanBalance += amount;
-            Debug.Log($"Borrowed ${amount} from pool");
+            GameManager.Instance.financeManager.cashOnHand += amount;
+            borrowingPower -= amount;
+            BorrowedThisMonth = true;
+
+            Debug.Log($"Borrowed ${amount}. Remaining power: ${borrowingPower}");
         }
         else
         {
@@ -61,16 +76,17 @@ public class LoanManager : MonoBehaviour
         else if (monthsContributed == 4) borrowingPower = totalContributed * 1.5f;
         else borrowingPower = totalContributed * 2f;
 
-        //Loan unlock moment
         if (!loanUnlocked && borrowingPower > 0f)
         {
             loanUnlocked = true;
-            UIManager.Instance.ShowLoanPanel();
+
+            UIManager.Instance.ShowLoanTopButton();
         }
     }
 
     public void ResetMonthlyFlags()
     {
         PaidThisMonth = false;
+        BorrowedThisMonth = false;
     }
 }

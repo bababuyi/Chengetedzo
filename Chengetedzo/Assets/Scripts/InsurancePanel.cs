@@ -16,6 +16,12 @@ public class InsurancePanel : MonoBehaviour
     public Button confirmButton;
 
     private InsuranceManager insuranceManager;
+
+
+    private void Start()
+    {
+    }
+
     private void Awake()
     {
         insuranceManager = GameManager.Instance.insuranceManager;
@@ -76,12 +82,10 @@ public class InsurancePanel : MonoBehaviour
 
     public void ConfirmInsurance()
     {
-        Debug.Log($"[Insurance] Confirm clicked. Phase = {GameManager.Instance.CurrentPhase}");
-
         if (GameManager.Instance.CurrentPhase != GameManager.GamePhase.Insurance)
             return;
 
-        GameManager.Instance.BeginMonthlySimulation();
+        GameManager.Instance.OnInsuranceConfirmed();
     }
 
     public void RefreshUI()

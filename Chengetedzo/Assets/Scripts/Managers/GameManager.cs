@@ -41,6 +41,7 @@ public class GameManager : MonoBehaviour
 
     private bool mentorCommentPending = false;
     private List<ResolvedEvent> monthlyEvents = new();
+    public bool IsLoanDecisionActive { get; private set; }
 
     private void Awake()
     {
@@ -93,6 +94,7 @@ public class GameManager : MonoBehaviour
 
         uiManager.ShowForecastPanel();
         forecastManager.GenerateForecast();
+        loanManager?.ResetMonthlyFlags();
     }
 
     public void BeginMonthlySimulation()
@@ -123,6 +125,9 @@ public class GameManager : MonoBehaviour
 
         EvaluateMomentumSignals();
         EvaluateMentor();
+
+        if (CurrentPhase == GamePhase.Simulation)
+            return;
     }
 
     public void EndMonthlySimulation()
@@ -147,6 +152,7 @@ public class GameManager : MonoBehaviour
         Idle,
         Forecast,
         Insurance,
+        Loan,
         Simulation,
         Report
     }
@@ -422,14 +428,14 @@ public class GameManager : MonoBehaviour
     {
         if (pendingEvents.Count == 0)
         {
-            // No more events → resume month flow
+            if (IsLoanDecisionActive)
+                return;
+
             StartCoroutine(SimulationRoutine());
             return;
         }
 
-        // If multiple events, allow mentor commentary
         mentorCommentPending = pendingEvents.Count >= 2;
-
         StartCoroutine(ShowNextEventWithDelay());
     }
 
@@ -476,5 +482,41 @@ public class GameManager : MonoBehaviour
         return MentorLines.Warning[
             Random.Range(0, MentorLines.Warning.Length)
         ];
+    }
+
+    public void BeginLoanDecision()
+    {
+        IsLoanDecisionActive = true;
+        CurrentPhase = GamePhase.Simulation; // still same month
+
+        uiManager.ShowLoanPanel();
+    }
+
+    public void EndLoanDecision()
+    {
+        IsLoanDecisionActive = false;
+
+        StartCoroutine(SimulationRoutine());
+    }
+
+    public void OnInsuranceConfirmed()
+    {
+        UIManager.Instance.HideAllPanels();
+
+        if (loanManager != null && loanManager.IsLoanUnlocked)
+        {
+            SetPhase(GamePhase.Loan);
+            UIManager.Instance.ShowLoanPanel();
+            return;
+        }
+
+        BeginMonthlySimulation();
+    }
+
+    public void OnLoanDecisionFinished()
+    {
+        IsLoanDecisionActive = false;
+        UIManager.Instance.HideAllPanels();
+        StartCoroutine(SimulationRoutine());
     }
 }
