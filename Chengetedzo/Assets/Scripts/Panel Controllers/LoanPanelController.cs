@@ -10,6 +10,7 @@ public class LoanPanelController : MonoBehaviour
     [Header("UI Elements")]
     public TextMeshProUGUI borrowingPowerText;
     public TextMeshProUGUI loanBalanceText;
+    public TextMeshProUGUI repaymentAmountText;
 
     public Slider repaymentSlider;
     public TextMeshProUGUI repaymentValueText;
@@ -42,7 +43,10 @@ public class LoanPanelController : MonoBehaviour
     private void OnRepaymentChanged(float value)
     {
         loanManager.repaymentRate = value;
-        repaymentValueText.text = $"{value * 100f:F0}%";
+
+        repaymentValueText.text =$"Repayment Rate: {loanManager.repaymentRate * 100f:F0}%";
+
+        UpdateRepaymentPreview();
     }
 
     private void TryBorrow(float amount)
@@ -53,27 +57,21 @@ public class LoanPanelController : MonoBehaviour
 
     public void RefreshUI()
     {
-        borrowingPowerText.text = $"Borrowing Power: ${loanManager.borrowingPower:F0}";
-        loanBalanceText.text = $"Loan Balance: ${loanManager.loanBalance:F0}";
+        borrowingPowerText.text =
+            $"Borrowing Power: ${loanManager.borrowingPower:F0}";
 
-        // Disable buttons if not eligible
+        loanBalanceText.text =
+            $"Loan Balance: ${loanManager.loanBalance:F0}";
+
         borrow100Button.interactable = loanManager.borrowingPower >= 100;
         borrow250Button.interactable = loanManager.borrowingPower >= 250;
         borrow500Button.interactable = loanManager.borrowingPower >= 500;
-        repaymentValueText.text = $"{loanManager.repaymentRate * 100f:F0}%";
 
-        bool canBorrow =
-        !loanManager.BorrowedThisMonth &&
-        loanManager.borrowingPower >= 100;
+        repaymentSlider.SetValueWithoutNotify(loanManager.repaymentRate);
+        repaymentValueText.text =
+            $"{loanManager.repaymentRate * 100f:F0}%";
 
-        borrow100Button.interactable = canBorrow;
-        borrow250Button.interactable =
-            !loanManager.BorrowedThisMonth &&
-            loanManager.borrowingPower >= 250;
-
-        borrow500Button.interactable =
-            !loanManager.BorrowedThisMonth &&
-            loanManager.borrowingPower >= 500;
+        UpdateRepaymentPreview();
     }
 
     private void OnContinueClicked()
@@ -81,5 +79,20 @@ public class LoanPanelController : MonoBehaviour
         UIManager.Instance.HideAllPanels();
 
         GameManager.Instance.BeginMonthlySimulation();
+    }
+
+    private void UpdateRepaymentPreview()
+    {
+        if (loanManager.loanBalance <= 0f)
+        {
+            repaymentAmountText.text = "No active loan";
+            return;
+        }
+
+        float amount =
+            loanManager.loanBalance * loanManager.repaymentRate;
+
+        repaymentAmountText.text =
+            $"Monthly Repayment: ${amount:F0}";
     }
 }

@@ -23,7 +23,6 @@ public class GameManager : MonoBehaviour
     
     [Header("Manager References")]
     public FinanceManager financeManager;
-    public SavingsManager savingsManager;
     public LoanManager loanManager;
     public InsuranceManager insuranceManager;
     public EventManager eventManager;
@@ -117,7 +116,6 @@ public class GameManager : MonoBehaviour
 
         ProcessNextEvent();
         insuranceManager.ProcessClaims();
-        savingsManager?.AccrueInterest();
         loanManager?.UpdateLoans();
         financeManager.ProcessSchoolFees(currentMonth);
 
@@ -204,7 +202,7 @@ public class GameManager : MonoBehaviour
         var player = PlayerDataManager.Instance;
 
         // --- SIGNAL A: Consistency ---
-        bool savedThisMonth = savingsManager.LastMonthSavings > 0f;
+        bool savedThisMonth = financeManager.LastMonthSavingsDelta > 0f;
         bool paidInsurance = insuranceManager.PaidPremiumsThisMonth;
         bool paidLoan = loanManager != null && loanManager.PaidThisMonth;
 

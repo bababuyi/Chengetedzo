@@ -166,7 +166,6 @@ public class ExpensesPanelController : MonoBehaviour
         finance.utilities = utilitiesSlider.value;
     }
 
-
     public void SetHousingMode(bool ownsHouse)
     {
         rentSliderGroup.SetActive(!ownsHouse);

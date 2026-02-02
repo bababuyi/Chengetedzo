@@ -55,7 +55,8 @@ public class FinanceManager : MonoBehaviour
     [Header("General Savings")]
     public float generalSavingsMonthly;
     public float generalSavingsBalance;
-    public float generalSavingsInterestRate = 0f; // optional later
+    public float generalSavingsInterestRate = 0f;
+    public float LastMonthSavingsDelta { get; private set; }
 
     /// <summary>
     /// Sets the player’s income at game start or during simulation.
@@ -99,10 +100,10 @@ public class FinanceManager : MonoBehaviour
     /// </summary>
     public void ProcessMonthlyBudget()
     {
-        // 1. Income arrives
+        // 1. Income
         cashOnHand += currentIncome;
 
-        // 2. Expenses
+        // 2. Fixed expenses
         float housingCost = GetHousingCost();
         totalExpenses = housingCost + groceries + transport + utilities;
         cashOnHand -= totalExpenses;
@@ -110,20 +111,20 @@ public class FinanceManager : MonoBehaviour
         balance = currentIncome - totalExpenses;
         WasOverBudgetThisMonth = balance < 0;
 
-        // 3. General savings (flexible)
-        if (generalSavingsMonthly > 0)
+        // 3. General savings (ONLY if affordable)
+        LastMonthSavingsDelta = 0f;
+
+        if (generalSavingsMonthly > 0 && cashOnHand >= generalSavingsMonthly)
         {
             cashOnHand -= generalSavingsMonthly;
             generalSavingsBalance += generalSavingsMonthly;
-            generalSavingsBalance *= 1 + generalSavingsInterestRate;
+            LastMonthSavingsDelta = generalSavingsMonthly;
         }
 
-        // 4. School fee savings (restricted)
-        if (schoolFeeSavingsMonthly > 0)
+        // 4. Interest (after contribution)
+        if (generalSavingsBalance > 0)
         {
-            cashOnHand -= schoolFeeSavingsMonthly;
-            schoolFeeSavingsBalance += schoolFeeSavingsMonthly;
-            schoolFeeSavingsBalance *= 1 + schoolFeeInterestRate;
+            generalSavingsBalance *= 1 + generalSavingsInterestRate;
         }
 
         // 5. Lifetime tracking
@@ -133,8 +134,7 @@ public class FinanceManager : MonoBehaviour
         Debug.Log(
             $"[Finance] Income: {currentIncome}, " +
             $"Expenses: {totalExpenses}, " +
-            $"Gen Savings: {generalSavingsMonthly}, " +
-            $"School Savings: {schoolFeeSavingsMonthly}, " +
+            $"Savings: {LastMonthSavingsDelta}, " +
             $"End Cash: {cashOnHand}"
         );
     }
@@ -158,19 +158,24 @@ public class FinanceManager : MonoBehaviour
 
     public void ProcessSchoolFees(int month)
     {
+        if (schoolFeesPerTerm <= 0f)
+            return;
+
         if (month == 1 || month == 5 || month == 9)
         {
-            if (schoolFeeSavingsBalance >= schoolFeesPerTerm)
+            if (cashOnHand >= schoolFeesPerTerm)
             {
-                schoolFeeSavingsBalance -= schoolFeesPerTerm;
-                Debug.Log($"[School Fees] Paid ${schoolFeesPerTerm} from savings.");
+                cashOnHand -= schoolFeesPerTerm;
+                totalSpent += schoolFeesPerTerm;
+                Debug.Log($"[School Fees] Paid ${schoolFeesPerTerm}");
             }
             else
             {
-                Debug.LogWarning("[School Fees] Not enough savings! Consider insurance payout or borrowing.");
+                Debug.LogWarning("[School Fees] Could not afford fees!");
             }
         }
     }
+
     public void RollMonthlyIncome()
     {
         if (minIncome <= 0 || maxIncome <= 0 || maxIncome < minIncome)

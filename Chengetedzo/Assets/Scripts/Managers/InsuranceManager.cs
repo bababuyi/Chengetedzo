@@ -52,8 +52,6 @@ public class InsuranceManager : MonoBehaviour
         Farm
     }
 
-
-
     public bool PaidPremiumsThisMonth { get; private set; }
 
     [System.Serializable]
