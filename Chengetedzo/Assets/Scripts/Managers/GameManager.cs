@@ -41,6 +41,8 @@ public class GameManager : MonoBehaviour
     private bool mentorCommentPending = false;
     private List<ResolvedEvent> monthlyEvents = new();
     public bool IsLoanDecisionActive { get; private set; }
+    private Queue<bool> forcedLoanHistory = new(); // last 6 months
+
 
     private void Awake()
     {
@@ -126,6 +128,13 @@ public class GameManager : MonoBehaviour
 
         if (CurrentPhase == GamePhase.Simulation)
             return;
+
+        insuranceManager.ProcessClaims();
+
+        // 🔴 FORCED LOAN CHECK
+        HandleForcedLoan();
+
+        loanManager?.UpdateLoans();
     }
 
     public void EndMonthlySimulation()
@@ -265,6 +274,25 @@ public class GameManager : MonoBehaviour
         {
             ShowZoneMentorLine(currentZone);
             lastMomentumZone = currentZone;
+        }
+
+        int forcedCount = 0;
+        foreach (bool forced in forcedLoanHistory)
+            if (forced) forcedCount++;
+
+        if (forcedCount >= 2)
+        {
+            uiManager.ShowMentorMessage(
+                MentorLines.ForcedLoanPattern[
+                    Random.Range(0, MentorLines.ForcedLoanPattern.Length)
+                ]);
+        }
+        else if (forcedCount == 1)
+        {
+            uiManager.ShowMentorMessage(
+                MentorLines.ForcedLoan[
+                    Random.Range(0, MentorLines.ForcedLoan.Length)
+                ]);
         }
 
         // --- B. Pattern Warning ---
@@ -516,5 +544,36 @@ public class GameManager : MonoBehaviour
         IsLoanDecisionActive = false;
         UIManager.Instance.HideAllPanels();
         StartCoroutine(SimulationRoutine());
+    }
+
+    private void HandleForcedLoan()
+    {
+        float cash = financeManager.cashOnHand;
+
+        if (cash >= 0f)
+        {
+            forcedLoanHistory.Enqueue(false);
+            TrimForcedLoanHistory();
+            return;
+        }
+
+        if (loanManager == null || !loanManager.CanForceLoan)
+            return;
+
+        float shortfall = Mathf.Abs(cash);
+        loanManager.ForceBorrow(shortfall);
+
+        PlayerDataManager.Instance.financialMomentum -= 3f;
+
+        forcedLoanHistory.Enqueue(true);
+        TrimForcedLoanHistory();
+
+        Debug.Log($"[Loan] Forced loan covered shortfall: ${shortfall:F0}");
+    }
+
+    private void TrimForcedLoanHistory()
+    {
+        if (forcedLoanHistory.Count > 6)
+            forcedLoanHistory.Dequeue();
     }
 }

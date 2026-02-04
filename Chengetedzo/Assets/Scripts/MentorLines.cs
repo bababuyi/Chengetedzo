@@ -110,5 +110,32 @@ public static class MentorLines
     "Small choices repeat quietly — until they don’t feel small anymore.",
     "You’ve been letting a few things slide. That tends to add weight over time."
     };
+    public static readonly string[] ForcedLoan =
+    {
+    "Sometimes survival makes the decision for you.",
+    "This wasn’t about comfort — it was about staying afloat.",
+    "Emergency choices don’t define you, but they do leave weight behind."
+    };
+
+    public static readonly string[] ForcedLoanPattern =
+    {
+    "Relying on emergency support too often turns relief into strain.",
+    "Shortfalls are becoming familiar. That deserves attention.",
+    "The gap isn’t closing on its own anymore."
+    };
+    
+    public static readonly string[] MissedLoan =
+    {
+    "Borrowing buys time — not forgiveness.",
+    "Unpaid obligations don’t disappear. They grow quieter, then heavier.",
+    "This loan needed attention this month."
+    };
+
+    public static readonly string[] LoanRecovery =
+    {
+    "You didn’t escape the loan — you faced it.",
+    "Momentum returns when pressure is met directly.",
+    "Stability doesn’t come from avoiding debt. It comes from managing it."
+    };
 
 }

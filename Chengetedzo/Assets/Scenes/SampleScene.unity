@@ -17684,7 +17684,6 @@ MonoBehaviour:
   totalMonths: 12
   monthDuration: 0.5
   financeManager: {fileID: 1855952298}
-  savingsManager: {fileID: 1855952296}
   loanManager: {fileID: 1855952297}
   insuranceManager: {fileID: 1855952291}
   eventManager: {fileID: 1855952292}
@@ -17769,6 +17768,7 @@ MonoBehaviour:
   schoolFeesSavings: 0
   generalSavings: 0
   monthlyInterestRate: 0.02
+  <LastMonthSavings>k__BackingField: 0
 --- !u!114 &1855952297
 MonoBehaviour:
   m_ObjectHideFlags: 0
