@@ -138,4 +138,17 @@ public static class MentorLines
     "Stability doesn’t come from avoiding debt. It comes from managing it."
     };
 
+    public static readonly string[] SchoolFeesMissed =
+    {
+    "School fees don’t wait — missed payments can ripple forward.",
+    "Education costs are unforgiving when delayed.",
+    "This is the kind of expense that rewards preparation."
+    };
+
+    public static readonly string[] SavingsUse =
+    {
+    "You leaned on what you built — not on debt.",
+    "This is what savings are for.",
+    "Using reserves is different from running out."
+    };
 }

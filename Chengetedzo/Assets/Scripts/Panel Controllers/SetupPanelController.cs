@@ -6,7 +6,6 @@ public class SetupPanelController : MonoBehaviour
     [Header("Sections")]
     public GameObject incomeSection;
     public GameObject expensesSection;
-    public GameObject schoolFeesSection;
     public GameObject reviewSection;
 
     [Header("Income Inputs")]
@@ -108,11 +107,10 @@ public class SetupPanelController : MonoBehaviour
     {
         incomeSection.SetActive(step == 1);
         expensesSection.SetActive(step == 2);
-        schoolFeesSection.SetActive(step == 3);
-        reviewSection.SetActive(step == 4);
+        reviewSection.SetActive(step == 3);
 
         backButton.SetActive(step > 1);
-        nextButton.SetActive(step < 4);
+        nextButton.SetActive(step < 3);
 
         currentStep = step;
 
@@ -120,15 +118,11 @@ public class SetupPanelController : MonoBehaviour
         {
             expensesPanelController.Init();
             expensesPanelController.SetHousingMode(hasHouseToggle.isOn);
-        }
 
-        if (step == 3)
-        {
-            schoolFeesSection.SetActive(true);
             OnSchoolFeesToggled(schoolFeesToggle.isOn);
         }
 
-        if (step == 4)
+        if (step == 3)
         {
             BuildReviewSummary();
         }
@@ -159,14 +153,13 @@ public class SetupPanelController : MonoBehaviour
             case 1:
                 return ValidateIncome();
 
-            case 3:
+            case 2:
                 return ValidateSchoolFees();
 
             default:
                 return true;
         }
     }
-
     private bool ValidateIncome()
     {
         if (!float.TryParse(minIncomeInput.text, out float min))
@@ -221,9 +214,9 @@ public class SetupPanelController : MonoBehaviour
 
     public void OnSchoolFeesToggled(bool enabled)
     {
-        if (schoolFeesAmountGroup == schoolFeesSection)
+        if (schoolFeesAmountGroup == null)
         {
-            Debug.LogError("[SetupPanelController] schoolFeesAmountGroup is incorrectly assigned!");
+            Debug.LogError("[SetupPanelController] schoolFeesAmountGroup is not assigned!");
             return;
         }
 

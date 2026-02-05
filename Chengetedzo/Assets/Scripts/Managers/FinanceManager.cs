@@ -21,10 +21,15 @@ public class FinanceManager : MonoBehaviour
     [Header("Base Budget")]
     [Tooltip("The player's current monthly income (can change with events).")]
     public float currentIncome = 400f;
-    public float rent = 100f;
+    // public float rent = 100f;
     public float groceries = 80f;
     public float transport = 40f;
     public float utilities = 30f;
+
+    [Header("School Fees")]
+    public float schoolFeesPerTerm;
+    private bool schoolFeesOutstanding = false;
+
 
     [Header("Financial State")]
     [Tooltip("Current available cash on hand after all calculations.")]
@@ -41,12 +46,6 @@ public class FinanceManager : MonoBehaviour
     public float totalSpent;
     public bool WasOverBudgetThisMonth { get; private set; }
 
-    [Header("School Fees Savings")]
-    public float schoolFeeSavingsMonthly;
-    public float schoolFeeSavingsBalance;
-    public float schoolFeeInterestRate = 0.02f; // 2%
-    public float schoolFeesPerTerm = 100f; // can be dynamic later
-
     [Header("Income Variability")]
     public float minIncome;
     public float maxIncome;
@@ -56,6 +55,10 @@ public class FinanceManager : MonoBehaviour
     public float generalSavingsMonthly;
     public float generalSavingsBalance;
     public float generalSavingsInterestRate = 0f;
+
+    [Header("Savings Tracking")]
+    public float savingsWithdrawnThisMonth;
+
     public float LastMonthSavingsDelta { get; private set; }
 
     /// <summary>
@@ -89,11 +92,6 @@ public class FinanceManager : MonoBehaviour
 
         currentIncome = Random.Range(minIncome, maxIncome);
     }
-    public void SetSchoolFeeSavings(float amount)
-    {
-        schoolFeeSavingsMonthly = amount;
-        Debug.Log($"[Finance] School Fee Savings (monthly) set to: ${amount}");
-    }
 
     /// <summary>
     /// Calculates and applies monthly expenses, updates balance and cash.
@@ -122,9 +120,22 @@ public class FinanceManager : MonoBehaviour
         }
 
         // 4. Interest (after contribution)
-        if (generalSavingsBalance > 0)
+        float interestBase = generalSavingsBalance;
+
+        if (savingsWithdrawnThisMonth > 0)
         {
-            generalSavingsBalance *= 1 + generalSavingsInterestRate;
+            interestBase = Mathf.Max(
+                0f,
+                generalSavingsBalance
+            );
+        }
+
+        if (interestBase > 0 && generalSavingsInterestRate > 0f)
+        {
+            float interest = interestBase * generalSavingsInterestRate;
+            generalSavingsBalance += interest;
+
+            Debug.Log($"[Savings] Interest gained: ${interest:F2}");
         }
 
         // 5. Lifetime tracking
@@ -137,6 +148,8 @@ public class FinanceManager : MonoBehaviour
             $"Savings: {LastMonthSavingsDelta}, " +
             $"End Cash: {cashOnHand}"
         );
+
+        savingsWithdrawnThisMonth = 0f;
     }
 
     /// <summary>
@@ -156,24 +169,31 @@ public class FinanceManager : MonoBehaviour
         Debug.Log($"[Finance] Income adjusted by {percentageChange:+0;-0}% ? New income: {currentIncome}");
     }
 
-    public void ProcessSchoolFees(int month)
+    public bool ProcessSchoolFees(int month)
     {
         if (schoolFeesPerTerm <= 0f)
-            return;
+            return false;
 
-        if (month == 1 || month == 5 || month == 9)
+        bool isTermStart = (month == 1 || month == 5 || month == 9);
+
+        if (isTermStart)
+            schoolFeesOutstanding = true;
+
+        if (!schoolFeesOutstanding)
+            return false;
+
+        if (cashOnHand >= schoolFeesPerTerm)
         {
-            if (cashOnHand >= schoolFeesPerTerm)
-            {
-                cashOnHand -= schoolFeesPerTerm;
-                totalSpent += schoolFeesPerTerm;
-                Debug.Log($"[School Fees] Paid ${schoolFeesPerTerm}");
-            }
-            else
-            {
-                Debug.LogWarning("[School Fees] Could not afford fees!");
-            }
+            cashOnHand -= schoolFeesPerTerm;
+            totalSpent += schoolFeesPerTerm;
+            schoolFeesOutstanding = false;
+
+            Debug.Log($"[School Fees] Paid ${schoolFeesPerTerm}");
+            return false;
         }
+
+        Debug.LogWarning("[School Fees] Unpaid — outstanding!");
+        return true;
     }
 
     public void RollMonthlyIncome()
@@ -230,12 +250,6 @@ public class FinanceManager : MonoBehaviour
         {
             sb.AppendLine($"- General Savings: ${generalSavingsMonthly:F2}");
             sb.AppendLine($"  Balance: ${generalSavingsBalance:F2}");
-        }
-
-        if (schoolFeeSavingsMonthly > 0)
-        {
-            sb.AppendLine($"- School Fee Savings: ${schoolFeeSavingsMonthly:F2}");
-            sb.AppendLine($"  Balance: ${schoolFeeSavingsBalance:F2}");
         }
 
         sb.AppendLine("");
@@ -295,5 +309,27 @@ public class FinanceManager : MonoBehaviour
             default:
                 return 0f;
         }
+    }
+
+    public bool WithdrawFromSavings(float amount)
+    {
+        if (amount <= 0f)
+            return false;
+
+        if (generalSavingsBalance < amount)
+        {
+            Debug.Log("[Savings] Not enough savings to withdraw.");
+            return false;
+        }
+
+        generalSavingsBalance -= amount;
+        cashOnHand += amount;
+        savingsWithdrawnThisMonth += amount;
+
+        // Momentum impact (lighter than loans)
+        PlayerDataManager.Instance.financialMomentum -= 1f;
+
+        Debug.Log($"[Savings] Withdrew ${amount}. Savings left: ${generalSavingsBalance:F0}");
+        return true;
     }
 }

@@ -430,41 +430,33 @@ public class InsuranceManager : MonoBehaviour
     /// </summary>
     public float HandleEvent(InsuranceType type, float lossPercent)
     {
+        var plan = GetPlan(type);
         float baseValue = finance.GetAssetValue(type);
         float rawLoss = baseValue * (lossPercent / 100f);
 
-        float cappedLoss = GameManager.Instance.ApplyMonthlyDamage(rawLoss);
+        float payout = 0f;
 
-        if (cappedLoss <= 0f)
+        // 1? Insurance reduction FIRST
+        if (plan != null && plan.CanClaim())
         {
-            Debug.Log("[Insurance] Monthly damage cap reached. No further loss applied.");
-            return 0f;
-        }
+            float deductible = rawLoss * (plan.deductiblePercent / 100f);
+            float insurableLoss = Mathf.Max(0f, rawLoss - deductible);
 
-        finance.cashOnHand -= cappedLoss;
-        totalLoss += cappedLoss;
-
-        var plan = GetPlan(type);
-        if (plan == null || !plan.CanClaim())
-        {
-            Debug.Log($"[Insurance] No valid coverage for {type}.");
-            return 0f;
-        }
-
-        float deductible = cappedLoss * (plan.deductiblePercent / 100f);
-
-        float coverageLimit =
-            plan.premiumIsAssetBased
-                ? finance.GetAssetValue(type)
+            float coverageCap = plan.premiumIsAssetBased
+                ? baseValue
                 : plan.coverageLimit;
 
-        float payout = Mathf.Min(cappedLoss - deductible, coverageLimit);
-        payout = Mathf.Max(0f, payout);
+            payout = Mathf.Min(insurableLoss, coverageCap);
+            totalPayout += payout;
+        }
 
-        finance.cashOnHand += payout;
-        totalPayout += payout;
+        // 2? Apply remaining loss to player
+        float netLoss = Mathf.Max(0f, rawLoss - payout);
+        float cappedLoss = GameManager.Instance.ApplyMonthlyDamage(netLoss);
 
-        Debug.Log($"[Insurance] {plan.planName} reduced loss. Paid ${payout:F2}.");
+        finance.cashOnHand -= cappedLoss;
+
+        Debug.Log($"[Insurance] Event {type}: Loss ${rawLoss:F2}, Covered ${payout:F2}, Player Paid ${cappedLoss:F2}");
 
         return payout;
     }

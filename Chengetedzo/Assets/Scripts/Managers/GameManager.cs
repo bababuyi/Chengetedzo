@@ -42,6 +42,7 @@ public class GameManager : MonoBehaviour
     private List<ResolvedEvent> monthlyEvents = new();
     public bool IsLoanDecisionActive { get; private set; }
     private Queue<bool> forcedLoanHistory = new(); // last 6 months
+    private bool forcedLoanThisMonth = false;
 
 
     private void Awake()
@@ -89,6 +90,7 @@ public class GameManager : MonoBehaviour
 
     public void StartNewMonth()
     {
+        forcedLoanThisMonth = false;
         Debug.Log($"=== Month {currentMonth} START ===");
 
         CurrentPhase = GamePhase.Forecast;
@@ -101,6 +103,8 @@ public class GameManager : MonoBehaviour
     public void BeginMonthlySimulation()
     {
         CurrentPhase = GamePhase.Simulation;
+        
+        uiManager.budgetPanel.GetComponent<BudgetPanelController>()?.ConfigureForPhase(GameManager.GamePhase.Simulation);
 
         monthlyDamageTaken = 0f;
 
@@ -118,8 +122,23 @@ public class GameManager : MonoBehaviour
 
         ProcessNextEvent();
         insuranceManager.ProcessClaims();
+
+        bool missedFees =
+            financeManager.ProcessSchoolFees(currentMonth);
+
+        HandleForcedLoan(); // reacts to negative cash AFTER fees
+
         loanManager?.UpdateLoans();
-        financeManager.ProcessSchoolFees(currentMonth);
+
+        // Momentum hit for missed fees
+        if (missedFees)
+        {
+            PlayerDataManager.Instance.financialMomentum -= 4f;
+            uiManager.ShowMentorMessage(
+                MentorLines.SchoolFeesMissed[
+                    Random.Range(0, MentorLines.SchoolFeesMissed.Length)
+                ]);
+        }
 
         visualManager?.UpdateVisuals();
 
@@ -130,9 +149,6 @@ public class GameManager : MonoBehaviour
             return;
 
         insuranceManager.ProcessClaims();
-
-        // 🔴 FORCED LOAN CHECK
-        HandleForcedLoan();
 
         loanManager?.UpdateLoans();
     }
@@ -259,6 +275,13 @@ public class GameManager : MonoBehaviour
         }
 
         player.financialMomentum = Mathf.Clamp(player.financialMomentum, -100f, 100f);
+
+        if (financeManager.savingsWithdrawnThisMonth > 0 &&
+        financeManager.generalSavingsBalance > 0)
+        {
+            PlayerDataManager.Instance.financialMomentum += 1f;
+        }
+
     }
 
     private void EvaluateMentor()
@@ -549,6 +572,11 @@ public class GameManager : MonoBehaviour
     private void HandleForcedLoan()
     {
         float cash = financeManager.cashOnHand;
+
+        if (forcedLoanThisMonth)
+            return;
+
+        forcedLoanThisMonth = true;
 
         if (cash >= 0f)
         {

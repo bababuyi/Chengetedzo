@@ -7,6 +7,17 @@ public class EventManager : MonoBehaviour
     [System.Serializable]
     public class MonthlyEvent
     {
+        public enum AssetRequirement
+        {
+            None,
+            House,
+            Motor,
+            Crops,
+            Livestock
+        }
+
+        public AssetRequirement requiredAsset;
+
         public string eventName;
         public string description;
 
@@ -44,6 +55,19 @@ public class EventManager : MonoBehaviour
             float lossPercent =
                 Random.Range(ev.minLossPercent, ev.maxLossPercent + 1);
 
+            bool ownsRequiredAsset = ev.requiredAsset switch
+            {
+                MonthlyEvent.AssetRequirement.None => true,
+                MonthlyEvent.AssetRequirement.House => GameManager.Instance.financeManager.assets.hasHouse,
+                MonthlyEvent.AssetRequirement.Motor => GameManager.Instance.financeManager.assets.hasMotor,
+                MonthlyEvent.AssetRequirement.Crops => GameManager.Instance.financeManager.assets.hasCrops,
+                MonthlyEvent.AssetRequirement.Livestock => GameManager.Instance.financeManager.assets.hasLivestock,
+                _ => false
+            };
+
+            if (!ownsRequiredAsset)
+                continue;
+
             results.Add(new ResolvedEvent
             {
                 title = ev.eventName,
@@ -51,8 +75,6 @@ public class EventManager : MonoBehaviour
                 type = ev.relatedInsurance,
                 lossPercent = lossPercent
             });
-
-            Debug.Log($"[Event] Queued: {ev.eventName} ({lossPercent}%)");
 
             if (GameManager.Instance.monthlyDamageTaken >=
                 GameManager.Instance.maxMonthlyDamagePercent)

@@ -27,14 +27,18 @@ public class LoanManager : MonoBehaviour
 
     public void ProcessContribution()
     {
-        Debug.Log("[Loan] ProcessContribution CALLED");
+        if (GameManager.Instance.financeManager.cashOnHand < contribution)
+        {
+            PaidThisMonth = false;
+            return;
+        }
 
+        GameManager.Instance.financeManager.cashOnHand -= contribution;
         PaidThisMonth = true;
+
         totalContributed += contribution;
         monthsContributed++;
         UpdateBorrowingPower();
-
-        Debug.Log($"[Loan] Contributed ${contribution}, Total: ${totalContributed}, Months: {monthsContributed}");
     }
 
     public void Borrow(float amount)
@@ -75,8 +79,25 @@ public class LoanManager : MonoBehaviour
         }
         else
         {
-            // MISSED PAYMENT
             MissedPayment();
+        }
+
+        if (GameManager.Instance.financeManager.cashOnHand >= repayment)
+        {
+            GameManager.Instance.financeManager.cashOnHand -= repayment;
+            loanBalance -= repayment;
+            onTimePayments++;
+
+            if (missedPayments > 0)
+                missedPayments--;
+
+            if (onTimePayments == 2)
+            {
+                UIManager.Instance.ShowMentorMessage(
+                    MentorLines.LoanRecovery[
+                        Random.Range(0, MentorLines.LoanRecovery.Length)
+                    ]);
+            }
         }
     }
 
