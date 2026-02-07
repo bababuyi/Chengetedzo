@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 
 /// <summary>
 /// Rebuilt InsuranceManager with:
@@ -34,6 +35,7 @@ public class InsuranceManager : MonoBehaviour
 
     public enum InsuranceType
     {
+        None,
         Funeral,
         Health,
         Education,
@@ -42,14 +44,6 @@ public class InsuranceManager : MonoBehaviour
         Motor,
         Home,
         Crop
-    }
-
-    public enum AssetRequirement
-    {
-        None,
-        Car,
-        House,
-        Farm
     }
 
     public bool PaidPremiumsThisMonth { get; private set; }
@@ -100,8 +94,7 @@ public class InsuranceManager : MonoBehaviour
             return "Active";
         }
 
-        public AssetRequirement requiredAsset = AssetRequirement.None;
-
+        public GameManager.AssetRequirement requiredAsset;
     }
 
     [Header("Available Insurance Plans")]
@@ -203,7 +196,7 @@ public class InsuranceManager : MonoBehaviour
             premium = 26.25f,
             coverageLimit = 3000f,
             waitingPeriodMonths = 0,
-            requiredAsset = AssetRequirement.Car,
+            requiredAsset = GameManager.AssetRequirement.Motor,
             coverageDescription = "Covers damage caused to third-party vehicles in a motor accident."
         });
 
@@ -215,7 +208,7 @@ public class InsuranceManager : MonoBehaviour
             premiumRate = 0.015f, // 1.5%
             deductiblePercent = 0f,
             waitingPeriodMonths = 0,
-            requiredAsset = AssetRequirement.House,
+            requiredAsset = GameManager.AssetRequirement.House,
             coverageDescription = "In the event of an incident, covers damage up to the value of the house."
         });
 
@@ -227,7 +220,7 @@ public class InsuranceManager : MonoBehaviour
             premiumRate = 0.005f, // 0.5%
             deductiblePercent = 0f,
             waitingPeriodMonths = 0,
-            requiredAsset = AssetRequirement.Farm,
+            requiredAsset = GameManager.AssetRequirement.Crops,
             coverageDescription = "In the event of crop loss, covers the cost of inputs."
         });
     }
@@ -247,21 +240,12 @@ public class InsuranceManager : MonoBehaviour
 
         switch (plan.requiredAsset)
         {
-            case AssetRequirement.None:
-                return true;
-
-            case AssetRequirement.Car:
-                return PlayerOwnsCar();
-
-            case AssetRequirement.House:
-                return PlayerOwnsHouse();
-
-            case AssetRequirement.Farm:
-                return PlayerOwnsFarm();
-
-            default:
-                return true;
+            case GameManager.AssetRequirement.None: return true;
+            case GameManager.AssetRequirement.Motor: return PlayerOwnsCar();
+            case GameManager.AssetRequirement.House: return PlayerOwnsHouse();
+            case GameManager.AssetRequirement.Crops: return PlayerOwnsFarm();
         }
+        return false;
     }
 
     /// <summary>
@@ -281,14 +265,21 @@ public class InsuranceManager : MonoBehaviour
             return assetValue * plan.premiumRate;
         }
 
-        // Per-person premium (existing logic)
-        int adults = PlayerDataManager.Instance?.adults ?? 0;
-        int children = PlayerDataManager.Instance?.children ?? 0;
+        // Per-person premium
+        int totalAdults = Mathf.Max(1, PlayerDataManager.Instance?.adults ?? 1);
+        int totalChildren = Mathf.Max(0, PlayerDataManager.Instance?.children ?? 0);
 
-        float adultCost = adults * plan.premium;
-        float childCost = children * plan.premium * 0.5f;
+        // Main adult (always 1)
+        float mainAdultCost = plan.premium;
 
-        return adultCost + childCost;
+        // Other adults
+        int otherAdults = totalAdults - 1;
+        float otherAdultCost = otherAdults * plan.premium;
+
+        // Children pay 50%
+        float childCost = totalChildren * plan.premium * 0.5f;
+
+        return mainAdultCost + otherAdultCost + childCost;
     }
 
     public float CalculateMonthlyPremiumForUI(InsurancePlan plan)

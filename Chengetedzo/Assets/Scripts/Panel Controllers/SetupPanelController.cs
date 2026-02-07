@@ -77,6 +77,18 @@ public class SetupPanelController : MonoBehaviour
             if (stableIncomeToggle.isOn)
                 maxIncomeInput.text = minIncomeInput.text;
         });
+
+        adultsInput.onEndEdit.AddListener(value =>
+        {
+            if (!int.TryParse(value, out int a) || a < 1)
+                adultsInput.text = "1";
+        });
+
+        if (string.IsNullOrWhiteSpace(adultsInput.text))
+            adultsInput.text = "1";
+
+        if (string.IsNullOrWhiteSpace(childrenInput.text))
+            childrenInput.text = "0";
     }
 
 
@@ -234,8 +246,17 @@ public class SetupPanelController : MonoBehaviour
         gm.setupData.maxIncome = float.Parse(maxIncomeInput.text);
         gm.setupData.isIncomeStable = stableIncomeToggle.isOn;
 
-        PlayerDataManager.Instance.adults = int.Parse(adultsInput.text);
-        PlayerDataManager.Instance.children = int.Parse(childrenInput.text);
+        int totalAdults = 1;
+        int totalChildren = 0;
+
+        if (!int.TryParse(adultsInput.text, out totalAdults) || totalAdults < 1)
+            totalAdults = 1;
+
+        if (!int.TryParse(childrenInput.text, out totalChildren) || totalChildren < 0)
+            totalChildren = 0;
+
+        PlayerDataManager.Instance.adults = totalAdults;
+        PlayerDataManager.Instance.children = totalChildren;
 
         gm.setupData.hasSchoolFees = schoolFeesToggle.isOn;
         if (schoolFeesToggle.isOn)
@@ -262,8 +283,14 @@ public class SetupPanelController : MonoBehaviour
         float minIncome = float.Parse(minIncomeInput.text);
         float maxIncome = float.Parse(maxIncomeInput.text);
 
-        int adults = int.Parse(adultsInput.text);
-        int children = int.Parse(childrenInput.text);
+        int adults = 1;
+        int children = 0;
+
+        if (!int.TryParse(adultsInput.text, out adults) || adults < 1)
+            adults = 1;
+
+        if (!int.TryParse(childrenInput.text, out children) || children < 0)
+            children = 0;
 
         bool stableIncome = stableIncomeToggle.isOn;
         bool hasSchoolFees = schoolFeesToggle.isOn;

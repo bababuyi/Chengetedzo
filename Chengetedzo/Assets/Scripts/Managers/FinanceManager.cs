@@ -98,15 +98,19 @@ public class FinanceManager : MonoBehaviour
     /// </summary>
     public void ProcessMonthlyBudget()
     {
-        // 1. Income
-        cashOnHand += currentIncome;
+        // 1. Income (apply income effects)
+        float incomeMultiplier = GameManager.Instance.GetIncomeMultiplier();
+        float effectiveIncome = currentIncome * incomeMultiplier;
+
+        cashOnHand += effectiveIncome;
+        Debug.Log($"[Income] Base: {currentIncome}, Multiplier: {incomeMultiplier:F2}, Effective: {effectiveIncome:F0}");
 
         // 2. Fixed expenses
         float housingCost = GetHousingCost();
         totalExpenses = housingCost + groceries + transport + utilities;
         cashOnHand -= totalExpenses;
 
-        balance = currentIncome - totalExpenses;
+        balance = effectiveIncome - totalExpenses;
         WasOverBudgetThisMonth = balance < 0;
 
         // 3. General savings (ONLY if affordable)
@@ -228,7 +232,20 @@ public class FinanceManager : MonoBehaviour
 
         // ===== Income =====
         sb.AppendLine("<b>Income</b>");
-        sb.AppendLine($"+ Monthly Income: ${currentIncome:F2}\n");
+        sb.AppendLine($"+ Monthly Income: ${currentIncome:F2}");
+
+        float incomeMultiplier = GameManager.Instance.GetIncomeMultiplier();
+
+        if (!Mathf.Approximately(incomeMultiplier, 1f))
+
+        {
+            sb.AppendLine(
+                $"<size=90%><color=#C94A4A>" +
+                $"Income Modifiers: x{incomeMultiplier:F2}</color></size>"
+            );
+        }
+
+        sb.AppendLine("");
 
         // ===== Expenses =====
         sb.AppendLine("<b>Expenses</b>");

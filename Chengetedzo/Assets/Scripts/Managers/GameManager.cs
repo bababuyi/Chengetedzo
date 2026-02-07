@@ -43,7 +43,7 @@ public class GameManager : MonoBehaviour
     public bool IsLoanDecisionActive { get; private set; }
     private Queue<bool> forcedLoanHistory = new(); // last 6 months
     private bool forcedLoanThisMonth = false;
-
+    private List<IncomeEffect> activeIncomeEffects = new();
 
     private void Awake()
     {
@@ -61,14 +61,6 @@ public class GameManager : MonoBehaviour
         setupData.housing = HousingType.Renting;
         setupData.ownsCar = false;
         setupData.ownsFarm = false;
-    }
-
-    public class ResolvedEvent
-    {
-        public string title;
-        public string description;
-        public InsuranceManager.InsuranceType type;
-        public float lossPercent;
     }
 
     private Queue<ResolvedEvent> pendingEvents = new();
@@ -98,6 +90,7 @@ public class GameManager : MonoBehaviour
         uiManager.ShowForecastPanel();
         forecastManager.GenerateForecast();
         loanManager?.ResetMonthlyFlags();
+        UpdateIncomeEffects();
     }
 
     public void BeginMonthlySimulation()
@@ -190,8 +183,18 @@ public class GameManager : MonoBehaviour
 
     public enum Season
     {
+        Any,
         Summer,
         Winter
+    }
+
+    public enum AssetRequirement
+    {
+        None,
+        House,
+        Motor,
+        Crops,
+        Livestock
     }
 
     public Season GetSeasonForMonth(int month)
@@ -446,30 +449,14 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public float ApplyMonthlyDamageCap(float proposedLoss)
-    {
-        float maxAllowed =
-            financeManager.cashOnHand * maxMonthlyDamagePercent;
-
-        float remaining =
-            maxAllowed - (monthlyDamageTaken * financeManager.cashOnHand);
-
-        float finalLoss = Mathf.Min(proposedLoss, remaining);
-
-        monthlyDamageTaken += finalLoss / financeManager.cashOnHand;
-
-        return finalLoss;
-    }
-
     public float ApplyMonthlyDamage(float intendedLoss)
     {
         float maxAllowedLoss = financeManager.cashOnHand * maxMonthlyDamagePercent;
         float remainingCap = maxAllowedLoss - monthlyDamageTaken;
 
-        float actualLoss = Mathf.Max(0f, Mathf.Min(intendedLoss, remainingCap));
+        float actualLoss = Mathf.Clamp(intendedLoss, 0f, remainingCap);
 
         monthlyDamageTaken += actualLoss;
-
         return actualLoss;
     }
 
@@ -603,5 +590,61 @@ public class GameManager : MonoBehaviour
     {
         if (forcedLoanHistory.Count > 6)
             forcedLoanHistory.Dequeue();
+    }
+
+    [System.Serializable]
+    public class IncomeEffect
+    {
+        public float reductionPercent;
+        public int remainingMonths; // -1 = permanent
+    }
+
+    public void ApplyIncomeEffect(float percent, int months)
+    {
+        // FUTURE GUARD: prevent stacking permanent effects
+        if (months <= 0 &&
+        activeIncomeEffects.Exists(e =>
+        e.remainingMonths == -1 &&
+        Mathf.Approximately(e.reductionPercent, percent)))
+        {
+            return;
+        }
+
+        activeIncomeEffects.Add(new IncomeEffect
+        {
+            reductionPercent = percent,
+            remainingMonths = months <= 0 ? -1 : months
+        });
+
+        Debug.Log(
+        $"[Income] Applied income change: {percent:+0;-0}% for " +
+        $"{(months <= 0 ? "permanent" : months + " months")}"
+        );
+    }
+
+    public float GetIncomeMultiplier()
+    {
+        float netChange = 0f;
+
+        foreach (var effect in activeIncomeEffects)
+            netChange += effect.reductionPercent;
+
+        netChange = Mathf.Clamp(netChange, -100f, 100f);
+
+        return 1f + (netChange / 100f);
+    }
+
+    private void UpdateIncomeEffects()
+    {
+        for (int i = activeIncomeEffects.Count - 1; i >= 0; i--)
+        {
+            if (activeIncomeEffects[i].remainingMonths == -1)
+                continue;
+
+            activeIncomeEffects[i].remainingMonths--;
+
+            if (activeIncomeEffects[i].remainingMonths <= 0)
+                activeIncomeEffects.RemoveAt(i);
+        }
     }
 }
