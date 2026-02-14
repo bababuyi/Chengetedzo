@@ -19,9 +19,18 @@ public class VisualSimulationManager : MonoBehaviour
     [Header("Wind Lines")]
     public GameObject windLines;
 
-    private void Start()
+    private void OnEnable()
     {
+        if (GameManager.Instance != null)
+            GameManager.Instance.OnSeasonChanged += UpdateVisuals;
+
         UpdateVisuals();
+    }
+
+    private void OnDisable()
+    {
+        if (GameManager.Instance != null)
+            GameManager.Instance.OnSeasonChanged -= UpdateVisuals;
     }
 
     public void UpdateVisuals()
@@ -30,10 +39,20 @@ public class VisualSimulationManager : MonoBehaviour
 
         Season currentSeason = GameManager.Instance.GetCurrentSeason();
 
-        if (currentSeason == Season.Summer)
-            ApplySummer();
-        else
-            ApplyWinter();
+        switch (currentSeason)
+        {
+            case Season.Summer:
+                ApplySummer();
+                break;
+
+            case Season.Winter:
+                ApplyWinter();
+                break;
+
+            default:
+                ApplySummer();
+                break;
+        }
     }
 
     private void SafeSet(GameObject obj, bool state)
@@ -74,11 +93,5 @@ public class VisualSimulationManager : MonoBehaviour
         SafeSet(windLines, false);
 
         Debug.Log("Visuals updated WINTER");
-    }
-
-    private void SetActiveSafe(GameObject obj, bool state)
-    {
-        if (obj != null)
-            obj.SetActive(state);
     }
 }

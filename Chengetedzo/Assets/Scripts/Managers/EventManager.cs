@@ -5,6 +5,7 @@ using static GameManager;
 public class EventManager : MonoBehaviour
 {
     [System.Serializable]
+
     public class MonthlyEvent
     {
         public ForecastManager.ForecastCategory category;
@@ -52,11 +53,19 @@ public class EventManager : MonoBehaviour
         public float momentumReward = 0f;
     }
 
+    [SerializeField] private int maxEventsPerMonth = 3;
+
+
     [Header("Possible Events")]
     public List<MonthlyEvent> allEvents = new List<MonthlyEvent>();
 
     public List<ResolvedEvent> GenerateMonthlyEvents(int month)
     {
+        int triggeredEventCount = 0;
+        float monthlyDamageCap =
+            GameManager.Instance.financeManager.cashOnHand *
+            GameManager.Instance.maxMonthlyDamagePercent;
+
         List<ResolvedEvent> results = new();
 
         Season currentSeason = GameManager.Instance.GetSeasonForMonth(month);
@@ -71,6 +80,9 @@ public class EventManager : MonoBehaviour
 
         foreach (var ev in eligibleEvents)
         {
+            if (triggeredEventCount >= maxEventsPerMonth)
+                break;
+
             if (Random.value * 100f > ev.probability)
                 continue;
 
@@ -86,6 +98,7 @@ public class EventManager : MonoBehaviour
 
             if (!ownsRequiredAsset)
                 continue;
+            triggeredEventCount++;
 
             // ---------------- POSITIVE EVENT ----------------
             if (ev.outcomeType == MonthlyEvent.EventOutcomeType.Positive)
@@ -94,7 +107,7 @@ public class EventManager : MonoBehaviour
                     GameManager.Instance.financeManager.cashOnHand += ev.cashReward;
 
                 if (ev.momentumReward != 0f)
-                    PlayerDataManager.Instance.financialMomentum += ev.momentumReward;
+                    PlayerDataManager.Instance.ModifyMomentum(ev.momentumReward);
 
                 if (ev.affectsIncome)
                 {
@@ -115,38 +128,30 @@ public class EventManager : MonoBehaviour
                 continue;
             }
 
-            // ---------------- NEGATIVE EVENT ----------------
-            //if (ev.outcomeType == MonthlyEvent.EventOutcomeType.Negative)
-            //{
-              //  bool hasAnyRelevantInsurance = false;
-
-                //foreach (var insurance in ev.relatedInsurances)
-                //{
-                  //  var plan = GameManager.Instance.insuranceManager.GetPlan(insurance);
-                    //if (plan != null && plan.isSubscribed && !plan.isLapsed)
-                    //{
-                      //  hasAnyRelevantInsurance = true;
-                        //break;
-                    //}
-                //}
-
-                //if (!hasAnyRelevantInsurance)
-                  //  continue;
-            //}
-
             float lossPercent =
                 Random.Range(ev.minLossPercent, ev.maxLossPercent + 1);
 
-            foreach (var insurance in ev.relatedInsurances)
+            InsuranceManager.InsuranceType insuranceType =
+            ev.relatedInsurances.Count > 0
+            ? ev.relatedInsurances[0]
+            : InsuranceManager.InsuranceType.None;
+
+            results.Add(new ResolvedEvent
             {
-                results.Add(new ResolvedEvent
-                {
-                    title = ev.eventName,
-                    description = ev.description,
-                    type = insurance,
-                    lossPercent = lossPercent
-                });
-            }
+                title = ev.eventName,
+                description = ev.description,
+                type = insuranceType,
+                lossPercent = lossPercent
+            });
+
+            float estimatedLoss =
+            GameManager.Instance.financeManager.cashOnHand * (lossPercent / 100f);
+
+            GameManager.Instance.monthlyDamageTaken += estimatedLoss;
+
+            if (GameManager.Instance.monthlyDamageTaken >= monthlyDamageCap)
+                break;
+
 
             if (ev.affectsIncome)
             {
@@ -156,16 +161,16 @@ public class EventManager : MonoBehaviour
                 );
             }
 
-            float maxAllowedLoss =
-            GameManager.Instance.financeManager.cashOnHand *
-            GameManager.Instance.maxMonthlyDamagePercent;
+            //float maxAllowedLoss =
+            //GameManager.Instance.financeManager.cashOnHand *
+            //GameManager.Instance.maxMonthlyDamagePercent;
 
-            if (GameManager.Instance.monthlyDamageTaken >=
-            GameManager.Instance.financeManager.cashOnHand *
-            GameManager.Instance.maxMonthlyDamagePercent)
-            {
-                break;
-            }
+            //if (GameManager.Instance.monthlyDamageTaken >=
+            //GameManager.Instance.financeManager.cashOnHand *
+            //GameManager.Instance.maxMonthlyDamagePercent)
+            //{
+              //  break;
+            //}
         }
 
         return results;

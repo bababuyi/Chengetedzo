@@ -24,14 +24,31 @@ public class LoanPanelController : MonoBehaviour
 
     private void Start()
     {
-        // Slider setup
-        repaymentSlider.minValue = 0.05f;
-        repaymentSlider.maxValue = 0.25f;
+        if (loanManager == null)
+        {
+            Debug.LogError("[LoanPanel] LoanManager not assigned.");
+            enabled = false;
+            return;
+        }
+
+        if (repaymentSlider == null ||
+            borrow100Button == null ||
+            borrow250Button == null ||
+            borrow500Button == null ||
+            continueButton == null)
+        {
+            Debug.LogError("[LoanPanel] UI references missing.");
+            enabled = false;
+            return;
+        }
+
+        // Slider setup (prefer manager config if available)
+        repaymentSlider.minValue = loanManager.minRepaymentRate;
+        repaymentSlider.maxValue = loanManager.maxRepaymentRate;
         repaymentSlider.value = loanManager.repaymentRate;
 
         repaymentSlider.onValueChanged.AddListener(OnRepaymentChanged);
 
-        // Borrow buttons
         borrow100Button.onClick.AddListener(() => TryBorrow(100));
         borrow250Button.onClick.AddListener(() => TryBorrow(250));
         borrow500Button.onClick.AddListener(() => TryBorrow(500));
@@ -40,9 +57,27 @@ public class LoanPanelController : MonoBehaviour
         RefreshUI();
     }
 
+    private void OnDestroy()
+    {
+        if (repaymentSlider != null)
+            repaymentSlider.onValueChanged.RemoveListener(OnRepaymentChanged);
+
+        if (borrow100Button != null)
+            borrow100Button.onClick.RemoveAllListeners();
+
+        if (borrow250Button != null)
+            borrow250Button.onClick.RemoveAllListeners();
+
+        if (borrow500Button != null)
+            borrow500Button.onClick.RemoveAllListeners();
+
+        if (continueButton != null)
+            continueButton.onClick.RemoveListener(OnContinueClicked);
+    }
+
     private void OnRepaymentChanged(float value)
     {
-        loanManager.repaymentRate = value;
+        loanManager.SetRepaymentRate(value);
 
         repaymentValueText.text =$"Repayment Rate: {loanManager.repaymentRate * 100f:F0}%";
 
@@ -51,38 +86,75 @@ public class LoanPanelController : MonoBehaviour
 
     private void TryBorrow(float amount)
     {
-        loanManager.Borrow(amount);
+        borrow100Button.interactable = false;
+        borrow250Button.interactable = false;
+        borrow500Button.interactable = false;
+
+        if (loanManager == null)
+            return;
+
+        bool success = loanManager.Borrow(amount);
+
+        if (!success)
+        {
+            repaymentAmountText.text = "Borrow request denied.";
+            return;
+        }
+
         RefreshUI();
     }
 
     public void RefreshUI()
     {
-        borrowingPowerText.text =
-            $"Borrowing Power: ${loanManager.borrowingPower:F0}";
+        if (loanManager == null)
+            return;
 
-        loanBalanceText.text =
-            $"Loan Balance: ${loanManager.loanBalance:F0}";
+        if (borrowingPowerText != null)
+            borrowingPowerText.text =
+                $"Borrowing Power: ${loanManager.borrowingPower:F0}";
 
-        borrow100Button.interactable = loanManager.borrowingPower >= 100;
-        borrow250Button.interactable = loanManager.borrowingPower >= 250;
-        borrow500Button.interactable = loanManager.borrowingPower >= 500;
+        if (loanBalanceText != null)
+            loanBalanceText.text =
+                $"Loan Balance: ${loanManager.loanBalance:F0}";
 
-        repaymentSlider.SetValueWithoutNotify(loanManager.repaymentRate);
-        repaymentValueText.text =
-            $"{loanManager.repaymentRate * 100f:F0}%";
+        if (borrow100Button != null)
+            borrow100Button.interactable = loanManager.borrowingPower >= 100;
+
+        if (borrow250Button != null)
+            borrow250Button.interactable = loanManager.borrowingPower >= 250;
+
+        if (borrow500Button != null)
+            borrow500Button.interactable = loanManager.borrowingPower >= 500;
+
+        if (repaymentSlider != null)
+            repaymentSlider.SetValueWithoutNotify(loanManager.repaymentRate);
+
+        if (repaymentValueText != null)
+            repaymentValueText.text =
+                $"Repayment Rate: {loanManager.repaymentRate * 100f:F0}%";
 
         UpdateRepaymentPreview();
     }
 
     private void OnContinueClicked()
     {
-        UIManager.Instance.HideAllPanels();
+        if (GameManager.Instance == null)
+            return;
+
+        if (GameManager.Instance.CurrentPhase != GameManager.GamePhase.Loan)
+            return;
+
+        if (UIManager.Instance != null)
+            UIManager.Instance.HideAllPanels();
 
         GameManager.Instance.BeginMonthlySimulation();
     }
 
     private void UpdateRepaymentPreview()
     {
+        if (loanManager == null)
+            return;
+
         if (loanManager.loanBalance <= 0f)
         {
             repaymentAmountText.text = "No active loan";
@@ -93,6 +165,6 @@ public class LoanPanelController : MonoBehaviour
             loanManager.loanBalance * loanManager.repaymentRate;
 
         repaymentAmountText.text =
-            $"Monthly Repayment: ${amount:F0}";
+            $"Monthly Repayment ({loanManager.repaymentRate * 100f:F0}%): ${amount:F0}";
     }
 }

@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using UnityEditor.PackageManager;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
@@ -44,6 +43,8 @@ public class GameManager : MonoBehaviour
     private Queue<bool> forcedLoanHistory = new(); // last 6 months
     private bool forcedLoanThisMonth = false;
     private List<IncomeEffect> activeIncomeEffects = new();
+    public bool IsSimulationPaused { get; private set; }
+    public System.Action OnSeasonChanged;
 
     private void Awake()
     {
@@ -85,65 +86,55 @@ public class GameManager : MonoBehaviour
         forcedLoanThisMonth = false;
         Debug.Log($"=== Month {currentMonth} START ===");
 
-        CurrentPhase = GamePhase.Forecast;
+        SetPhase(GamePhase.Forecast);
 
         uiManager.ShowForecastPanel();
         forecastManager.GenerateForecast();
         loanManager?.ResetMonthlyFlags();
         UpdateIncomeEffects();
     }
+    /// MONTHLY FINANCIAL ORDER (Intentional):
+    /// 1. Budget (income + savings allocation)
+    /// 2. Insurance premiums
+    /// 3. Loan contribution
+    /// 4. Events (damage)
+    /// 5. Loan repayment handled inside LoanManager
+    ///
+    /// Order matters:
+    /// - Budget first defines liquidity.
+    /// - Insurance before events ensures valid coverage.
+    /// - Loan contribution before events affects borrowing power.
+    /// - Events occur after protections are applied.
 
     public void BeginMonthlySimulation()
     {
-        CurrentPhase = GamePhase.Simulation;
-        
-        uiManager.budgetPanel.GetComponent<BudgetPanelController>()?.ConfigureForPhase(GameManager.GamePhase.Simulation);
+        if (insuranceManager == null)
+        {
+            Debug.LogError("[GameManager] InsuranceManager missing.");
+            return;
+        }
+
+        SetPhase(GamePhase.Simulation);
+
+        uiManager.budgetPanel
+            .GetComponent<BudgetPanelController>()
+            ?.ConfigureForPhase(GamePhase.Simulation);
 
         monthlyDamageTaken = 0f;
 
         Debug.Log($"[Simulation] Running Month {currentMonth}");
 
-        uiManager.HideAllPanels();
-
         financeManager.ProcessMonthlyBudget();
         insuranceManager.ProcessMonthlyPremiums();
         loanManager?.ProcessContribution();
+
         monthlyEvents = eventManager.GenerateMonthlyEvents(currentMonth);
 
         pendingEvents.Clear();
-        foreach (var ev in monthlyEvents)pendingEvents.Enqueue(ev);
+        foreach (var ev in monthlyEvents)
+            pendingEvents.Enqueue(ev);
 
         ProcessNextEvent();
-        insuranceManager.ProcessClaims();
-
-        bool missedFees =
-            financeManager.ProcessSchoolFees(currentMonth);
-
-        HandleForcedLoan(); // reacts to negative cash AFTER fees
-
-        loanManager?.UpdateLoans();
-
-        // Momentum hit for missed fees
-        if (missedFees)
-        {
-            PlayerDataManager.Instance.financialMomentum -= 4f;
-            uiManager.ShowMentorMessage(
-                MentorLines.SchoolFeesMissed[
-                    Random.Range(0, MentorLines.SchoolFeesMissed.Length)
-                ]);
-        }
-
-        visualManager?.UpdateVisuals();
-
-        EvaluateMomentumSignals();
-        EvaluateMentor();
-
-        if (CurrentPhase == GamePhase.Simulation)
-            return;
-
-        insuranceManager.ProcessClaims();
-
-        loanManager?.UpdateLoans();
     }
 
     public void EndMonthlySimulation()
@@ -151,15 +142,21 @@ public class GameManager : MonoBehaviour
         uiManager.UpdateMoneyText(financeManager.cashOnHand);
         Debug.Log($"[Simulation] Month {currentMonth} complete");
 
-        CurrentPhase = GamePhase.Report;
+        EvaluateMomentumSignals();
+        EvaluateMentor();
+        HandleForcedLoan();
+
+        SetPhase(GamePhase.Report);
 
         uiManager.ShowReportPanel(financeManager.GetMonthlySummary(currentMonth));
     }
 
     private IEnumerator SimulationRoutine()
     {
-        yield return new WaitForSeconds(monthDuration);
+        while (IsSimulationPaused)
+            yield return null;
 
+        yield return new WaitForSeconds(monthDuration);
         EndMonthlySimulation();
     }
 
@@ -177,6 +174,8 @@ public class GameManager : MonoBehaviour
     {
         CurrentPhase = phase;
         Debug.Log($"[GamePhase] → {phase}");
+
+        UpdateTopButtons();
     }
 
     public GamePhase CurrentPhase { get; private set; } = GamePhase.Idle;
@@ -231,8 +230,9 @@ public class GameManager : MonoBehaviour
 
         // --- SIGNAL A: Consistency ---
         bool savedThisMonth = financeManager.LastMonthSavingsDelta > 0f;
-        bool paidInsurance = insuranceManager.PaidPremiumsThisMonth;
-        bool paidLoan = loanManager != null && loanManager.PaidThisMonth;
+        bool paidInsurance = insuranceManager.AnyPremiumPaidThisMonth;
+
+        bool paidLoan = loanManager != null && loanManager.RepaidThisMonth;
 
         if (savedThisMonth || paidInsurance || paidLoan)
             savingsStreak++;
@@ -241,7 +241,7 @@ public class GameManager : MonoBehaviour
 
         if (savingsStreak == 3)
         {
-            player.financialMomentum += 3f;
+            PlayerDataManager.Instance.ModifyMomentum(3f);
             Debug.Log("[Momentum] Consistency streak complete (+3)");
             savingsStreak = 0;
         }
@@ -254,7 +254,7 @@ public class GameManager : MonoBehaviour
 
         if (overBudgetStreak == 2)
         {
-            player.financialMomentum -= 5f;
+            PlayerDataManager.Instance.ModifyMomentum(-5f);
             Debug.Log("[Momentum] Repeated over-budget (-5)");
             overBudgetStreak = 0;
         }
@@ -272,17 +272,15 @@ public class GameManager : MonoBehaviour
 
         if (skipCount >= 3)
         {
-            player.financialMomentum -= 4f;
+            PlayerDataManager.Instance.ModifyMomentum(-4f);
             Debug.Log("[Momentum] Skipping became a habit (-4)");
             skipHistory.Clear();
         }
 
-        player.financialMomentum = Mathf.Clamp(player.financialMomentum, -100f, 100f);
-
         if (financeManager.savingsWithdrawnThisMonth > 0 &&
         financeManager.generalSavingsBalance > 0)
         {
-            PlayerDataManager.Instance.financialMomentum += 1f;
+            PlayerDataManager.Instance.ModifyMomentum(1f);
         }
 
     }
@@ -292,7 +290,7 @@ public class GameManager : MonoBehaviour
         if (currentMonth <= 1)
             return;
 
-        float momentum = PlayerDataManager.Instance.financialMomentum;
+        float momentum = PlayerDataManager.Instance.FinancialMomentum;
         int currentZone = GetMomentumZone(momentum);
 
         // --- A. Zone Change ---
@@ -347,7 +345,7 @@ public class GameManager : MonoBehaviour
 
     private string GetYearEndMentorReflection()
     {
-        float momentum = PlayerDataManager.Instance.financialMomentum;
+        float momentum = PlayerDataManager.Instance.FinancialMomentum;
 
         if (momentum >= 20f)
             return MentorLines.YearEndStrong[Random.Range(0, MentorLines.YearEndStrong.Length)];
@@ -366,7 +364,7 @@ public class GameManager : MonoBehaviour
 
     private string GetMidYearMentorReflection()
     {
-        float momentum = PlayerDataManager.Instance.financialMomentum;
+        float momentum = PlayerDataManager.Instance.FinancialMomentum;
 
         if (momentum >= 15f)
             return MentorLines.MidYearStrong[Random.Range(0, MentorLines.MidYearStrong.Length)];
@@ -438,6 +436,8 @@ public class GameManager : MonoBehaviour
         Debug.Log($"=== Month {currentMonth} END ===");
 
         currentMonth++;
+
+        OnSeasonChanged?.Invoke();
 
         if (currentMonth <= totalMonths)
         {
@@ -523,7 +523,6 @@ public class GameManager : MonoBehaviour
     public void BeginLoanDecision()
     {
         IsLoanDecisionActive = true;
-        CurrentPhase = GamePhase.Simulation; // still same month
 
         uiManager.ShowLoanPanel();
     }
@@ -531,13 +530,15 @@ public class GameManager : MonoBehaviour
     public void EndLoanDecision()
     {
         IsLoanDecisionActive = false;
-
-        StartCoroutine(SimulationRoutine());
+        if (CurrentPhase == GamePhase.Simulation)
+            StartCoroutine(SimulationRoutine());
     }
 
     public void OnInsuranceConfirmed()
     {
         UIManager.Instance.HideAllPanels();
+
+        ResumeSimulation();
 
         if (loanManager != null && loanManager.IsLoanUnlocked)
         {
@@ -546,6 +547,7 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        SetPhase(GamePhase.Simulation);
         BeginMonthlySimulation();
     }
 
@@ -578,7 +580,8 @@ public class GameManager : MonoBehaviour
         float shortfall = Mathf.Abs(cash);
         loanManager.ForceBorrow(shortfall);
 
-        PlayerDataManager.Instance.financialMomentum -= 3f;
+        PlayerDataManager.Instance.ModifyMomentum(-3f);
+
 
         forcedLoanHistory.Enqueue(true);
         TrimForcedLoanHistory();
@@ -646,5 +649,42 @@ public class GameManager : MonoBehaviour
             if (activeIncomeEffects[i].remainingMonths <= 0)
                 activeIncomeEffects.RemoveAt(i);
         }
+    }
+    private void UpdateTopButtons()
+    {
+        bool canShowLoan =
+            CurrentPhase == GamePhase.Simulation &&
+            loanManager != null &&
+            loanManager.IsLoanUnlocked &&
+            !uiManager.IsPopupActive;
+
+        bool canShowSavings =
+            CurrentPhase == GamePhase.Simulation &&
+            financeManager != null &&
+            (financeManager.cashOnHand > 0f ||
+             financeManager.generalSavingsBalance > 0f) &&
+            !uiManager.IsPopupActive;
+
+        if (canShowLoan)
+            uiManager.ShowLoanTopButton();
+        else
+            uiManager.HideLoanTopButton();
+
+        if (canShowSavings)
+            uiManager.ShowSavingsTopButton();
+        else
+            uiManager.HideSavingsTopButton();
+    }
+
+    public void PauseSimulation()
+    {
+        IsSimulationPaused = true;
+        Debug.Log("[Simulation] Paused");
+    }
+
+    public void ResumeSimulation()
+    {
+        IsSimulationPaused = false;
+        Debug.Log("[Simulation] Resumed");
     }
 }

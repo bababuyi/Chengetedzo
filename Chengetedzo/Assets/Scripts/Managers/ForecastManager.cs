@@ -30,6 +30,9 @@ public class ForecastManager : MonoBehaviour
     public GameObject forecastItemPrefab;
     public TMP_Text forecastHeaderText;
 
+    [SerializeField] private int articlesPerForecast = 3;
+    private HashSet<string> usedHeadlines = new HashSet<string>();
+
     public enum ForecastCategory
     {
         Health,
@@ -65,39 +68,38 @@ public class ForecastManager : MonoBehaviour
 
     public void GenerateForecast()
     {
+        usedHeadlines.Clear();
         selectedForecasts.Clear();
         Season upcomingSeason =
-    GameManager.Instance.GetSeasonForMonth(GameManager.Instance.currentMonth);
+        GameManager.Instance.GetSeasonForMonth(GameManager.Instance.currentMonth);
         var possibleEvents = GameManager.Instance.eventManager.allEvents;
         List<EventManager.MonthlyEvent> seasonalEvents =
         possibleEvents.FindAll(e =>
         e.season == Season.Any || e.season == upcomingSeason
         );
-        Dictionary<ForecastCategory, int> categoryRisk =
-    new Dictionary<ForecastCategory, int>();
+        Dictionary<ForecastCategory, float> categoryRisk =
+        new Dictionary<ForecastCategory, float>();
 
         foreach (var ev in seasonalEvents)
         {
             if (!categoryRisk.ContainsKey(ev.category))
-                categoryRisk[ev.category] = 0;
+                categoryRisk[ev.category] = 0f;
 
-            categoryRisk[ev.category]++;
+            float avgLoss = (ev.minLossPercent + ev.maxLossPercent) * 0.5f;
+            categoryRisk[ev.category] += ev.probability * avgLoss;
         }
         foreach (var entry in categoryRisk)
         {
-            int articleCount =
-                entry.Value >= 4 ? 3 :
-                entry.Value >= 2 ? 2 : 1;
-
-            AddArticlesForCategory(entry.Key, articleCount);
+            AddArticlesForCategory(entry.Key, articlesPerForecast, upcomingSeason);
         }
-        while (selectedForecasts.Count < 7)
+
+        while (selectedForecasts.Count < articlesPerForecast)
         {
             ForecastCategory randomCategory =
                 (ForecastCategory)Random.Range(0,
                     System.Enum.GetValues(typeof(ForecastCategory)).Length);
 
-            AddArticlesForCategory(randomCategory, 1);
+            AddArticlesForCategory(randomCategory, 1, upcomingSeason);
         }
         ShowForecast();
     }
@@ -176,41 +178,33 @@ public class ForecastManager : MonoBehaviour
         }
     }
 
-    private void AddArticlesForCategory(
-    ForecastCategory category,
-    int count)
+    private void AddArticlesForCategory(ForecastCategory category,int count,Season currentSeason)
     {
-        string[] pool = GetLinesForCategory(category);
+        List<ForecastArticle> pool = forecastLibrary.FindAll(a =>
+            a.category == category &&
+            (a.season == Season.Any || a.season == currentSeason) &&
+            !usedHeadlines.Contains(a.headline)
+        );
 
-        List<string> shuffled = new List<string>(pool);
-        shuffled.Sort((a, b) => Random.Range(-1, 2));
+        pool.Sort((a, b) => Random.Range(-1, 2));
 
-        for (int i = 0; i < Mathf.Min(count, shuffled.Count); i++)
+        for (int i = 0; i < Mathf.Min(count, pool.Count); i++)
         {
-            string[] parts = shuffled[i].Split('\n');
-            if (parts.Length < 2) continue;
-
-            selectedForecasts.Add(new ForecastArticle
-            {
-                category = category,
-                season = Season.Any,
-                headline = parts[0],
-                body = parts[1]
-            });
+            selectedForecasts.Add(pool[i]);
+            usedHeadlines.Add(pool[i].headline);
         }
     }
-
-    private string[] GetLinesForCategory(ForecastCategory category)
-    {
-        return category switch
-        {
-            ForecastCategory.Health => ForecastLines.Health,
-            ForecastCategory.Livestock => ForecastLines.Livestock,
-            ForecastCategory.Crops => ForecastLines.Crops,
-            ForecastCategory.Economic => ForecastLines.Economic,
-            ForecastCategory.Crime => ForecastLines.Crime,
-            ForecastCategory.Weather => ForecastLines.Weather,
-            _ => ForecastLines.Economic
-        };
-    }
+    //private string[] GetLinesForCategory(ForecastCategory category)
+    //{
+    //  return category switch
+    //{
+    //  ForecastCategory.Health => ForecastLines.Health,
+    //ForecastCategory.Livestock => ForecastLines.Livestock,
+    //ForecastCategory.Crops => ForecastLines.Crops,
+    //ForecastCategory.Economic => ForecastLines.Economic,
+    //ForecastCategory.Crime => ForecastLines.Crime,
+    //ForecastCategory.Weather => ForecastLines.Weather,
+    //_ => ForecastLines.Economic
+    //};
+    //}
 }

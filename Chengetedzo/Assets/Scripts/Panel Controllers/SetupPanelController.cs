@@ -96,18 +96,40 @@ public class SetupPanelController : MonoBehaviour
 
     public void ConfirmSetup()
     {
+        if (!float.TryParse(minIncomeInput.text, out float minIncome))
+        {
+            ShowWarning("Invalid minimum income.");
+            return;
+        }
+
+        float maxIncome = minIncome;
+
+        if (!stableIncomeToggle.isOn)
+        {
+            if (!float.TryParse(maxIncomeInput.text, out maxIncome))
+            {
+                ShowWarning("Invalid maximum income.");
+                return;
+            }
+        }
+
+        //if (finance == null)
+        //  return;
+
         finance.assets = new PlayerAssets
         {
-            hasHouse = hasHouseToggle.isOn,
-            hasLivestock = hasLivestockToggle.isOn,
-            hasMotor = hasMotorToggle.isOn,
-            hasCrops = hasCropsToggle.isOn
+            hasHouse = hasHouseToggle != null && hasHouseToggle.isOn,
+            hasLivestock = hasLivestockToggle != null && hasLivestockToggle.isOn,
+            hasMotor = hasMotorToggle != null && hasMotorToggle.isOn,
+            hasCrops = hasCropsToggle != null && hasCropsToggle.isOn
         };
 
-        InsuranceManager.Instance.RefreshEligibility();
+        if (InsuranceManager.Instance != null)
+            InsuranceManager.Instance.RefreshEligibility();
 
         LockSetupUI();
     }
+
     private void LockSetupUI()
     {
         hasHouseToggle.interactable = false;
@@ -128,9 +150,14 @@ public class SetupPanelController : MonoBehaviour
 
         if (step == 2)
         {
+            if (expensesPanelController == null)
+            {
+                Debug.LogError("[SetupPanel] ExpensesPanelController missing.");
+                return;
+            }
+
             expensesPanelController.Init();
             expensesPanelController.SetHousingMode(hasHouseToggle.isOn);
-
             OnSchoolFeesToggled(schoolFeesToggle.isOn);
         }
 
@@ -209,12 +236,13 @@ public class SetupPanelController : MonoBehaviour
         if (!schoolFeesToggle.isOn)
             return true;
 
-        if (!float.TryParse(schoolFeesAmountInput.text, out float fees) || fees <= 0)
+        if (!float.TryParse(schoolFeesAmountInput.text, out float fees))
         {
-            ShowWarning("Please enter a valid school fee amount.");
+            ShowWarning("Invalid school fee amount.");
             return false;
         }
 
+        GameManager.Instance.setupData.schoolFeesAmount = fees;
         return true;
     }
 
@@ -237,6 +265,14 @@ public class SetupPanelController : MonoBehaviour
 
     public void ConfirmAndStart()
     {
+        if (GameManager.Instance == null ||
+            PlayerDataManager.Instance == null ||
+            UIManager.Instance == null)
+        {
+            Debug.LogError("[SetupPanelController] Required manager missing.");
+            return;
+        }
+
         GameManager gm = GameManager.Instance;
 
         ConfirmSetup();
@@ -255,8 +291,8 @@ public class SetupPanelController : MonoBehaviour
         if (!int.TryParse(childrenInput.text, out totalChildren) || totalChildren < 0)
             totalChildren = 0;
 
-        PlayerDataManager.Instance.adults = totalAdults;
-        PlayerDataManager.Instance.children = totalChildren;
+        PlayerDataManager.Instance.Adults = totalAdults;
+        PlayerDataManager.Instance.Children = totalChildren;
 
         gm.setupData.hasSchoolFees = schoolFeesToggle.isOn;
         if (schoolFeesToggle.isOn)
@@ -274,14 +310,20 @@ public class SetupPanelController : MonoBehaviour
         UIManager.Instance.ShowBudgetPanel();
         gameObject.SetActive(false);
 
-        // Hide setup panel
-        gameObject.SetActive(false);
+        if (expensesPanelController != null)
+            expensesPanelController.ApplyExpensesToFinance(finance);
+
+        if (!ValidateFullSetup())
+            return;
     }
 
     private void BuildReviewSummary()
     {
-        float minIncome = float.Parse(minIncomeInput.text);
-        float maxIncome = float.Parse(maxIncomeInput.text);
+        float.TryParse(minIncomeInput.text, out float minIncome);
+        float.TryParse(maxIncomeInput.text, out float maxIncome);
+
+        if (minIncome <= 0) minIncome = 0;
+        if (maxIncome <= 0) maxIncome = minIncome;
 
         int adults = 1;
         int children = 0;
@@ -307,7 +349,7 @@ public class SetupPanelController : MonoBehaviour
 
         if (hasSchoolFees)
         {
-            float fees = float.Parse(schoolFeesAmountInput.text);
+            float.TryParse(schoolFeesAmountInput.text, out float fees);
             summary += $"School Fees: ${fees:F0} per term\n\n";
         }
 
@@ -348,4 +390,26 @@ public class SetupPanelController : MonoBehaviour
         }
     }
 
+    private void OnDestroy()
+    {
+        stableIncomeToggle?.onValueChanged.RemoveAllListeners();
+        schoolFeesToggle?.onValueChanged.RemoveAllListeners();
+        hasHouseToggle?.onValueChanged.RemoveAllListeners();
+        minIncomeInput?.onValueChanged.RemoveAllListeners();
+        adultsInput?.onEndEdit.RemoveAllListeners();
+    }
+
+    private bool ValidateFullSetup()
+    {
+        return ValidateIncome() &&
+               ValidateSchoolFees();
+    }
+
+    public void UnlockSetupUI()
+    {
+        hasHouseToggle.interactable = true;
+        hasLivestockToggle.interactable = true;
+        hasMotorToggle.interactable = true;
+        hasCropsToggle.interactable = true;
+    }
 }

@@ -72,4 +72,10 @@ public class InsuranceToggleItem : MonoBehaviour
     {
         statusText.text = plan.GetStatusString();
     }
+
+    public void SetInteractable(bool state)
+    {
+        if (toggle != null)
+            toggle.interactable = state;
+    }
 }

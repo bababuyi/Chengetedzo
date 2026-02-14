@@ -17,24 +17,43 @@ public class InsurancePanel : MonoBehaviour
 
     private InsuranceManager insuranceManager;
 
-
     private void Start()
     {
+        RefreshUI();
     }
 
     private void Awake()
     {
+        if (GameManager.Instance == null)
+        {
+            Debug.LogError("[InsurancePanel] GameManager not initialized.");
+            enabled = false;
+            return;
+        }
+
         insuranceManager = GameManager.Instance.insuranceManager;
 
         if (insuranceManager == null)
         {
-            Debug.LogError("InsuranceManager not found in scene!");
+            Debug.LogError("[InsurancePanel] InsuranceManager not found.");
+            enabled = false;
             return;
         }
 
-        planInfoText.text = "Select one or more insurance plans to see their details.";
-        confirmButton.onClick.AddListener(ConfirmInsurance);
-        confirmButton.gameObject.SetActive(true);
+        if (planInfoText != null)
+            planInfoText.text = "Select one or more insurance plans to see their details.";
+
+        if (confirmButton != null)
+        {
+            confirmButton.onClick.AddListener(ConfirmInsurance);
+            confirmButton.gameObject.SetActive(true);
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (confirmButton != null)
+            confirmButton.onClick.RemoveListener(ConfirmInsurance);
     }
 
     public bool PlayerMeetsRequirement(InsuranceManager.InsurancePlan plan)
@@ -44,18 +63,25 @@ public class InsurancePanel : MonoBehaviour
                insuranceManager.PlayerMeetsRequirement(plan);
     }
 
-    private List<InsuranceToggleItem> toggleItems = new();
-
-    public void OnPlanToggled(bool isOn, InsuranceManager.InsuranceType type)
+    public void OnPlanToggled(bool isOn, InsuranceType type)
     {
+        if (insuranceManager == null)
+            return;
+
         var plan = insuranceManager.allPlans.Find(p => p.type == type);
-        if (plan == null) return;
+        if (plan == null)
+            return;
 
         if (isOn)
         {
-            insuranceManager.BuyInsurance(type);
+            bool success = insuranceManager.BuyInsurance(type);
 
-            float premium = insuranceManager.GetTotalMonthlyPremium();
+            if (!success)
+            {
+                RefreshUI(); // revert toggle state
+                planInfoText.text = "Not enough funds to purchase this plan.";
+                return;
+            }
 
             planInfoText.text =
                 $"<b>{plan.planName}</b>\n\n" +
@@ -68,7 +94,8 @@ public class InsurancePanel : MonoBehaviour
             insuranceManager.CancelInsurance(type);
             planInfoText.text = $"Removed {plan.planName} from your active plans.";
         }
-        RefreshUI();
+
+        UpdateSummary();
     }
 
     private void UpdateSummary()
@@ -82,6 +109,11 @@ public class InsurancePanel : MonoBehaviour
 
     public void ConfirmInsurance()
     {
+        Debug.Log("Current Phase: " + GameManager.Instance.CurrentPhase);
+
+        if (GameManager.Instance == null)
+            return;
+
         if (GameManager.Instance.CurrentPhase != GameManager.GamePhase.Insurance)
             return;
 
@@ -90,17 +122,23 @@ public class InsurancePanel : MonoBehaviour
 
     public void RefreshUI()
     {
-        // Clear existing toggle items
+        if (toggleContainer == null || togglePrefab == null || insuranceManager == null)
+            return;
+
         foreach (Transform child in toggleContainer)
             Destroy(child.gameObject);
 
-        // Rebuild from current insurance state
         foreach (var plan in insuranceManager.allPlans)
         {
             var item = Instantiate(togglePrefab, toggleContainer);
+
+            bool meetsRequirement = PlayerMeetsRequirement(plan);
+
             item.Init(plan, this, insuranceManager);
+            item.SetInteractable(meetsRequirement);
         }
 
         UpdateSummary();
     }
+
 }

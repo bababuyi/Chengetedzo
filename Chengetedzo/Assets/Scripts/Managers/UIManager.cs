@@ -13,10 +13,10 @@ public class UIManager : MonoBehaviour
 
     [Header("Top HUD Buttons")]
     public GameObject loanButton;
+    public GameObject savingsButton;
 
     [Header("Panels")]
     public GameObject budgetPanel;
-    public GameObject savingsPanel;
     public GameObject loanPanel;
     public GameObject insurancePanel;
     public GameObject reportPanel;
@@ -59,6 +59,7 @@ public class UIManager : MonoBehaviour
         mentorPopup?.SetActive(false);
 
         HideLoanTopButton();
+        HideSavingsTopButton();
     }
 
     private void Start()
@@ -81,7 +82,12 @@ public class UIManager : MonoBehaviour
 
     public void UpdateMonthText(int currentMonth, int totalMonths)
     {
-        monthText.text = $"Month: {currentMonth}/{totalMonths}";
+        string monthName = System.Globalization.CultureInfo
+            .CurrentCulture
+            .DateTimeFormat
+            .GetMonthName(currentMonth);
+
+        monthText.text = $"{monthName} ({currentMonth}/{totalMonths})";
     }
 
     public void UpdateMoneyText(float amount)
@@ -89,11 +95,10 @@ public class UIManager : MonoBehaviour
         moneyText.text = $"Money: ${amount:F2}";
     }
 
-    // ===== Panel Switching =====
+    // Hides all simulation and flow panels (does NOT hide setup, top HUD, or popups)
     public void HideAllPanels()
     {
         budgetPanel.SetActive(false);
-        savingsPanel.SetActive(false);
         loanPanel.SetActive(false);
         insurancePanel.SetActive(false);
         reportPanel.SetActive(false);
@@ -121,20 +126,18 @@ public class UIManager : MonoBehaviour
 
         forecastPanel.SetActive(true);
         topHUD.SetActive(true);
-
-        GameManager.Instance.SetPhase(GameManager.GamePhase.Forecast);
     }
 
     public void ShowInsurancePanel()
     {
         HideAllPanels();
+
+        GameManager.Instance.SetPhase(GameManager.GamePhase.Insurance);
+
         insurancePanel.SetActive(true);
 
         GameManager.Instance.insuranceManager.RefreshEligibility();
-
         insurancePanel.GetComponent<InsurancePanel>()?.RefreshUI();
-
-        GameManager.Instance.SetPhase(GameManager.GamePhase.Insurance);
     }
 
     public void ShowReportPanel(string reportText)
@@ -144,8 +147,6 @@ public class UIManager : MonoBehaviour
 
         if (monthlyReportText != null)
             monthlyReportText.text = reportText;
-
-        GameManager.Instance.SetPhase(GameManager.GamePhase.Report);
     }
 
     // ===== Event Popup =====
@@ -159,7 +160,8 @@ public class UIManager : MonoBehaviour
 
         eventIcon.sprite = icon;
         eventIcon.enabled = icon != null;
-
+       
+        // NOTE: Uses Time.timeScale = 0; GameManager relies on WaitForSecondsRealtime
         Time.timeScale = 0f;
         IsPopupActive = true;
 
@@ -219,9 +221,9 @@ public class UIManager : MonoBehaviour
         loanPanel.SetActive(true);
         topHUD.SetActive(true);
 
-        loanPanel.GetComponent<LoanPanelController>()?.RefreshUI();
+        GameManager.Instance.BeginLoanDecision();
 
-        GameManager.Instance.SetPhase(GameManager.GamePhase.Loan);
+        loanPanel.GetComponent<LoanPanelController>()?.RefreshUI();
     }
 
     public void ShowLoanTopButton()
@@ -245,6 +247,40 @@ public class UIManager : MonoBehaviour
     {
         HideAllPanels();
         topHUD.SetActive(true);
+
         GameManager.Instance.OnLoanDecisionFinished();
+    }
+
+    public void ShowSavingsTopButton()
+    {
+        if (savingsButton != null)
+            savingsButton.SetActive(true);
+    }
+
+    public void HideSavingsTopButton()
+    {
+        if (savingsButton != null)
+            savingsButton.SetActive(false);
+    }
+
+    public void OnSavingsButtonClicked()
+    {
+        HideAllPanels();
+        budgetPanel.SetActive(true);
+        topHUD.SetActive(true);
+
+        GameManager.Instance.PauseSimulation();
+
+        budgetPanel
+            .GetComponent<BudgetPanelController>()
+            ?.OpenSavingsSection(); // optional but ideal
+    }
+
+    public void CloseSavingsPanel()
+    {
+        HideAllPanels();
+        topHUD.SetActive(true);
+
+        GameManager.Instance.ResumeSimulation();
     }
 }

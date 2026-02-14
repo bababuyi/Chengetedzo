@@ -33,29 +33,38 @@ public class BudgetPanelController : MonoBehaviour
 
     private void Start()
     {
-        finance = GameManager.Instance?.financeManager;
+        if (GameManager.Instance == null)
+        {
+            Debug.LogError("[BudgetPanelController] GameManager not ready.");
+            return;
+        }
 
-        if (finance == null)
+        finance = GameManager.Instance.financeManager;
+
+        if (finance == null || GameManager.Instance == null)
+
         {
             Debug.LogError("[BudgetPanelController] FinanceManager not ready.");
             return;
         }
 
-        confirmButton.onClick.AddListener(OnConfirmPressed);
-        savingsSlider.onValueChanged.AddListener(_ => UpdateValues());
+        if (confirmButton != null)
+            confirmButton.onClick.AddListener(OnConfirmPressed);
+
+        if (savingsSlider != null)
+            savingsSlider.onValueChanged.AddListener(_ => UpdateValues());
 
         SetupWithdrawButtons();
 
-        // Default: setup phase
         ConfigureForPhase(GameManager.GamePhase.Idle);
 
         UpdateValues();
     }
 
-
     public void LoadDefaultsFromSetup()
     {
-        if (finance == null)
+        if (finance == null || GameManager.Instance == null)
+
         {
             Debug.LogError("[BudgetPanelController] FinanceManager not found.");
             return;
@@ -64,13 +73,21 @@ public class BudgetPanelController : MonoBehaviour
         var setup = GameManager.Instance.setupData;
 
         incomeDisplayText.text = $"Monthly Income: ${finance.currentIncome:F0}";
-        savingsSlider.value = finance.currentIncome * 0.1f;
+        float maxIncome = GameManager.Instance.setupData.maxIncome;
+        savingsSlider.value = maxIncome * 0.1f;
 
         UpdateValues();
     }
 
     private void UpdateValues()
     {
+        if (savingsSlider == null) return;
+
+        float maxIncome = GameManager.Instance.setupData.maxIncome;
+
+        savingsSlider.minValue = 0;
+        savingsSlider.maxValue = maxIncome;
+
         savingsValueText.text = $"${savingsSlider.value:F0}";
     }
 
@@ -106,9 +123,16 @@ public class BudgetPanelController : MonoBehaviour
 
     private void Withdraw(float amount)
     {
+        if (finance == null || GameManager.Instance == null)
+            return;
+
         if (finance.WithdrawFromSavings(amount))
         {
             RefreshSavingsDisplay();
+        }
+        else
+        {
+            Debug.Log("[Budget] Withdrawal failed.");
         }
     }
 
@@ -147,5 +171,13 @@ public class BudgetPanelController : MonoBehaviour
 
         if (!isSetup)
             RefreshSavingsDisplay();
+
+        if (confirmButton != null)
+            confirmButton.interactable = true;
+    }
+
+    public void OpenSavingsSection()
+    {
+        // Highlight savings tab / scroll to savings / expand savings UI
     }
 }

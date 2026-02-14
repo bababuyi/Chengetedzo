@@ -78,7 +78,6 @@ public class FinanceManager : MonoBehaviour
         else
             schoolFeesPerTerm = 0f;
 
-        RollMonthlyIncome();
         // Starting cash (choose ONE philosophy)
         cashOnHand = currentIncome * 0.5f;
     }
@@ -98,6 +97,8 @@ public class FinanceManager : MonoBehaviour
     /// </summary>
     public void ProcessMonthlyBudget()
     {
+        // income already rolled once per month
+        RollMonthlyIncome();
         // 1. Income (apply income effects)
         float incomeMultiplier = GameManager.Instance.GetIncomeMultiplier();
         float effectiveIncome = currentIncome * incomeMultiplier;
@@ -123,7 +124,7 @@ public class FinanceManager : MonoBehaviour
             LastMonthSavingsDelta = generalSavingsMonthly;
         }
 
-        // 4. Interest (after contribution)
+        // 4. Interest (applied to current savings balance after contributions/withdrawals)
         float interestBase = generalSavingsBalance;
 
         if (savingsWithdrawnThisMonth > 0)
@@ -143,8 +144,10 @@ public class FinanceManager : MonoBehaviour
         }
 
         // 5. Lifetime tracking
-        totalEarned += currentIncome;
+        totalEarned += effectiveIncome;
         totalSpent += totalExpenses;
+
+        ProcessSchoolFees(GameManager.Instance.currentMonth);
 
         Debug.Log(
             $"[Finance] Income: {currentIncome}, " +
@@ -160,6 +163,8 @@ public class FinanceManager : MonoBehaviour
     /// Applies player’s chosen budget plan (from BudgetPanel UI),
     /// including income, expenses, and allocation totals.
     /// </summary>
+
+    // NOTE: UI-only adjustment. Does NOT represent full monthly simulation.
     public void ApplyBudget(float income, float expenses, float allocations)
     {
         cashOnHand += income - (expenses + allocations);
@@ -253,7 +258,7 @@ public class FinanceManager : MonoBehaviour
 
         // ===== Budget Result =====
         sb.AppendLine("<b>Monthly Result</b>");
-        float net = currentIncome - totalExpenses;
+        float net = (currentIncome * incomeMultiplier) - totalExpenses;
 
         if (net >= 0)
             sb.AppendLine($"+ Surplus: ${net:F2}\n");
@@ -298,7 +303,9 @@ public class FinanceManager : MonoBehaviour
 
     public float GetHousingCost()
     {
-        return assets.hasHouse ? houseMaintenanceCost : rentCost;
+        bool ownsHouse = GameManager.Instance.setupData.housing == HousingType.OwnsHouse;
+
+        return ownsHouse ? houseMaintenanceCost : rentCost;
     }
 
     public float GetAssetValue(InsuranceManager.InsuranceType type)
@@ -344,7 +351,8 @@ public class FinanceManager : MonoBehaviour
         savingsWithdrawnThisMonth += amount;
 
         // Momentum impact (lighter than loans)
-        PlayerDataManager.Instance.financialMomentum -= 1f;
+        PlayerDataManager.Instance.ModifyMomentum(-1f);
+
 
         Debug.Log($"[Savings] Withdrew ${amount}. Savings left: ${generalSavingsBalance:F0}");
         return true;

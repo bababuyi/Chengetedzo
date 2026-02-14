@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Globalization;
 
 [System.Serializable]
 public struct ExpenseTier
@@ -49,6 +50,14 @@ public class ExpensesPanelController : MonoBehaviour
 
     public void Init()
     {
+        if (rentSlider == null || groceriesSlider == null ||
+    transportSlider == null || utilitiesSlider == null ||
+    houseCostInput == null)
+        {
+            Debug.LogError("[ExpensesPanelController] Missing UI references.");
+            return;
+        }
+
         // Clear old listeners
         rentSlider.onValueChanged.RemoveAllListeners();
         groceriesSlider.onValueChanged.RemoveAllListeners();
@@ -73,8 +82,13 @@ public class ExpensesPanelController : MonoBehaviour
 
     private void Awake()
     {
-        rentSliderGroup.SetActive(true);
-        houseCostInputGroup.SetActive(false);
+        if (rentSliderGroup != null)
+            rentSliderGroup.SetActive(true);
+
+        if (houseCostInputGroup != null)
+            houseCostInputGroup.SetActive(false);
+
+        Init();
     }
 
     private void RefreshAll()
@@ -116,7 +130,7 @@ public class ExpensesPanelController : MonoBehaviour
 
     private void UpdateHouseCost()
     {
-        if (float.TryParse(houseCostInput.text, out float value))
+        if (float.TryParse(houseCostInput.text, NumberStyles.Float, CultureInfo.InvariantCulture, out float value))
         {
             houseCostValueText.text = $"${value:F0}";
 
@@ -147,12 +161,19 @@ public class ExpensesPanelController : MonoBehaviour
 
     public void ApplyExpensesToFinance(FinanceManager finance)
     {
+        if (finance == null)
+        {
+            Debug.LogError("[ExpensesPanelController] FinanceManager is null.");
+            return;
+        }
+
         // HOUSE OWNED — value is for insurance ONLY
         if (finance.assets.hasHouse)
         {
-            if (float.TryParse(houseCostInput.text, out float houseValue))
+            if (float.TryParse(houseCostInput.text, NumberStyles.Float, CultureInfo.InvariantCulture, out float houseValue))
             {
-                finance.houseInsuredValue = houseValue; // rename later if possible
+                houseValue = Mathf.Max(MIN_HOUSE_COST, houseValue);
+                finance.houseInsuredValue = houseValue;
             }
         }
         else
@@ -168,7 +189,12 @@ public class ExpensesPanelController : MonoBehaviour
 
     public void SetHousingMode(bool ownsHouse)
     {
-        rentSliderGroup.SetActive(!ownsHouse);
-        houseCostInputGroup.SetActive(ownsHouse);
+        if (rentSliderGroup != null)
+            rentSliderGroup.SetActive(!ownsHouse);
+
+        if (houseCostInputGroup != null)
+            houseCostInputGroup.SetActive(ownsHouse);
+
+        RefreshAll();
     }
 }

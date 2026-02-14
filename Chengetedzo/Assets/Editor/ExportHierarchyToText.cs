@@ -75,7 +75,7 @@ public class ExportHierarchyToText : EditorWindow
             if (component is MonoBehaviour mono)
             {
                 sb.AppendLine($"{indent}    - {mono.GetType().Name} (Script)");
-                AppendPublicFields(mono, sb, indent + "      ");
+                AppendInspectorFields(mono, sb, indent + "      ");
             }
             else
             {
@@ -91,16 +91,27 @@ public class ExportHierarchyToText : EditorWindow
         }
     }
 
-    static void AppendPublicFields(MonoBehaviour mono, StringBuilder sb, string indent)
+    static void AppendInspectorFields(MonoBehaviour mono, StringBuilder sb, string indent)
     {
         FieldInfo[] fields = mono.GetType().GetFields(
-            BindingFlags.Instance | BindingFlags.Public
+            BindingFlags.Instance |
+            BindingFlags.Public |
+            BindingFlags.NonPublic
         );
 
         foreach (FieldInfo field in fields)
         {
             // Skip hidden fields
             if (Attribute.IsDefined(field, typeof(HideInInspector)))
+                continue;
+
+            // Unity shows fields if:
+            // - public
+            // - OR private with [SerializeField]
+            bool isPublic = field.IsPublic;
+            bool isSerializedPrivate = Attribute.IsDefined(field, typeof(SerializeField));
+
+            if (!isPublic && !isSerializedPrivate)
                 continue;
 
             object value = field.GetValue(mono);
@@ -121,7 +132,20 @@ public class ExportHierarchyToText : EditorWindow
             return value.ToString();
 
         if (value is UnityEngine.Object unityObj)
-            return unityObj.name + $" ({type.Name})";
+        {
+            try
+            {
+                // Unity "fake null" safety
+                if (unityObj == null)
+                    return "null (Unassigned Reference)";
+
+                return unityObj.name + $" ({type.Name})";
+            }
+            catch
+            {
+                return "(Unassigned Reference)";
+            }
+        }
 
         if (value is IEnumerable enumerable)
         {
