@@ -40,11 +40,14 @@ public class GameManager : MonoBehaviour
     private bool mentorCommentPending = false;
     private List<ResolvedEvent> monthlyEvents = new();
     public bool IsLoanDecisionActive { get; private set; }
+    public bool IsSavingsDecisionActive { get; private set; }
     private Queue<bool> forcedLoanHistory = new(); // last 6 months
     private bool forcedLoanThisMonth = false;
     private List<IncomeEffect> activeIncomeEffects = new();
     public bool IsSimulationPaused { get; private set; }
     public System.Action OnSeasonChanged;
+    private Coroutine simulationCoroutine;
+    private bool mentorSpokeThisMonth = false;
 
     private void Awake()
     {
@@ -68,21 +71,17 @@ public class GameManager : MonoBehaviour
     private ResolvedEvent currentEvent;
 
     private void Start()
-    {
-        Debug.Log("Game Ready — Awaiting Start of Simulation.");
-        
+    {        
         uiManager.UpdateMoneyText(financeManager.cashOnHand);
         uiManager.UpdateMonthText(currentMonth, totalMonths);
 
         visualManager?.UpdateVisuals();
-        Debug.Log(
-    $"[Setup] Housing: {setupData.housing}, " +
-    $"Car: {setupData.ownsCar}, Farm: {setupData.ownsFarm}");
-
+        financeManager.InitializeFromSetup();
     }
 
     public void StartNewMonth()
     {
+        mentorSpokeThisMonth = false;
         forcedLoanThisMonth = false;
         Debug.Log($"=== Month {currentMonth} START ===");
 
@@ -93,18 +92,12 @@ public class GameManager : MonoBehaviour
         loanManager?.ResetMonthlyFlags();
         UpdateIncomeEffects();
     }
-    /// MONTHLY FINANCIAL ORDER (Intentional):
+    /// MONTHLY FINANCIAL ORDER:
     /// 1. Budget (income + savings allocation)
     /// 2. Insurance premiums
     /// 3. Loan contribution
     /// 4. Events (damage)
     /// 5. Loan repayment handled inside LoanManager
-    ///
-    /// Order matters:
-    /// - Budget first defines liquidity.
-    /// - Insurance before events ensures valid coverage.
-    /// - Loan contribution before events affects borrowing power.
-    /// - Events occur after protections are applied.
 
     public void BeginMonthlySimulation()
     {
@@ -127,6 +120,7 @@ public class GameManager : MonoBehaviour
         financeManager.ProcessMonthlyBudget();
         insuranceManager.ProcessMonthlyPremiums();
         loanManager?.ProcessContribution();
+        loanManager?.UpdateLoans();
 
         monthlyEvents = eventManager.GenerateMonthlyEvents(currentMonth);
 
@@ -148,15 +142,27 @@ public class GameManager : MonoBehaviour
 
         SetPhase(GamePhase.Report);
 
-        uiManager.ShowReportPanel(financeManager.GetMonthlySummary(currentMonth));
+        // Force clear all other panels BEFORE showing report
+        uiManager.HideAllPanels();
+
+        uiManager.ShowReportPanel(
+            financeManager.GetMonthlySummary(currentMonth)
+        );
     }
 
     private IEnumerator SimulationRoutine()
     {
-        while (IsSimulationPaused)
-            yield return null;
+        float timer = 0f;
 
-        yield return new WaitForSeconds(monthDuration);
+        while (timer < monthDuration)
+        {
+            if (!IsSimulationPaused)
+                timer += Time.deltaTime;
+
+            yield return null;
+        }
+
+        simulationCoroutine = null;
         EndMonthlySimulation();
     }
 
@@ -167,7 +173,8 @@ public class GameManager : MonoBehaviour
         Insurance,
         Loan,
         Simulation,
-        Report
+        Report,
+        Savings
     }
 
     public void SetPhase(GamePhase phase)
@@ -287,60 +294,68 @@ public class GameManager : MonoBehaviour
 
     private void EvaluateMentor()
     {
-        if (currentMonth <= 1)
+        if (currentMonth <= 1 || mentorSpokeThisMonth)
             return;
 
         float momentum = PlayerDataManager.Instance.FinancialMomentum;
-        int currentZone = GetMomentumZone(momentum);
 
-        // --- A. Zone Change ---
-        if (currentZone != lastMomentumZone)
+        string lineToShow = null;
+
+        // PRIORITY 1 — Recovery
+        if (IsRecovery(momentum))
         {
-            ShowZoneMentorLine(currentZone);
-            lastMomentumZone = currentZone;
+            lineToShow = MentorLines.RecoveryLines[
+                Random.Range(0, MentorLines.RecoveryLines.Length)];
         }
 
-        int forcedCount = 0;
-        foreach (bool forced in forcedLoanHistory)
-            if (forced) forcedCount++;
-
-        if (forcedCount >= 2)
+        // PRIORITY 2 — Forced Loan Pattern
+        else if (CountForcedLoans() >= 2)
         {
-            uiManager.ShowMentorMessage(
-                MentorLines.ForcedLoanPattern[
-                    Random.Range(0, MentorLines.ForcedLoanPattern.Length)
-                ]);
-        }
-        else if (forcedCount == 1)
-        {
-            uiManager.ShowMentorMessage(
-                MentorLines.ForcedLoan[
-                    Random.Range(0, MentorLines.ForcedLoan.Length)
-                ]);
+            lineToShow = MentorLines.ForcedLoanPattern[
+                Random.Range(0, MentorLines.ForcedLoanPattern.Length)];
         }
 
-        // --- B. Pattern Warning ---
-        if (!patternWarningIssued && IsNegativePatternForming())
+        // PRIORITY 3 — Zone Change
+        else if (HasZoneChanged(momentum))
         {
-            uiManager.ShowMentorMessage(
-                MentorLines.PatternWarning[
-                    Random.Range(0, MentorLines.PatternWarning.Length)]);
+            lineToShow = GetZoneLine(momentum);
+        }
+
+        // PRIORITY 4 — Pattern Warning
+        else if (!patternWarningIssued && IsNegativePatternForming())
+        {
+            lineToShow = MentorLines.PatternWarning[
+                Random.Range(0, MentorLines.PatternWarning.Length)];
+
             patternWarningIssued = true;
         }
 
-        // --- C. Recovery Acknowledgment ---
-        CheckRecovery(momentum);
+        if (lineToShow != null)
+        {
+            uiManager.ShowMentorMessage(lineToShow);
+            mentorSpokeThisMonth = true;
+        }
 
         previousMomentum = momentum;
     }
 
-
-    private int GetMomentumZone(float momentum)
+    private string GetZoneLine(float momentum)
     {
-        if (momentum >= 15f) return 2;
-        if (momentum >= 0f) return 1;
-        if (momentum > -15f) return -1;
-        return -2;                        
+        int zone = GetMomentumZone(momentum);
+
+        switch (zone)
+        {
+            case 2:
+                return MentorLines.Positive[Random.Range(0, MentorLines.Positive.Length)];
+            case 1:
+                return MentorLines.Neutral[Random.Range(0, MentorLines.Neutral.Length)];
+            case -1:
+                return MentorLines.Warning[Random.Range(0, MentorLines.Warning.Length)];
+            case -2:
+                return MentorLines.Negative[Random.Range(0, MentorLines.Negative.Length)];
+        }
+
+        return null;
     }
 
     private string GetYearEndMentorReflection()
@@ -381,29 +396,6 @@ public class GameManager : MonoBehaviour
         return MentorLines.MidYearNegative[Random.Range(0, MentorLines.MidYearNegative.Length)];
     }
 
-    private void ShowZoneMentorLine(int zone)
-    {
-        string line = "";
-
-        switch (zone)
-        {
-            case 2:
-                line = MentorLines.Positive[Random.Range(0, MentorLines.Positive.Length)];
-                break;
-            case 1:
-                line = MentorLines.Neutral[Random.Range(0, MentorLines.Neutral.Length)];
-                break;
-            case -1:
-                line = MentorLines.Warning[Random.Range(0, MentorLines.Warning.Length)];
-                break;
-            case -2:
-                line = MentorLines.Negative[Random.Range(0, MentorLines.Negative.Length)];
-                break;
-        }
-
-        uiManager.ShowMentorMessage(line);
-    }
-
     private bool IsNegativePatternForming()
     {
         int skipCount = 0;
@@ -413,29 +405,35 @@ public class GameManager : MonoBehaviour
         return overBudgetStreak >= 2 || skipCount >= 3;
     }
 
-    private void CheckRecovery(float currentMomentum)
-    {
-        if (recoveryAcknowledged)
-            return;
+    //private void CheckRecovery(float currentMomentum)
+    //{
+        //if (recoveryAcknowledged)
+          //  return;
 
-        bool wasCritical = previousMomentum <= -15f;
-        bool improving = currentMomentum > previousMomentum;
-        bool escapedDanger = currentMomentum >= -5f;
+        //bool wasCritical = previousMomentum <= -15f;
+        //bool improving = currentMomentum > previousMomentum;
+        //bool escapedDanger = currentMomentum >= -5f;
 
-        if (wasCritical && improving && escapedDanger)
-        {
-            uiManager.ShowMentorMessage(
-                MentorLines.RecoveryLines[
-                    Random.Range(0, MentorLines.RecoveryLines.Length)]);
-            recoveryAcknowledged = true;
-        }
-    }
+        //if (wasCritical && improving && escapedDanger)
+        //{
+            //if (mentorSpokeThisMonth) return;
+
+            //uiManager.ShowMentorMessage(line);
+            //mentorSpokeThisMonth = true;
+
+            //uiManager.ShowMentorMessage(
+            //    MentorLines.RecoveryLines[
+          //          Random.Range(0, MentorLines.RecoveryLines.Length)]);
+        //    recoveryAcknowledged = true;
+      //  }
+    //}
 
     public void EndMonthAndAdvance()
     {
         Debug.Log($"=== Month {currentMonth} END ===");
 
         currentMonth++;
+        UIManager.Instance.UpdateMonthText(currentMonth, totalMonths);
 
         OnSeasonChanged?.Invoke();
 
@@ -464,10 +462,10 @@ public class GameManager : MonoBehaviour
     {
         if (pendingEvents.Count == 0)
         {
-            if (IsLoanDecisionActive)
+            if (IsLoanDecisionActive || IsSavingsDecisionActive)
                 return;
 
-            StartCoroutine(SimulationRoutine());
+            StartSimulationTimer();
             return;
         }
 
@@ -477,61 +475,93 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator ShowNextEventWithDelay()
     {
-        // Small pause between events (real-time, unaffected by Time.timeScale)
         yield return new WaitForSecondsRealtime(delayBetweenEvents);
 
         currentEvent = pendingEvents.Dequeue();
 
-        // Apply damage before showing
-        insuranceManager.HandleEvent(
-            currentEvent.type,
-            currentEvent.lossPercent
-        );
+        string fullDescription = currentEvent.description;
+
+        // Show gain or loss
+        if (currentEvent.actualMoneyChange != 0f)
+        {
+            if (currentEvent.actualMoneyChange > 0f)
+            {
+                fullDescription +=
+                    $"\n\nYou gained: +${currentEvent.actualMoneyChange:F0}";
+            }
+            else
+            {
+                fullDescription +=
+                    $"\n\nYou lost: -${Mathf.Abs(currentEvent.actualMoneyChange):F0}";
+            }
+        }
+
+        // Show insurance payout (if any)
+        if (currentEvent.insurancePayout > 0f)
+        {
+            fullDescription +=
+                $"\nInsurance covered: +${currentEvent.insurancePayout:F0}";
+        }
 
         uiManager.ShowEventPopup(
             currentEvent.title,
-            currentEvent.description
+            fullDescription
         );
+
+        Debug.Log($"Event Money Change: {currentEvent.actualMoneyChange}");
+        Debug.Log($"Insurance Payout: {currentEvent.insurancePayout}");
+
     }
 
     private IEnumerator ShowMentorBetweenEvents()
     {
-        // Small breathing pause
         yield return new WaitForSecondsRealtime(1f);
 
-        string line = PickEventMentorLine();
-        uiManager.ShowMentorMessage(line);
+        if (!mentorSpokeThisMonth)
+        {
+            string line = PickEventMentorLine();
+            uiManager.ShowMentorMessage(line);
+            mentorSpokeThisMonth = true;
+        }
 
-        // Wait until mentor popup is closed
         while (uiManager.IsPopupActive)
             yield return null;
 
-        // Small pause after mentor
         yield return new WaitForSecondsRealtime(0.5f);
 
         ProcessNextEvent();
     }
 
+
     private string PickEventMentorLine()
     {
-        // You can expand this later with insurance awareness etc.
-        return MentorLines.Warning[
-            Random.Range(0, MentorLines.Warning.Length)
+        if (currentEvent.insurancePayout > 0f)
+            return "Protection reduced the impact. That wasn’t accidental.";
+
+        if (currentEvent.actualMoneyChange < 0f)
+            return "Losses rarely arrive alone. Stay aware of the pattern.";
+
+        return MentorLines.Neutral[
+            Random.Range(0, MentorLines.Neutral.Length)
         ];
     }
 
     public void BeginLoanDecision()
     {
-        IsLoanDecisionActive = true;
+        if (IsLoanDecisionActive)
+            return;
 
+        IsLoanDecisionActive = true;
+        PauseSimulation();
         uiManager.ShowLoanPanel();
     }
 
+    // Dont need this anymore
     public void EndLoanDecision()
     {
         IsLoanDecisionActive = false;
         if (CurrentPhase == GamePhase.Simulation)
-            StartCoroutine(SimulationRoutine());
+            StartSimulationTimer();
     }
 
     public void OnInsuranceConfirmed()
@@ -554,8 +584,14 @@ public class GameManager : MonoBehaviour
     public void OnLoanDecisionFinished()
     {
         IsLoanDecisionActive = false;
+
+        SetPhase(GamePhase.Simulation);
+
         UIManager.Instance.HideAllPanels();
-        StartCoroutine(SimulationRoutine());
+        ResumeSimulation();
+
+        if (CurrentPhase == GamePhase.Simulation)
+            StartSimulationTimer();
     }
 
     private void HandleForcedLoan()
@@ -652,6 +688,13 @@ public class GameManager : MonoBehaviour
     }
     private void UpdateTopButtons()
     {
+        if (CurrentPhase != GamePhase.Simulation)
+        {
+            uiManager.HideLoanTopButton();
+            uiManager.HideSavingsTopButton();
+            return;
+        }
+
         bool canShowLoan =
             CurrentPhase == GamePhase.Simulation &&
             loanManager != null &&
@@ -687,4 +730,91 @@ public class GameManager : MonoBehaviour
         IsSimulationPaused = false;
         Debug.Log("[Simulation] Resumed");
     }
+
+    private void StartSimulationTimer()
+    {
+        if (simulationCoroutine != null)
+            StopCoroutine(simulationCoroutine);
+
+        simulationCoroutine = StartCoroutine(SimulationRoutine());
+    }
+
+    private bool IsRecovery(float currentMomentum)
+    {
+        if (recoveryAcknowledged)
+            return false;
+
+        bool wasCritical = previousMomentum <= -15f;
+        bool improving = currentMomentum > previousMomentum;
+        bool escapedDanger = currentMomentum >= -5f;
+
+        if (wasCritical && improving && escapedDanger)
+        {
+            recoveryAcknowledged = true;
+            return true;
+        }
+
+        return false;
+    }
+
+    private int CountForcedLoans()
+    {
+        int count = 0;
+
+        foreach (bool forced in forcedLoanHistory)
+            if (forced) count++;
+
+        return count;
+    }
+
+    private bool HasZoneChanged(float momentum)
+    {
+        int currentZone = GetMomentumZone(momentum);
+
+        if (currentZone != lastMomentumZone)
+        {
+            lastMomentumZone = currentZone;
+            return true;
+        }
+
+        return false;
+    }
+
+    private int GetMomentumZone(float momentum)
+    {
+        if (momentum >= 15f) return 2;
+        if (momentum >= 0f) return 1;
+        if (momentum > -15f) return -1;
+        return -2;
+    }
+
+    public void BeginSavingsDecision()
+    {
+        SetPhase(GamePhase.Savings);
+        if (IsSavingsDecisionActive)
+            return;
+
+        IsSavingsDecisionActive = true;
+
+        PauseSimulation();
+
+        if (uiManager != null)
+            uiManager.ShowSavingsPanel();
+    }
+
+    public void OnSavingsDecisionFinished()
+    {
+        SetPhase(GamePhase.Simulation);
+
+        IsSavingsDecisionActive = false;
+
+        if (uiManager != null)
+            uiManager.HideAllPanels();
+
+        ResumeSimulation();
+
+        if (CurrentPhase == GamePhase.Simulation)
+            StartSimulationTimer();
+    }
+
 }

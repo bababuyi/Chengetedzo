@@ -14,6 +14,16 @@ public class ReportPanelController : MonoBehaviour
             return;
         }
 
+        if (GameManager.Instance == null)
+        {
+            Debug.LogWarning("[ReportPanel] GameManager not ready yet.");
+            continueButton.interactable = false;
+            return;
+        }
+
+        continueButton.interactable =
+            GameManager.Instance.CurrentPhase == GameManager.GamePhase.Report;
+
         continueButton.onClick.RemoveAllListeners();
         continueButton.onClick.AddListener(OnContinue);
     }

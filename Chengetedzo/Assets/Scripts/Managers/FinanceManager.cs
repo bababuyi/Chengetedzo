@@ -73,15 +73,22 @@ public class FinanceManager : MonoBehaviour
         maxIncome = setup.maxIncome;
         isIncomeStable = setup.isIncomeStable;
 
+        currentIncome = isIncomeStable
+            ? minIncome
+            : Random.Range(minIncome, maxIncome);
+
         if (setup.hasSchoolFees)
             schoolFeesPerTerm = setup.schoolFeesAmount;
         else
             schoolFeesPerTerm = 0f;
 
-        // Starting cash (choose ONE philosophy)
-        cashOnHand = currentIncome * 0.5f;
-    }
+        cashOnHand = Mathf.Max(0f, currentIncome * 0.5f);
 
+        Debug.Log("Income at init: " + currentIncome);
+        Debug.Log("Starting cash: " + cashOnHand);
+
+        UpdateHUD();
+    }
 
     public void SetIncomeRange(float min, float max, bool stable)
     {
@@ -113,6 +120,8 @@ public class FinanceManager : MonoBehaviour
 
         balance = effectiveIncome - totalExpenses;
         WasOverBudgetThisMonth = balance < 0;
+
+        ProcessSchoolFees(GameManager.Instance.currentMonth);
 
         // 3. General savings (ONLY if affordable)
         LastMonthSavingsDelta = 0f;
@@ -147,8 +156,6 @@ public class FinanceManager : MonoBehaviour
         totalEarned += effectiveIncome;
         totalSpent += totalExpenses;
 
-        ProcessSchoolFees(GameManager.Instance.currentMonth);
-
         Debug.Log(
             $"[Finance] Income: {currentIncome}, " +
             $"Expenses: {totalExpenses}, " +
@@ -157,6 +164,10 @@ public class FinanceManager : MonoBehaviour
         );
 
         savingsWithdrawnThisMonth = 0f;
+        UpdateHUD();
+
+        cashOnHand = Mathf.Max(0f, cashOnHand);
+        generalSavingsBalance = Mathf.Max(0f, generalSavingsBalance);
     }
 
     /// <summary>
@@ -168,6 +179,7 @@ public class FinanceManager : MonoBehaviour
     public void ApplyBudget(float income, float expenses, float allocations)
     {
         cashOnHand += income - (expenses + allocations);
+        UpdateHUD();
         Debug.Log($"[Finance] Budget Applied — New Balance: ${cashOnHand}");
     }
 
@@ -348,6 +360,7 @@ public class FinanceManager : MonoBehaviour
 
         generalSavingsBalance -= amount;
         cashOnHand += amount;
+        UpdateHUD();
         savingsWithdrawnThisMonth += amount;
 
         // Momentum impact (lighter than loans)
@@ -357,4 +370,30 @@ public class FinanceManager : MonoBehaviour
         Debug.Log($"[Savings] Withdrew ${amount}. Savings left: ${generalSavingsBalance:F0}");
         return true;
     }
+
+    private void UpdateHUD()
+    {
+        UIManager.Instance?.UpdateMoneyText(cashOnHand);
+    }
+
+    public float GetProjectedMonthlyExpenses()
+    {
+        float housingCost = GetHousingCost();
+
+        float projected =
+            housingCost +
+            groceries +
+            transport +
+            utilities;
+
+        // Include school fees if active (monthly average across terms)
+        if (schoolFeesPerTerm > 0f)
+        {
+            // Spread term fees across 12 months for projection
+            projected += (schoolFeesPerTerm * 3f) / 12f;
+        }
+
+        return projected;
+    }
+
 }

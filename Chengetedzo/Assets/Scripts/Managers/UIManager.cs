@@ -1,7 +1,8 @@
 using System.Collections;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
+using static GameManager;
 
 public class UIManager : MonoBehaviour
 {
@@ -69,15 +70,8 @@ public class UIManager : MonoBehaviour
 
     public void ShowSetupPanel()
     {
-        // Setup only
         setupPanel.SetActive(true);
-
-        budgetPanel.SetActive(false);
-        forecastPanel.SetActive(false);
-        endOfYearScreen.SetActive(false);
-
-        HideAllPanels(); // hides sim panels
-        topHUD.SetActive(false);
+        setupPanel.GetComponent<SetupPanelController>().OnPanelOpened();
     }
 
     public void UpdateMonthText(int currentMonth, int totalMonths)
@@ -218,10 +212,9 @@ public class UIManager : MonoBehaviour
     public void ShowLoanPanel()
     {
         HideAllPanels();
+        GameManager.Instance.SetPhase(GameManager.GamePhase.Loan);
         loanPanel.SetActive(true);
         topHUD.SetActive(true);
-
-        GameManager.Instance.BeginLoanDecision();
 
         loanPanel.GetComponent<LoanPanelController>()?.RefreshUI();
     }
@@ -240,7 +233,7 @@ public class UIManager : MonoBehaviour
 
     public void OnLoanButtonClicked()
     {
-        UIManager.Instance.ShowLoanPanel();
+        GameManager.Instance.BeginLoanDecision();
     }
 
     public void CloseLoanPanel()
@@ -265,15 +258,7 @@ public class UIManager : MonoBehaviour
 
     public void OnSavingsButtonClicked()
     {
-        HideAllPanels();
-        budgetPanel.SetActive(true);
-        topHUD.SetActive(true);
-
-        GameManager.Instance.PauseSimulation();
-
-        budgetPanel
-            .GetComponent<BudgetPanelController>()
-            ?.OpenSavingsSection(); // optional but ideal
+        GameManager.Instance.BeginSavingsDecision();
     }
 
     public void CloseSavingsPanel()
@@ -282,5 +267,15 @@ public class UIManager : MonoBehaviour
         topHUD.SetActive(true);
 
         GameManager.Instance.ResumeSimulation();
+    }
+    public void ShowSavingsPanel()
+    {
+        HideAllPanels();
+
+        budgetPanel.SetActive(true);
+        topHUD.SetActive(true);
+
+        var controller = budgetPanel.GetComponent<BudgetPanelController>();
+        controller?.ConfigureForPhase(GameManager.GamePhase.Savings);
     }
 }

@@ -82,6 +82,8 @@ public class LoanPanelController : MonoBehaviour
         repaymentValueText.text =$"Repayment Rate: {loanManager.repaymentRate * 100f:F0}%";
 
         UpdateRepaymentPreview();
+
+        Debug.Log("New repayment rate: " + loanManager.repaymentRate);
     }
 
     private void TryBorrow(float amount)
@@ -116,6 +118,9 @@ public class LoanPanelController : MonoBehaviour
         if (loanBalanceText != null)
             loanBalanceText.text =
                 $"Loan Balance: ${loanManager.loanBalance:F0}";
+        bool hasLoan = loanManager.loanBalance > 0f;
+        repaymentSlider.interactable = hasLoan;
+
 
         if (borrow100Button != null)
             borrow100Button.interactable = loanManager.borrowingPower >= 100;
@@ -134,20 +139,13 @@ public class LoanPanelController : MonoBehaviour
                 $"Repayment Rate: {loanManager.repaymentRate * 100f:F0}%";
 
         UpdateRepaymentPreview();
+        Debug.Log("Loan balance: " + loanManager.loanBalance);
+        Debug.Log("Slider interactable: " + repaymentSlider.interactable);
     }
 
     private void OnContinueClicked()
     {
-        if (GameManager.Instance == null)
-            return;
-
-        if (GameManager.Instance.CurrentPhase != GameManager.GamePhase.Loan)
-            return;
-
-        if (UIManager.Instance != null)
-            UIManager.Instance.HideAllPanels();
-
-        GameManager.Instance.BeginMonthlySimulation();
+        UIManager.Instance.CloseLoanPanel();
     }
 
     private void UpdateRepaymentPreview()

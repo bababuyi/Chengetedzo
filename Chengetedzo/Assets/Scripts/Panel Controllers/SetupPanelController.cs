@@ -126,8 +126,6 @@ public class SetupPanelController : MonoBehaviour
 
         if (InsuranceManager.Instance != null)
             InsuranceManager.Instance.RefreshEligibility();
-
-        LockSetupUI();
     }
 
     private void LockSetupUI()
@@ -147,6 +145,11 @@ public class SetupPanelController : MonoBehaviour
         nextButton.SetActive(step < 3);
 
         currentStep = step;
+
+        if (step == 1)
+        {
+            UnlockSetupUI();
+        }
 
         if (step == 2)
         {
@@ -276,6 +279,7 @@ public class SetupPanelController : MonoBehaviour
         GameManager gm = GameManager.Instance;
 
         ConfirmSetup();
+        LockSetupUI();
 
         // Save setup data
         gm.setupData.minIncome = float.Parse(minIncomeInput.text);
@@ -325,6 +329,8 @@ public class SetupPanelController : MonoBehaviour
         if (minIncome <= 0) minIncome = 0;
         if (maxIncome <= 0) maxIncome = minIncome;
 
+        float averageIncome = (minIncome + maxIncome) * 0.5f;
+
         int adults = 1;
         int children = 0;
 
@@ -337,40 +343,59 @@ public class SetupPanelController : MonoBehaviour
         bool stableIncome = stableIncomeToggle.isOn;
         bool hasSchoolFees = schoolFeesToggle.isOn;
 
+        float monthlyExpenses = 0f;
+
+        if (expensesPanelController != null)
+            monthlyExpenses = expensesPanelController.GetEstimatedMonthlyExpenses();
+
+        float surplus = averageIncome - monthlyExpenses;
+
         string summary = "<b>Your Starting Situation</b>\n\n";
 
-        summary += $"Income: ${minIncome:F0} – ${maxIncome:F0} per month\n";
-        summary += $"Stability: {(stableIncome ? "Stable income" : "Variable income")}\n\n";
+        summary += $"Income Range: ${minIncome:F0} – ${maxIncome:F0}\n";
+        summary += $"Estimated Monthly Income: ${averageIncome:F0}\n\n";
+
+        summary += $"Living Expenses: -${monthlyExpenses:F0}\n";
+
+        if (hasSchoolFees)
+        {
+            float.TryParse(schoolFeesAmountInput.text, out float fees);
+            summary += $"School Fees: -${fees:F0}\n";
+        }
+
+        summary += "\n";
+
+        if (surplus >= 0)
+            summary += $"<color=#3CB371>Estimated Surplus: +${surplus:F0}</color>\n\n";
+        else
+            summary += $"<color=#E74C3C>Estimated Shortfall: -${Mathf.Abs(surplus):F0}</color>\n\n";
 
         summary += $"Household: {adults} adult{(adults != 1 ? "s" : "")}";
         if (children > 0)
             summary += $", {children} child{(children != 1 ? "ren" : "")}";
         summary += "\n\n";
 
-        if (hasSchoolFees)
-        {
-            float.TryParse(schoolFeesAmountInput.text, out float fees);
-            summary += $"School Fees: ${fees:F0} per term\n\n";
-        }
-
-        summary += "<i>Nothing here is permanent — but patterns will begin here.</i>";
+        summary += "<i>This is your financial baseline. The year will test it.</i>";
 
         reviewSummaryText.text = summary;
 
         if (reflectionLineText != null)
-            reflectionLineText.text = GetReflectionLine(stableIncome, hasSchoolFees);
+            reflectionLineText.text = GetReflectionLine(stableIncome, hasSchoolFees, surplus);
     }
 
-    private string GetReflectionLine(bool stableIncome, bool hasSchoolFees)
+    private string GetReflectionLine(bool stableIncome, bool hasSchoolFees, float surplus)
     {
-        if (!stableIncome && hasSchoolFees)
-            return "Periods of uncertainty may test consistency.";
+        if (surplus < 0)
+            return "Your expenses already exceed your income. Stability will require difficult choices.";
 
-        if (!stableIncome)
-            return "Flexibility will matter more than precision.";
+        if (surplus < 200)
+            return "You have little breathing room. Small shocks may feel large.";
 
-        if (hasSchoolFees)
-            return "Regular commitments reward planning.";
+        if (!stableIncome && surplus > 0)
+            return "Your flexibility will matter more than your margin.";
+
+        if (hasSchoolFees && surplus > 0)
+            return "Regular commitments reward consistent planning.";
 
         return "A steady base gives you room to adapt.";
     }
@@ -412,4 +437,11 @@ public class SetupPanelController : MonoBehaviour
         hasMotorToggle.interactable = true;
         hasCropsToggle.interactable = true;
     }
+
+    public void OnPanelOpened()
+    {
+        UnlockSetupUI();
+        ShowStep(1);
+    }
+
 }

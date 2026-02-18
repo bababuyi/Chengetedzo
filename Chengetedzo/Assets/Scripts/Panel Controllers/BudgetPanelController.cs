@@ -11,6 +11,9 @@ public class BudgetPanelController : MonoBehaviour
     public Slider savingsSlider;
     public TMP_Text savingsValueText;
 
+    [Header("Navigation")]
+    public Button backButton;
+
     [Header("Confirm")]
     public Button confirmButton;
     public TMP_Text confirmButtonText;
@@ -33,6 +36,9 @@ public class BudgetPanelController : MonoBehaviour
 
     private void Start()
     {
+        if (backButton != null)
+            backButton.onClick.AddListener(OnBackPressed);
+
         if (GameManager.Instance == null)
         {
             Debug.LogError("[BudgetPanelController] GameManager not ready.");
@@ -73,8 +79,11 @@ public class BudgetPanelController : MonoBehaviour
         var setup = GameManager.Instance.setupData;
 
         incomeDisplayText.text = $"Monthly Income: ${finance.currentIncome:F0}";
+        ConfigureSliderBounds();
+
         float maxIncome = GameManager.Instance.setupData.maxIncome;
-        savingsSlider.value = maxIncome * 0.1f;
+        savingsSlider.value = Mathf.Round((maxIncome * 0.1f) / 10f) * 10f;
+
 
         UpdateValues();
     }
@@ -83,12 +92,13 @@ public class BudgetPanelController : MonoBehaviour
     {
         if (savingsSlider == null) return;
 
-        float maxIncome = GameManager.Instance.setupData.maxIncome;
+        // Snap to increments of 10
+        float snapped = Mathf.Round(savingsSlider.value / 10f) * 10f;
+        savingsSlider.SetValueWithoutNotify(snapped);
 
-        savingsSlider.minValue = 0;
-        savingsSlider.maxValue = maxIncome;
+        savingsValueText.text = $"${snapped:F0}";
 
-        savingsValueText.text = $"${savingsSlider.value:F0}";
+        UpdateSavingsColour(snapped);
     }
 
     private void OnConfirmPressed()
@@ -96,7 +106,21 @@ public class BudgetPanelController : MonoBehaviour
         if (currentPhase == GameManager.GamePhase.Idle)
         {
             // SETUP CONFIRM
-            finance.generalSavingsMonthly = savingsSlider.value;
+            float savings = savingsSlider.value;
+
+            float monthlyExpenses = finance.GetProjectedMonthlyExpenses();
+            float maxSurplus = Mathf.Max(0f,
+                GameManager.Instance.setupData.maxIncome - monthlyExpenses);
+
+            if (savings > maxSurplus)
+            {
+                Debug.Log("[Budget] Cannot allocate savings beyond projected surplus.");
+                return; // Block progression
+            }
+
+            finance.generalSavingsMonthly = savings;
+
+            GameManager.Instance.SetPhase(GameManager.GamePhase.Forecast);  // ADD THIS
 
             UIManager.Instance.ShowForecastPanel();
             GameManager.Instance.forecastManager.GenerateForecast();
@@ -108,7 +132,7 @@ public class BudgetPanelController : MonoBehaviour
             // SIMULATION CONFIRM (done borrowing)
             gameObject.SetActive(false);
 
-            GameManager.Instance.OnLoanDecisionFinished();
+            GameManager.Instance.OnSavingsDecisionFinished();
             // This already resumes the simulation flow safely
         }
     }
@@ -176,8 +200,68 @@ public class BudgetPanelController : MonoBehaviour
             confirmButton.interactable = true;
     }
 
-    public void OpenSavingsSection()
+    private void OnBackPressed()
     {
-        // Highlight savings tab / scroll to savings / expand savings UI
+        if (currentPhase != GameManager.GamePhase.Idle)
+            return; // only allow back during setup phase
+
+        UIManager.Instance.ShowSetupPanel();
+        gameObject.SetActive(false);
+    }
+
+    private void ConfigureSliderBounds()
+    {
+        float maxIncome = GameManager.Instance.setupData.maxIncome;
+
+        savingsSlider.minValue = 0;
+        savingsSlider.maxValue = maxIncome;
+        savingsSlider.wholeNumbers = false;
+    }
+
+    private void UpdateSavingsColour(float savingsAmount)
+    {
+        if (GameManager.Instance == null || GameManager.Instance.setupData == null)
+            return;
+
+        var setup = GameManager.Instance.setupData;
+
+        float minIncome = setup.minIncome;
+        float maxIncome = setup.maxIncome;
+
+        float monthlyExpenses = 0f;
+
+        if (GameManager.Instance.financeManager != null)
+        {
+            monthlyExpenses =
+                GameManager.Instance.financeManager.GetProjectedMonthlyExpenses();
+        }
+
+        // Calculate surplus AFTER getting expenses
+        float minSurplus = minIncome - monthlyExpenses;
+        float maxSurplus = maxIncome - monthlyExpenses;
+
+        // Clamp negatives
+        minSurplus = Mathf.Max(0f, minSurplus);
+        maxSurplus = Mathf.Max(0f, maxSurplus);
+
+        if (maxSurplus <= 0f)
+        {
+            savingsValueText.color = Color.red;
+            return;
+        }
+
+        if (savingsAmount <= minSurplus)
+        {
+            savingsValueText.color = Color.white;
+        }
+        else if (savingsAmount <= maxSurplus)
+        {
+            savingsValueText.color = new Color(1f, 0.5f, 0f); // orange
+        }
+        else
+        {
+            savingsValueText.color = Color.red;
+        }
+        confirmButton.interactable = savingsAmount <= maxSurplus;
     }
 }

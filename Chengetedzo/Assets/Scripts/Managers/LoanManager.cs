@@ -70,6 +70,8 @@ public class LoanManager : MonoBehaviour
 
     public void UpdateLoans()
     {
+        RepaidThisMonth = false;
+
         if (loanBalance <= 0f)
             return;
 

@@ -45,6 +45,10 @@ public class ExpensesPanelController : MonoBehaviour
     public GameObject houseCostInputGroup;
     public TMP_Text houseCostWarningText;
 
+    [Header("School Fees")]
+    public Toggle schoolFeesToggle;
+    public TMP_InputField schoolFeesInput;
+
 
     private const float MIN_HOUSE_COST = 15000f;
 
@@ -181,6 +185,15 @@ public class ExpensesPanelController : MonoBehaviour
             finance.rentCost = rentSlider.value;
         }
 
+        if (GameManager.Instance.setupData.hasSchoolFees)
+        {
+            finance.schoolFeesPerTerm = GameManager.Instance.setupData.schoolFeesAmount;
+        }
+        else
+        {
+            finance.schoolFeesPerTerm = 0f;
+        }
+
         // Monthly living costs
         finance.groceries = groceriesSlider.value;
         finance.transport = transportSlider.value;
@@ -196,5 +209,28 @@ public class ExpensesPanelController : MonoBehaviour
             houseCostInputGroup.SetActive(ownsHouse);
 
         RefreshAll();
+    }
+
+    public float GetEstimatedMonthlyExpenses()
+    {
+        float total = 0f;
+
+        if (houseCostInputGroup.activeSelf)
+        {
+            total += 0f;
+        }
+        else
+        {
+            total += rentSlider.value;
+        }
+
+        total += groceriesSlider.value;
+        total += transportSlider.value;
+        total += utilitiesSlider.value;
+        if (GameManager.Instance.setupData.hasSchoolFees)
+        {
+            total += GameManager.Instance.setupData.schoolFeesAmount;
+        }
+        return total;
     }
 }

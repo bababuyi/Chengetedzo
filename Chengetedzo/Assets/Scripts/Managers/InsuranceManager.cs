@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using static EventManager;
 
 /// <summary>
 /// Rebuilt InsuranceManager with:
@@ -289,6 +290,7 @@ public class InsuranceManager : MonoBehaviour
 
     public bool BuyInsurance(InsuranceType type)
     {
+        Debug.Log($"[Insurance] Cash: {Finance.cashOnHand}");
         if (Finance == null)
         {
             Debug.LogError("[Insurance] FinanceManager missing.");
@@ -335,6 +337,8 @@ public class InsuranceManager : MonoBehaviour
             Debug.Log($"[Insurance] Subscribed to {plan.planName}. Charged ${firstPremium:F2}");
             return true;
         }
+        Debug.Log("Insurance sees Finance ID: " + Finance.GetInstanceID());
+        Debug.Log("Insurance sees Cash: " + Finance.cashOnHand);
 
         Debug.LogWarning($"[Insurance] Not enough money for {plan.planName}. Need ${firstPremium:F2}");
         return false;
@@ -426,11 +430,26 @@ public class InsuranceManager : MonoBehaviour
     /// Returns the payout amount (0 if no payout).
     /// This checks waiting period and lapse rules.
     /// </summary>
-    public float HandleEvent(InsuranceType type, float lossPercent)
+    public float HandleEvent(InsuranceType type, float lossPercent, MonthlyEvent.LossCalculationType lossType, float fixedAmount = 0f)
     {
         var plan = GetPlan(type);
-        float baseValue = Finance.GetAssetValue(type);
-        float rawLoss = baseValue * (lossPercent / 100f);
+        float rawLoss = 0f;
+
+        switch (lossType)
+        {
+            case MonthlyEvent.LossCalculationType.AssetValue:
+                float assetValue = Finance.GetAssetValue(type);
+                rawLoss = assetValue * (lossPercent / 100f);
+                break;
+
+            case MonthlyEvent.LossCalculationType.CashOnHand:
+                rawLoss = Finance.cashOnHand * (lossPercent / 100f);
+                break;
+
+            case MonthlyEvent.LossCalculationType.FixedAmount:
+                rawLoss = fixedAmount;
+                break;
+        }
 
         float payout = 0f;
 
@@ -440,9 +459,17 @@ public class InsuranceManager : MonoBehaviour
             float deductible = rawLoss * (plan.deductiblePercent / 100f);
             float insurableLoss = Mathf.Max(0f, rawLoss - deductible);
 
-            float coverageCap = plan.premiumIsAssetBased
-                ? baseValue
-                : plan.coverageLimit;
+            float coverageCap;
+
+            if (plan.premiumIsAssetBased)
+            {
+                float assetValue = Finance.GetAssetValue(type);
+                coverageCap = assetValue;
+            }
+            else
+            {
+                coverageCap = plan.coverageLimit;
+            }
 
             payout = Mathf.Min(insurableLoss, coverageCap);
             totalPayout += payout;
@@ -451,6 +478,8 @@ public class InsuranceManager : MonoBehaviour
         // 2? Apply remaining loss to player (ApplyMonthlyDamage handles cash impact)
         float netLoss = Mathf.Max(0f, rawLoss - payout);
         float cappedLoss = GameManager.Instance.ApplyMonthlyDamage(netLoss);
+
+        Finance.cashOnHand -= cappedLoss;
 
         totalLoss += cappedLoss;
 

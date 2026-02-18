@@ -15,6 +15,9 @@ public class InsurancePanel : MonoBehaviour
     public TMP_Text summaryText;
     public Button confirmButton;
 
+    [Header("Navigation")]
+    public Button backButton;
+
     private InsuranceManager insuranceManager;
 
     private void Start()
@@ -24,6 +27,9 @@ public class InsurancePanel : MonoBehaviour
 
     private void Awake()
     {
+        if (backButton != null)
+            backButton.onClick.AddListener(BackToForecast);
+
         if (GameManager.Instance == null)
         {
             Debug.LogError("[InsurancePanel] GameManager not initialized.");
@@ -139,6 +145,15 @@ public class InsurancePanel : MonoBehaviour
         }
 
         UpdateSummary();
+    }
+
+    private void BackToForecast()
+    {
+        if (GameManager.Instance.CurrentPhase != GameManager.GamePhase.Insurance)
+            return;
+
+        GameManager.Instance.SetPhase(GameManager.GamePhase.Forecast);
+        UIManager.Instance.ShowForecastPanel();
     }
 
 }
