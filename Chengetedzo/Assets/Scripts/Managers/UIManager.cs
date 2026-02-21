@@ -58,6 +58,7 @@ public class UIManager : MonoBehaviour
 
         eventPopup?.SetActive(false);
         mentorPopup?.SetActive(false);
+        endOfYearScreen?.SetActive(false);
 
         HideLoanTopButton();
         HideSavingsTopButton();
@@ -65,6 +66,10 @@ public class UIManager : MonoBehaviour
 
     private void Start()
     {
+        HideAllPanels();
+        setupPanel.SetActive(false);
+        topHUD.SetActive(false);
+
         ShowSetupPanel();
     }
 
@@ -97,6 +102,7 @@ public class UIManager : MonoBehaviour
         insurancePanel.SetActive(false);
         reportPanel.SetActive(false);
         forecastPanel.SetActive(false);
+        endOfYearScreen.SetActive(false);
     }
 
     public void ShowBudgetPanel()

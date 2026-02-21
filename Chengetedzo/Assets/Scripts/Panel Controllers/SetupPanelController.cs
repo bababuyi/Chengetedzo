@@ -51,12 +51,6 @@ public class SetupPanelController : MonoBehaviour
     {
         finance = GameManager.Instance?.financeManager;
 
-        if (finance == null)
-        {
-            Debug.LogError("[SetupPanelController] FinanceManager not ready.");
-            return;
-        }
-
         ShowStep(1);
 
         stableIncomeToggle.onValueChanged.RemoveAllListeners();
