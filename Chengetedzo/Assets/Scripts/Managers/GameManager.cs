@@ -8,8 +8,7 @@ public class GameManager : MonoBehaviour
 
     [Header("Simulation Settings")]
     public int currentMonth = 1;
-    public int totalMonths = 12;
-    public float monthDuration = 5f;
+    public int totalMonths = 24;
 
     [Header("Momentum")]
     private int savingsStreak = 0;
@@ -34,10 +33,6 @@ public class GameManager : MonoBehaviour
     public float monthlyDamageTaken = 0f;
     public float maxMonthlyDamagePercent = 0.35f;
 
-    [Header("Event Timing")]
-    public float delayBetweenEvents = 1.5f;
-
-    private bool mentorCommentPending = false;
     private List<ResolvedEvent> monthlyEvents = new();
     public bool IsLoanDecisionActive { get; private set; }
     public bool IsSavingsDecisionActive { get; private set; }
@@ -46,8 +41,12 @@ public class GameManager : MonoBehaviour
     private List<IncomeEffect> activeIncomeEffects = new();
     public bool IsSimulationPaused { get; private set; }
     public System.Action OnSeasonChanged;
-    private Coroutine simulationCoroutine;
     private bool mentorSpokeThisMonth = false;
+    private bool loanIntroShown = false;
+    private bool monthResolutionStarted = false;
+    private Queue<ResolvedEvent> pendingEvents = new();
+    private ResolvedEvent currentEvent;
+    public MonthlyFinancialLedger CurrentLedger { get; private set; }
 
     private void Awake()
     {
@@ -67,105 +66,16 @@ public class GameManager : MonoBehaviour
         setupData.ownsFarm = false;
     }
 
-    private Queue<ResolvedEvent> pendingEvents = new();
-    private ResolvedEvent currentEvent;
-
     private void Start()
     {        
-        uiManager.UpdateMoneyText(financeManager.cashOnHand);
+        uiManager.UpdateMoneyText(financeManager.CashOnHand);
         uiManager.UpdateMonthText(currentMonth, totalMonths);
 
         visualManager?.UpdateVisuals();
         financeManager.InitializeFromSetup();
     }
 
-    public void StartNewMonth()
-    {
-        mentorSpokeThisMonth = false;
-        forcedLoanThisMonth = false;
-        Debug.Log($"=== Month {currentMonth} START ===");
-
-        SetPhase(GamePhase.Forecast);
-
-        uiManager.ShowForecastPanel();
-        forecastManager.GenerateForecast();
-        loanManager?.ResetMonthlyFlags();
-        UpdateIncomeEffects();
-    }
-    /// MONTHLY FINANCIAL ORDER:
-    /// 1. Budget (income + savings allocation)
-    /// 2. Insurance premiums
-    /// 3. Loan contribution
-    /// 4. Events (damage)
-    /// 5. Loan repayment handled inside LoanManager
-
-    public void BeginMonthlySimulation()
-    {
-        if (insuranceManager == null)
-        {
-            Debug.LogError("[GameManager] InsuranceManager missing.");
-            return;
-        }
-
-        SetPhase(GamePhase.Simulation);
-
-        uiManager.budgetPanel
-            .GetComponent<BudgetPanelController>()
-            ?.ConfigureForPhase(GamePhase.Simulation);
-
-        monthlyDamageTaken = 0f;
-
-        Debug.Log($"[Simulation] Running Month {currentMonth}");
-
-        financeManager.ProcessMonthlyBudget();
-        insuranceManager.ProcessMonthlyPremiums();
-        loanManager?.ProcessContribution();
-        loanManager?.UpdateLoans();
-
-        monthlyEvents = eventManager.GenerateMonthlyEvents(currentMonth);
-
-        pendingEvents.Clear();
-        foreach (var ev in monthlyEvents)
-            pendingEvents.Enqueue(ev);
-
-        ProcessNextEvent();
-    }
-
-    public void EndMonthlySimulation()
-    {
-        uiManager.UpdateMoneyText(financeManager.cashOnHand);
-        Debug.Log($"[Simulation] Month {currentMonth} complete");
-
-        EvaluateMomentumSignals();
-        EvaluateMentor();
-        HandleForcedLoan();
-
-        SetPhase(GamePhase.Report);
-
-        // Force clear all other panels BEFORE showing report
-        uiManager.HideAllPanels();
-
-        uiManager.ShowReportPanel(
-            financeManager.GetMonthlySummary(currentMonth)
-        );
-    }
-
-    private IEnumerator SimulationRoutine()
-    {
-        float timer = 0f;
-
-        while (timer < monthDuration)
-        {
-            if (!IsSimulationPaused)
-                timer += Time.deltaTime;
-
-            yield return null;
-        }
-
-        simulationCoroutine = null;
-        EndMonthlySimulation();
-    }
-
+    //Enums and Structs
     public enum GamePhase
     {
         Idle,
@@ -174,18 +84,9 @@ public class GameManager : MonoBehaviour
         Loan,
         Simulation,
         Report,
-        Savings
+        Savings,
+        End_of_Year
     }
-
-    public void SetPhase(GamePhase phase)
-    {
-        CurrentPhase = phase;
-        Debug.Log($"[GamePhase] → {phase}");
-
-        UpdateTopButtons();
-    }
-
-    public GamePhase CurrentPhase { get; private set; } = GamePhase.Idle;
 
     public enum Season
     {
@@ -203,6 +104,84 @@ public class GameManager : MonoBehaviour
         Livestock
     }
 
+    class MonthContext
+    {
+        public int monthNumber;
+        public List<ResolvedEvent> events;
+        public float totalDamage;
+        public float totalIncome;
+        public float totalInsurancePaid;
+    }
+
+    [System.Serializable]
+    public class IncomeEffect
+    {
+        public float reductionPercent;
+        public int remainingMonths; // -1 = permanent
+    }
+
+    public void StartNewMonth()
+    {
+        mentorSpokeThisMonth = false;
+        forcedLoanThisMonth = false;
+        Debug.Log($"=== Month {currentMonth} START ===");
+        EnterForecastPhase();
+        forecastManager.GenerateForecast();
+        loanManager?.ResetMonthlyFlags();
+        UpdateIncomeEffects();
+    }
+
+    //Month Controls
+
+    public void ConfirmMonthAndResolve()
+    {
+        CurrentLedger = new MonthlyFinancialLedger(currentMonth,financeManager.CashOnHand);
+        if (monthResolutionStarted)
+            return;
+
+        monthResolutionStarted = true;
+
+        Debug.Log($"[Month] Confirmed → Resolving Month {currentMonth}");
+
+        SetPhase(GamePhase.Simulation);
+
+        monthlyDamageTaken = 0f;
+
+        // 1. Apply Income & Budget
+        financeManager.ProcessMonthlyBudget();
+
+        // 2. Insurance Premiums
+        insuranceManager.ProcessMonthlyPremiums();
+
+        // 3. Loan Contribution
+        loanManager?.ProcessContribution();
+        loanManager?.UpdateLoans();
+
+        // 4. Generate Events
+        monthlyEvents = eventManager.GenerateMonthlyEvents(currentMonth);
+
+        pendingEvents.Clear();
+        foreach (var ev in monthlyEvents)
+            pendingEvents.Enqueue(ev);
+
+        // 5. Start stepping through events
+        ProcessNextEvent();
+    }
+
+    private void SetPhase(GamePhase phase)
+    {
+        if (uiManager.IsPopupActive && phase != GamePhase.Simulation)
+            return;
+        if (CurrentPhase == phase)
+            return;
+        CurrentPhase = phase;
+        Debug.Log($"[GamePhase] → {phase}");
+        Debug.Log($"Current State = {CurrentPhase}");
+        UpdateTopButtons();
+    }
+
+    public GamePhase CurrentPhase { get; private set; } = GamePhase.Idle;
+
     public Season GetSeasonForMonth(int month)
     {
         if (month == 11 || month == 12 || (month >= 1 && month <= 4))
@@ -218,16 +197,9 @@ public class GameManager : MonoBehaviour
 
     public void OnEventPopupClosed()
     {
-        Debug.Log("[GameManager] Event popup closed");
+        UpdateTopButtons();
 
-        // Inject mentor commentary once
-        if (mentorCommentPending)
-        {
-            mentorCommentPending = false;
-            StartCoroutine(ShowMentorBetweenEvents());
-            return;
-        }
-
+        if (CurrentPhase == GamePhase.Simulation) 
         ProcessNextEvent();
     }
 
@@ -445,11 +417,12 @@ public class GameManager : MonoBehaviour
         {
             uiManager.ShowEndOfYearSummary(GetYearEndMentorReflection());
         }
+        monthResolutionStarted = false;
     }
 
     public float ApplyMonthlyDamage(float intendedLoss)
     {
-        float maxAllowedLoss = financeManager.cashOnHand * maxMonthlyDamagePercent;
+        float maxAllowedLoss = financeManager.CashOnHand * maxMonthlyDamagePercent;
         float remainingCap = maxAllowedLoss - monthlyDamageTaken;
 
         float actualLoss = Mathf.Clamp(intendedLoss, 0f, remainingCap);
@@ -458,80 +431,62 @@ public class GameManager : MonoBehaviour
         return actualLoss;
     }
 
-    private void ProcessNextEvent()
+    public void ProcessNextEvent()
     {
         if (pendingEvents.Count == 0)
         {
-            if (IsLoanDecisionActive || IsSavingsDecisionActive)
-                return;
-
-            StartSimulationTimer();
+            EndMonthlyResolution();
             return;
         }
 
-        mentorCommentPending = pendingEvents.Count >= 2;
-        StartCoroutine(ShowNextEventWithDelay());
-    }
-
-    private IEnumerator ShowNextEventWithDelay()
-    {
-        yield return new WaitForSecondsRealtime(delayBetweenEvents);
-
         currentEvent = pendingEvents.Dequeue();
 
-        string fullDescription = currentEvent.description;
+        ShowEvent(currentEvent);
+    }
 
-        // Show gain or loss
-        if (currentEvent.actualMoneyChange != 0f)
+    private void ShowEvent(ResolvedEvent ev)
+    {
+        string fullDescription = ev.description;
+
+        // Money change
+        if (ev.actualMoneyChange != 0f)
         {
-            if (currentEvent.actualMoneyChange > 0f)
-            {
-                fullDescription +=
-                    $"\n\nYou gained: +${currentEvent.actualMoneyChange:F0}";
-            }
+            if (ev.actualMoneyChange > 0f)
+                fullDescription += $"\n\nYou gained: +${ev.actualMoneyChange:F0}";
             else
-            {
-                fullDescription +=
-                    $"\n\nYou lost: -${Mathf.Abs(currentEvent.actualMoneyChange):F0}";
-            }
+                fullDescription += $"\n\nYou lost: -${Mathf.Abs(ev.actualMoneyChange):F0}";
         }
 
-        // Show insurance payout (if any)
-        if (currentEvent.insurancePayout > 0f)
+        // Insurance payout
+        if (ev.insurancePayout > 0f)
         {
             fullDescription +=
-                $"\nInsurance covered: +${currentEvent.insurancePayout:F0}";
+                $"\nInsurance covered: +${ev.insurancePayout:F0}";
         }
 
-        uiManager.ShowEventPopup(
-            currentEvent.title,
-            fullDescription
-        );
+        uiManager.ShowEventPopup(ev.title, fullDescription);
 
-        Debug.Log($"Event Money Change: {currentEvent.actualMoneyChange}");
-        Debug.Log($"Insurance Payout: {currentEvent.insurancePayout}");
-
+        // Update money display immediately
+        uiManager.UpdateMoneyText(financeManager.CashOnHand);
     }
 
-    private IEnumerator ShowMentorBetweenEvents()
+    private void EndMonthlyResolution()
     {
-        yield return new WaitForSecondsRealtime(1f);
+        Debug.Log("[Month] All events resolved");
 
-        if (!mentorSpokeThisMonth)
-        {
-            string line = PickEventMentorLine();
-            uiManager.ShowMentorMessage(line);
-            mentorSpokeThisMonth = true;
-        }
+        EvaluateMomentumSignals();
+        EvaluateMentor();
+        HandleForcedLoan();
 
-        while (uiManager.IsPopupActive)
-            yield return null;
+        CurrentLedger.FinalizeLedger();
+        Debug.Log(CurrentLedger.GetMonthlyBreakdown());
 
-        yield return new WaitForSecondsRealtime(0.5f);
+        SetPhase(GamePhase.Report);
 
-        ProcessNextEvent();
+        uiManager.ShowReportPanel(
+        CurrentLedger.GetMonthlyBreakdown()
+        );
     }
-
 
     private string PickEventMentorLine()
     {
@@ -550,35 +505,27 @@ public class GameManager : MonoBehaviour
     {
         if (IsLoanDecisionActive)
             return;
-
+        SetPhase(GamePhase.Loan);
         IsLoanDecisionActive = true;
-        PauseSimulation();
         uiManager.ShowLoanPanel();
-    }
-
-    // Dont need this anymore
-    public void EndLoanDecision()
-    {
-        IsLoanDecisionActive = false;
-        if (CurrentPhase == GamePhase.Simulation)
-            StartSimulationTimer();
     }
 
     public void OnInsuranceConfirmed()
     {
-        UIManager.Instance.HideAllPanels();
-
-        ResumeSimulation();
-
-        if (loanManager != null && loanManager.IsLoanUnlocked)
+        // Only force loan panel once, on first unlock
+        if (!loanIntroShown &&
+            loanManager != null &&
+            loanManager.IsLoanUnlocked)
         {
+            loanIntroShown = true;
+
             SetPhase(GamePhase.Loan);
-            UIManager.Instance.ShowLoanPanel();
+            uiManager.ShowLoanPanel();
             return;
         }
 
         SetPhase(GamePhase.Simulation);
-        BeginMonthlySimulation();
+        ConfirmMonthAndResolve();
     }
 
     public void OnLoanDecisionFinished()
@@ -587,16 +534,13 @@ public class GameManager : MonoBehaviour
 
         SetPhase(GamePhase.Simulation);
 
-        UIManager.Instance.HideAllPanels();
-        ResumeSimulation();
-
-        if (CurrentPhase == GamePhase.Simulation)
-            StartSimulationTimer();
+        if (pendingEvents.Count > 0)
+            ProcessNextEvent();
     }
 
     private void HandleForcedLoan()
     {
-        float cash = financeManager.cashOnHand;
+        float cash = financeManager.CashOnHand;
 
         if (forcedLoanThisMonth)
             return;
@@ -629,13 +573,6 @@ public class GameManager : MonoBehaviour
     {
         if (forcedLoanHistory.Count > 6)
             forcedLoanHistory.Dequeue();
-    }
-
-    [System.Serializable]
-    public class IncomeEffect
-    {
-        public float reductionPercent;
-        public int remainingMonths; // -1 = permanent
     }
 
     public void ApplyIncomeEffect(float percent, int months)
@@ -704,7 +641,7 @@ public class GameManager : MonoBehaviour
         bool canShowSavings =
             CurrentPhase == GamePhase.Simulation &&
             financeManager != null &&
-            (financeManager.cashOnHand > 0f ||
+            (financeManager.CashOnHand > 0f ||
              financeManager.generalSavingsBalance > 0f) &&
             !uiManager.IsPopupActive;
 
@@ -717,27 +654,7 @@ public class GameManager : MonoBehaviour
             uiManager.ShowSavingsTopButton();
         else
             uiManager.HideSavingsTopButton();
-    }
-
-    public void PauseSimulation()
-    {
-        IsSimulationPaused = true;
-        Debug.Log("[Simulation] Paused");
-    }
-
-    public void ResumeSimulation()
-    {
-        IsSimulationPaused = false;
-        Debug.Log("[Simulation] Resumed");
-    }
-
-    private void StartSimulationTimer()
-    {
-        if (simulationCoroutine != null)
-            StopCoroutine(simulationCoroutine);
-
-        simulationCoroutine = StartCoroutine(SimulationRoutine());
-    }
+    }   
 
     private bool IsRecovery(float currentMomentum)
     {
@@ -790,31 +707,108 @@ public class GameManager : MonoBehaviour
 
     public void BeginSavingsDecision()
     {
-        SetPhase(GamePhase.Savings);
         if (IsSavingsDecisionActive)
             return;
 
         IsSavingsDecisionActive = true;
 
-        PauseSimulation();
-
-        if (uiManager != null)
-            uiManager.ShowSavingsPanel();
+        SetPhase(GamePhase.Savings);
+        uiManager.ShowSavingsPanel();
     }
 
     public void OnSavingsDecisionFinished()
     {
-        SetPhase(GamePhase.Simulation);
-
         IsSavingsDecisionActive = false;
 
-        if (uiManager != null)
-            uiManager.HideAllPanels();
+        SetPhase(GamePhase.Simulation);
 
-        ResumeSimulation();
-
-        if (CurrentPhase == GamePhase.Simulation)
-            StartSimulationTimer();
+        if (pendingEvents.Count > 0)
+            ProcessNextEvent();
     }
 
+    public void BeginInsuranceDecision()
+    {
+        SetPhase(GamePhase.Insurance);
+        uiManager.ShowInsurancePanel();
+    }
+
+    public void OnSavingsSetupConfirmed(float savings)
+    {
+        financeManager.generalSavingsMonthly = savings;
+
+        SetPhase(GamePhase.Forecast);
+        uiManager.ShowForecastPanel();
+
+        forecastManager.GenerateForecast();
+    }
+
+    public void OnForecastConfirmed()
+    {
+        SetPhase(GamePhase.Insurance);
+        uiManager.ShowInsurancePanel();
+    }
+
+    public void OnForecastBack()
+    {
+        SetPhase(GamePhase.Idle);
+        uiManager.ShowBudgetPanel();
+    }
+
+    public void OnInsuranceBack()
+    {
+        SetPhase(GamePhase.Forecast);
+        uiManager.ShowForecastPanel();
+    }
+
+    public void BeginBudgetSetup()
+    {
+        SetPhase(GamePhase.Idle);
+        uiManager.ShowBudgetPanel();
+    }
+
+    private void EnterForecastPhase()
+    {
+        SetPhase(GamePhase.Forecast);
+        uiManager.ShowForecastPanel();
+        forecastManager.GenerateForecast();
+    }
+
+    public void OnBudgetBackRequested()
+    {
+        SetPhase(GamePhase.Idle);
+        uiManager.ShowSetupPanel();
+    }
+
+    public void ApplyMoneyChange(
+    FinancialEntry.EntryType type,
+    string source,
+    float amount,
+    bool isCredit)
+    {
+        if (CurrentPhase != GamePhase.Simulation &&
+        CurrentPhase != GamePhase.Insurance &&
+        CurrentPhase != GamePhase.Loan)
+        {
+            Debug.LogError("Money mutation outside allowed phases.");
+            return;
+        }
+        if (CurrentPhase != GamePhase.Simulation)
+        {
+            Debug.LogError("Money mutation outside Simulation phase.");
+            return;
+        }
+
+        if (CurrentLedger == null)
+        {
+            Debug.LogError("Ledger not initialized.");
+            return;
+        }
+
+        var entry = new FinancialEntry(type, source, amount, isCredit);
+        CurrentLedger.AddEntry(entry);
+
+        float signed = entry.SignedAmount();
+
+        financeManager.ApplyCashDelta(signed);
+    }
 }

@@ -7831,7 +7831,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: -100, y: 0}
-  m_SizeDelta: {x: 120, y: 80}
+  m_SizeDelta: {x: 140, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &778005576
 MonoBehaviour:
@@ -12760,7 +12760,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: -20, y: 170}
-  m_SizeDelta: {x: 100, y: 50}
+  m_SizeDelta: {x: 140, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1220170501
 MonoBehaviour:
@@ -14485,7 +14485,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: -100, y: 0}
-  m_SizeDelta: {x: 120, y: 80}
+  m_SizeDelta: {x: 140, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1395055238
 MonoBehaviour:
@@ -14507,7 +14507,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 500
+  m_text: 15000
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -15416,7 +15416,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: -100, y: 0}
-  m_SizeDelta: {x: 120, y: 80}
+  m_SizeDelta: {x: 140, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1525183709
 MonoBehaviour:
@@ -15438,7 +15438,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 500
+  m_text: 10000
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -16511,7 +16511,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1552810409}
   m_Direction: 0
   m_Value: 0
-  m_Size: 0.9999785
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -18214,7 +18214,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 500
+  m_text: 10000
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -18310,7 +18310,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: -100, y: 0}
-  m_SizeDelta: {x: 120, y: 80}
+  m_SizeDelta: {x: 140, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1781851097
 GameObject:
@@ -19294,7 +19294,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae66ec1bc3e7dcb44aac8efa9becb287, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxEventsPerMonth: 3
+  maxEventsPerMonth: 2
   allEvents:
   - category: 0
     requiredAsset: 0
@@ -19921,8 +19921,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   currentMonth: 1
-  totalMonths: 12
-  monthDuration: 3
+  totalMonths: 24
   financeManager: {fileID: 1855952298}
   loanManager: {fileID: 1855952297}
   insuranceManager: {fileID: 1855952291}
@@ -19943,7 +19942,6 @@ MonoBehaviour:
     ownsFarm: 0
   monthlyDamageTaken: 0
   maxMonthlyDamagePercent: 0.35
-  delayBetweenEvents: 1.5
 --- !u!4 &1855952294
 Transform:
   m_ObjectHideFlags: 0
@@ -20069,7 +20067,7 @@ MonoBehaviour:
   forecastListParent: {fileID: 710781135}
   forecastItemPrefab: {fileID: 3974805500194630959, guid: 26e6bd24cde4a5647bb02e91c2894df0, type: 3}
   forecastHeaderText: {fileID: 617706385}
-  articlesPerForecast: 3
+  articlesPerForecast: 5
 --- !u!114 &1855952300
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -20118,7 +20116,7 @@ GameObject:
   - component: {fileID: 1861761812}
   - component: {fileID: 1861761811}
   m_Layer: 5
-  m_Name: Button
+  m_Name: Continue Btn
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

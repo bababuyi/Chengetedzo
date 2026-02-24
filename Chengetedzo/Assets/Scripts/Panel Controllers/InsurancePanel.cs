@@ -152,8 +152,7 @@ public class InsurancePanel : MonoBehaviour
         if (GameManager.Instance.CurrentPhase != GameManager.GamePhase.Insurance)
             return;
 
-        GameManager.Instance.SetPhase(GameManager.GamePhase.Forecast);
-        UIManager.Instance.ShowForecastPanel();
+        GameManager.Instance.OnInsuranceBack();
     }
 
 }

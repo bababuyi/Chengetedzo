@@ -305,8 +305,7 @@ public class SetupPanelController : MonoBehaviour
         finance.InitializeFromSetup();
 
         // SHOW BUDGET PANEL (do NOT start simulation yet)
-        UIManager.Instance.ShowBudgetPanel();
-        gameObject.SetActive(false);
+        GameManager.Instance.BeginBudgetSetup();
 
         if (expensesPanelController != null)
             expensesPanelController.ApplyExpensesToFinance(finance);
@@ -437,5 +436,4 @@ public class SetupPanelController : MonoBehaviour
         UnlockSetupUI();
         ShowStep(1);
     }
-
 }

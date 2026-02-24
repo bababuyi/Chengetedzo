@@ -1,6 +1,7 @@
+﻿using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
+using static UIManager;
 
 public class BudgetPanelController : MonoBehaviour
 {
@@ -103,11 +104,10 @@ public class BudgetPanelController : MonoBehaviour
 
     private void OnConfirmPressed()
     {
+        float savings = savingsSlider.value;   // ← move this up
+
         if (currentPhase == GameManager.GamePhase.Idle)
         {
-            // SETUP CONFIRM
-            float savings = savingsSlider.value;
-
             float monthlyExpenses = finance.GetProjectedMonthlyExpenses();
             float maxSurplus = Mathf.Max(0f,
                 GameManager.Instance.setupData.maxIncome - monthlyExpenses);
@@ -115,25 +115,17 @@ public class BudgetPanelController : MonoBehaviour
             if (savings > maxSurplus)
             {
                 Debug.Log("[Budget] Cannot allocate savings beyond projected surplus.");
-                return; // Block progression
+                return;
             }
 
             finance.generalSavingsMonthly = savings;
 
-            GameManager.Instance.SetPhase(GameManager.GamePhase.Forecast);  // ADD THIS
-
-            UIManager.Instance.ShowForecastPanel();
-            GameManager.Instance.forecastManager.GenerateForecast();
-
-            gameObject.SetActive(false);
+            GameManager.Instance.OnSavingsSetupConfirmed(savings);
         }
         else
         {
-            // SIMULATION CONFIRM (done borrowing)
-            gameObject.SetActive(false);
-
+            // SIMULATION CONFIRM
             GameManager.Instance.OnSavingsDecisionFinished();
-            // This already resumes the simulation flow safely
         }
     }
 
@@ -202,11 +194,7 @@ public class BudgetPanelController : MonoBehaviour
 
     private void OnBackPressed()
     {
-        if (currentPhase != GameManager.GamePhase.Idle)
-            return; // only allow back during setup phase
-
-        UIManager.Instance.ShowSetupPanel();
-        gameObject.SetActive(false);
+        GameManager.Instance.OnBudgetBackRequested();
     }
 
     private void ConfigureSliderBounds()

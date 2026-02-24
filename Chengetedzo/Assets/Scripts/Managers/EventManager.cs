@@ -75,7 +75,7 @@ public class EventManager : MonoBehaviour
     {
         int triggeredEventCount = 0;
         float monthlyDamageCap =
-            GameManager.Instance.financeManager.cashOnHand *
+            GameManager.Instance.financeManager.CashOnHand *
             GameManager.Instance.maxMonthlyDamagePercent;
 
         List<ResolvedEvent> results = new();
@@ -119,7 +119,12 @@ public class EventManager : MonoBehaviour
                 float gained = ev.cashReward;
 
                 if (gained > 0f)
-                    GameManager.Instance.financeManager.cashOnHand += gained;
+                    GameManager.Instance.ApplyMoneyChange(
+                    FinancialEntry.EntryType.EventReward,
+                    ev.eventName,
+                    gained,
+                    true
+                    );
 
                 if (ev.momentumReward != 0f)
                     PlayerDataManager.Instance.ModifyMomentum(ev.momentumReward);
@@ -148,7 +153,7 @@ public class EventManager : MonoBehaviour
             float lossPercent =
             Random.Range(ev.minLossPercent, ev.maxLossPercent + 1);
 
-            float cashBefore = GameManager.Instance.financeManager.cashOnHand;
+            float cashBefore = GameManager.Instance.financeManager.CashOnHand;
 
             float totalPayout = 0f;
 
@@ -165,21 +170,31 @@ public class EventManager : MonoBehaviour
                 }
             }
 
-            float cashAfter = GameManager.Instance.financeManager.cashOnHand;
+            float cashAfter = GameManager.Instance.financeManager.CashOnHand;
 
             // Total money lost by player
             float actualLoss = cashBefore - cashAfter;
+
+            // Apply insurance payout to ledger if any
+            if (totalPayout > 0f)
+            {
+                GameManager.Instance.ApplyMoneyChange(
+                    FinancialEntry.EntryType.InsurancePayout,
+                    "Insurance Payout",
+                    totalPayout,
+                    true
+                );
+            }
 
             results.Add(new ResolvedEvent
             {
                 title = ev.eventName,
                 description = ev.description,
-                type = InsuranceManager.InsuranceType.None, // no single type now
+                type = InsuranceManager.InsuranceType.None,
                 lossPercent = lossPercent,
                 actualMoneyChange = -actualLoss,
                 insurancePayout = totalPayout
             });
-
 
             if (ev.affectsIncome)
             {

@@ -290,7 +290,7 @@ public class InsuranceManager : MonoBehaviour
 
     public bool BuyInsurance(InsuranceType type)
     {
-        Debug.Log($"[Insurance] Cash: {Finance.cashOnHand}");
+        Debug.Log($"[Insurance] Cash: {Finance.CashOnHand}");
         if (Finance == null)
         {
             Debug.LogError("[Insurance] FinanceManager missing.");
@@ -325,9 +325,14 @@ public class InsuranceManager : MonoBehaviour
 
         float firstPremium = CalculateMonthlyPremiumForPlan(plan);
 
-        if (Finance.cashOnHand >= firstPremium)
+        if (Finance.CashOnHand >= firstPremium)
         {
-            Finance.cashOnHand -= firstPremium;
+            GameManager.Instance.ApplyMoneyChange(
+            FinancialEntry.EntryType.InsurancePremium,
+            $"Insurance Premium - {plan.planName}",
+            firstPremium,
+            false
+            );
 
             plan.isSubscribed = true;
             plan.monthsPaid = 1;
@@ -338,7 +343,7 @@ public class InsuranceManager : MonoBehaviour
             return true;
         }
         Debug.Log("Insurance sees Finance ID: " + Finance.GetInstanceID());
-        Debug.Log("Insurance sees Cash: " + Finance.cashOnHand);
+        Debug.Log("Insurance sees Cash: " + Finance.CashOnHand);
 
         Debug.LogWarning($"[Insurance] Not enough money for {plan.planName}. Need ${firstPremium:F2}");
         return false;
@@ -355,7 +360,12 @@ public class InsuranceManager : MonoBehaviour
         ? CalculateMonthlyPremiumForPlan(plan)
         : 0f;
 
-        Finance.cashOnHand += refund;
+        GameManager.Instance.ApplyMoneyChange(
+        FinancialEntry.EntryType.InsuranceRefund,
+        $"Insurance Refund - {plan.planName}",
+        refund,
+        true
+        );
 
         // Reset tracking
         plan.isSubscribed = false;
@@ -386,9 +396,14 @@ public class InsuranceManager : MonoBehaviour
 
             float premium = CalculateMonthlyPremiumForPlan(plan);
 
-            if (Finance.cashOnHand >= premium)
+            if (Finance.CashOnHand >= premium)
             {
-                Finance.cashOnHand -= premium;
+                GameManager.Instance.ApplyMoneyChange(
+                FinancialEntry.EntryType.InsurancePremium,
+                $"Insurance Premium - {plan.planName}",
+                premium,
+                false
+                );
                 totalCharged += premium;
 
                 plan.missedPayments = 0;
@@ -443,7 +458,7 @@ public class InsuranceManager : MonoBehaviour
                 break;
 
             case MonthlyEvent.LossCalculationType.CashOnHand:
-                rawLoss = Finance.cashOnHand * (lossPercent / 100f);
+                rawLoss = Finance.CashOnHand * (lossPercent / 100f);
                 break;
 
             case MonthlyEvent.LossCalculationType.FixedAmount:
@@ -479,7 +494,12 @@ public class InsuranceManager : MonoBehaviour
         float netLoss = Mathf.Max(0f, rawLoss - payout);
         float cappedLoss = GameManager.Instance.ApplyMonthlyDamage(netLoss);
 
-        Finance.cashOnHand -= cappedLoss;
+        //GameManager.Instance.ApplyMoneyChange(
+        //FinancialEntry.EntryType.EventLoss,
+       //$"Event Loss - {type}",
+        //cappedLoss,
+        //false
+        //);
 
         totalLoss += cappedLoss;
 
@@ -500,7 +520,7 @@ public class InsuranceManager : MonoBehaviour
 
     public void CalculateSeasonResults()
     {
-        float resilienceScore = (Finance.cashOnHand + totalPayout) - totalLoss;
+        float resilienceScore = (Finance.CashOnHand + totalPayout) - totalLoss;
         Debug.Log($"[Insurance] Resilience Score: {resilienceScore}");
     }
 

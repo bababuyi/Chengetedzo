@@ -49,7 +49,68 @@ public class UIManager : MonoBehaviour
     public Button mentorContinueButton;
 
     // Popup state property (correct, single version)
-    public bool IsPopupActive { get; private set; } = false;
+    private UIPanelState currentPanelState = UIPanelState.None;
+    // ================================
+    // POPUP CONTROLLER (SEALED)
+    // ================================
+
+    private GameObject activePopup;
+    private Button activeContinueButton;
+    private System.Action activeOnClose;
+
+    public bool IsPopupActive { get; private set; }
+
+    private void ShowPopup(
+        GameObject popupObject,
+        Button continueBtn,
+        System.Action onClose = null)
+    {
+        if (IsPopupActive)
+        {
+            Debug.LogWarning("Popup already active. Ignoring new popup.");
+            return;
+        }
+
+        IsPopupActive = true;
+
+        activePopup = popupObject;
+        activeContinueButton = continueBtn;
+        activeOnClose = onClose;
+
+        popupObject.SetActive(true);
+
+        continueBtn.onClick.RemoveAllListeners();
+        continueBtn.onClick.AddListener(CloseActivePopup);
+    }
+
+    private void CloseActivePopup()
+    {
+        if (!IsPopupActive)
+            return;
+
+        activePopup.SetActive(false);
+        activeOnClose?.Invoke();
+
+        activePopup = null;
+        activeContinueButton = null;
+        activeOnClose = null;
+
+        IsPopupActive = false;
+
+        Debug.Log("Popup closed safely.");
+    }
+
+    public enum UIPanelState
+    {
+        None,
+        Setup,
+        Budget,
+        Forecast,
+        Insurance,
+        Loan,
+        Report,
+        EndOfYear
+    }
 
     private void Awake()
     {
@@ -58,7 +119,6 @@ public class UIManager : MonoBehaviour
 
         eventPopup?.SetActive(false);
         mentorPopup?.SetActive(false);
-        endOfYearScreen?.SetActive(false);
 
         HideLoanTopButton();
         HideSavingsTopButton();
@@ -66,17 +126,14 @@ public class UIManager : MonoBehaviour
 
     private void Start()
     {
-        HideAllPanels();
-        setupPanel.SetActive(false);
-        topHUD.SetActive(false);
-
+        SwitchPanel(UIPanelState.None);
         ShowSetupPanel();
     }
 
     public void ShowSetupPanel()
     {
-        setupPanel.SetActive(true);
-        setupPanel.GetComponent<SetupPanelController>().OnPanelOpened();
+        SwitchPanel(UIPanelState.Setup);
+        setupPanel.GetComponent<SetupPanelController>()?.OnPanelOpened();
     }
 
     public void UpdateMonthText(int currentMonth, int totalMonths)
@@ -95,86 +152,175 @@ public class UIManager : MonoBehaviour
     }
 
     // Hides all simulation and flow panels (does NOT hide setup, top HUD, or popups)
+    private void HideAllPanelsInternal()
+    {
+        setupPanel.SetActive(false);
+        budgetPanel.SetActive(false);
+        forecastPanel.SetActive(false);
+        insurancePanel.SetActive(false);
+        loanPanel.SetActive(false);
+        reportPanel.SetActive(false);
+        endOfYearScreen.SetActive(false);
+    }
+
     public void HideAllPanels()
     {
-        budgetPanel.SetActive(false);
-        loanPanel.SetActive(false);
-        insurancePanel.SetActive(false);
-        reportPanel.SetActive(false);
-        forecastPanel.SetActive(false);
-        endOfYearScreen.SetActive(false);
+        if (setupPanel != null) setupPanel.SetActive(false);
+        if (forecastPanel != null) forecastPanel.SetActive(false);
+        if (insurancePanel != null) insurancePanel.SetActive(false);
+        if (loanPanel != null) loanPanel.SetActive(false);
+        if (reportPanel != null) reportPanel.SetActive(false);
+        if (budgetPanel != null) budgetPanel.SetActive(false);
+        if (endOfYearScreen != null) endOfYearScreen.SetActive(false);
+    }
+
+    public void ShowPanel(UIPanelState state)
+    {
+        HideAllPanels();
+
+        switch (state)
+        {
+            case UIPanelState.Setup:
+                setupPanel.SetActive(true);
+                break;
+
+            case UIPanelState.Budget:
+                budgetPanel.SetActive(true);
+                break;
+
+            case UIPanelState.Forecast:
+                forecastPanel.SetActive(true);
+                break;
+
+            case UIPanelState.Loan:
+                loanPanel.SetActive(true);
+                break;
+
+            case UIPanelState.Report:
+                reportPanel.SetActive(true);
+                break;
+
+            case UIPanelState.EndOfYear:
+                endOfYearScreen.SetActive(true);
+                break;
+        }
+    }
+
+    public void SwitchPanel(UIPanelState newState)
+    {
+        if (currentPanelState == newState)
+            return;
+
+        // Close popup safely if open
+        if (IsPopupActive)
+            CloseActivePopup();
+
+        HideAllPanelsInternal();
+
+        currentPanelState = newState;
+
+        switch (newState)
+        {
+            case UIPanelState.Setup:
+                setupPanel.SetActive(true);
+                topHUD.SetActive(false);
+                break;
+
+            case UIPanelState.Budget:
+                budgetPanel.SetActive(true);
+                topHUD.SetActive(true);
+                break;
+
+            case UIPanelState.Forecast:
+                forecastPanel.SetActive(true);
+                topHUD.SetActive(true);
+                break;
+
+            case UIPanelState.Insurance:
+                insurancePanel.SetActive(true);
+                topHUD.SetActive(true);
+                break;
+
+            case UIPanelState.Loan:
+                loanPanel.SetActive(true);
+                topHUD.SetActive(true);
+                break;
+
+            case UIPanelState.Report:
+                reportPanel.SetActive(true);
+                topHUD.SetActive(true);
+                break;
+
+            case UIPanelState.EndOfYear:
+                endOfYearScreen.SetActive(true);
+                topHUD.SetActive(false);
+                break;
+
+            case UIPanelState.None:
+                topHUD.SetActive(false);
+                break;
+        }
     }
 
     public void ShowBudgetPanel()
     {
-        setupPanel.SetActive(false);
-        forecastPanel.SetActive(false);
-
-        HideAllPanels();
-        budgetPanel.SetActive(true);
-        topHUD.SetActive(true);
-
-        var controller = budgetPanel.GetComponent<BudgetPanelController>();
-        controller?.LoadDefaultsFromSetup();
+        SwitchPanel(UIPanelState.Budget);
+        budgetPanel.GetComponent<BudgetPanelController>()?.LoadDefaultsFromSetup();
     }
 
     public void ShowForecastPanel()
     {
-        HideAllPanels();
-        budgetPanel.SetActive(false);
-        setupPanel.SetActive(false);
-
-        forecastPanel.SetActive(true);
-        topHUD.SetActive(true);
+        SwitchPanel(UIPanelState.Forecast);
     }
 
     public void ShowInsurancePanel()
     {
-        HideAllPanels();
-
-        GameManager.Instance.SetPhase(GameManager.GamePhase.Insurance);
-
-        insurancePanel.SetActive(true);
-
-        GameManager.Instance.insuranceManager.RefreshEligibility();
-        insurancePanel.GetComponent<InsurancePanel>()?.RefreshUI();
+        SwitchPanel(UIPanelState.Insurance);
     }
 
     public void ShowReportPanel(string reportText)
     {
-        HideAllPanels();
-        reportPanel.SetActive(true);
-
-        if (monthlyReportText != null)
-            monthlyReportText.text = reportText;
+        SwitchPanel(UIPanelState.Report);
+        monthlyReportText.text = reportText;
     }
 
-    // ===== Event Popup =====
     public void ShowEventPopup(string title, string description, Sprite icon = null)
     {
-        if (IsPopupActive) return;
-
-        eventPopup.SetActive(true);
         eventTitleText.text = title;
         eventDescriptionText.text = description;
 
         eventIcon.sprite = icon;
         eventIcon.enabled = icon != null;
-       
-        // NOTE: Uses Time.timeScale = 0; GameManager relies on WaitForSecondsRealtime
-        Time.timeScale = 0f;
-        IsPopupActive = true;
 
-        continueButton.onClick.RemoveAllListeners();
-        continueButton.onClick.AddListener(CloseEventPopup);
+        ShowPopup(
+            eventPopup,
+            continueButton,
+            () => GameManager.Instance.OnEventPopupClosed()
+        );
     }
+
+    //public void ShowEventPopup(string title, string description, Sprite icon = null)
+    //{
+    //if (IsPopupActive) return;
+
+    //eventPopup.SetActive(true);
+    //eventTitleText.text = title;
+    //eventDescriptionText.text = description;
+
+    //eventIcon.sprite = icon;
+    //eventIcon.enabled = icon != null;
+
+    // NOTE: Uses Time.timeScale = 0; GameManager relies on WaitForSecondsRealtime
+    //IsPopupActive = true;
+
+    //continueButton.onClick.RemoveAllListeners();
+    //continueButton.onClick.AddListener(CloseEventPopup);
+    //}
 
     private void CloseEventPopup()
     {
         eventPopup.SetActive(false);
         IsPopupActive = false;
-
-        Time.timeScale = 1f;
 
         GameManager.Instance.OnEventPopupClosed();
     }
@@ -182,7 +328,8 @@ public class UIManager : MonoBehaviour
     // ===== End-of-Year Screen =====
     public void ShowEndOfYearSummary(string mentorReflection)
     {
-        endOfYearScreen.SetActive(true);
+        SwitchPanel(UIPanelState.EndOfYear);
+
         resultsText.text =
             "<b>Year Complete</b>\n\n" +
             $"<i>{mentorReflection}</i>";
@@ -196,32 +343,24 @@ public class UIManager : MonoBehaviour
 
     public void ShowMentorMessage(string message)
     {
-        if (IsPopupActive) return;
-
-        mentorPopup.SetActive(true);
         mentorText.text = message;
 
-        Time.timeScale = 0f;
-        IsPopupActive = true;
-
-        mentorContinueButton.onClick.RemoveAllListeners();
-        mentorContinueButton.onClick.AddListener(CloseMentorPopup);
+        ShowPopup(
+            mentorPopup,
+            mentorContinueButton,
+            null
+        );
     }
 
     private void CloseMentorPopup()
     {
         mentorPopup.SetActive(false);
         IsPopupActive = false;
-        Time.timeScale = 1f;
     }
 
     public void ShowLoanPanel()
     {
-        HideAllPanels();
-        GameManager.Instance.SetPhase(GameManager.GamePhase.Loan);
-        loanPanel.SetActive(true);
-        topHUD.SetActive(true);
-
+        SwitchPanel(UIPanelState.Loan);
         loanPanel.GetComponent<LoanPanelController>()?.RefreshUI();
     }
 
@@ -244,8 +383,7 @@ public class UIManager : MonoBehaviour
 
     public void CloseLoanPanel()
     {
-        HideAllPanels();
-        topHUD.SetActive(true);
+        SwitchPanel(UIPanelState.None);
 
         GameManager.Instance.OnLoanDecisionFinished();
     }
@@ -269,17 +407,12 @@ public class UIManager : MonoBehaviour
 
     public void CloseSavingsPanel()
     {
-        HideAllPanels();
-        topHUD.SetActive(true);
-
-        GameManager.Instance.ResumeSimulation();
+        SwitchPanel(UIPanelState.None);
+        GameManager.Instance.OnSavingsDecisionFinished();
     }
     public void ShowSavingsPanel()
     {
-        HideAllPanels();
-
-        budgetPanel.SetActive(true);
-        topHUD.SetActive(true);
+        SwitchPanel(UIPanelState.Budget);
 
         var controller = budgetPanel.GetComponent<BudgetPanelController>();
         controller?.ConfigureForPhase(GameManager.GamePhase.Savings);

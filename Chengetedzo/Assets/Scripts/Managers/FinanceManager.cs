@@ -33,7 +33,8 @@ public class FinanceManager : MonoBehaviour
 
     [Header("Financial State")]
     [Tooltip("Current available cash on hand after all calculations.")]
-    public float cashOnHand;
+    [SerializeField] private float cashOnHand;
+    public float CashOnHand => cashOnHand;
     [Tooltip("Sum of all monthly expenses.")]
     public float totalExpenses;
     [Tooltip("Net difference between income and expenses for the month.")]
@@ -90,6 +91,12 @@ public class FinanceManager : MonoBehaviour
         UpdateHUD();
     }
 
+    public void ApplyCashDelta(float amount)
+    {
+        cashOnHand += amount;
+        UpdateHUD();
+    }
+
     public void SetIncomeRange(float min, float max, bool stable)
     {
         minIncome = min;
@@ -110,13 +117,24 @@ public class FinanceManager : MonoBehaviour
         float incomeMultiplier = GameManager.Instance.GetIncomeMultiplier();
         float effectiveIncome = currentIncome * incomeMultiplier;
 
-        cashOnHand += effectiveIncome;
+        GameManager.Instance.ApplyMoneyChange(
+        FinancialEntry.EntryType.Income,
+        "Monthly Income",
+        effectiveIncome,
+        true
+        );
+         
         Debug.Log($"[Income] Base: {currentIncome}, Multiplier: {incomeMultiplier:F2}, Effective: {effectiveIncome:F0}");
 
         // 2. Fixed expenses
         float housingCost = GetHousingCost();
         totalExpenses = housingCost + groceries + transport + utilities;
-        cashOnHand -= totalExpenses;
+        GameManager.Instance.ApplyMoneyChange(
+        FinancialEntry.EntryType.Expense,
+        "Fixed Expenses",
+        totalExpenses,
+        false
+        );
 
         balance = effectiveIncome - totalExpenses;
         WasOverBudgetThisMonth = balance < 0;
@@ -126,9 +144,15 @@ public class FinanceManager : MonoBehaviour
         // 3. General savings (ONLY if affordable)
         LastMonthSavingsDelta = 0f;
 
-        if (generalSavingsMonthly > 0 && cashOnHand >= generalSavingsMonthly)
+        if (generalSavingsMonthly > 0 && CashOnHand >= generalSavingsMonthly)
         {
-            cashOnHand -= generalSavingsMonthly;
+            GameManager.Instance.ApplyMoneyChange(
+            FinancialEntry.EntryType.Expense,
+            "Savings Contribution",
+            generalSavingsMonthly,
+            false
+            );
+
             generalSavingsBalance += generalSavingsMonthly;
             LastMonthSavingsDelta = generalSavingsMonthly;
         }
@@ -147,7 +171,12 @@ public class FinanceManager : MonoBehaviour
         if (interestBase > 0 && generalSavingsInterestRate > 0f)
         {
             float interest = interestBase * generalSavingsInterestRate;
-            generalSavingsBalance += interest;
+            GameManager.Instance.ApplyMoneyChange(
+            FinancialEntry.EntryType.SavingsInterest,
+            "Savings Interest",
+            interest,
+            true
+            );
 
             Debug.Log($"[Savings] Interest gained: ${interest:F2}");
         }
@@ -166,7 +195,6 @@ public class FinanceManager : MonoBehaviour
         savingsWithdrawnThisMonth = 0f;
         UpdateHUD();
 
-        cashOnHand = Mathf.Max(0f, cashOnHand);
         generalSavingsBalance = Mathf.Max(0f, generalSavingsBalance);
     }
 
@@ -178,7 +206,14 @@ public class FinanceManager : MonoBehaviour
     // NOTE: UI-only adjustment. Does NOT represent full monthly simulation.
     public void ApplyBudget(float income, float expenses, float allocations)
     {
-        cashOnHand += income - (expenses + allocations);
+        float delta = income - (expenses + allocations);
+
+        GameManager.Instance.ApplyMoneyChange(
+            FinancialEntry.EntryType.ManualAdjustment,
+            "Budget Adjustment",
+            Mathf.Abs(delta),
+            delta >= 0
+            );
         UpdateHUD();
         Debug.Log($"[Finance] Budget Applied — New Balance: ${cashOnHand}");
     }
@@ -205,7 +240,12 @@ public class FinanceManager : MonoBehaviour
 
         if (cashOnHand >= schoolFeesPerTerm)
         {
-            cashOnHand -= schoolFeesPerTerm;
+            GameManager.Instance.ApplyMoneyChange(
+            FinancialEntry.EntryType.Expense,
+            "School Fees",
+            schoolFeesPerTerm,
+            false
+            );
             totalSpent += schoolFeesPerTerm;
             schoolFeesOutstanding = false;
 
@@ -359,7 +399,12 @@ public class FinanceManager : MonoBehaviour
         }
 
         generalSavingsBalance -= amount;
-        cashOnHand += amount;
+        GameManager.Instance.ApplyMoneyChange(
+        FinancialEntry.EntryType.ManualAdjustment,
+        "Savings Withdrawal",
+        amount,
+        true
+        );
         UpdateHUD();
         savingsWithdrawnThisMonth += amount;
 

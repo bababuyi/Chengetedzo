@@ -49,8 +49,7 @@ public class ForecastManager : MonoBehaviour
 
     private void Start()
     {
-        if (forecastPanel != null)
-            forecastPanel.SetActive(false);
+
     }
 
     private void Awake()
@@ -101,6 +100,7 @@ public class ForecastManager : MonoBehaviour
 
             AddArticlesForCategory(randomCategory, 1, upcomingSeason);
         }
+
         ShowForecast();
     }
 
@@ -108,7 +108,6 @@ public class ForecastManager : MonoBehaviour
     {
         if (forecastPanel == null) return;
 
-        forecastPanel.SetActive(true);
         forecastHeaderText.text = "Seasonal Forecast";
 
         foreach (Transform child in forecastListParent)
@@ -125,8 +124,8 @@ public class ForecastManager : MonoBehaviour
             if (text != null)
             {
                 text.text =
-                $"<b>{forecast.headline}</b>\n" +
-                $"<size=80%>{forecast.body}</size>";
+                    $"<b>{forecast.headline}</b>\n" +
+                    $"<size=80%>{forecast.body}</size>";
             }
 
             UnityEngine.UI.Image img =
@@ -150,7 +149,6 @@ public class ForecastManager : MonoBehaviour
     public void ContinueToInsuranceSelection()
     {
         if (forecastPanel != null)
-            forecastPanel.SetActive(false);
 
         if (UIManager.Instance != null)
             UIManager.Instance.ShowInsurancePanel();

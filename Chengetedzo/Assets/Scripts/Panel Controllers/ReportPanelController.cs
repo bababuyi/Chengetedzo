@@ -46,8 +46,6 @@ public class ReportPanelController : MonoBehaviour
         if (continueButton != null)
             continueButton.interactable = false;
 
-        gameObject.SetActive(false);
-
         GameManager.Instance.EndMonthAndAdvance();
     }
 }

@@ -32,8 +32,7 @@ public class ForecastPanelController : MonoBehaviour
         if (GameManager.Instance.CurrentPhase != GameManager.GamePhase.Forecast)
             return;
 
-        GameManager.Instance.SetPhase(GameManager.GamePhase.Insurance);
-        UIManager.Instance.ShowInsurancePanel();
+        GameManager.Instance.OnForecastConfirmed();
     }
 
     private void BackToBudget()
@@ -41,7 +40,6 @@ public class ForecastPanelController : MonoBehaviour
         if (GameManager.Instance.CurrentPhase != GameManager.GamePhase.Forecast)
             return;
 
-        GameManager.Instance.SetPhase(GameManager.GamePhase.Idle);
-        UIManager.Instance.ShowBudgetPanel();
+        GameManager.Instance.OnForecastBack();
     }
 }

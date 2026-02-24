@@ -31,13 +31,18 @@ public class LoanManager : MonoBehaviour
 
     public void ProcessContribution()
     {
-        if (GameManager.Instance.financeManager.cashOnHand < contribution)
+        if (GameManager.Instance.financeManager.CashOnHand < contribution)
         {
             ContributedThisMonth = false;
             return;
         }
 
-        GameManager.Instance.financeManager.cashOnHand -= contribution;
+        GameManager.Instance.ApplyMoneyChange(
+        FinancialEntry.EntryType.LoanContribution,
+        "Loan Pool Contribution",
+        contribution,
+        false
+        );
         ContributedThisMonth = true;
 
         totalContributed += contribution;
@@ -47,6 +52,8 @@ public class LoanManager : MonoBehaviour
 
     public bool Borrow(float amount)
     {
+        if (GameManager.Instance.CurrentPhase != GameManager.GamePhase.Simulation)
+            return false;
         if (BorrowedThisMonth)
         {
             Debug.Log("Already borrowed this month.");
@@ -60,7 +67,12 @@ public class LoanManager : MonoBehaviour
         }
 
         loanBalance += amount;
-        GameManager.Instance.financeManager.cashOnHand += amount;
+        GameManager.Instance.ApplyMoneyChange(
+        FinancialEntry.EntryType.LoanBorrow,
+        "Loan Borrowed",
+        amount,
+        true
+        );
         borrowingPower -= amount;
         BorrowedThisMonth = true;
 
@@ -77,9 +89,14 @@ public class LoanManager : MonoBehaviour
 
         float repayment = loanBalance * repaymentRate;
 
-        if (GameManager.Instance.financeManager.cashOnHand >= repayment)
+        if (GameManager.Instance.financeManager.CashOnHand >= repayment)
         {
-            GameManager.Instance.financeManager.cashOnHand -= repayment;
+            GameManager.Instance.ApplyMoneyChange(
+            FinancialEntry.EntryType.LoanRepayment,
+            "Loan Repayment",
+            repayment,
+            false
+            );
             loanBalance -= repayment;
 
             onTimePayments++;
@@ -150,7 +167,12 @@ public class LoanManager : MonoBehaviour
 
         loanBalance += amount;
         borrowingPower -= amount;
-        GameManager.Instance.financeManager.cashOnHand += amount;
+        GameManager.Instance.ApplyMoneyChange(
+        FinancialEntry.EntryType.LoanBorrow,
+        "Forced Loan",
+        amount,
+        true
+        );
 
         Debug.Log($"[Loan] FORCED loan issued: ${amount:F0}");
     }
