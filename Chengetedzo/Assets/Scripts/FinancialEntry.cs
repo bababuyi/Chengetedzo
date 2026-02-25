@@ -4,15 +4,22 @@ public class FinancialEntry
     {
         Income,
         Expense,
+
         LoanContribution,
         LoanBorrow,
         LoanRepayment,
+
         InsurancePremium,
         InsuranceRefund,
         InsurancePayout,
+
         EventReward,
         EventLoss,
+
+        SavingsContribution,
+        SavingsWithdrawal,
         SavingsInterest,
+
         ManualAdjustment
     }
 

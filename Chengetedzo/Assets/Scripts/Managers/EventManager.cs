@@ -65,7 +65,7 @@ public class EventManager : MonoBehaviour
 
     }
 
-    [SerializeField] private int maxEventsPerMonth = 3;
+    [SerializeField] private int maxEventsPerMonth = 2;
 
 
     [Header("Possible Events")]
@@ -73,6 +73,12 @@ public class EventManager : MonoBehaviour
 
     public List<ResolvedEvent> GenerateMonthlyEvents(int month)
     {
+        if (GameManager.Instance.CurrentPhase != GameManager.GamePhase.Simulation)
+        {
+            Debug.LogWarning("Attempted to generate events outside Simulation phase.");
+            return new List<ResolvedEvent>();
+        }
+
         int triggeredEventCount = 0;
         float monthlyDamageCap =
             GameManager.Instance.financeManager.CashOnHand *
@@ -150,38 +156,38 @@ public class EventManager : MonoBehaviour
                 continue;
             }
 
-            float lossPercent =
-            Random.Range(ev.minLossPercent, ev.maxLossPercent + 1);
+            float intendedLoss = Random.Range(ev.minLossPercent, ev.maxLossPercent + 1);
+            float lossAmount = GameManager.Instance.financeManager.CashOnHand * (intendedLoss / 100f);
 
-            float cashBefore = GameManager.Instance.financeManager.CashOnHand;
+            // Apply monthly damage cap
+            float cappedLoss = GameManager.Instance.ApplyMonthlyDamage(lossAmount);
 
-            float totalPayout = 0f;
+            // Apply loss through ledger
+            GameManager.Instance.ApplyMoneyChange(
+                FinancialEntry.EntryType.EventLoss,
+                ev.eventName,
+                cappedLoss,
+                false
+            );
 
-            // If no related insurances, still apply damage once
-            if (ev.relatedInsurances == null || ev.relatedInsurances.Count == 0)
-            {
-                totalPayout += GameManager.Instance.insuranceManager.HandleEvent(InsuranceManager.InsuranceType.None, lossPercent, ev.lossType, ev.fixedLossAmount);
-            }
-            else
+            // Let insurance handle payout AFTER loss
+            float payout = 0f;
+
+            if (ev.relatedInsurances != null && ev.relatedInsurances.Count > 0)
             {
                 foreach (var insuranceType in ev.relatedInsurances)
                 {
-                    totalPayout += GameManager.Instance.insuranceManager.HandleEvent(insuranceType, lossPercent, ev.lossType, ev.fixedLossAmount);
+                    payout += GameManager.Instance.insuranceManager
+                        .HandleEvent(insuranceType, intendedLoss, ev.lossType, ev.fixedLossAmount);
                 }
             }
 
-            float cashAfter = GameManager.Instance.financeManager.CashOnHand;
-
-            // Total money lost by player
-            float actualLoss = cashBefore - cashAfter;
-
-            // Apply insurance payout to ledger if any
-            if (totalPayout > 0f)
+            if (payout > 0f)
             {
                 GameManager.Instance.ApplyMoneyChange(
                     FinancialEntry.EntryType.InsurancePayout,
                     "Insurance Payout",
-                    totalPayout,
+                    payout,
                     true
                 );
             }
@@ -191,9 +197,9 @@ public class EventManager : MonoBehaviour
                 title = ev.eventName,
                 description = ev.description,
                 type = InsuranceManager.InsuranceType.None,
-                lossPercent = lossPercent,
-                actualMoneyChange = -actualLoss,
-                insurancePayout = totalPayout
+                lossPercent = intendedLoss,
+                actualMoneyChange = -cappedLoss,
+                insurancePayout = payout
             });
 
             if (ev.affectsIncome)
@@ -203,19 +209,30 @@ public class EventManager : MonoBehaviour
                     ev.incomeEffectMonths
                 );
             }
-
-            //float maxAllowedLoss =
-            //GameManager.Instance.financeManager.cashOnHand *
-            //GameManager.Instance.maxMonthlyDamagePercent;
-
-            //if (GameManager.Instance.monthlyDamageTaken >=
-            //GameManager.Instance.financeManager.cashOnHand *
-            //GameManager.Instance.maxMonthlyDamagePercent)
-            //{
-              //  break;
-            //}
         }
 
         return results;
+    }
+
+    private float CalculateLossAmount(MonthlyEvent ev, float lossPercent)
+    {
+        switch (ev.lossType)
+        {
+            case MonthlyEvent.LossCalculationType.CashOnHand:
+                return GameManager.Instance.financeManager.CashOnHand * (lossPercent / 100f);
+
+            case MonthlyEvent.LossCalculationType.AssetValue:
+                float assetValue = GameManager.Instance.financeManager
+                    .GetAssetValue(ev.relatedInsurances.Count > 0
+                    ? ev.relatedInsurances[0]
+                    : InsuranceManager.InsuranceType.None);
+                return assetValue * (lossPercent / 100f);
+
+            case MonthlyEvent.LossCalculationType.FixedAmount:
+                return ev.fixedLossAmount;
+
+            default:
+                return 0f;
+        }
     }
 }

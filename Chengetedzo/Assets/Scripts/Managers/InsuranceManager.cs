@@ -494,12 +494,15 @@ public class InsuranceManager : MonoBehaviour
         float netLoss = Mathf.Max(0f, rawLoss - payout);
         float cappedLoss = GameManager.Instance.ApplyMonthlyDamage(netLoss);
 
-        //GameManager.Instance.ApplyMoneyChange(
-        //FinancialEntry.EntryType.EventLoss,
-       //$"Event Loss - {type}",
-        //cappedLoss,
-        //false
-        //);
+        if (cappedLoss > 0f)
+        {
+            GameManager.Instance.ApplyMoneyChange(
+                FinancialEntry.EntryType.EventLoss,
+                $"Event Loss - {type}",
+                cappedLoss,
+                false
+            );
+        }
 
         totalLoss += cappedLoss;
 

@@ -57,15 +57,79 @@ public class MonthlyFinancialLedger
         sb.AppendLine($"Opening Balance: ${OpeningBalance:F2}");
         sb.AppendLine("");
 
-        foreach (var entry in entries)
-        {
-            string sign = entry.isPositive ? "+" : "-";
-            sb.AppendLine($"{sign} {entry.description}: ${entry.amount:F2}");
-        }
+        float income =
+            GetTotalByType(FinancialEntry.EntryType.Income) +
+            GetTotalByType(FinancialEntry.EntryType.EventReward);
 
+        float fixedExpenses =
+            GetTotalByType(FinancialEntry.EntryType.Expense);
+
+        float savingsContribution =
+            -GetTotalByType(FinancialEntry.EntryType.SavingsContribution);
+
+        float savingsWithdrawal =
+            GetTotalByType(FinancialEntry.EntryType.SavingsWithdrawal);
+
+        float savingsInterest =
+            GetTotalByType(FinancialEntry.EntryType.SavingsInterest);
+
+        float premiums =
+            -GetTotalByType(FinancialEntry.EntryType.InsurancePremium);
+
+        float payouts =
+            GetTotalByType(FinancialEntry.EntryType.InsurancePayout);
+
+        float eventLosses =
+            -GetTotalByType(FinancialEntry.EntryType.EventLoss);
+
+        float loanRepayments =
+            -GetTotalByType(FinancialEntry.EntryType.LoanRepayment);
+
+        float net = ClosingBalance - OpeningBalance;
+
+        sb.AppendLine("Income:");
+        sb.AppendLine($"  ${income:F2}");
         sb.AppendLine("");
+
+        sb.AppendLine("Expenses:");
+        sb.AppendLine($"  ${fixedExpenses:F2}");
+        sb.AppendLine("");
+
+        sb.AppendLine("Savings:");
+        sb.AppendLine($"  Contributions: ${savingsContribution:F2}");
+        sb.AppendLine($"  Withdrawals: ${savingsWithdrawal:F2}");
+        sb.AppendLine($"  Interest: ${savingsInterest:F2}");
+        sb.AppendLine("");
+
+        sb.AppendLine("Insurance:");
+        sb.AppendLine($"  Premiums: ${premiums:F2}");
+        sb.AppendLine($"  Payouts: ${payouts:F2}");
+        sb.AppendLine("");
+
+        sb.AppendLine("Events:");
+        sb.AppendLine($"  Losses: ${eventLosses:F2}");
+        sb.AppendLine("");
+
+        sb.AppendLine("Loans:");
+        sb.AppendLine($"  Repayments: ${loanRepayments:F2}");
+        sb.AppendLine("");
+
+        sb.AppendLine($"Net Result: ${net:F2}");
         sb.AppendLine($"Closing Balance: ${ClosingBalance:F2}");
 
         return sb.ToString();
+    }
+
+    public float GetTotalByType(FinancialEntry.EntryType type)
+    {
+        float total = 0f;
+
+        foreach (var entry in entries)
+        {
+            if (entry.entryType == type)
+                total += entry.SignedAmount();
+        }
+
+        return total;
     }
 }

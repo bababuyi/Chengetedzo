@@ -147,7 +147,7 @@ public class FinanceManager : MonoBehaviour
         if (generalSavingsMonthly > 0 && CashOnHand >= generalSavingsMonthly)
         {
             GameManager.Instance.ApplyMoneyChange(
-            FinancialEntry.EntryType.Expense,
+            FinancialEntry.EntryType.SavingsContribution,
             "Savings Contribution",
             generalSavingsMonthly,
             false
@@ -400,7 +400,7 @@ public class FinanceManager : MonoBehaviour
 
         generalSavingsBalance -= amount;
         GameManager.Instance.ApplyMoneyChange(
-        FinancialEntry.EntryType.ManualAdjustment,
+        FinancialEntry.EntryType.SavingsWithdrawal,
         "Savings Withdrawal",
         amount,
         true

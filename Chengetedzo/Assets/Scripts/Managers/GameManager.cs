@@ -32,6 +32,7 @@ public class GameManager : MonoBehaviour
     [Header("Monthly Damage")]
     public float monthlyDamageTaken = 0f;
     public float maxMonthlyDamagePercent = 0.35f;
+    private float monthlyDamageCapBase;
 
     private List<ResolvedEvent> monthlyEvents = new();
     public bool IsLoanDecisionActive { get; private set; }
@@ -146,6 +147,7 @@ public class GameManager : MonoBehaviour
         SetPhase(GamePhase.Simulation);
 
         monthlyDamageTaken = 0f;
+        monthlyDamageCapBase = financeManager.CashOnHand;
 
         // 1. Apply Income & Budget
         financeManager.ProcessMonthlyBudget();
@@ -422,12 +424,13 @@ public class GameManager : MonoBehaviour
 
     public float ApplyMonthlyDamage(float intendedLoss)
     {
-        float maxAllowedLoss = financeManager.CashOnHand * maxMonthlyDamagePercent;
+        float maxAllowedLoss = monthlyDamageCapBase * maxMonthlyDamagePercent;
         float remainingCap = maxAllowedLoss - monthlyDamageTaken;
 
         float actualLoss = Mathf.Clamp(intendedLoss, 0f, remainingCap);
 
         monthlyDamageTaken += actualLoss;
+
         return actualLoss;
     }
 
@@ -790,11 +793,6 @@ public class GameManager : MonoBehaviour
         CurrentPhase != GamePhase.Loan)
         {
             Debug.LogError("Money mutation outside allowed phases.");
-            return;
-        }
-        if (CurrentPhase != GamePhase.Simulation)
-        {
-            Debug.LogError("Money mutation outside Simulation phase.");
             return;
         }
 
