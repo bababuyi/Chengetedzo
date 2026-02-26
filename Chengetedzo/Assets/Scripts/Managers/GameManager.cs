@@ -170,6 +170,11 @@ public class GameManager : MonoBehaviour
         ProcessNextEvent();
     }
 
+    public ForecastManager.ForecastState GetCurrentForecast()
+    {
+        return forecastManager?.CurrentForecast;
+    }
+
     private void SetPhase(GamePhase phase)
     {
         if (uiManager.IsPopupActive && phase != GamePhase.Simulation)

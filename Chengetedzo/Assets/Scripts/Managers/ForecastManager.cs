@@ -13,6 +13,13 @@ public class ForecastManager : MonoBehaviour
         public string headline;
         public string body;
     }
+    public class ForecastState
+    {
+        public Dictionary<ForecastCategory, float> categoryRiskMultiplier
+            = new Dictionary<ForecastCategory, float>();
+
+        public float globalIncomeModifier = 0f; // % change
+    }
 
     [System.Serializable]
     public class ForecastCategoryIcon
@@ -32,7 +39,7 @@ public class ForecastManager : MonoBehaviour
 
     [SerializeField] private int articlesPerForecast = 3;
     private HashSet<string> usedHeadlines = new HashSet<string>();
-
+    public ForecastState CurrentForecast { get; private set; }
     public enum ForecastCategory
     {
         Health,
@@ -90,6 +97,17 @@ public class ForecastManager : MonoBehaviour
         foreach (var entry in categoryRisk)
         {
             AddArticlesForCategory(entry.Key, articlesPerForecast, upcomingSeason);
+        }
+
+        CurrentForecast = new ForecastState();
+
+        foreach (var entry in categoryRisk)
+        {
+            float normalizedRisk = Mathf.Clamp01(entry.Value / 100f);
+
+            float multiplier = 1f + normalizedRisk;
+
+            CurrentForecast.categoryRiskMultiplier[entry.Key] = multiplier;
         }
 
         while (selectedForecasts.Count < articlesPerForecast)

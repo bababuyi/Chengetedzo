@@ -57,6 +57,15 @@ public class MonthlyFinancialLedger
         sb.AppendLine($"Opening Balance: ${OpeningBalance:F2}");
         sb.AppendLine("");
 
+        var forecast = GameManager.Instance.GetCurrentForecast();
+
+        if (forecast != null)
+        {
+            sb.AppendLine("<b>Forecast Effects Applied</b>");
+            sb.AppendLine("Seasonal risk influenced event probability.");
+            sb.AppendLine("");
+        }
+
         float income =
             GetTotalByType(FinancialEntry.EntryType.Income) +
             GetTotalByType(FinancialEntry.EntryType.EventReward);

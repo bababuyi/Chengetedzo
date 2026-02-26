@@ -132,6 +132,17 @@ public class InsuranceManager : MonoBehaviour
             CreateDefaultPlans();
     }
 
+    public struct InsuranceResult
+    {
+        public float rawLoss;
+        public float payout;
+        public float deductibleAmount;
+        public float finalLoss;
+        public bool claimApproved;
+        public bool waitingPeriodBlocked;
+        public bool lapsedBlocked;
+    }
+
     private void CreateDefaultPlans()
     {
         allPlans = new List<InsurancePlan>();
@@ -217,7 +228,7 @@ public class InsuranceManager : MonoBehaviour
             type = InsuranceType.Crop,
             premiumIsAssetBased = true,
             premiumRate = 0.005f, // 0.5%
-            deductiblePercent = 0f,
+            deductiblePercent = 0.05f,
             waitingPeriodMonths = 0,
             requiredAsset = GameManager.AssetRequirement.Crops,
             coverageDescription = "In the event of crop loss, covers the cost of inputs."
@@ -445,11 +456,19 @@ public class InsuranceManager : MonoBehaviour
     /// Returns the payout amount (0 if no payout).
     /// This checks waiting period and lapse rules.
     /// </summary>
-    public float HandleEvent(InsuranceType type, float lossPercent, MonthlyEvent.LossCalculationType lossType, float fixedAmount = 0f)
+    public InsuranceResult HandleEvent(
+    InsuranceType type,
+    float lossPercent,
+    MonthlyEvent.LossCalculationType lossType,
+    float fixedAmount = 0f)
     {
+        InsuranceResult result = new InsuranceResult();
+
         var plan = GetPlan(type);
+
         float rawLoss = 0f;
 
+        // 1?? Calculate raw loss
         switch (lossType)
         {
             case MonthlyEvent.LossCalculationType.AssetValue:
@@ -467,30 +486,37 @@ public class InsuranceManager : MonoBehaviour
         }
 
         float payout = 0f;
+        float deductibleAmount = 0f;
 
-        // 1? Insurance reduction FIRST
-        if (plan != null && plan.CanClaim())
+        bool waitingBlocked = false;
+        bool lapsedBlocked = false;
+
+        // 2?? Insurance evaluation
+        if (plan != null)
         {
-            float deductible = rawLoss * (plan.deductiblePercent / 100f);
-            float insurableLoss = Mathf.Max(0f, rawLoss - deductible);
-
-            float coverageCap;
-
-            if (plan.premiumIsAssetBased)
+            if (plan.isLapsed)
             {
-                float assetValue = Finance.GetAssetValue(type);
-                coverageCap = assetValue;
+                lapsedBlocked = true;
             }
-            else
+            else if (plan.monthsPaid < plan.waitingPeriodMonths)
             {
-                coverageCap = plan.coverageLimit;
+                waitingBlocked = true;
             }
+            else if (plan.CanClaim())
+            {
+                deductibleAmount = rawLoss * (plan.deductiblePercent / 100f);
+                float insurableLoss = Mathf.Max(0f, rawLoss - deductibleAmount);
 
-            payout = Mathf.Min(insurableLoss, coverageCap);
-            totalPayout += payout;
+                float coverageCap = plan.premiumIsAssetBased
+                    ? Finance.GetAssetValue(type)
+                    : plan.coverageLimit;
+
+                payout = Mathf.Min(insurableLoss, coverageCap);
+                totalPayout += payout;
+            }
         }
 
-        // 2? Apply remaining loss to player (ApplyMonthlyDamage handles cash impact)
+        // 3?? Apply remaining loss
         float netLoss = Mathf.Max(0f, rawLoss - payout);
         float cappedLoss = GameManager.Instance.ApplyMonthlyDamage(netLoss);
 
@@ -506,9 +532,18 @@ public class InsuranceManager : MonoBehaviour
 
         totalLoss += cappedLoss;
 
-        Debug.Log($"[Insurance] Event {type}: Loss ${rawLoss:F2}, Covered ${payout:F2}, Player Paid ${cappedLoss:F2}");
+        // 4?? Fill result struct
+        result.rawLoss = rawLoss;
+        result.payout = payout;
+        result.deductibleAmount = deductibleAmount;
+        result.finalLoss = cappedLoss;
+        result.claimApproved = payout > 0f;
+        result.waitingPeriodBlocked = waitingBlocked;
+        result.lapsedBlocked = lapsedBlocked;
 
-        return payout;
+        Debug.Log($"[Insurance] Event {type}: Raw ${rawLoss:F2}, Deductible ${deductibleAmount:F2}, Paid ${payout:F2}, Player ${cappedLoss:F2}");
+
+        return result;
     }
 
     // ------------------------------

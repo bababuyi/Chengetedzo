@@ -101,7 +101,17 @@ public class EventManager : MonoBehaviour
             if (triggeredEventCount >= maxEventsPerMonth)
                 break;
 
-            if (Random.value * 100f > ev.probability)
+            float adjustedProbability = ev.probability;
+
+            var forecast = GameManager.Instance.GetCurrentForecast();
+
+            if (forecast != null &&
+                forecast.categoryRiskMultiplier.TryGetValue(ev.category, out float multiplier))
+            {
+                adjustedProbability *= multiplier;
+            }
+
+            if (Random.value * 100f > adjustedProbability)
                 continue;
 
             bool ownsRequiredAsset = ev.requiredAsset switch
@@ -159,26 +169,26 @@ public class EventManager : MonoBehaviour
             float intendedLoss = Random.Range(ev.minLossPercent, ev.maxLossPercent + 1);
             float lossAmount = GameManager.Instance.financeManager.CashOnHand * (intendedLoss / 100f);
 
-            // Apply monthly damage cap
-            float cappedLoss = GameManager.Instance.ApplyMonthlyDamage(lossAmount);
-
-            // Apply loss through ledger
-            GameManager.Instance.ApplyMoneyChange(
-                FinancialEntry.EntryType.EventLoss,
-                ev.eventName,
-                cappedLoss,
-                false
-            );
-
             // Let insurance handle payout AFTER loss
             float payout = 0f;
+            float finalLoss = 0f;
 
             if (ev.relatedInsurances != null && ev.relatedInsurances.Count > 0)
             {
                 foreach (var insuranceType in ev.relatedInsurances)
                 {
-                    payout += GameManager.Instance.insuranceManager
-                        .HandleEvent(insuranceType, intendedLoss, ev.lossType, ev.fixedLossAmount);
+                    InsuranceManager.InsuranceResult result =
+                        GameManager.Instance.insuranceManager
+                            .HandleEvent(insuranceType, intendedLoss, ev.lossType, ev.fixedLossAmount);
+
+                    payout += result.payout;
+                    finalLoss = result.finalLoss; // loss already applied inside InsuranceManager
+
+                    if (result.waitingPeriodBlocked)
+                        Debug.Log("Claim blocked: waiting period.");
+
+                    if (result.lapsedBlocked)
+                        Debug.Log("Claim blocked: policy lapsed.");
                 }
             }
 
@@ -198,7 +208,7 @@ public class EventManager : MonoBehaviour
                 description = ev.description,
                 type = InsuranceManager.InsuranceType.None,
                 lossPercent = intendedLoss,
-                actualMoneyChange = -cappedLoss,
+                actualMoneyChange = -finalLoss,
                 insurancePayout = payout
             });
 
