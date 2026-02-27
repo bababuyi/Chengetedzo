@@ -121,12 +121,6 @@ public class LoanManager : MonoBehaviour
         }
     }
 
-    //private void IncreaseRepaymentRate()
-    //{
-        //repaymentRate += 0.10f;
-        //repaymentRate = Mathf.Clamp(repaymentRate, 0.05f, 0.5f);
-    //}
-
     private void UpdateBorrowingPower()
     {
         float previousPower = borrowingPower;

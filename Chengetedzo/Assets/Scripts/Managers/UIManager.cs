@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Globalization;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -48,6 +49,13 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI mentorText;
     public Button mentorContinueButton;
 
+    [Header("Year Totals")]
+    private float yearIncome;
+    private float yearExpenses;
+    private float yearPremiums;
+    private float yearPayouts;
+    private float yearEventLosses;
+
     // Popup state property (correct, single version)
     private UIPanelState currentPanelState = UIPanelState.None;
     // ================================
@@ -89,15 +97,17 @@ public class UIManager : MonoBehaviour
             return;
 
         activePopup.SetActive(false);
-        activeOnClose?.Invoke();
+
+        var callback = activeOnClose;
 
         activePopup = null;
         activeContinueButton = null;
         activeOnClose = null;
-
         IsPopupActive = false;
 
         Debug.Log("Popup closed safely.");
+
+        callback?.Invoke();
     }
 
     public enum UIPanelState
@@ -109,7 +119,8 @@ public class UIManager : MonoBehaviour
         Insurance,
         Loan,
         Report,
-        EndOfYear
+        EndOfYear,
+        Simulation
     }
 
     private void Awake()
@@ -138,10 +149,12 @@ public class UIManager : MonoBehaviour
 
     public void UpdateMonthText(int currentMonth, int totalMonths)
     {
+        int displayMonth = ((currentMonth - 1) % 12) + 1;
+
         string monthName = System.Globalization.CultureInfo
             .CurrentCulture
             .DateTimeFormat
-            .GetMonthName(currentMonth);
+            .GetMonthName(displayMonth);
 
         monthText.text = $"{monthName} ({currentMonth}/{totalMonths})";
     }
@@ -256,8 +269,8 @@ public class UIManager : MonoBehaviour
                 topHUD.SetActive(false);
                 break;
 
-            case UIPanelState.None:
-                topHUD.SetActive(false);
+            case UIPanelState.Simulation:
+                topHUD.SetActive(true);
                 break;
         }
     }
@@ -280,8 +293,18 @@ public class UIManager : MonoBehaviour
 
     public void ShowReportPanel(string reportText)
     {
+        if (IsPopupActive)
+            CloseActivePopup();
+
+        eventPopup?.SetActive(false);
+        mentorPopup?.SetActive(false);
+        IsPopupActive = false;
+
         SwitchPanel(UIPanelState.Report);
         monthlyReportText.text = reportText;
+
+        Debug.Log("Entering Report Phase.");
+        Debug.Log("IsPopupActive at report: " + IsPopupActive);
     }
 
     public void ShowEventPopup(string title, string description, Sprite icon = null)
@@ -299,39 +322,27 @@ public class UIManager : MonoBehaviour
         );
     }
 
-    //public void ShowEventPopup(string title, string description, Sprite icon = null)
-    //{
-    //if (IsPopupActive) return;
-
-    //eventPopup.SetActive(true);
-    //eventTitleText.text = title;
-    //eventDescriptionText.text = description;
-
-    //eventIcon.sprite = icon;
-    //eventIcon.enabled = icon != null;
-
-    // NOTE: Uses Time.timeScale = 0; GameManager relies on WaitForSecondsRealtime
-    //IsPopupActive = true;
-
-    //continueButton.onClick.RemoveAllListeners();
-    //continueButton.onClick.AddListener(CloseEventPopup);
-    //}
-
-    private void CloseEventPopup()
-    {
-        eventPopup.SetActive(false);
-        IsPopupActive = false;
-
-        GameManager.Instance.OnEventPopupClosed();
-    }
-
     // ===== End-of-Year Screen =====
     public void ShowEndOfYearSummary(string mentorReflection)
     {
         SwitchPanel(UIPanelState.EndOfYear);
 
+        float net =
+            yearIncome
+            - yearExpenses
+            - yearPremiums
+            - yearEventLosses
+            + yearPayouts;
+
         resultsText.text =
             "<b>Year Complete</b>\n\n" +
+            $"Income: ${yearIncome:F0}\n" +
+            $"Expenses: ${yearExpenses:F0}\n" +
+            $"Insurance Premiums: ${yearPremiums:F0}\n" +
+            $"Insurance Payouts: ${yearPayouts:F0}\n" +
+            $"Event Losses: ${yearEventLosses:F0}\n\n" +
+            $"Net Result: ${net:F0}\n" +
+            $"Final Cash: ${GameManager.Instance.financeManager.CashOnHand:F0}\n\n" +
             $"<i>{mentorReflection}</i>";
     }
 

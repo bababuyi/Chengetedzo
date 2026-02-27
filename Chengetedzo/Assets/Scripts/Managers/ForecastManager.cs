@@ -53,7 +53,6 @@ public class ForecastManager : MonoBehaviour
     private List<ForecastArticle> forecastLibrary;
     private List<ForecastArticle> selectedForecasts = new List<ForecastArticle>();
 
-
     private void Start()
     {
 
@@ -71,9 +70,14 @@ public class ForecastManager : MonoBehaviour
         AddCategoryArticles(ForecastCategory.Weather, ForecastLines.Weather);
     }
 
+    public bool forecastGeneratedThisMonth = false;
 
     public void GenerateForecast()
     {
+        if (forecastGeneratedThisMonth)
+            return;
+
+        forecastGeneratedThisMonth = true;
         usedHeadlines.Clear();
         selectedForecasts.Clear();
         Season upcomingSeason =
@@ -210,17 +214,4 @@ public class ForecastManager : MonoBehaviour
             usedHeadlines.Add(pool[i].headline);
         }
     }
-    //private string[] GetLinesForCategory(ForecastCategory category)
-    //{
-    //  return category switch
-    //{
-    //  ForecastCategory.Health => ForecastLines.Health,
-    //ForecastCategory.Livestock => ForecastLines.Livestock,
-    //ForecastCategory.Crops => ForecastLines.Crops,
-    //ForecastCategory.Economic => ForecastLines.Economic,
-    //ForecastCategory.Crime => ForecastLines.Crime,
-    //ForecastCategory.Weather => ForecastLines.Weather,
-    //_ => ForecastLines.Economic
-    //};
-    //}
 }

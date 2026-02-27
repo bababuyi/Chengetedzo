@@ -281,73 +281,75 @@ public class FinanceManager : MonoBehaviour
         currentIncome = income;
         Debug.Log($"[Finance] Monthly income set to: {currentIncome}");
     }
-    public string GetMonthlySummary(int month)
-    {
-        StringBuilder sb = new StringBuilder();
 
-        sb.AppendLine($"<b>Month {month} Financial Report</b>\n");
+    //public string GetMonthlySummary(int month)
+    //{
+      //  StringBuilder sb = new StringBuilder();
+
+        //sb.AppendLine($"<b>Month {month} Financial Report</b>\n");
 
         // ===== Income =====
-        sb.AppendLine("<b>Income</b>");
-        sb.AppendLine($"+ Monthly Income: ${currentIncome:F2}");
+        //sb.AppendLine("<b>Income</b>");
+        //sb.AppendLine($"+ Monthly Income: ${currentIncome:F2}");
 
-        float incomeMultiplier = GameManager.Instance.GetIncomeMultiplier();
+        //float incomeMultiplier = GameManager.Instance.GetIncomeMultiplier();
 
-        if (!Mathf.Approximately(incomeMultiplier, 1f))
+        //if (!Mathf.Approximately(incomeMultiplier, 1f))
 
-        {
-            sb.AppendLine(
-                $"<size=90%><color=#C94A4A>" +
-                $"Income Modifiers: x{incomeMultiplier:F2}</color></size>"
-            );
-        }
+        //{
+          //  sb.AppendLine(
+            //    $"<size=90%><color=#C94A4A>" +
+              //  $"Income Modifiers: x{incomeMultiplier:F2}</color></size>"
+            //);
+        //}
 
-        sb.AppendLine("");
+        //sb.AppendLine("");
 
         // ===== Expenses =====
-        sb.AppendLine("<b>Expenses</b>");
-        sb.AppendLine($"- Total Expenses: ${totalExpenses:F2}\n");
+        //sb.AppendLine("<b>Expenses</b>");
+        //sb.AppendLine($"- Total Expenses: ${totalExpenses:F2}\n");
 
         // ===== Budget Result =====
-        sb.AppendLine("<b>Monthly Result</b>");
-        float net = (currentIncome * incomeMultiplier) - totalExpenses;
+        //sb.AppendLine("<b>Monthly Result</b>");
+        //float net = (currentIncome * incomeMultiplier) - totalExpenses;
 
-        if (net >= 0)
-            sb.AppendLine($"+ Surplus: ${net:F2}\n");
-        else
-            sb.AppendLine($"- Deficit: ${Mathf.Abs(net):F2}\n");
+        //if (net >= 0)
+          //  sb.AppendLine($"+ Surplus: ${net:F2}\n");
+        //else
+          //  sb.AppendLine($"- Deficit: ${Mathf.Abs(net):F2}\n");
 
         // ===== Savings =====
-        sb.AppendLine("<b>Savings</b>");
+//        sb.AppendLine("<b>Savings</b>");
 
-        if (generalSavingsMonthly > 0)
-        {
-            sb.AppendLine($"- General Savings: ${generalSavingsMonthly:F2}");
-            sb.AppendLine($"  Balance: ${generalSavingsBalance:F2}");
-        }
+  //      if (generalSavingsMonthly > 0)
+    //    {
+      //      sb.AppendLine($"- General Savings: ${generalSavingsMonthly:F2}");
+        //    sb.AppendLine($"  Balance: ${generalSavingsBalance:F2}");
+        //}
 
-        sb.AppendLine("");
+        //sb.AppendLine("");
 
 
         // ===== End Balance =====
-        sb.AppendLine("<b>End of Month Balance</b>");
-        sb.AppendLine($"${cashOnHand:F2}");
+        //sb.AppendLine("<b>End of Month Balance</b>");
+        //sb.AppendLine($"${cashOnHand:F2}");
 
         // ===== Warnings (NO mentor) =====
-        if (WasOverBudgetThisMonth)
-        {
-            sb.AppendLine(
-                "\n<size=90%><color=#C94A4A>You spent more than your income this month.</color></size>");
-        }
+//        if (WasOverBudgetThisMonth)
+//        {
+ //           sb.AppendLine(
+   //             "\n<size=90%><color=#C94A4A>You spent more than your income this month.</color></size>");
+     //   }
 
-        if (cashOnHand <= 0)
-        {
-            sb.AppendLine(
-                "<size=90%><color=#C94A4A>You have no remaining cash.</color></size>");
-        }
+       // if (cashOnHand <= 0)
+       // {
+         //   sb.AppendLine(
+         //       "<size=90%><color=#C94A4A>You have no remaining cash.</color></size>");
+        //}
+        //
+        //return sb.ToString();
+    //}
 
-        return sb.ToString();
-    }
 
     public float rentCost;
     public float houseInsuredValue;

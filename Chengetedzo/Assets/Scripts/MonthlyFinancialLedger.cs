@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Text;
-using Unity.VisualScripting;
+using UnityEngine;
 
 public class MonthlyFinancialLedger
 {
@@ -10,8 +10,13 @@ public class MonthlyFinancialLedger
     private readonly List<FinancialEntry> entries = new List<FinancialEntry>();
     private bool isFinalized = false;
 
-    public IReadOnlyList<FinancialEntry> Entries => entries.AsReadOnly();
+    public float TotalIncome { get; private set; }
+    public float TotalExpenses { get; private set; }
+    public float TotalInsurancePremiums { get; private set; }
+    public float TotalInsurancePayouts { get; private set; }
+    public float TotalEventLosses { get; private set; }
 
+    public IReadOnlyList<FinancialEntry> Entries => entries.AsReadOnly();
     public float ClosingBalance { get; private set; }
 
     public MonthlyFinancialLedger(int monthNumber, float openingBalance)
@@ -25,7 +30,7 @@ public class MonthlyFinancialLedger
     {
         if (isFinalized)
         {
-            UnityEngine.Debug.LogError("[Ledger] Attempted to modify finalized ledger.");
+            Debug.LogError("[Ledger] Attempted to modify finalized ledger.");
             return;
         }
 
@@ -37,8 +42,41 @@ public class MonthlyFinancialLedger
     {
         if (isFinalized)
         {
-            UnityEngine.Debug.LogWarning("[Ledger] Ledger already finalized.");
+            Debug.LogWarning("[Ledger] Ledger already finalized.");
             return;
+        }
+
+        TotalIncome = 0f;
+        TotalExpenses = 0f;
+        TotalInsurancePremiums = 0f;
+        TotalInsurancePayouts = 0f;
+        TotalEventLosses = 0f;
+
+        foreach (var entry in entries)
+        {
+            switch (entry.entryType)
+            {
+                case FinancialEntry.EntryType.Income:
+                case FinancialEntry.EntryType.EventReward:
+                    TotalIncome += entry.SignedAmount();
+                    break;
+
+                case FinancialEntry.EntryType.Expense:
+                    TotalExpenses += Mathf.Abs(entry.SignedAmount());
+                    break;
+
+                case FinancialEntry.EntryType.InsurancePremium:
+                    TotalInsurancePremiums += Mathf.Abs(entry.SignedAmount());
+                    break;
+
+                case FinancialEntry.EntryType.InsurancePayout:
+                    TotalInsurancePayouts += entry.SignedAmount();
+                    break;
+
+                case FinancialEntry.EntryType.EventLoss:
+                    TotalEventLosses += Mathf.Abs(entry.SignedAmount());
+                    break;
+            }
         }
 
         isFinalized = true;
@@ -49,6 +87,19 @@ public class MonthlyFinancialLedger
         return isFinalized;
     }
 
+    public float GetTotalByType(FinancialEntry.EntryType type)
+    {
+        float total = 0f;
+
+        foreach (var entry in entries)
+        {
+            if (entry.entryType == type)
+                total += entry.SignedAmount();
+        }
+
+        return total;
+    }
+
     public string GetMonthlyBreakdown()
     {
         StringBuilder sb = new StringBuilder();
@@ -57,21 +108,12 @@ public class MonthlyFinancialLedger
         sb.AppendLine($"Opening Balance: ${OpeningBalance:F2}");
         sb.AppendLine("");
 
-        var forecast = GameManager.Instance.GetCurrentForecast();
-
-        if (forecast != null)
-        {
-            sb.AppendLine("<b>Forecast Effects Applied</b>");
-            sb.AppendLine("Seasonal risk influenced event probability.");
-            sb.AppendLine("");
-        }
-
         float income =
             GetTotalByType(FinancialEntry.EntryType.Income) +
             GetTotalByType(FinancialEntry.EntryType.EventReward);
 
         float fixedExpenses =
-            GetTotalByType(FinancialEntry.EntryType.Expense);
+            -GetTotalByType(FinancialEntry.EntryType.Expense);
 
         float savingsContribution =
             -GetTotalByType(FinancialEntry.EntryType.SavingsContribution);
@@ -127,18 +169,5 @@ public class MonthlyFinancialLedger
         sb.AppendLine($"Closing Balance: ${ClosingBalance:F2}");
 
         return sb.ToString();
-    }
-
-    public float GetTotalByType(FinancialEntry.EntryType type)
-    {
-        float total = 0f;
-
-        foreach (var entry in entries)
-        {
-            if (entry.entryType == type)
-                total += entry.SignedAmount();
-        }
-
-        return total;
     }
 }

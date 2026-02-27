@@ -26,6 +26,8 @@ public class ReportPanelController : MonoBehaviour
 
         continueButton.onClick.RemoveAllListeners();
         continueButton.onClick.AddListener(OnContinue);
+
+        Debug.Log("ReportPanel OnEnable - Phase = " + GameManager.Instance.CurrentPhase);
     }
 
     private void OnDisable()

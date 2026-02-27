@@ -83,6 +83,9 @@ public class SetupPanelController : MonoBehaviour
 
         if (string.IsNullOrWhiteSpace(childrenInput.text))
             childrenInput.text = "0";
+
+        warningText.text = "";
+        warningText.gameObject.SetActive(false);
     }
 
 

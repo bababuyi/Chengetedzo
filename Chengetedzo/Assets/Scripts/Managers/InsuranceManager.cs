@@ -2,15 +2,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using static EventManager;
 
-/// <summary>
-/// Rebuilt InsuranceManager with:
-/// - Waiting periods (per-plan)
-/// - Grace-month lapse rule (1 missed payment => grace, 2 missed => lapse)
-/// - Monthly premium processing
-/// - Claim blocking when in waiting period or lapsed
-/// - Basic "buy" and "cancel" behavior (first premium charged on buy)
-/// - Per-dependent premium calculation (adult = full, child = 50%)
-/// </summary>
 public class InsuranceManager : MonoBehaviour
 {
     private PlayerAssets Assets =>
@@ -258,12 +249,6 @@ public class InsuranceManager : MonoBehaviour
         return false;
     }
 
-    /// <summary>
-    /// Calculate monthly premium for a plan taking dependents into account:
-    /// - adults pay full premium
-    /// - children pay 50% premium
-    /// Uses PlayerDataManager.Instance.adults / children.
-    /// </summary>
     public float CalculateMonthlyPremiumForPlan(InsurancePlan plan)
     {
         if (plan == null) return 0f;

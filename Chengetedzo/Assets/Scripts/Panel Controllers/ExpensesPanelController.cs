@@ -49,7 +49,6 @@ public class ExpensesPanelController : MonoBehaviour
     public Toggle schoolFeesToggle;
     public TMP_InputField schoolFeesInput;
 
-
     private const float MIN_HOUSE_COST = 15000f;
 
     public void Init()
