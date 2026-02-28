@@ -28,7 +28,7 @@ public class GameManager : MonoBehaviour
     public UIManager uiManager;
     public ForecastManager forecastManager;
     public VisualSimulationManager visualManager;
-    public PlayerSetupData setupData = new PlayerSetupData();
+    public PlayerSetupData setupData;
 
     [Header("Monthly Damage")]
     public float monthlyDamageTaken = 0f;
@@ -41,6 +41,11 @@ public class GameManager : MonoBehaviour
     private float yearPremiums = 0f;
     private float yearPayouts = 0f;
     private float yearEventLosses = 0f;
+    public float YearIncome => yearIncome;
+    public float YearExpenses => yearExpenses;
+    public float YearPremiums => yearPremiums;
+    public float YearPayouts => yearPayouts;
+    public float YearEventLosses => yearEventLosses;
 
     private List<ResolvedEvent> monthlyEvents = new();
     public bool IsLoanDecisionActive { get; private set; }
@@ -48,7 +53,7 @@ public class GameManager : MonoBehaviour
     private Queue<bool> forcedLoanHistory = new(); // last 6 months
     private bool forcedLoanThisMonth = false;
     private List<IncomeEffect> activeIncomeEffects = new();
-    public bool IsSimulationPaused { get; private set; }
+    public bool IsHeadlessSimulation = false;
     public System.Action OnSeasonChanged;
     private bool mentorSpokeThisMonth = false;
     private bool loanIntroShown = false;
@@ -67,16 +72,25 @@ public class GameManager : MonoBehaviour
 
         Instance = this;
 
-        if (setupData == null)
-            setupData = new PlayerSetupData();
+        //if (setupData == null)
+        //{
+            //Debug.LogError("SetupData not assigned in inspector!");
+        //}
 
-        setupData.housing = HousingType.Renting;
-        setupData.ownsCar = false;
-        setupData.ownsFarm = false;
+        //setupData.housing = HousingType.Renting;
+        //setupData.ownsCar = false;
+        //setupData.ownsFarm = false;
     }
 
     private void Start()
-    {        
+    {
+        if (setupData == null)
+        {
+            Debug.LogError("Game cannot start without SetupData.");
+            enabled = false;
+            return;
+        }
+
         uiManager.UpdateMoneyText(financeManager.CashOnHand);
         uiManager.UpdateMonthText(currentMonth, totalMonths);
 
@@ -144,6 +158,7 @@ public class GameManager : MonoBehaviour
         Debug.Log($"[Month] Confirmed → Resolving Month {currentMonth}");
 
         SetPhase(GamePhase.Simulation);
+        uiManager.SwitchPanel(UIManager.UIPanelState.Simulation);
 
         monthlyDamageTaken = 0f;
         monthlyDamageCapBase = financeManager.CashOnHand;
@@ -160,6 +175,7 @@ public class GameManager : MonoBehaviour
 
         // 4. Generate Events
         monthlyEvents = eventManager.GenerateMonthlyEvents(currentMonth);
+        Debug.Log($"[Events] Generated: {monthlyEvents.Count} events for month {currentMonth}");
 
         pendingEvents.Clear();
         foreach (var ev in monthlyEvents)
@@ -308,6 +324,9 @@ public class GameManager : MonoBehaviour
             patternWarningIssued = true;
         }
 
+        if (IsHeadlessSimulation)
+            return;
+
         if (lineToShow != null)
         {
             uiManager.ShowMentorMessage(lineToShow);
@@ -436,11 +455,14 @@ public class GameManager : MonoBehaviour
 
     private void ShowEvent(ResolvedEvent ev)
     {
+        if (IsHeadlessSimulation)
+        {
+            OnEventPopupClosed();
+            return;
+        }
+
         string fullText = BuildEventResultText(ev);
         uiManager.ShowEventPopup(ev.title, fullText, ev.icon);
-
-        // Update money display immediately
-        uiManager.UpdateMoneyText(financeManager.CashOnHand);
     }
 
     private void EndMonthlyResolution()
@@ -786,7 +808,9 @@ public class GameManager : MonoBehaviour
 
         if (CurrentLedger == null)
         {
-            Debug.LogError("Ledger not initialized. This should never happen.");
+            // Pre-resolution financial mutation (e.g., insurance purchase)
+            financeManager.ApplyCashDelta(isCredit ? amount : -amount);
+            Debug.Log("[Ledger] Pre-resolution transaction applied without ledger.");
             return;
         }
 
@@ -836,26 +860,36 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("===== STARTING 24 MONTH STRESS TEST =====");
 
+        IsHeadlessSimulation = true;
+
+        yearIncome = 0f;
+        yearExpenses = 0f;
+        yearPremiums = 0f;
+        yearPayouts = 0f;
+        yearEventLosses = 0f;
+
         if (setupData == null)
         {
-            Debug.LogError("❌ Cannot stress test. setupData not assigned.");
+            Debug.LogError("❌ SetupData not assigned. Assign a real asset in inspector.");
             return;
         }
 
-        FinanceManager finance = FindObjectOfType<FinanceManager>();
-        if (finance == null)
+        if (financeManager == null)
         {
-            Debug.LogError("❌ FinanceManager not found in scene.");
+            Debug.LogError("❌ FinanceManager not assigned in inspector.");
             return;
         }
 
-        finance.InitializeFromSetup();
+        financeManager.InitializeFromSetup();
 
         if (CurrentPhase == GamePhase.Idle)
             StartNewMonth();
 
         int safetyCounter = 0;
         int maxSteps = 10000;
+
+        financeManager.generalSavingsMonthly = 0f;
+        //insuranceManager.DisableAllPlans(); // if you have it
 
         while (currentMonth <= totalMonths)
         {
@@ -872,6 +906,7 @@ public class GameManager : MonoBehaviour
                     break;
 
                 case GamePhase.Insurance:
+                    //insuranceManager.EnableBasicPlan();
                     OnInsuranceConfirmed();
                     break;
 

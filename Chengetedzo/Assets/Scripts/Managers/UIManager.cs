@@ -49,13 +49,6 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI mentorText;
     public Button mentorContinueButton;
 
-    [Header("Year Totals")]
-    private float yearIncome;
-    private float yearExpenses;
-    private float yearPremiums;
-    private float yearPayouts;
-    private float yearEventLosses;
-
     // Popup state property (correct, single version)
     private UIPanelState currentPanelState = UIPanelState.None;
     // ================================
@@ -327,23 +320,25 @@ public class UIManager : MonoBehaviour
     {
         SwitchPanel(UIPanelState.EndOfYear);
 
+        var gm = GameManager.Instance;
+
         float net =
-            yearIncome
-            - yearExpenses
-            - yearPremiums
-            - yearEventLosses
-            + yearPayouts;
+            gm.YearIncome
+            - gm.YearExpenses
+            - gm.YearPremiums
+            - gm.YearEventLosses
+            + gm.YearPayouts;
 
         resultsText.text =
-            "<b>Year Complete</b>\n\n" +
-            $"Income: ${yearIncome:F0}\n" +
-            $"Expenses: ${yearExpenses:F0}\n" +
-            $"Insurance Premiums: ${yearPremiums:F0}\n" +
-            $"Insurance Payouts: ${yearPayouts:F0}\n" +
-            $"Event Losses: ${yearEventLosses:F0}\n\n" +
-            $"Net Result: ${net:F0}\n" +
-            $"Final Cash: ${GameManager.Instance.financeManager.CashOnHand:F0}\n\n" +
-            $"<i>{mentorReflection}</i>";
+        "<b>Year Complete</b>\n\n" +
+        $"Income: ${gm.YearIncome:F0}\n" +
+        $"Expenses: ${gm.YearExpenses:F0}\n" +
+        $"Insurance Premiums: ${gm.YearPremiums:F0}\n" +
+        $"Insurance Payouts: ${gm.YearPayouts:F0}\n" +
+        $"Event Losses: ${gm.YearEventLosses:F0}\n\n" +
+        $"Net Result: ${net:F0}\n" +
+        $"Final Cash: ${gm.financeManager.CashOnHand:F0}\n\n" +
+        $"<i>{mentorReflection}</i>";
     }
 
     public void RestartGame()

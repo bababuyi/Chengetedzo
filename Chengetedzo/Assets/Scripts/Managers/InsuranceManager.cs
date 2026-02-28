@@ -594,4 +594,16 @@ public class InsuranceManager : MonoBehaviour
         }
         Debug.Log("[Insurance] Eligibility refreshed.");
     }
+    public void EnableBasicPlan()
+    {
+        Debug.Log("[Insurance] Enabling all eligible base plans.");
+
+        foreach (var plan in allPlans)
+        {
+            if (!plan.isSubscribed && PlayerMeetsRequirement(plan))
+            {
+                BuyInsurance(plan.type);
+            }
+        }
+    }
 }

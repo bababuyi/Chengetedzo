@@ -15,7 +15,7 @@ public class MonthlyFinancialLedger
     public float TotalInsurancePremiums { get; private set; }
     public float TotalInsurancePayouts { get; private set; }
     public float TotalEventLosses { get; private set; }
-
+    public int EntryCount => entries.Count;
     public IReadOnlyList<FinancialEntry> Entries => entries.AsReadOnly();
     public float ClosingBalance { get; private set; }
 

@@ -196,6 +196,13 @@ public class FinanceManager : MonoBehaviour
         UpdateHUD();
 
         generalSavingsBalance = Mathf.Max(0f, generalSavingsBalance);
+
+        Debug.Log("Monthly Income Applied: " + currentIncome);
+        Debug.Log("Cash After Income: " + cashOnHand);
+        if (GameManager.Instance.CurrentLedger != null)
+        {
+            Debug.Log("Ledger Entry Count: " + GameManager.Instance.CurrentLedger.EntryCount);
+        }
     }
 
     /// <summary>
