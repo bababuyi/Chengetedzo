@@ -21,6 +21,16 @@ public class ForecastPanelController : MonoBehaviour
         continueButton.onClick.AddListener(ContinueToInsurance);
     }
 
+    private void OnEnable()
+    {
+        if (backButton == null)
+            return;
+
+        backButton.gameObject.SetActive(
+            !GameManager.Instance.IsForecastBackLocked
+        );
+    }
+
     private void OnDestroy()
     {
         if (continueButton != null)
@@ -37,7 +47,7 @@ public class ForecastPanelController : MonoBehaviour
 
     private void BackToBudget()
     {
-        if (GameManager.Instance.CurrentPhase != GameManager.GamePhase.Forecast)
+        if (GameManager.Instance.IsForecastBackLocked)
             return;
 
         GameManager.Instance.OnForecastBack();

@@ -60,6 +60,7 @@ public class ForecastManager : MonoBehaviour
 
     private void Awake()
     {
+        forecastGeneratedThisMonth = false;
         forecastLibrary = new List<ForecastArticle>();
 
         AddCategoryArticles(ForecastCategory.Health, ForecastLines.Health);
@@ -74,10 +75,18 @@ public class ForecastManager : MonoBehaviour
 
     public void GenerateForecast()
     {
+        Debug.Log($"forecastGeneratedThisMonth = {forecastGeneratedThisMonth}");
+        if (GameManager.Instance.CurrentPhase != GameManager.GamePhase.Forecast)
+        {
+            Debug.LogWarning("Forecast generation attempted outside Forecast phase.");
+            return;
+        }
+
         if (forecastGeneratedThisMonth)
             return;
 
         forecastGeneratedThisMonth = true;
+
         usedHeadlines.Clear();
         selectedForecasts.Clear();
         Season upcomingSeason =
@@ -122,15 +131,18 @@ public class ForecastManager : MonoBehaviour
 
             AddArticlesForCategory(randomCategory, 1, upcomingSeason);
         }
-
+        Debug.Log($"[Forecast] Selected Count: {selectedForecasts.Count}");
         ShowForecast();
     }
 
     private void ShowForecast()
     {
+        Debug.Log("[Forecast] ShowForecast CALLED");
+        Debug.Log($"Parent: {forecastListParent}");
+        Debug.Log($"Prefab: {forecastItemPrefab}");
         if (forecastPanel == null) return;
 
-        forecastHeaderText.text = "Seasonal Forecast";
+        forecastHeaderText.text = "Monthly News";
 
         foreach (Transform child in forecastListParent)
             Destroy(child.gameObject);
@@ -142,6 +154,8 @@ public class ForecastManager : MonoBehaviour
 
             TMP_Text text =
                 item.GetComponentInChildren<TMP_Text>();
+
+            Debug.Log($"Spawning article: {forecast.headline}");
 
             if (text != null)
             {

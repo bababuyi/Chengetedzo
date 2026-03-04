@@ -51,4 +51,10 @@ public class PlayerDataManager : MonoBehaviour
     {
         financialMomentum = Mathf.Clamp(value, -100f, 100f);
     }
+    public void ResetPlayerData()
+    {
+        financialMomentum = 0f;
+        adults = 1;
+        children = 0;
+    }
 }

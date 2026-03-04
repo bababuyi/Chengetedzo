@@ -420,13 +420,23 @@ public class FinanceManager : MonoBehaviour
         // Momentum impact (lighter than loans)
         PlayerDataManager.Instance.ModifyMomentum(-1f);
 
-
+        Debug.Log("Cash after withdrawal: " + cashOnHand);
         Debug.Log($"[Savings] Withdrew ${amount}. Savings left: ${generalSavingsBalance:F0}");
         return true;
     }
 
     private void UpdateHUD()
     {
+        Debug.Log("Updating HUD with: " + cashOnHand);
+        Debug.Log("UIManager Instance ID: " + UIManager.Instance.GetInstanceID());
+        Debug.Log("moneyText object ID: " + UIManager.Instance.moneyText.GetInstanceID());
+
+        if (UIManager.Instance == null)
+            Debug.LogError("UIManager.Instance is NULL");
+
+        if (UIManager.Instance.moneyText == null)
+            Debug.LogError("moneyText reference is NULL");
+
         UIManager.Instance?.UpdateMoneyText(cashOnHand);
     }
 
@@ -450,4 +460,30 @@ public class FinanceManager : MonoBehaviour
         return projected;
     }
 
+    public void ResetFinance()
+    {
+        cashOnHand = 0f;
+        totalExpenses = 0f;
+        balance = 0f;
+
+        totalEarned = 0f;
+        totalSpent = 0f;
+
+        generalSavingsMonthly = 0f;
+        generalSavingsBalance = 0f;
+        savingsWithdrawnThisMonth = 0f;
+        LastMonthSavingsDelta = 0f;
+
+        WasOverBudgetThisMonth = false;
+
+        schoolFeesOutstanding = false;
+
+        minIncome = 0f;
+        maxIncome = 0f;
+        isIncomeStable = true;
+
+        currentIncome = 0f;
+
+        UpdateHUD();
+    }
 }

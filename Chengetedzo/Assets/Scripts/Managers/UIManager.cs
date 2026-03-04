@@ -154,7 +154,8 @@ public class UIManager : MonoBehaviour
 
     public void UpdateMoneyText(float amount)
     {
-        moneyText.text = $"Money: ${amount:F2}";
+        Debug.Log("Updating TOP HUD TEXT to: " + amount);
+        moneyText.text = $"${amount:F0}";
     }
 
     // Hides all simulation and flow panels (does NOT hide setup, top HUD, or popups)
@@ -343,18 +344,17 @@ public class UIManager : MonoBehaviour
 
     public void RestartGame()
     {
-        UnityEngine.SceneManagement.SceneManager.LoadScene(
-            UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
+        GameManager.Instance.FullRestart();
     }
 
-    public void ShowMentorMessage(string message)
+    public void ShowMentorMessage(string message, System.Action onClose = null)
     {
         mentorText.text = message;
 
         ShowPopup(
             mentorPopup,
             mentorContinueButton,
-            null
+            onClose
         );
     }
 
@@ -389,7 +389,7 @@ public class UIManager : MonoBehaviour
 
     public void CloseLoanPanel()
     {
-        SwitchPanel(UIPanelState.None);
+        SwitchPanel(UIPanelState.Simulation);
 
         GameManager.Instance.OnLoanDecisionFinished();
     }
@@ -413,7 +413,7 @@ public class UIManager : MonoBehaviour
 
     public void CloseSavingsPanel()
     {
-        SwitchPanel(UIPanelState.None);
+        SwitchPanel(UIPanelState.Simulation);
         GameManager.Instance.OnSavingsDecisionFinished();
     }
     public void ShowSavingsPanel()
@@ -422,5 +422,10 @@ public class UIManager : MonoBehaviour
 
         var controller = budgetPanel.GetComponent<BudgetPanelController>();
         controller?.ConfigureForPhase(GameManager.GamePhase.Savings);
+    }
+
+    public void ClearReportPanel()
+    {
+        resultsText.text = "";
     }
 }

@@ -52,7 +52,10 @@ public class LoanManager : MonoBehaviour
 
     public bool Borrow(float amount)
     {
-        if (GameManager.Instance.CurrentPhase != GameManager.GamePhase.Simulation)
+        var phase = GameManager.Instance.CurrentPhase;
+
+        if (phase != GameManager.GamePhase.Simulation &&
+            phase != GameManager.GamePhase.Loan)
             return false;
         if (BorrowedThisMonth)
         {
@@ -199,5 +202,26 @@ public class LoanManager : MonoBehaviour
     public void SetRepaymentRate(float value)
     {
         repaymentRate = Mathf.Clamp(value, minRepaymentRate, maxRepaymentRate);
+    }
+
+    public void ResetAll()
+    {
+        contribution = 50f;
+        totalContributed = 0f;
+        monthsContributed = 0;
+
+        loanBalance = 0f;
+        borrowingPower = 0f;
+
+        repaymentRate = 0.1f;
+
+        missedPayments = 0;
+        onTimePayments = 0;
+
+        ContributedThisMonth = false;
+        RepaidThisMonth = false;
+        BorrowedThisMonth = false;
+
+        loanUnlocked = false;
     }
 }

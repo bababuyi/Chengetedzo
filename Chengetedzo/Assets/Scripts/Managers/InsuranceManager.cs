@@ -594,6 +594,23 @@ public class InsuranceManager : MonoBehaviour
         }
         Debug.Log("[Insurance] Eligibility refreshed.");
     }
+
+    public void ResetAll()
+    {
+        totalLoss = 0f;
+        totalPayout = 0f;
+
+        foreach (var plan in allPlans)
+        {
+            plan.isSubscribed = false;
+            plan.isLapsed = false;
+            plan.monthsPaid = 0;
+            plan.missedPayments = 0;
+        }
+
+        AnyPremiumPaidThisMonth = false;
+    }
+
     public void EnableBasicPlan()
     {
         Debug.Log("[Insurance] Enabling all eligible base plans.");

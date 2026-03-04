@@ -9830,7 +9830,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 910493673}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1855952295}
+        m_TargetAssemblyTypeName: UIManager, Assembly-CSharp
+        m_MethodName: RestartGame
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &910493673
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11850,19 +11862,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1158673157}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1855952295}
-        m_TargetAssemblyTypeName: UIManager, Assembly-CSharp
-        m_MethodName: ShowLoanPanel
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &1158673157
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13514,19 +13514,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1248129213}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1029234455}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: 
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: 
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &1248129213
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -16511,7 +16499,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1552810409}
   m_Direction: 0
   m_Value: 1
-  m_Size: 1
+  m_Size: 0.9999988
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -19930,8 +19918,8 @@ MonoBehaviour:
   forecastManager: {fileID: 1855952299}
   visualManager: {fileID: 1855952301}
   setupData:
-    minIncome: 250
-    maxIncome: 600
+    minIncome: 0
+    maxIncome: 0
     isIncomeStable: 0
     adults: 1
     children: 0
@@ -19942,6 +19930,7 @@ MonoBehaviour:
     ownsFarm: 0
   monthlyDamageTaken: 0
   maxMonthlyDamagePercent: 0.35
+  IsHeadlessSimulation: 0
 --- !u!4 &1855952294
 Transform:
   m_ObjectHideFlags: 0
@@ -20034,7 +20023,7 @@ MonoBehaviour:
   groceries: 0
   transport: 0
   utilities: 0
-  schoolFeesPerTerm: 100
+  schoolFeesPerTerm: 0
   cashOnHand: 0
   totalExpenses: 0
   balance: 0
@@ -20047,7 +20036,7 @@ MonoBehaviour:
   generalSavingsBalance: 0
   generalSavingsInterestRate: 0.5
   savingsWithdrawnThisMonth: 0
-  rentCost: 180
+  rentCost: 0
   houseInsuredValue: 0
   houseMaintenanceCost: 0
 --- !u!114 &1855952299

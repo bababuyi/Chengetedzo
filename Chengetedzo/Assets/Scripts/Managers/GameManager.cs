@@ -61,6 +61,9 @@ public class GameManager : MonoBehaviour
     private Queue<ResolvedEvent> pendingEvents = new();
     private ResolvedEvent currentEvent;
     public MonthlyFinancialLedger CurrentLedger { get; private set; }
+    private bool isWaitingForEventConfirmation = false;
+    private bool forecastBackLocked = false;
+    public bool IsForecastBackLocked => forecastBackLocked;
 
     private void Awake()
     {
@@ -136,6 +139,7 @@ public class GameManager : MonoBehaviour
 
     public void StartNewMonth()
     {
+        monthResolutionStarted = false;
         mentorSpokeThisMonth = false;
         forcedLoanThisMonth = false;
         forecastManager.forecastGeneratedThisMonth = false;
@@ -158,6 +162,7 @@ public class GameManager : MonoBehaviour
         Debug.Log($"[Month] Confirmed → Resolving Month {currentMonth}");
 
         SetPhase(GamePhase.Simulation);
+        forecastBackLocked = true;
         uiManager.SwitchPanel(UIManager.UIPanelState.Simulation);
 
         monthlyDamageTaken = 0f;
@@ -221,8 +226,10 @@ public class GameManager : MonoBehaviour
     {
         UpdateTopButtons();
 
-        if (CurrentPhase == GamePhase.Simulation) 
-        ProcessNextEvent();
+        isWaitingForEventConfirmation = false;
+
+        if (CurrentPhase == GamePhase.Simulation)
+            ProcessNextEvent();
     }
 
     private void EvaluateMomentumSignals()
@@ -405,27 +412,33 @@ public class GameManager : MonoBehaviour
     public void EndMonthAndAdvance()
     {
         Debug.Log($"=== Month {currentMonth} END ===");
-        uiManager.SwitchPanel(UIManager.UIPanelState.None);
+
+        int finishedMonth = currentMonth;
+
         currentMonth++;
         UIManager.Instance.UpdateMonthText(currentMonth, totalMonths);
 
         OnSeasonChanged?.Invoke();
 
-        if (currentMonth == 7 || currentMonth == 19)
+        // Mid-year checkpoints
+        if (finishedMonth == 6 || finishedMonth == 12 || finishedMonth == 18)
         {
-            uiManager.ShowMentorMessage(GetMidYearMentorReflection());
+            uiManager.ShowMentorMessage(
+                GetMidYearMentorReflection(),
+                () => StartNewMonth()
+            );
             return;
         }
 
-        if (currentMonth <= totalMonths)
-        {
-            StartNewMonth();
-        }
-        else
+        // Final year
+        if (finishedMonth == 24)
         {
             uiManager.ShowEndOfYearSummary(GetYearEndMentorReflection());
+            CurrentLedger = null;
+            return;
         }
-        monthResolutionStarted = false;
+
+        StartNewMonth();
     }
 
     public float ApplyMonthlyDamage(float intendedLoss)
@@ -448,8 +461,20 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        currentEvent = pendingEvents.Dequeue();
+        if (isWaitingForEventConfirmation)
+        {
+            ShowEvent(currentEvent);
+            return;
+        }
 
+        if (pendingEvents.Count == 0)
+        {
+            EndMonthlyResolution();
+            return;
+        }
+
+        currentEvent = pendingEvents.Dequeue();
+        isWaitingForEventConfirmation = true;
         ShowEvent(currentEvent);
     }
 
@@ -468,11 +493,16 @@ public class GameManager : MonoBehaviour
     private void EndMonthlyResolution()
     {
         Debug.Log("[Month] All events resolved");
-
+        
         EvaluateMomentumSignals();
         EvaluateMentor();
         HandleForcedLoan();
 
+        if (CurrentLedger.IsFinalized())
+        {
+            Debug.LogWarning("Ledger already finalized. Preventing duplicate year accumulation.");
+            return;
+        }
         CurrentLedger.FinalizeLedger();
 
         yearIncome += CurrentLedger.TotalIncome;
@@ -544,11 +574,26 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        // Otherwise continue event stepping
-        SetPhase(GamePhase.Simulation);
+        // If month is already resolving
+        if (isWaitingForEventConfirmation)
+        {
+            SetPhase(GamePhase.Simulation);
+            ShowEvent(currentEvent);
+            return;
+        }
 
         if (pendingEvents.Count > 0)
+        {
+            SetPhase(GamePhase.Simulation);
             ProcessNextEvent();
+            return;
+        }
+
+        // If no events and resolution already done → go to report
+        if (CurrentPhase != GamePhase.Report)
+        {
+            EndMonthlyResolution();
+        }
     }
 
     private void HandleForcedLoan()
@@ -733,10 +778,31 @@ public class GameManager : MonoBehaviour
     {
         IsSavingsDecisionActive = false;
 
-        SetPhase(GamePhase.Simulation);
+        if (!monthResolutionStarted)
+        {
+            SetPhase(GamePhase.Simulation);
+            ConfirmMonthAndResolve();
+            return;
+        }
+
+        if (isWaitingForEventConfirmation)
+        {
+            SetPhase(GamePhase.Simulation);
+            ShowEvent(currentEvent);
+            return;
+        }
 
         if (pendingEvents.Count > 0)
+        {
+            SetPhase(GamePhase.Simulation);
             ProcessNextEvent();
+            return;
+        }
+
+        if (CurrentPhase != GamePhase.Report)
+        {
+            EndMonthlyResolution();
+        }
     }
 
     public void BeginInsuranceDecision()
@@ -748,10 +814,10 @@ public class GameManager : MonoBehaviour
     public void OnSavingsSetupConfirmed(float savings)
     {
         financeManager.generalSavingsMonthly = savings;
-
         SetPhase(GamePhase.Forecast);
         uiManager.ShowForecastPanel();
-
+        Debug.Log($"ForecastManager ref = {forecastManager}");
+        forecastManager.forecastGeneratedThisMonth = false;
         forecastManager.GenerateForecast();
     }
 
@@ -800,7 +866,8 @@ public class GameManager : MonoBehaviour
     {
         if (CurrentPhase != GamePhase.Simulation &&
         CurrentPhase != GamePhase.Insurance &&
-        CurrentPhase != GamePhase.Loan)
+        CurrentPhase != GamePhase.Loan &&
+        CurrentPhase != GamePhase.Savings)
         {
             Debug.LogError("Money mutation outside allowed phases.");
             return;
@@ -852,6 +919,79 @@ public class GameManager : MonoBehaviour
         }
 
         return text;
+    }
+
+    public void FullRestart()
+    {
+        Debug.Log("=== FULL GAME RESET ===");
+
+        // Reset systems
+        financeManager?.ResetFinance();
+        uiManager.UpdateMoneyText(financeManager.CashOnHand);
+        loanManager?.ResetAll();
+        PlayerDataManager.Instance?.ResetPlayerData();
+
+        // Reset setup data
+        setupData.minIncome = 0f;
+        setupData.maxIncome = 0f;
+        setupData.isIncomeStable = true;
+        setupData.hasSchoolFees = false;
+        setupData.schoolFeesAmount = 0f;
+        financeManager.assets = new PlayerAssets();
+        if (forecastManager != null)
+        {
+            forecastManager.forecastGeneratedThisMonth = false;
+        }
+
+        // Reset GameManager state
+        currentMonth = 1;
+
+        yearIncome = 0f;
+        yearExpenses = 0f;
+        yearPremiums = 0f;
+        yearPayouts = 0f;
+        yearEventLosses = 0f;
+
+        monthlyDamageTaken = 0f;
+
+        savingsStreak = 0;
+        overBudgetStreak = 0;
+        skipHistory.Clear();
+        forcedLoanHistory.Clear();
+        activeIncomeEffects.Clear();
+
+        mentorSpokeThisMonth = false;
+        loanIntroShown = false;
+        monthResolutionStarted = false;
+        recoveryAcknowledged = false;
+        patternWarningIssued = false;
+        lastMomentumZone = int.MinValue;
+
+        CurrentLedger = null;
+
+        SetPhase(GamePhase.Idle);
+
+        uiManager.ClearReportPanel();
+
+        uiManager.UpdateMonthText(currentMonth, totalMonths);
+        uiManager.UpdateMoneyText(0f);
+
+        // HARD STOP SIMULATION STATE
+        pendingEvents.Clear();
+        monthlyEvents.Clear();
+        IsHeadlessSimulation = false;
+
+        uiManager.SwitchPanel(UIManager.UIPanelState.Setup);
+
+        var setup = uiManager.setupPanel.GetComponent<SetupPanelController>();
+        setup?.OnPanelOpened();
+
+        Debug.Log("=== GAME RESET COMPLETE ===");
+    }
+
+    public bool HasMonthResolutionStarted()
+    {
+        return monthResolutionStarted;
     }
 
 #if UNITY_EDITOR

@@ -49,8 +49,6 @@ public class SetupPanelController : MonoBehaviour
 
     private void Start()
     {
-        finance = GameManager.Instance?.financeManager;
-
         ShowStep(1);
 
         stableIncomeToggle.onValueChanged.RemoveAllListeners();
@@ -62,9 +60,18 @@ public class SetupPanelController : MonoBehaviour
         OnSchoolFeesToggled(schoolFeesToggle.isOn);
 
         hasHouseToggle.onValueChanged.RemoveAllListeners();
-        hasHouseToggle.onValueChanged.AddListener(OnHouseToggleChanged);
+        hasLivestockToggle.onValueChanged.RemoveAllListeners();
+        hasMotorToggle.onValueChanged.RemoveAllListeners();
+        hasCropsToggle.onValueChanged.RemoveAllListeners();
 
-        OnHouseToggleChanged(hasHouseToggle.isOn);
+        hasHouseToggle.onValueChanged.AddListener(OnHouseToggleChanged);
+        hasHouseToggle.onValueChanged.AddListener(_ => UpdateAssetsFromToggles());
+
+        hasLivestockToggle.onValueChanged.AddListener(_ => UpdateAssetsFromToggles());
+        hasMotorToggle.onValueChanged.AddListener(_ => UpdateAssetsFromToggles());
+        hasCropsToggle.onValueChanged.AddListener(_ => UpdateAssetsFromToggles());
+
+        UpdateAssetsFromToggles();
 
         minIncomeInput.onValueChanged.AddListener(_ =>
         {
@@ -88,9 +95,6 @@ public class SetupPanelController : MonoBehaviour
         warningText.gameObject.SetActive(false);
     }
 
-
-    private FinanceManager finance;
-
     public void ConfirmSetup()
     {
         if (!float.TryParse(minIncomeInput.text, out float minIncome))
@@ -113,12 +117,15 @@ public class SetupPanelController : MonoBehaviour
         //if (finance == null)
         //  return;
 
-        finance.assets = new PlayerAssets
+        var currentFinance = GameManager.Instance?.financeManager;
+        if (currentFinance == null) return;
+
+        currentFinance.assets = new PlayerAssets
         {
-            hasHouse = hasHouseToggle != null && hasHouseToggle.isOn,
-            hasLivestock = hasLivestockToggle != null && hasLivestockToggle.isOn,
-            hasMotor = hasMotorToggle != null && hasMotorToggle.isOn,
-            hasCrops = hasCropsToggle != null && hasCropsToggle.isOn
+            hasHouse = hasHouseToggle.isOn,
+            hasLivestock = hasLivestockToggle.isOn,
+            hasMotor = hasMotorToggle.isOn,
+            hasCrops = hasCropsToggle.isOn
         };
 
         if (InsuranceManager.Instance != null)
@@ -438,5 +445,24 @@ public class SetupPanelController : MonoBehaviour
     {
         UnlockSetupUI();
         ShowStep(1);
+    }
+
+    private void UpdateAssetsFromToggles()
+    {
+        var currentFinance = GameManager.Instance?.financeManager;
+
+        if (currentFinance == null)
+            return;
+
+        currentFinance.assets = new PlayerAssets
+        {
+            hasHouse = hasHouseToggle.isOn,
+            hasLivestock = hasLivestockToggle.isOn,
+            hasMotor = hasMotorToggle.isOn,
+            hasCrops = hasCropsToggle.isOn
+        };
+
+        if (InsuranceManager.Instance != null)
+            InsuranceManager.Instance.RefreshEligibility();
     }
 }

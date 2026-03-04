@@ -20,7 +20,7 @@ public class InsurancePanel : MonoBehaviour
 
     private InsuranceManager insuranceManager;
 
-    private void Start()
+    private void OnEnable()
     {
         RefreshUI();
     }

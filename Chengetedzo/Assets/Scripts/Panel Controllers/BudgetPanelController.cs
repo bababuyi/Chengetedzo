@@ -33,7 +33,7 @@ public class BudgetPanelController : MonoBehaviour
     public GameObject savingsAllocationGroup;
 
     private FinanceManager finance;
-    private GameManager.GamePhase currentPhase;
+    
 
     private void Start()
     {
@@ -104,9 +104,10 @@ public class BudgetPanelController : MonoBehaviour
 
     private void OnConfirmPressed()
     {
+        Debug.Log("CONFIRM BUTTON CLICKED");
         float savings = savingsSlider.value;   // ← move this up
-
-        if (currentPhase == GameManager.GamePhase.Idle)
+        Debug.Log($"GameManager Phase = {GameManager.Instance.CurrentPhase}");
+        if (GameManager.Instance.CurrentPhase == GameManager.GamePhase.Idle)
         {
             float monthlyExpenses = finance.GetProjectedMonthlyExpenses();
             float maxSurplus = Mathf.Max(0f,
@@ -124,8 +125,7 @@ public class BudgetPanelController : MonoBehaviour
         }
         else
         {
-            // SIMULATION CONFIRM
-            GameManager.Instance.OnSavingsDecisionFinished();
+            UIManager.Instance.CloseSavingsPanel();
         }
     }
 
@@ -168,17 +168,18 @@ public class BudgetPanelController : MonoBehaviour
 
     public void ConfigureForPhase(GameManager.GamePhase phase)
     {
-        currentPhase = phase;
         bool isSetup = phase == GameManager.GamePhase.Idle;
 
         // Setup UI
         savingsAllocationGroup.SetActive(isSetup);
         savingsValueText.gameObject.SetActive(isSetup);
 
+        if (backButton != null)
+            backButton.gameObject.SetActive(isSetup);
+
         // Confirm is always visible
         confirmButton.gameObject.SetActive(true);
 
-        // Change confirm text dynamically
         if (confirmButtonText != null)
             confirmButtonText.text = isSetup ? "Confirm Savings" : "Continue";
 
@@ -191,7 +192,6 @@ public class BudgetPanelController : MonoBehaviour
         if (confirmButton != null)
             confirmButton.interactable = true;
     }
-
     private void OnBackPressed()
     {
         GameManager.Instance.OnBudgetBackRequested();
