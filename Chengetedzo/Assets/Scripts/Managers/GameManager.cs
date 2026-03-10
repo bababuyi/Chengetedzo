@@ -35,6 +35,11 @@ public class GameManager : MonoBehaviour
     public float maxMonthlyDamagePercent = 0.35f;
     private float monthlyDamageCapBase;
 
+    // --- NEW: Disaster grace protection ---
+    [Header("Event Protection")]
+    public int monthsSinceMajorEvent = 3;
+    public int majorEventGraceMonths = 2;
+
     [Header("Year Totals")]
     private float yearIncome = 0f;
     private float yearExpenses = 0f;
@@ -74,19 +79,18 @@ public class GameManager : MonoBehaviour
         }
 
         Instance = this;
-
-        //if (setupData == null)
-        //{
-            //Debug.LogError("SetupData not assigned in inspector!");
-        //}
-
-        //setupData.housing = HousingType.Renting;
-        //setupData.ownsCar = false;
-        //setupData.ownsFarm = false;
     }
 
     private void Start()
     {
+        GameSaveData save = SaveSystem.LoadGame();
+
+        if (save != null)
+        {
+            LoadFromSave(save);
+            return;
+        }
+
         if (setupData == null)
         {
             Debug.LogError("Game cannot start without SetupData.");
@@ -100,6 +104,24 @@ public class GameManager : MonoBehaviour
         visualManager?.UpdateVisuals();
         financeManager.InitializeFromSetup();
     }
+
+    // ============================
+    // BEHAVIOR TRACKING (YEAR)
+    // ============================
+
+    private int totalUnexpectedEvents = 0;
+    private int insuredEventsCount = 0;
+    private float totalRawEventDamage = 0f;
+    private float totalInsurancePayoutAmount = 0f;
+    private int forcedLoanCount = 0;
+    private int monthsUnderFinancialPressure = 0;
+
+    public int TotalUnexpectedEvents => totalUnexpectedEvents;
+    public int InsuredEventsCount => insuredEventsCount;
+    public float TotalRawEventDamage => totalRawEventDamage;
+    public float TotalInsurancePayoutAmount => totalInsurancePayoutAmount;
+    public int ForcedLoanCount => forcedLoanCount;
+    public int MonthsUnderFinancialPressure => monthsUnderFinancialPressure;
 
     //Enums and Structs
     public enum GamePhase
@@ -413,12 +435,16 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log($"=== Month {currentMonth} END ===");
 
+        SaveSystem.SaveGame(this);
+
         int finishedMonth = currentMonth;
 
         currentMonth++;
         UIManager.Instance.UpdateMonthText(currentMonth, totalMonths);
 
         OnSeasonChanged?.Invoke();
+
+        monthsSinceMajorEvent++;
 
         // Mid-year checkpoints
         if (finishedMonth == 6 || finishedMonth == 12 || finishedMonth == 18)
@@ -436,6 +462,26 @@ public class GameManager : MonoBehaviour
             uiManager.ShowEndOfYearSummary(GetYearEndMentorReflection());
             CurrentLedger = null;
             return;
+        }
+
+        // --- NEW: yearly savings interest ---
+        if (finishedMonth % 12 == 0)
+        {
+            float savings = financeManager.generalSavingsBalance;
+
+            if (savings > 0)
+            {
+                float interest = savings * 0.03f;
+
+                ApplyMoneyChange(
+                    FinancialEntry.EntryType.Income,
+                    "Savings Interest",
+                    interest,
+                    true
+                );
+
+                Debug.Log($"[Savings] Interest gained: {interest}");
+            }
         }
 
         StartNewMonth();
@@ -474,6 +520,25 @@ public class GameManager : MonoBehaviour
         }
 
         currentEvent = pendingEvents.Dequeue();
+
+        // --- NEW: detect major disasters ---
+        float lossPercent = Mathf.Abs(currentEvent.moneyChange) /
+                            Mathf.Max(1f, financeManager.CashOnHand);
+
+        if (lossPercent >= 0.25f)
+        {
+            monthsSinceMajorEvent = 0;
+        }
+
+        totalUnexpectedEvents++;
+        totalRawEventDamage += Mathf.Abs(currentEvent.moneyChange);
+        totalInsurancePayoutAmount += currentEvent.insurancePayout;
+
+        if (currentEvent.insurancePayout > 0f)
+        {
+            insuredEventsCount++;
+        }
+
         isWaitingForEventConfirmation = true;
         ShowEvent(currentEvent);
     }
@@ -495,6 +560,11 @@ public class GameManager : MonoBehaviour
         Debug.Log("[Month] All events resolved");
         
         EvaluateMomentumSignals();
+        if (financeManager.CashOnHand < 0f)
+        {
+            monthsUnderFinancialPressure++;
+        }
+
         EvaluateMentor();
         HandleForcedLoan();
 
@@ -617,7 +687,8 @@ public class GameManager : MonoBehaviour
 
         float shortfall = Mathf.Abs(cash);
         loanManager.ForceBorrow(shortfall);
-
+        
+        forcedLoanCount++;
         PlayerDataManager.Instance.ModifyMomentum(-3f);
 
 
@@ -921,6 +992,34 @@ public class GameManager : MonoBehaviour
         return text;
     }
 
+    public void LoadFromSave(GameSaveData save)
+    {
+        currentMonth = save.currentMonth;
+
+        financeManager.SetCash(save.cashOnHand);
+        financeManager.generalSavingsBalance = save.generalSavingsBalance;
+        financeManager.generalSavingsMonthly = save.generalSavingsMonthly;
+
+        yearIncome = save.yearIncome;
+        yearExpenses = save.yearExpenses;
+        yearPremiums = save.yearPremiums;
+        yearPayouts = save.yearPayouts;
+        yearEventLosses = save.yearEventLosses;
+
+        totalUnexpectedEvents = save.totalUnexpectedEvents;
+        insuredEventsCount = save.insuredEventsCount;
+        totalRawEventDamage = save.totalRawEventDamage;
+        totalInsurancePayoutAmount = save.totalInsurancePayoutAmount;
+        forcedLoanCount = save.forcedLoanCount;
+        monthsUnderFinancialPressure = save.monthsUnderFinancialPressure;
+        PlayerDataManager.Instance.SetMomentum(save.financialMomentum);
+
+        uiManager.UpdateMonthText(currentMonth, totalMonths);
+        uiManager.UpdateMoneyText(financeManager.CashOnHand);
+
+        StartNewMonth();
+    }
+
     public void FullRestart()
     {
         Debug.Log("=== FULL GAME RESET ===");
@@ -942,6 +1041,12 @@ public class GameManager : MonoBehaviour
         {
             forecastManager.forecastGeneratedThisMonth = false;
         }
+        totalUnexpectedEvents = 0;
+        insuredEventsCount = 0;
+        totalRawEventDamage = 0f;
+        totalInsurancePayoutAmount = 0f;
+        forcedLoanCount = 0;
+        monthsUnderFinancialPressure = 0;
 
         // Reset GameManager state
         currentMonth = 1;
@@ -985,6 +1090,8 @@ public class GameManager : MonoBehaviour
 
         var setup = uiManager.setupPanel.GetComponent<SetupPanelController>();
         setup?.OnPanelOpened();
+
+        SaveSystem.DeleteSave();
 
         Debug.Log("=== GAME RESET COMPLETE ===");
     }

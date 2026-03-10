@@ -444,7 +444,7 @@ public class InsuranceManager : MonoBehaviour
     public InsuranceResult HandleEvent(
     InsuranceType type,
     float lossPercent,
-    MonthlyEvent.LossCalculationType lossType,
+    LossCalculationType lossType,
     float fixedAmount = 0f)
     {
         InsuranceResult result = new InsuranceResult();
@@ -456,16 +456,16 @@ public class InsuranceManager : MonoBehaviour
         // 1?? Calculate raw loss
         switch (lossType)
         {
-            case MonthlyEvent.LossCalculationType.AssetValue:
+            case LossCalculationType.AssetValue:
                 float assetValue = Finance.GetAssetValue(type);
                 rawLoss = assetValue * (lossPercent / 100f);
                 break;
 
-            case MonthlyEvent.LossCalculationType.CashOnHand:
+            case LossCalculationType.CashOnHand:
                 rawLoss = Finance.CashOnHand * (lossPercent / 100f);
                 break;
 
-            case MonthlyEvent.LossCalculationType.FixedAmount:
+            case LossCalculationType.FixedAmount:
                 rawLoss = fixedAmount;
                 break;
         }

@@ -91,8 +91,17 @@ public class ForecastManager : MonoBehaviour
         selectedForecasts.Clear();
         Season upcomingSeason =
         GameManager.Instance.GetSeasonForMonth(GameManager.Instance.currentMonth);
-        var possibleEvents = GameManager.Instance.eventManager.allEvents;
-        List<EventManager.MonthlyEvent> seasonalEvents =
+        var database = GameManager.Instance.eventManager.EventDatabase;
+
+        if (database == null || database.events == null)
+        {
+            Debug.LogWarning("[Forecast] No EventDatabase assigned.");
+            return;
+        }
+
+        var possibleEvents = database.events;
+
+        List<EventData> seasonalEvents =
         possibleEvents.FindAll(e =>
         e.season == Season.Any || e.season == upcomingSeason
         );
@@ -118,7 +127,7 @@ public class ForecastManager : MonoBehaviour
         {
             float normalizedRisk = Mathf.Clamp01(entry.Value / 100f);
 
-            float multiplier = 1f + normalizedRisk;
+            float multiplier = 1f + (normalizedRisk * 1.5f);
 
             CurrentForecast.categoryRiskMultiplier[entry.Key] = multiplier;
         }

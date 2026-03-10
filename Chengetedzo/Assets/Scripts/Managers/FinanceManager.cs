@@ -97,6 +97,12 @@ public class FinanceManager : MonoBehaviour
         UpdateHUD();
     }
 
+    public void SetCash(float amount)
+    {
+        cashOnHand = amount;
+        UpdateHUD();
+    }
+
     public void SetIncomeRange(float min, float max, bool stable)
     {
         minIncome = min;

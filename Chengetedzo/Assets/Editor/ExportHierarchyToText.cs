@@ -3,12 +3,12 @@ using UnityEditor;
 using UnityEngine.SceneManagement;
 using System.IO;
 using System.Text;
-using System.Reflection;
-using System.Collections;
 using System;
 
 public class ExportHierarchyToText : EditorWindow
 {
+    MonoScript targetScript;
+
     [MenuItem("Window/Export Hierarchy to Text")]
     public static void ShowWindow()
     {
@@ -17,24 +17,39 @@ public class ExportHierarchyToText : EditorWindow
 
     void OnGUI()
     {
+        GUILayout.Label("Optional Script Filter", EditorStyles.boldLabel);
+
+        targetScript = (MonoScript)EditorGUILayout.ObjectField(
+            "Script To Copy Values From",
+            targetScript,
+            typeof(MonoScript),
+            false
+        );
+
+        GUILayout.Space(10);
+
         if (GUILayout.Button("Export Current Scene Hierarchy"))
         {
-            ExportHierarchy();
+            ExportHierarchy(targetScript);
         }
     }
 
-    static void ExportHierarchy()
+    static void ExportHierarchy(MonoScript filterScript)
     {
         GameObject[] rootObjects = SceneManager.GetActiveScene().GetRootGameObjects();
         StringBuilder sb = new StringBuilder();
 
         sb.AppendLine("=== Scene Hierarchy Export ===");
         sb.AppendLine("Scene: " + SceneManager.GetActiveScene().name);
+
+        if (filterScript != null)
+            sb.AppendLine("Filtered Script: " + filterScript.name);
+
         sb.AppendLine();
 
         foreach (GameObject go in rootObjects)
         {
-            AppendObjectAndChildren(go.transform, sb, 0);
+            AppendObjectAndChildren(go.transform, sb, 0, filterScript);
         }
 
         string path = EditorUtility.SaveFilePanel(
@@ -51,7 +66,7 @@ public class ExportHierarchyToText : EditorWindow
         }
     }
 
-    static void AppendObjectAndChildren(Transform transform, StringBuilder sb, int level)
+    static void AppendObjectAndChildren(Transform transform, StringBuilder sb, int level, MonoScript filterScript)
     {
         string indent = new string('-', level * 2);
 
@@ -64,6 +79,11 @@ public class ExportHierarchyToText : EditorWindow
         Component[] components = transform.GetComponents<Component>();
         sb.AppendLine($"{indent}  Components:");
 
+        Type filterType = null;
+
+        if (filterScript != null)
+            filterType = filterScript.GetClass();
+
         foreach (Component component in components)
         {
             if (component == null)
@@ -72,12 +92,15 @@ public class ExportHierarchyToText : EditorWindow
                 continue;
             }
 
+            if (filterType != null && component.GetType() != filterType)
+                continue;
+
             if (component is MonoBehaviour mono)
             {
                 sb.AppendLine($"{indent}    - {mono.GetType().Name} (Script)");
-                AppendInspectorFields(mono, sb, indent + "      ");
+                AppendSerializedFields(mono, sb, indent + "      ");
             }
-            else
+            else if (filterType == null)
             {
                 sb.AppendLine($"{indent}    - {component.GetType().Name}");
             }
@@ -87,73 +110,63 @@ public class ExportHierarchyToText : EditorWindow
 
         for (int i = 0; i < transform.childCount; i++)
         {
-            AppendObjectAndChildren(transform.GetChild(i), sb, level + 1);
+            AppendObjectAndChildren(transform.GetChild(i), sb, level + 1, filterScript);
         }
     }
 
-    static void AppendInspectorFields(MonoBehaviour mono, StringBuilder sb, string indent)
+    static void AppendSerializedFields(MonoBehaviour mono, StringBuilder sb, string indent)
     {
-        FieldInfo[] fields = mono.GetType().GetFields(
-            BindingFlags.Instance |
-            BindingFlags.Public |
-            BindingFlags.NonPublic
-        );
+        SerializedObject so = new SerializedObject(mono);
+        SerializedProperty prop = so.GetIterator();
 
-        foreach (FieldInfo field in fields)
+        bool enterChildren = true;
+
+        while (prop.NextVisible(enterChildren))
         {
-            // Skip hidden fields
-            if (Attribute.IsDefined(field, typeof(HideInInspector)))
+            enterChildren = true;
+
+            if (prop.name == "m_Script")
                 continue;
 
-            // Unity shows fields if:
-            // - public
-            // - OR private with [SerializeField]
-            bool isPublic = field.IsPublic;
-            bool isSerializedPrivate = Attribute.IsDefined(field, typeof(SerializeField));
-
-            if (!isPublic && !isSerializedPrivate)
-                continue;
-
-            object value = field.GetValue(mono);
-            string valueString = FormatValue(value);
-
-            sb.AppendLine($"{indent}{field.Name} = {valueString}");
+            sb.AppendLine($"{indent}{prop.displayName}: {PropertyToString(prop)}");
         }
     }
 
-    static string FormatValue(object value)
+    static string PropertyToString(SerializedProperty prop)
     {
-        if (value == null)
-            return "null";
-
-        Type type = value.GetType();
-
-        if (type.IsPrimitive || value is string || type.IsEnum)
-            return value.ToString();
-
-        if (value is UnityEngine.Object unityObj)
+        switch (prop.propertyType)
         {
-            try
-            {
-                // Unity "fake null" safety
-                if (unityObj == null)
-                    return "null (Unassigned Reference)";
+            case SerializedPropertyType.Integer:
+                return prop.intValue.ToString();
 
-                return unityObj.name + $" ({type.Name})";
-            }
-            catch
-            {
-                return "(Unassigned Reference)";
-            }
+            case SerializedPropertyType.Boolean:
+                return prop.boolValue.ToString();
+
+            case SerializedPropertyType.Float:
+                return prop.floatValue.ToString();
+
+            case SerializedPropertyType.String:
+                return prop.stringValue;
+
+            case SerializedPropertyType.Enum:
+                return prop.enumDisplayNames[prop.enumValueIndex];
+
+            case SerializedPropertyType.ObjectReference:
+                return prop.objectReferenceValue ? prop.objectReferenceValue.name : "None";
+
+            case SerializedPropertyType.Vector2:
+                return prop.vector2Value.ToString();
+
+            case SerializedPropertyType.Vector3:
+                return prop.vector3Value.ToString();
+
+            case SerializedPropertyType.Generic:
+                if (prop.isArray)
+                    return $"Array Size: {prop.arraySize}";
+                return "(Struct/Class)";
+
+            default:
+                return "(Unsupported)";
         }
-
-        if (value is IEnumerable enumerable)
-        {
-            int count = 0;
-            foreach (var _ in enumerable) count++;
-            return $"[Size: {count}]";
-        }
-
-        return $"({type.Name})";
     }
 }

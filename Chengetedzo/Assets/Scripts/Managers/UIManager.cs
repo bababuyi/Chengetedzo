@@ -34,6 +34,17 @@ public class UIManager : MonoBehaviour
     public GameObject endOfYearScreen;
     public TextMeshProUGUI resultsText;
 
+    [Header("End Of Year Controls")]
+    public Button endOfYearContinueButton;
+    public Button restartButton;
+
+    private bool isShowingYearPartTwo = false;
+    private string yearPartOneText;
+
+    private string yearPartTwoText;
+    private const float CONTINUE_X = 700f;
+    private const float BACK_X = -700f;
+
     [Header("Monthly Report")]
     public TextMeshProUGUI monthlyReportText;
 
@@ -48,6 +59,7 @@ public class UIManager : MonoBehaviour
     public GameObject mentorPopup;
     public TextMeshProUGUI mentorText;
     public Button mentorContinueButton;
+
 
     // Popup state property (correct, single version)
     private UIPanelState currentPanelState = UIPanelState.None;
@@ -102,6 +114,11 @@ public class UIManager : MonoBehaviour
 
         callback?.Invoke();
     }
+    public int TotalUnexpectedEvents;
+    public int InsuredEventsCount;
+    public float TotalInsurancePayoutAmount;
+    public int ForcedLoanCount;
+    public int MonthsUnderFinancialPressure;
 
     public enum UIPanelState
     {
@@ -330,16 +347,71 @@ public class UIManager : MonoBehaviour
             - gm.YearEventLosses
             + gm.YearPayouts;
 
-        resultsText.text =
-        "<b>Year Complete</b>\n\n" +
-        $"Income: ${gm.YearIncome:F0}\n" +
-        $"Expenses: ${gm.YearExpenses:F0}\n" +
-        $"Insurance Premiums: ${gm.YearPremiums:F0}\n" +
-        $"Insurance Payouts: ${gm.YearPayouts:F0}\n" +
-        $"Event Losses: ${gm.YearEventLosses:F0}\n\n" +
-        $"Net Result: ${net:F0}\n" +
-        $"Final Cash: ${gm.financeManager.CashOnHand:F0}\n\n" +
-        $"<i>{mentorReflection}</i>";
+        // ===== PART 1 =====
+        yearPartOneText =
+            "<b>Year Complete</b>\n\n" +
+            $"Income: ${gm.YearIncome:F0}\n" +
+            $"Expenses: ${gm.YearExpenses:F0}\n" +
+            $"Insurance Premiums: ${gm.YearPremiums:F0}\n" +
+            $"Insurance Payouts: ${gm.YearPayouts:F0}\n" +
+            $"Event Losses: ${gm.YearEventLosses:F0}\n\n" +
+            $"Net Result: ${net:F0}\n" +
+            $"Final Cash: ${gm.financeManager.CashOnHand:F0}\n\n" +
+            $"<i>{mentorReflection}</i>";
+
+        // ===== PART 2 =====
+        yearPartTwoText = "";
+
+        yearPartTwoText += $"Unexpected events happened {gm.TotalUnexpectedEvents} times.\n\n";
+
+        if (gm.TotalUnexpectedEvents > 0)
+        {
+            yearPartTwoText += $"You were insured during {gm.InsuredEventsCount} of those events.\n";
+            yearPartTwoText += $"Insurance reduced your losses by ${gm.TotalInsurancePayoutAmount:F0}.\n\n";
+        }
+
+        yearPartTwoText += $"Emergency loans were required in {gm.ForcedLoanCount} months.\n";
+        yearPartTwoText += $"Financial pressure occurred in {gm.MonthsUnderFinancialPressure} months.\n\n";
+        yearPartTwoText += $"Final cash remaining: ${gm.financeManager.CashOnHand:F0}";
+
+        // Start on Part 1
+        isShowingYearPartTwo = false;
+        resultsText.text = yearPartOneText;
+        SetEndOfYearButtonPosition(CONTINUE_X);
+
+        endOfYearContinueButton.GetComponentInChildren<TextMeshProUGUI>().text = "Continue";
+
+        restartButton.interactable = false;
+    }
+
+    public void OnEndOfYearContinueClicked()
+    {
+        if (!isShowingYearPartTwo)
+        {
+            // Switch to Part 2
+            resultsText.text = yearPartTwoText;
+
+            endOfYearContinueButton.GetComponentInChildren<TextMeshProUGUI>().text = "Back";
+
+            restartButton.interactable = true;
+
+            SetEndOfYearButtonPosition(BACK_X);
+
+            isShowingYearPartTwo = true;
+        }
+        else
+        {
+            // Switch back to Part 1
+            resultsText.text = yearPartOneText;
+
+            endOfYearContinueButton.GetComponentInChildren<TextMeshProUGUI>().text = "Continue";
+
+            restartButton.interactable = false;
+
+            SetEndOfYearButtonPosition(CONTINUE_X);
+
+            isShowingYearPartTwo = false;
+        }
     }
 
     public void RestartGame()
@@ -427,5 +499,13 @@ public class UIManager : MonoBehaviour
     public void ClearReportPanel()
     {
         resultsText.text = "";
+    }
+
+    private void SetEndOfYearButtonPosition(float xPos)
+    {
+        RectTransform rect = endOfYearContinueButton.GetComponent<RectTransform>();
+        Vector2 pos = rect.anchoredPosition;
+        pos.x = xPos;
+        rect.anchoredPosition = pos;
     }
 }
