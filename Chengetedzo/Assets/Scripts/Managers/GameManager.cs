@@ -1026,8 +1026,10 @@ public class GameManager : MonoBehaviour
 
         // Reset systems
         financeManager?.ResetFinance();
+        eventManager?.ResetAll();
         uiManager.UpdateMoneyText(financeManager.CashOnHand);
         loanManager?.ResetAll();
+        insuranceManager.ResetAll();
         PlayerDataManager.Instance?.ResetPlayerData();
 
         // Reset setup data

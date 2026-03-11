@@ -81,6 +81,11 @@ public class EventManager : MonoBehaviour
 
     }*/
 
+    [SerializeField] private int monthlyEventBudget = 100;
+    private HashSet<EventData> eventsTriggeredThisYear = new();
+    private List<PendingEvent> pendingEvents = new List<PendingEvent>();
+    private int remainingEventBudget;
+
     [System.Serializable]
     public class PendingEvent
     {
@@ -88,28 +93,54 @@ public class EventManager : MonoBehaviour
         public int monthToTrigger;
     }
 
-    private List<PendingEvent> pendingEvents = new List<PendingEvent>();
-
     [SerializeField] private int maxEventsPerMonth = 2;
 
     [Header("Possible Events")]
     [SerializeField] private EventDatabase eventDatabase;
     public EventDatabase EventDatabase => eventDatabase;
 
+    private int GetEventCost(EventData ev)
+    {
+        switch (ev.severity)
+        {
+            case EventSeverity.Minor:
+                return 20;
+
+            case EventSeverity.Moderate:
+                return 40;
+
+            case EventSeverity.Major:
+                return 80;
+
+            default:
+                return 20;
+        }
+    }
+
     public List<ResolvedEvent> GenerateMonthlyEvents(int month)
     {
+        List<ResolvedEvent> results = new();
+
+        if (month % 12 == 1)
+        {
+            eventsTriggeredThisYear.Clear();
+        }
+
+        remainingEventBudget = monthlyEventBudget;
+
         int disasterCount = 0;
+        int triggeredEventCount = 0;
 
         var pending = GetPendingEventsForMonth(month);
 
         foreach (var ev in pending)
         {
-            results.Add(new ResolvedEvent
-            {
-                title = ev.eventName,
-                description = ev.description,
-                type = InsuranceManager.InsuranceType.None
-            });
+            if (triggeredEventCount >= maxEventsPerMonth)
+                break;
+
+            ResolveEvent(ev, month, results, ref disasterCount);
+
+            triggeredEventCount++;
         }
 
         if (GameManager.Instance.CurrentPhase != GameManager.GamePhase.Simulation)
@@ -117,10 +148,6 @@ public class EventManager : MonoBehaviour
             Debug.LogWarning("Attempted to generate events outside Simulation phase.");
             return new List<ResolvedEvent>();
         }
-
-        int triggeredEventCount = 0;
-
-        List<ResolvedEvent> results = new();
 
         Season currentSeason = GameManager.Instance.GetSeasonForMonth(month);
 
@@ -166,6 +193,16 @@ public class EventManager : MonoBehaviour
             if (ev == null)
                 continue;
 
+            if (eventsTriggeredThisYear.Contains(ev))
+                continue;
+
+            int eventCost = GetEventCost(ev);
+
+            if (eventCost > remainingEventBudget)
+                continue;
+
+            eventsTriggeredThisYear.Add(ev);
+
             float adjustedProbability = ev.probability;
 
             var forecast = GameManager.Instance.GetCurrentForecast();
@@ -204,6 +241,8 @@ public class EventManager : MonoBehaviour
 
             if (!ownsRequiredAsset)
                 continue;
+
+            remainingEventBudget -= eventCost;
 
             triggeredEventCount++;
 
@@ -253,12 +292,8 @@ public class EventManager : MonoBehaviour
             else if (income < 4000)
                 intendedLoss *= 0.8f;
 
-            float rawLoss = CalculateLossAmount(ev, intendedLoss);
-
-            float cappedLoss = GameManager.Instance.ApplyMonthlyDamage(rawLoss);
-
             float payout = 0f;
-            float finalLoss = cappedLoss;
+            float finalLoss = 0f;
 
             if (ev.insuranceType != InsuranceType.None)
             {
@@ -296,6 +331,8 @@ public class EventManager : MonoBehaviour
                 insurancePayout = payout
             });
 
+            TryScheduleFollowUp(ev, month);
+
             if (ev.affectsIncome)
             {
                 GameManager.Instance.ApplyIncomeEffect(
@@ -306,7 +343,6 @@ public class EventManager : MonoBehaviour
         }
 
         return results;
-        TryScheduleFollowUp(ev, month);
     }
 
     private float CalculateLossAmount(EventData ev, float lossPercent)
@@ -391,5 +427,98 @@ public class EventManager : MonoBehaviour
         }
 
         return events[0];
+    }
+
+    private void ResolveEvent(EventData ev, int month, List<ResolvedEvent> results, ref int disasterCount)
+    {
+        // ---------------- POSITIVE EVENT ----------------
+        if (ev.outcomeType == EventOutcomeType.Positive)
+        {
+            float gained = ev.cashReward;
+
+            if (gained > 0f)
+                GameManager.Instance.ApplyMoneyChange(
+                    FinancialEntry.EntryType.EventReward,
+                    ev.eventName,
+                    gained,
+                    true
+                );
+
+            if (ev.momentumReward != 0f)
+                PlayerDataManager.Instance.ModifyMomentum(ev.momentumReward);
+
+            if (ev.affectsIncome)
+            {
+                GameManager.Instance.ApplyIncomeEffect(
+                    ev.incomePercentChange,
+                    ev.incomeEffectMonths
+                );
+            }
+
+            results.Add(new ResolvedEvent
+            {
+                title = ev.eventName,
+                description = ev.description,
+                type = InsuranceType.None,
+                lossPercent = 0f,
+                actualMoneyChange = gained,
+                insurancePayout = 0f
+            });
+
+            return;
+        }
+
+        float intendedLoss = Random.Range(ev.minLossPercent, ev.maxLossPercent + 1);
+
+        float income = GameManager.Instance.financeManager.CashOnHand;
+
+        if (income < 2000)
+            intendedLoss *= 0.6f;
+        else if (income < 4000)
+            intendedLoss *= 0.8f;
+
+        float rawLoss = CalculateLossAmount(ev, intendedLoss);
+        float cappedLoss = GameManager.Instance.ApplyMonthlyDamage(rawLoss);
+
+        float payout = 0f;
+        float finalLoss = cappedLoss;
+
+        if (ev.insuranceType != InsuranceType.None)
+        {
+            var result = GameManager.Instance.insuranceManager
+                .HandleEvent(ev.insuranceType, intendedLoss, ev.lossType, ev.fixedLossAmount);
+
+            payout += result.payout;
+            finalLoss = result.finalLoss;
+        }
+
+        if (payout > 0f)
+        {
+            GameManager.Instance.ApplyMoneyChange(
+                FinancialEntry.EntryType.InsurancePayout,
+                "Insurance Payout",
+                payout,
+                true
+            );
+        }
+
+        results.Add(new ResolvedEvent
+        {
+            title = ev.eventName,
+            description = ev.description,
+            type = InsuranceType.None,
+            lossPercent = intendedLoss,
+            actualMoneyChange = -finalLoss,
+            insurancePayout = payout
+        });
+
+        TryScheduleFollowUp(ev, month);
+    }
+
+    public void ResetAll()
+    {
+        pendingEvents.Clear();
+        eventsTriggeredThisYear.Clear();
+        remainingEventBudget = monthlyEventBudget;
     }
 }

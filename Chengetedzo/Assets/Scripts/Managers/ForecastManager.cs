@@ -194,6 +194,7 @@ public class ForecastManager : MonoBehaviour
     public void ContinueToInsuranceSelection()
     {
         if (forecastPanel != null)
+            forecastPanel.SetActive(false);
 
         if (UIManager.Instance != null)
             UIManager.Instance.ShowInsurancePanel();
