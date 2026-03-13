@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
+  m_Name: Food Poisoning
+  m_EditorClassIdentifier: 
+  eventName: Food Poisoning
+  description: Short illness impacts work.
+  financialLesson: Short shocks can hurt income.
+  category: 0
+  pool: 3
+  requiredAsset: 0
+  icon: {fileID: 0}
+  probability: 3
+  weight: 8
+  minLossPercent: 0
+  maxLossPercent: 0
+  affectsIncome: 1
+  incomePercentChange: -10
+  incomeEffectMonths: 1
+  insuranceType: 2
+  outcomeType: 0
+  cashReward: 0
+  momentumReward: 0
+  season: 0
+  severity: 0
+  lossType: 1
+  fixedLossAmount: 0
+  startsChain: 0
+  followUpEvents: []
+  followUpChance: 0
+  followUpDelay: 0

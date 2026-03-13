@@ -46,9 +46,6 @@ public class EventData : ScriptableObject
     [Header("Insurance")]
     public InsuranceType insuranceType;
 
-    [Range(0f, 1f)]
-    public float insuranceCoverage;
-
     [Header("Outcome")]
     public EventOutcomeType outcomeType;
 

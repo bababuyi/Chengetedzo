@@ -235,8 +235,8 @@ public class UIManager : MonoBehaviour
         if (currentPanelState == newState)
             return;
 
-        // Close popup safely if open
-        if (IsPopupActive)
+        // FUTURE BARAKA. BE VERY CAREFUL WITH EVENT AND MENTOR POPUPS. YOU WILL REGRET TOUCHING ANYTHING
+        if (IsPopupActive && activePopup != eventPopup)
             CloseActivePopup();
 
         HideAllPanelsInternal();

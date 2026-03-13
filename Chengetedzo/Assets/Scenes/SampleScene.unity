@@ -1702,8 +1702,8 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 2036149918}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.4347826, y: 0}
-  m_AnchorMax: {x: 0.4347826, y: 1}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -3133,9 +3133,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1269510975}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 595, y: -50}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 50, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &299664833
@@ -3752,7 +3752,7 @@ RectTransform:
   m_Father: {fileID: 616640813}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0.53571427, y: 1}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 10, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -4000,9 +4000,9 @@ RectTransform:
   - {fileID: 123504797}
   m_Father: {fileID: 799771960}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 210, y: -332.33664}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 420, y: 60}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &371677750
@@ -4757,9 +4757,9 @@ RectTransform:
   - {fileID: 1981363373}
   m_Father: {fileID: 799771960}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 345, y: -416.44885}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 690, y: 40}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &471634404
@@ -6134,7 +6134,7 @@ RectTransform:
   m_Father: {fileID: 710975496}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0.53333336, y: 1}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 10, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -6210,9 +6210,9 @@ RectTransform:
   - {fileID: 192393412}
   m_Father: {fileID: 799771960}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 195, y: -238.22443}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 390, y: 60}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &657304933
@@ -6519,8 +6519,8 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1346227580}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.53571427, y: 0}
-  m_AnchorMax: {x: 0.53571427, y: 1}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -7000,7 +7000,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0.00030517578, y: 0}
+  m_AnchoredPosition: {x: 0.000061035156, y: 0}
   m_SizeDelta: {x: -18.592855, y: 0}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &710781136
@@ -7248,7 +7248,7 @@ RectTransform:
   m_Father: {fileID: 64862936}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0.33333334, y: 1}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 10, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -7807,9 +7807,9 @@ RectTransform:
   - {fileID: 1867910503}
   m_Father: {fileID: 799771960}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 355, y: -154.11221}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 710, y: 40}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &770427677
@@ -9328,9 +9328,9 @@ RectTransform:
   - {fileID: 26782763}
   m_Father: {fileID: 799771960}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 355, y: -490.56107}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 710, y: 40}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &841234240
@@ -9550,7 +9550,7 @@ RectTransform:
   m_Father: {fileID: 1317974373}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0.4347826, y: 1}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 10, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -10065,7 +10065,7 @@ RectTransform:
   m_Father: {fileID: 592572398}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 10, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -10924,7 +10924,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1029234456
 RectTransform:
   m_ObjectHideFlags: 0
@@ -11253,7 +11253,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1077850325
 RectTransform:
   m_ObjectHideFlags: 0
@@ -12620,7 +12620,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1187311663
 RectTransform:
   m_ObjectHideFlags: 0
@@ -12677,9 +12677,9 @@ RectTransform:
   - {fileID: 1886841292}
   m_Father: {fileID: 799771960}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 300, y: -564.6733}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 600, y: 40}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1189555598
@@ -13332,7 +13332,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1226619106
 RectTransform:
   m_ObjectHideFlags: 0
@@ -13799,9 +13799,9 @@ RectTransform:
   - {fileID: 2025858873}
   m_Father: {fileID: 799771960}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 610, y: -50}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 1220, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1269510976
@@ -13976,9 +13976,9 @@ RectTransform:
   - {fileID: 522444752}
   m_Father: {fileID: 1269510975}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 280, y: -50}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 560, y: 60}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1336503000
@@ -16133,9 +16133,9 @@ RectTransform:
   m_Father: {fileID: 1894907968}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -17, y: -17}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &1549654367
 MonoBehaviour:
@@ -16260,7 +16260,7 @@ RectTransform:
   m_Father: {fileID: 1353237172}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -16796,9 +16796,9 @@ RectTransform:
   m_Father: {fileID: 1894907968}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -17, y: 20}
+  m_SizeDelta: {x: 0, y: 20}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &1586267272
 MonoBehaviour:
@@ -17480,7 +17480,7 @@ RectTransform:
   m_Father: {fileID: 1209583191}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -18814,9 +18814,9 @@ RectTransform:
   - {fileID: 377586430}
   m_Father: {fileID: 799771960}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 600, y: -638.7855}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 1200, y: 40}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1786386453
@@ -19155,7 +19155,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1799183105
 RectTransform:
   m_ObjectHideFlags: 0
@@ -19535,7 +19535,7 @@ RectTransform:
   m_Father: {fileID: 513344150}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -19627,692 +19627,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae66ec1bc3e7dcb44aac8efa9becb287, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  monthlyEventBudget: 100
   maxEventsPerMonth: 2
-  allEvents:
-  - category: 0
-    requiredAsset: 0
-    eventName: Minor Illness
-    description: A household member fell ill and required a clinic visit and medication.
-    probability: 7
-    relatedInsurances: 02000000
-    minLossPercent: 8
-    maxLossPercent: 15
-    season: 0
-    affectsIncome: 0
-    incomePercentChange: 0
-    incomeEffectMonths: 0
-    pool: 3
-    weight: 10
-    outcomeType: 0
-    cashReward: 0
-    momentumReward: 0
-    lossType: 0
-    fixedLossAmount: 0
-  - category: 0
-    requiredAsset: 0
-    eventName: Child Illness
-    description: A child became sick and needed medical attention.
-    probability: 6
-    relatedInsurances: 02000000
-    minLossPercent: 10
-    maxLossPercent: 20
-    season: 0
-    affectsIncome: 0
-    incomePercentChange: 0
-    incomeEffectMonths: 0
-    pool: 0
-    weight: 10
-    outcomeType: 0
-    cashReward: 0
-    momentumReward: 0
-    lossType: 0
-    fixedLossAmount: 0
-  - category: 0
-    requiredAsset: 0
-    eventName: Hospital Admission
-    description: A family member was admitted to hospital for treatment.
-    probability: 4
-    relatedInsurances: 0200000004000000
-    minLossPercent: 40
-    maxLossPercent: 60
-    season: 0
-    affectsIncome: 0
-    incomePercentChange: 0
-    incomeEffectMonths: 0
-    pool: 0
-    weight: 10
-    outcomeType: 0
-    cashReward: 0
-    momentumReward: 0
-    lossType: 0
-    fixedLossAmount: 0
-  - category: 0
-    requiredAsset: 0
-    eventName: Emergency Surgery
-    description: A medical condition required immediate surgery.
-    probability: 2
-    relatedInsurances: 02000000
-    minLossPercent: 80
-    maxLossPercent: 120
-    season: 0
-    affectsIncome: 0
-    incomePercentChange: 0
-    incomeEffectMonths: 0
-    pool: 0
-    weight: 10
-    outcomeType: 0
-    cashReward: 0
-    momentumReward: 0
-    lossType: 0
-    fixedLossAmount: 0
-  - category: 0
-    requiredAsset: 0
-    eventName: Chronic Illness Diagnosis
-    description: A long-term condition was diagnosed requiring ongoing treatment.
-    probability: 1
-    relatedInsurances: 02000000
-    minLossPercent: 15
-    maxLossPercent: 25
-    season: 0
-    affectsIncome: 1
-    incomePercentChange: -15
-    incomeEffectMonths: 6
-    pool: 0
-    weight: 10
-    outcomeType: 0
-    cashReward: 0
-    momentumReward: 0
-    lossType: 0
-    fixedLossAmount: 0
-  - category: 0
-    requiredAsset: 0
-    eventName: Household Accident
-    description: An accident at home caused an injury requiring treatment.
-    probability: 5
-    relatedInsurances: 0500000002000000
-    minLossPercent: 20
-    maxLossPercent: 40
-    season: 0
-    affectsIncome: 0
-    incomePercentChange: 0
-    incomeEffectMonths: 0
-    pool: 0
-    weight: 10
-    outcomeType: 0
-    cashReward: 0
-    momentumReward: 0
-    lossType: 0
-    fixedLossAmount: 0
-  - category: 0
-    requiredAsset: 0
-    eventName: Workplace Injury
-    description: An injury at work temporarily affected earning ability.
-    probability: 3
-    relatedInsurances: 05000000
-    minLossPercent: 20
-    maxLossPercent: 35
-    season: 0
-    affectsIncome: 1
-    incomePercentChange: -30
-    incomeEffectMonths: 2
-    pool: 0
-    weight: 10
-    outcomeType: 0
-    cashReward: 0
-    momentumReward: 0
-    lossType: 0
-    fixedLossAmount: 0
-  - category: 0
-    requiredAsset: 0
-    eventName: Temporary Disability
-    description: An injury prevents work for a short period.
-    probability: 1.5
-    relatedInsurances: 05000000
-    minLossPercent: 0
-    maxLossPercent: 0
-    season: 0
-    affectsIncome: 1
-    incomePercentChange: -50
-    incomeEffectMonths: 3
-    pool: 0
-    weight: 10
-    outcomeType: 0
-    cashReward: 0
-    momentumReward: 0
-    lossType: 0
-    fixedLossAmount: 0
-  - category: 0
-    requiredAsset: 0
-    eventName: Permanent Injury
-    description: A serious accident caused lasting injury.
-    probability: 0.5
-    relatedInsurances: 05000000
-    minLossPercent: 0
-    maxLossPercent: 0
-    season: 0
-    affectsIncome: 1
-    incomePercentChange: -30
-    incomeEffectMonths: 0
-    pool: 0
-    weight: 10
-    outcomeType: 0
-    cashReward: 0
-    momentumReward: 0
-    lossType: 0
-    fixedLossAmount: 0
-  - category: 0
-    requiredAsset: 0
-    eventName: Death of Household Adult
-    description: A death in the household brought funeral costs and income loss.
-    probability: 0.7
-    relatedInsurances: 01000000
-    minLossPercent: 60
-    maxLossPercent: 90
-    season: 0
-    affectsIncome: 1
-    incomePercentChange: -40
-    incomeEffectMonths: 0
-    pool: 0
-    weight: 10
-    outcomeType: 0
-    cashReward: 0
-    momentumReward: 0
-    lossType: 0
-    fixedLossAmount: 0
-  - category: 0
-    requiredAsset: 0
-    eventName: Death of Child
-    description: A tragic loss resulted in funeral expenses.
-    probability: 0.4
-    relatedInsurances: 01000000
-    minLossPercent: 50
-    maxLossPercent: 80
-    season: 0
-    affectsIncome: 0
-    incomePercentChange: 0
-    incomeEffectMonths: 0
-    pool: 0
-    weight: 10
-    outcomeType: 0
-    cashReward: 0
-    momentumReward: 0
-    lossType: 0
-    fixedLossAmount: 0
-  - category: 0
-    requiredAsset: 0
-    eventName: Extended Family Funeral
-    description: A close relative passed away, requiring financial contribution.
-    probability: 1
-    relatedInsurances: 00000000
-    minLossPercent: 15
-    maxLossPercent: 30
-    season: 0
-    affectsIncome: 0
-    incomePercentChange: 0
-    incomeEffectMonths: 0
-    pool: 0
-    weight: 10
-    outcomeType: 0
-    cashReward: 0
-    momentumReward: 0
-    lossType: 0
-    fixedLossAmount: 0
-  - category: 0
-    requiredAsset: 0
-    eventName: School Fees Increase
-    description: School fees increased unexpectedly.
-    probability: 5
-    relatedInsurances: 03000000
-    minLossPercent: 10
-    maxLossPercent: 20
-    season: 0
-    affectsIncome: 0
-    incomePercentChange: 0
-    incomeEffectMonths: 0
-    pool: 0
-    weight: 10
-    outcomeType: 0
-    cashReward: 0
-    momentumReward: 0
-    lossType: 0
-    fixedLossAmount: 0
-  - category: 0
-    requiredAsset: 0
-    eventName: Exam Fees Required
-    description: Additional exam fees are required this month.
-    probability: 4
-    relatedInsurances: 03000000
-    minLossPercent: 5
-    maxLossPercent: 10
-    season: 0
-    affectsIncome: 0
-    incomePercentChange: 0
-    incomeEffectMonths: 0
-    pool: 0
-    weight: 10
-    outcomeType: 0
-    cashReward: 0
-    momentumReward: 0
-    lossType: 0
-    fixedLossAmount: 0
-  - category: 0
-    requiredAsset: 0
-    eventName: School Transition
-    description: A child moved to a higher education level with increased costs.
-    probability: 2
-    relatedInsurances: 03000000
-    minLossPercent: 20
-    maxLossPercent: 30
-    season: 0
-    affectsIncome: 0
-    incomePercentChange: 0
-    incomeEffectMonths: 0
-    pool: 0
-    weight: 10
-    outcomeType: 0
-    cashReward: 0
-    momentumReward: 0
-    lossType: 0
-    fixedLossAmount: 0
-  - category: 0
-    requiredAsset: 0
-    eventName: Loss of Scholarship
-    description: Educational financial support was withdrawn.
-    probability: 1
-    relatedInsurances: 03000000
-    minLossPercent: 40
-    maxLossPercent: 60
-    season: 0
-    affectsIncome: 0
-    incomePercentChange: 0
-    incomeEffectMonths: 0
-    pool: 0
-    weight: 10
-    outcomeType: 0
-    cashReward: 0
-    momentumReward: 0
-    lossType: 0
-    fixedLossAmount: 0
-  - category: 0
-    requiredAsset: 0
-    eventName: Job Loss
-    description: Employment ended unexpectedly.
-    probability: 2
-    relatedInsurances: 
-    minLossPercent: 0
-    maxLossPercent: 0
-    season: 0
-    affectsIncome: 1
-    incomePercentChange: -100
-    incomeEffectMonths: 4
-    pool: 0
-    weight: 10
-    outcomeType: 0
-    cashReward: 0
-    momentumReward: 0
-    lossType: 0
-    fixedLossAmount: 0
-  - category: 0
-    requiredAsset: 0
-    eventName: Salary Reduction
-    description: Monthly income was reduced.
-    probability: 4
-    relatedInsurances: 
-    minLossPercent: 0
-    maxLossPercent: 0
-    season: 0
-    affectsIncome: 1
-    incomePercentChange: -25
-    incomeEffectMonths: 0
-    pool: 0
-    weight: 10
-    outcomeType: 0
-    cashReward: 0
-    momentumReward: 0
-    lossType: 0
-    fixedLossAmount: 0
-  - category: 0
-    requiredAsset: 0
-    eventName: Delayed Salary
-    description: Income was delayed and not received this month.
-    probability: 4
-    relatedInsurances: 
-    minLossPercent: 0
-    maxLossPercent: 0
-    season: 0
-    affectsIncome: 1
-    incomePercentChange: -100
-    incomeEffectMonths: 1
-    pool: 0
-    weight: 10
-    outcomeType: 0
-    cashReward: 0
-    momentumReward: 0
-    lossType: 0
-    fixedLossAmount: 0
-  - category: 0
-    requiredAsset: 0
-    eventName: Salary Increase
-    description: Monthly income increased.
-    probability: 3
-    relatedInsurances: 
-    minLossPercent: 0
-    maxLossPercent: 0
-    season: 0
-    affectsIncome: 1
-    incomePercentChange: 15
-    incomeEffectMonths: 1
-    pool: 0
-    weight: 10
-    outcomeType: 1
-    cashReward: 0
-    momentumReward: 10
-    lossType: 0
-    fixedLossAmount: 0
-  - category: 0
-    requiredAsset: 0
-    eventName: Bonus / Overtime
-    description: Additional income was received this month.
-    probability: 3
-    relatedInsurances: 
-    minLossPercent: 0
-    maxLossPercent: 0
-    season: 0
-    affectsIncome: 1
-    incomePercentChange: 0
-    incomeEffectMonths: 1
-    pool: 0
-    weight: 10
-    outcomeType: 1
-    cashReward: 300
-    momentumReward: 5
-    lossType: 0
-    fixedLossAmount: 0
-  - category: 0
-    requiredAsset: 2
-    eventName: Major Car Accident
-    description: The vehicle was damaged and needs repairs.
-    probability: 5
-    relatedInsurances: 06000000
-    minLossPercent: 15
-    maxLossPercent: 30
-    season: 0
-    affectsIncome: 0
-    incomePercentChange: 0
-    incomeEffectMonths: 0
-    pool: 0
-    weight: 10
-    outcomeType: 0
-    cashReward: 0
-    momentumReward: 0
-    lossType: 0
-    fixedLossAmount: 0
-  - category: 0
-    requiredAsset: 2
-    eventName: Major Car Accident
-    description: A serious accident caused major damage.
-    probability: 2
-    relatedInsurances: 06000000
-    minLossPercent: 50
-    maxLossPercent: 80
-    season: 0
-    affectsIncome: 0
-    incomePercentChange: 0
-    incomeEffectMonths: 0
-    pool: 0
-    weight: 10
-    outcomeType: 0
-    cashReward: 0
-    momentumReward: 0
-    lossType: 0
-    fixedLossAmount: 0
-  - category: 0
-    requiredAsset: 2
-    eventName: Vehicle Theft / Vandalism
-    description: The vehicle was stolen or damaged.
-    probability: 1.5
-    relatedInsurances: 06000000
-    minLossPercent: 40
-    maxLossPercent: 70
-    season: 0
-    affectsIncome: 0
-    incomePercentChange: 0
-    incomeEffectMonths: 0
-    pool: 0
-    weight: 10
-    outcomeType: 0
-    cashReward: 0
-    momentumReward: 0
-    lossType: 0
-    fixedLossAmount: 0
-  - category: 0
-    requiredAsset: 1
-    eventName: Storm Damage
-    description: Severe weather damaged the home.
-    probability: 4
-    relatedInsurances: 07000000
-    minLossPercent: 25
-    maxLossPercent: 45
-    season: 0
-    affectsIncome: 0
-    incomePercentChange: 0
-    incomeEffectMonths: 0
-    pool: 0
-    weight: 10
-    outcomeType: 0
-    cashReward: 0
-    momentumReward: 0
-    lossType: 0
-    fixedLossAmount: 0
-  - category: 0
-    requiredAsset: 1
-    eventName: Storm Damage
-    description: Severe weather damaged the home.
-    probability: 1
-    relatedInsurances: 07000000
-    minLossPercent: 25
-    maxLossPercent: 45
-    season: 0
-    affectsIncome: 0
-    incomePercentChange: 0
-    incomeEffectMonths: 0
-    pool: 0
-    weight: 10
-    outcomeType: 0
-    cashReward: 0
-    momentumReward: 0
-    lossType: 0
-    fixedLossAmount: 0
-  - category: 0
-    requiredAsset: 1
-    eventName: Burglary
-    description: The home was broken into.
-    probability: 2
-    relatedInsurances: 07000000
-    minLossPercent: 20
-    maxLossPercent: 30
-    season: 0
-    affectsIncome: 0
-    incomePercentChange: 0
-    incomeEffectMonths: 0
-    pool: 0
-    weight: 10
-    outcomeType: 0
-    cashReward: 0
-    momentumReward: 0
-    lossType: 0
-    fixedLossAmount: 0
-  - category: 0
-    requiredAsset: 3
-    eventName: Drought
-    description: Low rainfall reduced crop yields.
-    probability: 5
-    relatedInsurances: 08000000
-    minLossPercent: 0
-    maxLossPercent: 0
-    season: 1
-    affectsIncome: 1
-    incomePercentChange: -40
-    incomeEffectMonths: 3
-    pool: 0
-    weight: 10
-    outcomeType: 0
-    cashReward: 0
-    momentumReward: 0
-    lossType: 0
-    fixedLossAmount: 0
-  - category: 0
-    requiredAsset: 3
-    eventName: Pest Infestation
-    description: Pests damaged crops.
-    probability: 4
-    relatedInsurances: 08000000
-    minLossPercent: 20
-    maxLossPercent: 40
-    season: 1
-    affectsIncome: 0
-    incomePercentChange: 0
-    incomeEffectMonths: 0
-    pool: 0
-    weight: 10
-    outcomeType: 0
-    cashReward: 0
-    momentumReward: 0
-    lossType: 0
-    fixedLossAmount: 0
-  - category: 0
-    requiredAsset: 3
-    eventName: Crop Failure
-    description: The harvest failed entirely.
-    probability: 1
-    relatedInsurances: 08000000
-    minLossPercent: 0
-    maxLossPercent: 0
-    season: 1
-    affectsIncome: 1
-    incomePercentChange: -70
-    incomeEffectMonths: 4
-    pool: 0
-    weight: 10
-    outcomeType: 0
-    cashReward: 0
-    momentumReward: 0
-    lossType: 0
-    fixedLossAmount: 0
-  - category: 0
-    requiredAsset: 3
-    eventName: Good Harvest
-    description: Crop yields exceeded expectations.
-    probability: 3
-    relatedInsurances: 00000000
-    minLossPercent: 0
-    maxLossPercent: 0
-    season: 0
-    affectsIncome: 1
-    incomePercentChange: 25
-    incomeEffectMonths: 2
-    pool: 0
-    weight: 10
-    outcomeType: 1
-    cashReward: 0
-    momentumReward: 0
-    lossType: 0
-    fixedLossAmount: 0
-  - category: 0
-    requiredAsset: 4
-    eventName: Livestock Illness
-    description: A disease affected part of your livestock herd.
-    probability: 5
-    relatedInsurances: 08000000
-    minLossPercent: 20
-    maxLossPercent: 40
-    season: 0
-    affectsIncome: 0
-    incomePercentChange: 0
-    incomeEffectMonths: 0
-    pool: 0
-    weight: 10
-    outcomeType: 0
-    cashReward: 0
-    momentumReward: 0
-    lossType: 0
-    fixedLossAmount: 0
-  - category: 0
-    requiredAsset: 4
-    eventName: Livestock Death
-    description: One or more animals died due to illness or poor conditions.
-    probability: 2
-    relatedInsurances: 08000000
-    minLossPercent: 40
-    maxLossPercent: 70
-    season: 0
-    affectsIncome: 0
-    incomePercentChange: 0
-    incomeEffectMonths: 0
-    pool: 0
-    weight: 10
-    outcomeType: 0
-    cashReward: 0
-    momentumReward: 0
-    lossType: 0
-    fixedLossAmount: 0
-  - category: 0
-    requiredAsset: 4
-    eventName: Livestock Theft
-    description: Livestock were stolen from your property.
-    probability: 1.5
-    relatedInsurances: 08000000
-    minLossPercent: 30
-    maxLossPercent: 60
-    season: 1
-    affectsIncome: 0
-    incomePercentChange: 0
-    incomeEffectMonths: 0
-    pool: 0
-    weight: 10
-    outcomeType: 0
-    cashReward: 0
-    momentumReward: 0
-    lossType: 0
-    fixedLossAmount: 0
-  - category: 0
-    requiredAsset: 4
-    eventName: Disease Outbreak
-    description: A contagious disease spread through your livestock herd.
-    probability: 0.8
-    relatedInsurances: 08000000
-    minLossPercent: 60
-    maxLossPercent: 90
-    season: 1
-    affectsIncome: 0
-    incomePercentChange: 0
-    incomeEffectMonths: 0
-    pool: 0
-    weight: 10
-    outcomeType: 0
-    cashReward: 0
-    momentumReward: 0
-    lossType: 0
-    fixedLossAmount: 0
-  - category: 0
-    requiredAsset: 4
-    eventName: Healthy Herd
-    description: Good animal health led to higher productivity
-    probability: 3
-    relatedInsurances: 
-    minLossPercent: 0
-    maxLossPercent: 0
-    season: 0
-    affectsIncome: 1
-    incomePercentChange: 20
-    incomeEffectMonths: 0
-    pool: 0
-    weight: 10
-    outcomeType: 1
-    cashReward: 0
-    momentumReward: 10
-    lossType: 0
-    fixedLossAmount: 0
+  eventDatabase: {fileID: 11400000, guid: 83828d2576659de45ab98702a5e5eaf8, type: 2}
 --- !u!114 &1855952293
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -22685,7 +22002,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &2009277815
 RectTransform:
   m_ObjectHideFlags: 0
@@ -22899,9 +22216,9 @@ RectTransform:
   - {fileID: 2044947724}
   m_Father: {fileID: 1269510975}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 920, y: -50}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 580, y: 60}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2025858874
@@ -23330,9 +22647,9 @@ RectTransform:
   m_Father: {fileID: 1894907968}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMax: {x: 1, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 20, y: -17}
+  m_SizeDelta: {x: 20, y: 0}
   m_Pivot: {x: 1, y: 1}
 --- !u!114 &2042588577
 MonoBehaviour:
@@ -23641,8 +22958,8 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1449150622}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.53333336, y: 0}
-  m_AnchorMax: {x: 0.53333336, y: 1}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -23774,7 +23091,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &2090022189
 RectTransform:
   m_ObjectHideFlags: 0
@@ -23905,8 +23222,8 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1403469021}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.33333334, y: 0}
-  m_AnchorMax: {x: 0.33333334, y: 1}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}

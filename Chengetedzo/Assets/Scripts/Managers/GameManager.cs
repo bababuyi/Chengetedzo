@@ -541,10 +541,13 @@ public class GameManager : MonoBehaviour
 
         isWaitingForEventConfirmation = true;
         ShowEvent(currentEvent);
+        Debug.Log($"[Event] Processing: {currentEvent.title} | MoneyChange: {currentEvent.moneyChange}");
     }
 
     private void ShowEvent(ResolvedEvent ev)
     {
+
+        Debug.Log("SHOW EVENT POPUP CALLED");
         if (IsHeadlessSimulation)
         {
             OnEventPopupClosed();

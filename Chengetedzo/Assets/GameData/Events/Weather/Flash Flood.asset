@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
+  m_Name: Flash Flood
+  m_EditorClassIdentifier: 
+  eventName: Flash Flood
+  description: Sudden flooding damages property.
+  financialLesson: 'Flood protection is critical.
+
+'
+  category: 5
+  pool: 0
+  requiredAsset: 1
+  icon: {fileID: 0}
+  probability: 4
+  weight: 10
+  minLossPercent: 10
+  maxLossPercent: 25
+  affectsIncome: 0
+  incomePercentChange: 0
+  incomeEffectMonths: 0
+  insuranceType: 7
+  outcomeType: 0
+  cashReward: 0
+  momentumReward: 0
+  season: 1
+  severity: 2
+  lossType: 0
+  fixedLossAmount: 0
+  startsChain: 1
+  followUpEvents: []
+  followUpChance: 0.5
+  followUpDelay: 1

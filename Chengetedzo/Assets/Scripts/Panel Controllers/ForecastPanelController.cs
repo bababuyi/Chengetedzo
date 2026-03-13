@@ -26,6 +26,12 @@ public class ForecastPanelController : MonoBehaviour
         if (backButton == null)
             return;
 
+        if (GameManager.Instance == null)
+        {
+            Debug.LogWarning("[ForecastPanelController] GameManager not ready yet.");
+            return;
+        }
+
         backButton.gameObject.SetActive(
             !GameManager.Instance.IsForecastBackLocked
         );
