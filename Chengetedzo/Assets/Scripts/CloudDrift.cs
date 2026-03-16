@@ -7,7 +7,7 @@ public class CloudDrift : MonoBehaviour
 
     public RectTransform leftBoundary;
     public RectTransform rightBoundary;
-
+    public CloudSpawner spawner;
     private RectTransform rect;
 
     private void Awake()
@@ -23,12 +23,12 @@ public class CloudDrift : MonoBehaviour
 
         if (moveRight && rect.anchoredPosition.x >= rightBoundary.anchoredPosition.x)
         {
-            CloudSpawner.cloudCount--;
+            if (spawner != null) spawner.cloudCount--;
             Destroy(gameObject);
         }
         else if (!moveRight && rect.anchoredPosition.x <= leftBoundary.anchoredPosition.x)
         {
-            CloudSpawner.cloudCount--;
+            if (spawner != null) spawner.cloudCount--;
             Destroy(gameObject);
         }
     }

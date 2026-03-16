@@ -149,7 +149,8 @@ public class GameManager : MonoBehaviour
         House,
         Motor,
         Crops,
-        Livestock
+        Livestock,
+        CropsOrLivestock
     }
 
     [System.Serializable]
@@ -175,11 +176,12 @@ public class GameManager : MonoBehaviour
 
     public void ConfirmMonthAndResolve()
     {
-        CurrentLedger = new MonthlyFinancialLedger(currentMonth,financeManager.CashOnHand);
         if (monthResolutionStarted)
             return;
 
         monthResolutionStarted = true;
+
+        CurrentLedger = new MonthlyFinancialLedger(currentMonth,financeManager.CashOnHand);
 
         Debug.Log($"[Month] Confirmed → Resolving Month {currentMonth}");
 
@@ -356,7 +358,15 @@ public class GameManager : MonoBehaviour
         if (IsHeadlessSimulation)
             return;
 
-        if (lineToShow != null)
+        // Base monthly mentor chance
+        float monthlyChance = 0.35f; // 35%
+
+        // Stronger chance if momentum is extreme
+        if (momentum >= 15f || momentum <= -15f)
+            monthlyChance = 0.60f;
+
+        // Only trigger if chance succeeds
+        if (lineToShow != null && Random.value < monthlyChance)
         {
             uiManager.ShowMentorMessage(lineToShow);
             mentorSpokeThisMonth = true;
@@ -510,12 +520,11 @@ public class GameManager : MonoBehaviour
         if (isWaitingForEventConfirmation)
         {
             ShowEvent(currentEvent);
-            return;
-        }
-
-        if (pendingEvents.Count == 0)
-        {
-            EndMonthlyResolution();
+            if (!mentorSpokeThisMonth && Random.value < 0.25f)
+            {
+                uiManager.ShowMentorMessage(PickEventMentorLine());
+                mentorSpokeThisMonth = true;
+            }
             return;
         }
 
@@ -546,7 +555,7 @@ public class GameManager : MonoBehaviour
 
     private void ShowEvent(ResolvedEvent ev)
     {
-
+        Debug.Log("Headless Mode: " + IsHeadlessSimulation);
         Debug.Log("SHOW EVENT POPUP CALLED");
         if (IsHeadlessSimulation)
         {
@@ -755,6 +764,7 @@ public class GameManager : MonoBehaviour
                 activeIncomeEffects.RemoveAt(i);
         }
     }
+
     private void UpdateTopButtons()
     {
         if (CurrentPhase != GamePhase.Simulation)
@@ -764,29 +774,24 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        // CurrentPhase == Simulation is already guaranteed here
         bool canShowLoan =
-            CurrentPhase == GamePhase.Simulation &&
             loanManager != null &&
             loanManager.IsLoanUnlocked &&
             !uiManager.IsPopupActive;
 
         bool canShowSavings =
-            CurrentPhase == GamePhase.Simulation &&
             financeManager != null &&
             (financeManager.CashOnHand > 0f ||
              financeManager.generalSavingsBalance > 0f) &&
             !uiManager.IsPopupActive;
 
-        if (canShowLoan)
-            uiManager.ShowLoanTopButton();
-        else
-            uiManager.HideLoanTopButton();
+        if (canShowLoan) uiManager.ShowLoanTopButton();
+        else uiManager.HideLoanTopButton();
 
-        if (canShowSavings)
-            uiManager.ShowSavingsTopButton();
-        else
-            uiManager.HideSavingsTopButton();
-    }   
+        if (canShowSavings) uiManager.ShowSavingsTopButton();
+        else uiManager.HideSavingsTopButton();
+    }
 
     private bool IsRecovery(float currentMomentum)
     {
@@ -997,6 +1002,17 @@ public class GameManager : MonoBehaviour
 
     public void LoadFromSave(GameSaveData save)
     {
+        if (loanManager != null)
+        {
+            loanManager.loanBalance = save.loanBalance;
+            loanManager.borrowingPower = save.borrowingPower;
+            loanManager.totalContributed = save.totalContributed;
+            loanManager.monthsContributed = save.monthsContributed;
+            loanManager.SetRepaymentRate(save.repaymentRate);
+            loanManager.missedPayments = save.missedPayments;
+            loanManager.onTimePayments = save.onTimePayments;
+        }
+
         currentMonth = save.currentMonth;
 
         financeManager.SetCash(save.cashOnHand);

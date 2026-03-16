@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
+  m_Name: Medical Supply Shortage
+  m_EditorClassIdentifier: 
+  eventName: Medical Supply Shortage
+  description: You are ill but medicine is currently scarce and expensive as a result
+    of policies.
+  financialLesson: Crises can increase healthcare costs
+  category: 0
+  pool: 2
+  requiredAsset: 0
+  icon: {fileID: 0}
+  probability: 6
+  weight: 2
+  minLossPercent: 5
+  maxLossPercent: 15
+  affectsIncome: 0
+  incomePercentChange: 0
+  incomeEffectMonths: 0
+  insuranceType: 2
+  outcomeType: 0
+  cashReward: 0
+  momentumReward: -1
+  season: 0
+  signal: 0
+  severity: 1
+  lossType: 2
+  fixedLossAmount: 120
+  startsChain: 0
+  followUpEvents: []
+  followUpChance: 0
+  followUpDelay: 0

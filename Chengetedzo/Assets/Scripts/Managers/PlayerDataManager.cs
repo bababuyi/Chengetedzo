@@ -31,7 +31,6 @@ public class PlayerDataManager : MonoBehaviour
         }
 
         Instance = this;
-        DontDestroyOnLoad(gameObject);
 
         adults = Mathf.Max(1, adults);
         children = Mathf.Max(0, children);

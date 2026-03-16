@@ -7,21 +7,6 @@ public class InsuranceManager : MonoBehaviour
     private PlayerAssets Assets =>
     GameManager.Instance.financeManager.assets;
 
-    private bool PlayerOwnsCar()
-    {
-        return Assets.hasMotor;
-    }
-
-    private bool PlayerOwnsHouse()
-    {
-        return Assets.hasHouse;
-    }
-
-    private bool PlayerOwnsFarm()
-    {
-        return Assets.hasCrops;
-    }
-
     public enum InsuranceType
     {
         None,
@@ -93,7 +78,6 @@ public class InsuranceManager : MonoBehaviour
     private float totalLoss;
     private float totalPayout;
 
-    public static InsuranceManager Instance;
 
     private FinanceManager Finance
     {
@@ -108,14 +92,6 @@ public class InsuranceManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
-        Instance = this;
-
         if (Finance == null)
             Debug.LogWarning("[InsuranceManager] FinanceManager not ready in Awake.");
 
@@ -183,8 +159,8 @@ public class InsuranceManager : MonoBehaviour
         {
             planName = "Personal Accident Cover",
             type = InsuranceType.PersonalAccident,
-            premium = 1f,
-            coverageLimit = 10000f,
+            premium = 2f,
+            coverageLimit = 8000f,
             deductiblePercent = 0f,
             waitingPeriodMonths = 3,
             coverageDescription = "Pays a lump sum in the event of accidental death of the breadwinner."
@@ -215,14 +191,17 @@ public class InsuranceManager : MonoBehaviour
 
         allPlans.Add(new InsurancePlan
         {
-            planName = "Crop Insurance",
-            type = InsuranceType.Crop,
-            premiumIsAssetBased = true,
-            premiumRate = 0.005f, // 0.5%
+            planName = "Agricultural Insurance",
+            type = InsuranceType.Crop,         // keep the enum value to avoid breaking anything
+            premiumIsAssetBased = false,
+            premium = 5f,
+            coverageLimit = 2000f,
             deductiblePercent = 0.05f,
             waitingPeriodMonths = 0,
-            requiredAsset = GameManager.AssetRequirement.Crops,
-            coverageDescription = "In the event of crop loss, covers the cost of inputs."
+            requiredAsset = GameManager.AssetRequirement.CropsOrLivestock, // CHANGE from Crops
+            coverageDescription = "Covers financial losses from crop failure or livestock disease. " +
+                          "Protects farmers and smallholders against the unexpected costs " +
+                          "of agricultural setbacks."
         });
     }
 
@@ -241,10 +220,16 @@ public class InsuranceManager : MonoBehaviour
 
         switch (plan.requiredAsset)
         {
-            case GameManager.AssetRequirement.None: return true;
-            case GameManager.AssetRequirement.Motor: return PlayerOwnsCar();
-            case GameManager.AssetRequirement.House: return PlayerOwnsHouse();
-            case GameManager.AssetRequirement.Crops: return PlayerOwnsFarm();
+            case GameManager.AssetRequirement.None:
+                return true;
+            case GameManager.AssetRequirement.Motor:
+                return Assets.hasMotor;
+            case GameManager.AssetRequirement.House:
+                return Assets.hasHouse;
+            case GameManager.AssetRequirement.Crops:
+            case GameManager.AssetRequirement.Livestock:
+            case GameManager.AssetRequirement.CropsOrLivestock:
+                return Assets.hasCrops || Assets.hasLivestock;
         }
         return false;
     }
@@ -286,12 +271,13 @@ public class InsuranceManager : MonoBehaviour
 
     public bool BuyInsurance(InsuranceType type)
     {
-        Debug.Log($"[Insurance] Cash: {Finance.CashOnHand}");
         if (Finance == null)
         {
             Debug.LogError("[Insurance] FinanceManager missing.");
             return false;
         }
+
+        Debug.Log($"[Insurance] Cash: {Finance.CashOnHand}");
 
         var plan = GetPlan(type);
         if (plan == null)
@@ -441,20 +427,18 @@ public class InsuranceManager : MonoBehaviour
     /// Returns the payout amount (0 if no payout).
     /// This checks waiting period and lapse rules.
     /// </summary>
+    
     public InsuranceResult HandleEvent(
     InsuranceType type,
-    float lossPercent,
-    LossCalculationType lossType,
-    float fixedAmount = 0f)
+    float rawLoss)
+
     {
         InsuranceResult result = new InsuranceResult();
 
         var plan = GetPlan(type);
 
-        float rawLoss = 0f;
-
         // 1?? Calculate raw loss
-        switch (lossType)
+        /*switch (lossType)
         {
             case LossCalculationType.AssetValue:
                 float assetValue = Finance.GetAssetValue(type);
@@ -468,7 +452,7 @@ public class InsuranceManager : MonoBehaviour
             case LossCalculationType.FixedAmount:
                 rawLoss = fixedAmount;
                 break;
-        }
+        }*/
 
         float payout = 0f;
         float deductibleAmount = 0f;

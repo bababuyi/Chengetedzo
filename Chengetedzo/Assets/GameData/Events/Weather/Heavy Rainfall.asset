@@ -13,14 +13,14 @@ MonoBehaviour:
   m_Name: Heavy Rainfall
   m_EditorClassIdentifier: 
   eventName: Heavy Rainfall
-  description: Heavy rains damage structures.
+  description: Days of heavy rain damage buildings and infrastructure.
   financialLesson: Weather risk affects assets.
   category: 5
   pool: 0
   requiredAsset: 1
   icon: {fileID: 0}
   probability: 5
-  weight: 10
+  weight: 12
   minLossPercent: 5
   maxLossPercent: 15
   affectsIncome: 0
@@ -31,11 +31,14 @@ MonoBehaviour:
   cashReward: 0
   momentumReward: 0
   season: 1
+  signal: 2
   severity: 1
   lossType: 0
   fixedLossAmount: 0
   startsChain: 1
   followUpEvents:
   - {fileID: 11400000, guid: a6cc881257b00b349a68b80b0c25dfc3, type: 2}
+  - {fileID: 11400000, guid: b9563139ed1f1b1469ceb6a161b00e5e, type: 2}
+  - {fileID: 11400000, guid: 2c3a66e2e26ea19419129fb624ed295b, type: 2}
   followUpChance: 0.5
   followUpDelay: 1

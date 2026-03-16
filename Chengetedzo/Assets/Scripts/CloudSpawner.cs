@@ -26,16 +26,16 @@ public class CloudSpawner : MonoBehaviour
 
     [Header("Cloud Limit")]
     public int maxClouds = 10;
-    public static int cloudCount = 0;
-
-    private void Start()
-    {
-        StartCoroutine(SpawnCloud());
-    }
+    public int cloudCount = 0;
 
     private void Awake()
     {
         cloudCount = 0;
+    }
+
+    private void Start()
+    {
+        StartCoroutine(SpawnCloud());
     }
 
     private System.Collections.IEnumerator SpawnCloud()
@@ -66,6 +66,7 @@ public class CloudSpawner : MonoBehaviour
             mover.moveRight = spawnFromLeft;
             mover.leftBoundary = spawnLeft;
             mover.rightBoundary = spawnRight;
+            mover.spawner = this;
 
             cloudCount++;
         }

@@ -13,9 +13,7 @@ MonoBehaviour:
   m_Name: Livestock Disease
   m_EditorClassIdentifier: 
   eventName: 'Livestock Disease '
-  description: 'Animals fall ill.
-
-'
+  description: A disease outbreak spreads among livestock.
   financialLesson: 'Insurance protects livestock.
 
 '
@@ -26,7 +24,7 @@ MonoBehaviour:
   probability: 5
   weight: 10
   minLossPercent: 15
-  maxLossPercent: 35
+  maxLossPercent: 30
   affectsIncome: 1
   incomePercentChange: -20
   incomeEffectMonths: 3
@@ -35,10 +33,14 @@ MonoBehaviour:
   cashReward: 0
   momentumReward: 0
   season: 0
+  signal: 4
   severity: 2
-  lossType: 0
+  lossType: 1
   fixedLossAmount: 0
   startsChain: 1
-  followUpEvents: []
+  followUpEvents:
+  - {fileID: 11400000, guid: 3904b7e41092d0d4ea8a4b2d560e13d8, type: 2}
+  - {fileID: 11400000, guid: 2d93a1ad12d76c646bddaa0cacff0264, type: 2}
+  - {fileID: 11400000, guid: 65384cc2cbf0f464a8d25cc86ef4ee16, type: 2}
   followUpChance: 0.7
   followUpDelay: 1

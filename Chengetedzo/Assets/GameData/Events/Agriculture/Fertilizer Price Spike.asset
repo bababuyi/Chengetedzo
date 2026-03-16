@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Fertilizer Price Spike
   m_EditorClassIdentifier: 
   eventName: Fertilizer Price Spike
-  description: Farming input costs increase.
+  description: Fertilizer prices surge, increasing production costs.
   financialLesson: Budgeting protects profit.
   category: 2
   pool: 1
@@ -31,10 +31,11 @@ MonoBehaviour:
   cashReward: 0
   momentumReward: 0
   season: 0
+  signal: 5
   severity: 0
-  lossType: 0
+  lossType: 1
   fixedLossAmount: 0
   startsChain: 0
   followUpEvents: []
-  followUpChance: 0.5
-  followUpDelay: 1
+  followUpChance: 0
+  followUpDelay: 0

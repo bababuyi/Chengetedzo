@@ -13,13 +13,14 @@ MonoBehaviour:
   m_Name: Clinic Fees
   m_EditorClassIdentifier: 
   eventName: Clinic Fees
-  description: Unexpected medical check.
-  financialLesson: Budgeting for health costs.
+  description: An unexpected medical visit adds unexpected costs.
+  financialLesson: Even when healthy you should always plan for unexpected health
+    costs.
   category: 0
   pool: 3
   requiredAsset: 0
   icon: {fileID: 0}
-  probability: 3
+  probability: 10
   weight: 8
   minLossPercent: 0
   maxLossPercent: 0
@@ -31,6 +32,7 @@ MonoBehaviour:
   cashReward: 0
   momentumReward: 0
   season: 0
+  signal: 4
   severity: 0
   lossType: 2
   fixedLossAmount: 100

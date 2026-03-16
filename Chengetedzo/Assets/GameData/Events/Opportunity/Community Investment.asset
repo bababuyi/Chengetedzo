@@ -13,14 +13,14 @@ MonoBehaviour:
   m_Name: Community Investment
   m_EditorClassIdentifier: 
   eventName: Community Investment
-  description: Local project increases income.
+  description: A community project boosts local economic activity.
   financialLesson: Community development helps growth.
   category: 3
   pool: 5
-  requiredAsset: 3
+  requiredAsset: 5
   icon: {fileID: 0}
-  probability: 2
-  weight: 5
+  probability: 2.5
+  weight: 6
   minLossPercent: 0
   maxLossPercent: 0
   affectsIncome: 1
@@ -31,6 +31,7 @@ MonoBehaviour:
   cashReward: 150
   momentumReward: 10
   season: 0
+  signal: 0
   severity: 0
   lossType: 2
   fixedLossAmount: 0

@@ -13,14 +13,14 @@ MonoBehaviour:
   m_Name: Pandemic Restrictions
   m_EditorClassIdentifier: 
   eventName: Pandemic Restrictions
-  description: Work limited temporarily.
+  description: A health crisis limits economic activity.
   financialLesson: Macro health events affect income.
   category: 0
   pool: 3
   requiredAsset: 0
   icon: {fileID: 0}
-  probability: 2
-  weight: 6
+  probability: 4
+  weight: 4
   minLossPercent: 0
   maxLossPercent: 0
   affectsIncome: 1
@@ -31,10 +31,14 @@ MonoBehaviour:
   cashReward: 0
   momentumReward: 0
   season: 0
+  signal: 4
   severity: 2
   lossType: 1
   fixedLossAmount: 0
   startsChain: 1
-  followUpEvents: []
+  followUpEvents:
+  - {fileID: 11400000, guid: 84be7abed2c5bdf489b40ee44b2d31c2, type: 2}
+  - {fileID: 11400000, guid: e2524c38bc4f70145ab442e00b9add60, type: 2}
+  - {fileID: 11400000, guid: be057585fcfbe8f4d9b472b9510653f0, type: 2}
   followUpChance: 0.5
   followUpDelay: 2

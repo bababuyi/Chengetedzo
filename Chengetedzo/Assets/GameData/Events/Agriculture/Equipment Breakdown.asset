@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: Equipment Breakdown
   m_EditorClassIdentifier: 
   eventName: Equipment Breakdown
-  description: Farm equipment fails.
+  description: Essential farming equipment suddenly fails.
   financialLesson: Maintenance avoids big costs.
   category: 1
   pool: 1
-  requiredAsset: 2
+  requiredAsset: 5
   icon: {fileID: 0}
   probability: 4
   weight: 8
@@ -31,10 +31,11 @@ MonoBehaviour:
   cashReward: 0
   momentumReward: 0
   season: 0
+  signal: 0
   severity: 0
-  lossType: 0
+  lossType: 1
   fixedLossAmount: 0
   startsChain: 0
   followUpEvents: []
-  followUpChance: 0.5
-  followUpDelay: 1
+  followUpChance: 0
+  followUpDelay: 0

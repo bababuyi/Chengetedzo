@@ -16,6 +16,5 @@ public class ResolvedEvent
 
     public float lossPercent;
 
-    public float actualMoneyChange;
     public float insurancePayout;
 }

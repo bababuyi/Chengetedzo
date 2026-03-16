@@ -33,7 +33,7 @@ public class BudgetPanelController : MonoBehaviour
     public GameObject savingsAllocationGroup;
 
     private FinanceManager finance;
-    
+
 
     private void Start()
     {
@@ -48,8 +48,7 @@ public class BudgetPanelController : MonoBehaviour
 
         finance = GameManager.Instance.financeManager;
 
-        if (finance == null || GameManager.Instance == null)
-
+        if (finance == null)
         {
             Debug.LogError("[BudgetPanelController] FinanceManager not ready.");
             return;
@@ -62,9 +61,7 @@ public class BudgetPanelController : MonoBehaviour
             savingsSlider.onValueChanged.AddListener(_ => UpdateValues());
 
         SetupWithdrawButtons();
-
         ConfigureForPhase(GameManager.GamePhase.Idle);
-
         UpdateValues();
     }
 

@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
+using static ForecastLines;
 using static GameManager;
 
 public class ForecastManager : MonoBehaviour
@@ -10,15 +12,46 @@ public class ForecastManager : MonoBehaviour
     {
         public ForecastCategory category;
         public GameManager.Season season;
+
+        public ForecastSignal signal;
+        public ForecastLines.ForecastIntensity intensity;
+
         public string headline;
         public string body;
     }
+
+    public enum ForecastSignal
+    {
+        Neutral,
+        Dry,
+        Wet,
+        Heat,
+        Disease,
+        EconomicStress,
+        CrimeWave
+    }
+
+    ForecastSignal GetSignal(EventData ev)
+    {
+        string name = ev.eventName.ToLower();
+
+        if (name.Contains("drought")) return ForecastSignal.Dry;
+        if (name.Contains("flood")) return ForecastSignal.Wet;
+        if (name.Contains("storm")) return ForecastSignal.Wet;
+        if (name.Contains("heat")) return ForecastSignal.Heat;
+
+        return ForecastSignal.Neutral;
+    }
+
     public class ForecastState
     {
         public Dictionary<ForecastCategory, float> categoryRiskMultiplier
             = new Dictionary<ForecastCategory, float>();
 
-        public float globalIncomeModifier = 0f; // % change
+        public Dictionary<ForecastSignal, float> signalRiskMultiplier
+            = new Dictionary<ForecastSignal, float>();
+
+        public float globalIncomeModifier = 0f;
     }
 
     [System.Serializable]
@@ -55,7 +88,6 @@ public class ForecastManager : MonoBehaviour
 
     private void Start()
     {
-
     }
 
     private void Awake()
@@ -114,20 +146,44 @@ public class ForecastManager : MonoBehaviour
                 categoryRisk[ev.category] = 0f;
 
             float avgLoss = (ev.minLossPercent + ev.maxLossPercent) * 0.5f;
-            categoryRisk[ev.category] += ev.probability * avgLoss;
+
+            // Convert probability to 0-1 scale
+            float probabilityFactor = ev.probability / 100f;
+
+            // Risk score
+            float eventRisk = probabilityFactor * avgLoss;
+
+            categoryRisk[ev.category] += eventRisk;
         }
-        foreach (var entry in categoryRisk)
+
+        List<ForecastCategory> riskyCategories = new List<ForecastCategory>(categoryRisk.Keys);
+
+        while (selectedForecasts.Count < articlesPerForecast && riskyCategories.Count > 0)
         {
-            AddArticlesForCategory(entry.Key, articlesPerForecast, upcomingSeason);
+            riskyCategories.Sort((a, b) => categoryRisk[b].CompareTo(categoryRisk[a]));
+            ForecastCategory category = riskyCategories[0];
+
+            AddArticlesForCategory(category, 1, upcomingSeason);
+
+            riskyCategories.RemoveAt(0);
         }
 
         CurrentForecast = new ForecastState();
+
+        // Default signal multipliers
+        CurrentForecast.signalRiskMultiplier[ForecastSignal.Neutral] = 1f;
+        CurrentForecast.signalRiskMultiplier[ForecastSignal.Dry] = 1f;
+        CurrentForecast.signalRiskMultiplier[ForecastSignal.Wet] = 1f;
+        CurrentForecast.signalRiskMultiplier[ForecastSignal.Heat] = 1f;
+        CurrentForecast.signalRiskMultiplier[ForecastSignal.Disease] = 1f;
+        CurrentForecast.signalRiskMultiplier[ForecastSignal.EconomicStress] = 1f;
+        CurrentForecast.signalRiskMultiplier[ForecastSignal.CrimeWave] = 1f;
 
         foreach (var entry in categoryRisk)
         {
             float normalizedRisk = Mathf.Clamp01(entry.Value / 100f);
 
-            float multiplier = 1f + (normalizedRisk * 1.5f);
+            float multiplier = Mathf.Lerp(0.8f, 1.6f, normalizedRisk);
 
             CurrentForecast.categoryRiskMultiplier[entry.Key] = multiplier;
         }
@@ -138,9 +194,42 @@ public class ForecastManager : MonoBehaviour
                 (ForecastCategory)Random.Range(0,
                     System.Enum.GetValues(typeof(ForecastCategory)).Length);
 
+            // Prevent duplicate categories
+            if (selectedForecasts.Exists(a => a.category == randomCategory))
+                continue;
+
             AddArticlesForCategory(randomCategory, 1, upcomingSeason);
         }
+
+        foreach (var article in selectedForecasts)
+        {
+            float intensityMultiplier = 1f;
+
+            switch (article.intensity)
+            {
+                case ForecastLines.ForecastIntensity.Mild:
+                    intensityMultiplier = 1.2f;
+                    break;
+
+                case ForecastLines.ForecastIntensity.Warning:
+                    intensityMultiplier = 1.4f;
+                    break;
+
+                case ForecastLines.ForecastIntensity.Severe:
+                    intensityMultiplier = 1.7f;
+                    break;
+            }
+
+            CurrentForecast.signalRiskMultiplier[article.signal] *= intensityMultiplier;
+        }
+
         Debug.Log($"[Forecast] Selected Count: {selectedForecasts.Count}");
+
+        if (selectedForecasts.Count > articlesPerForecast)
+        {
+            selectedForecasts = selectedForecasts.GetRange(0, articlesPerForecast);
+        }
+
         ShowForecast();
     }
 
@@ -202,22 +291,19 @@ public class ForecastManager : MonoBehaviour
 
     private void AddCategoryArticles(
     ForecastCategory category,
-    string[] lines,
+    ForecastLine[] lines,
     GameManager.Season season = GameManager.Season.Any)
     {
-        foreach (string line in lines)
+        foreach (ForecastLine line in lines)
         {
-            string[] parts = line.Split('\n');
-
-            if (parts.Length < 2)
-                continue;
-
             forecastLibrary.Add(new ForecastArticle
             {
                 category = category,
                 season = season,
-                headline = parts[0],
-                body = parts[1]
+                signal = line.signal,
+                intensity = line.intensity,
+                headline = line.headline,
+                body = line.body
             });
         }
     }
@@ -230,7 +316,7 @@ public class ForecastManager : MonoBehaviour
             !usedHeadlines.Contains(a.headline)
         );
 
-        pool.Sort((a, b) => Random.Range(-1, 2));
+        pool = pool.OrderBy(x => Random.value).ToList();
 
         for (int i = 0; i < Mathf.Min(count, pool.Count); i++)
         {

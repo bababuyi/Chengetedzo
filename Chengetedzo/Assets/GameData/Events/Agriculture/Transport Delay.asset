@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: Transport Delay
   m_EditorClassIdentifier: 
   eventName: Transport Delay
-  description: Crops spoil during transport.
+  description: Transport delays cause crops to spoil before reaching market.
   financialLesson: Logistics risks affect profit.
   category: 1
   pool: 1
-  requiredAsset: 3
+  requiredAsset: 2
   icon: {fileID: 0}
   probability: 3
   weight: 8
@@ -31,10 +31,11 @@ MonoBehaviour:
   cashReward: 0
   momentumReward: 0
   season: 0
+  signal: 0
   severity: 0
-  lossType: 0
+  lossType: 1
   fixedLossAmount: 0
   startsChain: 0
   followUpEvents: []
-  followUpChance: 0.5
-  followUpDelay: 1
+  followUpChance: 0
+  followUpDelay: 0

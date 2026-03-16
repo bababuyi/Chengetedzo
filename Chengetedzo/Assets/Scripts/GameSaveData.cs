@@ -22,4 +22,12 @@ public class GameSaveData
     public float totalInsurancePayoutAmount;
     public int forcedLoanCount;
     public int monthsUnderFinancialPressure;
+    public float loanBalance;
+    public float borrowingPower;
+    public float totalContributed;
+    public int monthsContributed;
+    public float repaymentRate;
+    public int missedPayments;
+    public int onTimePayments;
+    public bool loanUnlocked;
 }

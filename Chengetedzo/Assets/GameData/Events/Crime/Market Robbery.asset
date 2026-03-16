@@ -13,7 +13,9 @@ MonoBehaviour:
   m_Name: Market Robbery
   m_EditorClassIdentifier: 
   eventName: Market Robbery
-  description: Cash stolen at market.
+  description: 'Cash was stolen during a market transaction.
+
+'
   financialLesson: Diversifying cash storage matters.
   category: 4
   pool: 4
@@ -31,6 +33,7 @@ MonoBehaviour:
   cashReward: 0
   momentumReward: 0
   season: 0
+  signal: 6
   severity: 1
   lossType: 2
   fixedLossAmount: 300

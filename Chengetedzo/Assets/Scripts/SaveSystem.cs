@@ -9,7 +9,17 @@ public static class SaveSystem
     public static void SaveGame(GameManager gm)
     {
         GameSaveData data = new GameSaveData();
-
+        var loan = gm.loanManager;
+        if (loan != null)
+        {
+            data.loanBalance = loan.loanBalance;
+            data.borrowingPower = loan.borrowingPower;
+            data.totalContributed = loan.totalContributed;
+            data.monthsContributed = loan.monthsContributed;
+            data.repaymentRate = loan.repaymentRate;
+            data.missedPayments = loan.missedPayments;
+            data.onTimePayments = loan.onTimePayments;
+        }
         data.currentMonth = gm.currentMonth;
 
         data.cashOnHand = gm.financeManager.CashOnHand;

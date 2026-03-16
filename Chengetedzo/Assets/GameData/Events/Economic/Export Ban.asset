@@ -13,13 +13,13 @@ MonoBehaviour:
   m_Name: Export Ban
   m_EditorClassIdentifier: 
   eventName: Export Ban
-  description: Market access restricted.
+  description: Government policy blocks access to export markets.
   financialLesson: Policy risk affects income.
   category: 3
   pool: 2
   requiredAsset: 3
   icon: {fileID: 0}
-  probability: 3
+  probability: 6
   weight: 8
   minLossPercent: 0
   maxLossPercent: 0
@@ -31,10 +31,14 @@ MonoBehaviour:
   cashReward: 0
   momentumReward: 0
   season: 0
+  signal: 5
   severity: 2
   lossType: 1
   fixedLossAmount: 0
   startsChain: 1
-  followUpEvents: []
+  followUpEvents:
+  - {fileID: 11400000, guid: 312126b357e525c4d9e486647998caa5, type: 2}
+  - {fileID: 11400000, guid: 06c950880c847f4488c87685d951bab0, type: 2}
+  - {fileID: 11400000, guid: 424912d5c64832b4e9ee1a79e1792e76, type: 2}
   followUpChance: 0.5
   followUpDelay: 2

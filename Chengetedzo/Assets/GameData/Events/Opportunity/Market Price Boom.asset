@@ -13,13 +13,13 @@ MonoBehaviour:
   m_Name: Market Price Boom
   m_EditorClassIdentifier: 
   eventName: Market Price Boom
-  description: Crop prices rise.
+  description: Market prices suddenly rise, increasing profits.
   financialLesson: Market cycles create profit.
   category: 3
   pool: 5
-  requiredAsset: 3
+  requiredAsset: 5
   icon: {fileID: 0}
-  probability: 3
+  probability: 3.5
   weight: 6
   minLossPercent: 0
   maxLossPercent: 0
@@ -31,6 +31,7 @@ MonoBehaviour:
   cashReward: 200
   momentumReward: 10
   season: 0
+  signal: 0
   severity: 0
   lossType: 2
   fixedLossAmount: 0

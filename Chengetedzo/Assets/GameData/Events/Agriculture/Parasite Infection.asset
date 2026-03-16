@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Parasite Infection
   m_EditorClassIdentifier: 
   eventName: 'Parasite Infestation '
-  description: Parasites harm animals.
+  description: Parasites spread through the herd causing health problems.
   financialLesson: Preventive care saves money.
   category: 1
   pool: 1
@@ -21,8 +21,8 @@ MonoBehaviour:
   icon: {fileID: 0}
   probability: 4
   weight: 8
-  minLossPercent: 10
-  maxLossPercent: 20
+  minLossPercent: 5
+  maxLossPercent: 15
   affectsIncome: 1
   incomePercentChange: -10
   incomeEffectMonths: 2
@@ -31,10 +31,11 @@ MonoBehaviour:
   cashReward: 0
   momentumReward: 0
   season: 0
+  signal: 4
   severity: 0
-  lossType: 0
+  lossType: 1
   fixedLossAmount: 0
   startsChain: 0
   followUpEvents: []
-  followUpChance: 0.5
-  followUpDelay: 1
+  followUpChance: 0
+  followUpDelay: 0

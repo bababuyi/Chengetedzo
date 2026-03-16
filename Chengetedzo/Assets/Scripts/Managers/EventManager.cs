@@ -1,87 +1,20 @@
 using System.Collections.Generic;
 using UnityEngine;
+using static ForecastLines;
 using static GameManager;
 using static InsuranceManager;
+using static UnityEngine.ParticleSystem;
 
 public class EventManager : MonoBehaviour
 {
-    /*[System.Serializable]
+    [Header("Event Pressure System")]
 
-    public class MonthlyEvent
-    {
-        public ForecastManager.ForecastCategory category;
+    [SerializeField] private float eventPressure = 0f;
 
-        public GameManager.AssetRequirement requiredAsset;
+    [SerializeField] private float pressureIncreasePerMonth = 6f;
+    [SerializeField] private float maxPressure = 60f;
 
-        public string eventName;
-        public string description;
-
-        [Range(0, 100f)]
-        public float probability;
-
-        [Header("Insurance Impact")]
-        public List<InsuranceManager.InsuranceType> relatedInsurances
-         = new List<InsuranceManager.InsuranceType>();
-
-        [Header("Negative Event Impact")]
-        public int minLossPercent;
-        public int maxLossPercent;
-
-        [Header("Seasons")]
-        public Season season;
-
-        [Header("Income Impact")]
-        public bool affectsIncome = false;
-
-        // Positive = increase, Negative = decrease
-        [Range(-100f, 100f)]
-        public float incomePercentChange = 0f;
-
-        // Duration in months (0 = permanent)
-        public int incomeEffectMonths = 0;
-
-        public enum EventPool
-        {
-            Weather,
-            Agriculture,
-            Economic,
-            Health,
-            Crime,
-            Opportunity
-        }
-
-        [Header("Event Pool")]
-        public EventPool pool = EventPool.Weather;
-
-        [Range(1, 100)]
-        public int weight = 10;
-
-        public enum EventOutcomeType
-        {
-            Negative,
-            Positive
-        }
-
-        [Header("Outcome")]
-        public EventOutcomeType outcomeType = EventOutcomeType.Negative;
-
-        [Header("Positive Rewards")]
-        public float cashReward = 0f;
-        public float momentumReward = 0f;
-
-        public enum LossCalculationType
-        {
-            AssetValue,
-            CashOnHand,
-            FixedAmount
-        }
-
-        public LossCalculationType lossType = LossCalculationType.AssetValue;
-        public float fixedLossAmount = 0f;
-
-    }*/
-
-    [SerializeField] private int monthlyEventBudget = 160;
+    [SerializeField] private int monthlyEventBudget = 100;
     private HashSet<EventData> eventsTriggeredThisYear = new();
     private List<PendingEvent> pendingEvents = new List<PendingEvent>();
     private int remainingEventBudget;
@@ -93,7 +26,7 @@ public class EventManager : MonoBehaviour
         public int monthToTrigger;
     }
 
-    [SerializeField] private int maxEventsPerMonth = 3;
+    [SerializeField] private int maxEventsPerMonth = 2;
 
     [Header("Possible Events")]
     [SerializeField] private EventDatabase eventDatabase;
@@ -110,7 +43,7 @@ public class EventManager : MonoBehaviour
                 return 40;
 
             case EventSeverity.Major:
-                return 80;
+                return 120;
 
             default:
                 return 20;
@@ -119,7 +52,18 @@ public class EventManager : MonoBehaviour
 
     public List<ResolvedEvent> GenerateMonthlyEvents(int month)
     {
-        Debug.Log("GenerateMonthlyEvents CALLED");
+        if (GameManager.Instance.CurrentPhase != GameManager.GamePhase.Simulation)
+        {
+            Debug.LogWarning("Attempted to generate events outside Simulation phase.");
+            return new List<ResolvedEvent>();
+        }
+
+        eventPressure = Mathf.Min(eventPressure + pressureIncreasePerMonth, maxPressure);
+
+        Debug.Log(
+            $"[PRESSURE] Month: {month} | Pressure: {eventPressure:F1}/{maxPressure}"
+        );
+
         List<ResolvedEvent> results = new();
 
         if (month % 12 == 1)
@@ -139,15 +83,16 @@ public class EventManager : MonoBehaviour
             if (triggeredEventCount >= maxEventsPerMonth)
                 break;
 
+            if (GetEventCost(ev) > remainingEventBudget)
+                continue;
+
+            if (!PlayerOwnsRequiredAsset(ev))
+                continue;
+
             ResolveEvent(ev, month, results, ref disasterCount);
 
+            remainingEventBudget -= GetEventCost(ev);
             triggeredEventCount++;
-        }
-
-        if (GameManager.Instance.CurrentPhase != GameManager.GamePhase.Simulation)
-        {
-            Debug.LogWarning("Attempted to generate events outside Simulation phase.");
-            return new List<ResolvedEvent>();
         }
 
         Season currentSeason = GameManager.Instance.GetSeasonForMonth(month);
@@ -191,10 +136,10 @@ public class EventManager : MonoBehaviour
 
             EventData ev = GetWeightedEvent(pool.Value);
 
-            Debug.Log($"Event triggered: {ev.eventName}");
-
             if (ev == null)
                 continue;
+
+            Debug.Log($"[EVENT] {ev.eventName} | Severity: {ev.severity} | Pool: {ev.pool}");
 
             if (eventsTriggeredThisYear.Contains(ev))
                 continue;
@@ -205,16 +150,25 @@ public class EventManager : MonoBehaviour
                 continue;
 
             eventsTriggeredThisYear.Add(ev);
-
-            float adjustedProbability = ev.probability;
-            Debug.Log($"Checking event: {ev.eventName} with probability {adjustedProbability}");
+            float pressureMultiplier = Mathf.Lerp(1f, 1.6f, eventPressure / maxPressure);
+            float adjustedProbability = ev.probability * pressureMultiplier;
+            if (ev.severity == EventSeverity.Major)
+                adjustedProbability *= 0.75f;
 
             var forecast = GameManager.Instance.GetCurrentForecast();
 
-            if (forecast != null &&
-                forecast.categoryRiskMultiplier.TryGetValue(ev.category, out float multiplier))
+            if (forecast != null)
             {
-                adjustedProbability *= multiplier;
+                // Category influence
+                if (forecast.categoryRiskMultiplier.TryGetValue(ev.category, out float multiplier))
+                    adjustedProbability *= multiplier;
+
+                // Signal influence
+                var signal = ev.signal;
+
+                if (forecast.signalRiskMultiplier.TryGetValue(signal, out float signalMultiplier))
+                    adjustedProbability *= signalMultiplier;
+
             }
 
             if (Random.value * 100f > adjustedProbability)
@@ -236,10 +190,23 @@ public class EventManager : MonoBehaviour
             bool ownsRequiredAsset = ev.requiredAsset switch
             {
                 GameManager.AssetRequirement.None => true,
-                GameManager.AssetRequirement.House => GameManager.Instance.financeManager.assets.hasHouse,
-                GameManager.AssetRequirement.Motor => GameManager.Instance.financeManager.assets.hasMotor,
-                GameManager.AssetRequirement.Crops => GameManager.Instance.financeManager.assets.hasCrops,
-                GameManager.AssetRequirement.Livestock => GameManager.Instance.financeManager.assets.hasLivestock,
+
+                GameManager.AssetRequirement.House =>
+                    GameManager.Instance.financeManager.assets.hasHouse,
+
+                GameManager.AssetRequirement.Motor =>
+                    GameManager.Instance.financeManager.assets.hasMotor,
+
+                GameManager.AssetRequirement.Crops =>
+                    GameManager.Instance.financeManager.assets.hasCrops,
+
+                GameManager.AssetRequirement.Livestock =>
+                    GameManager.Instance.financeManager.assets.hasLivestock,
+
+                GameManager.AssetRequirement.CropsOrLivestock =>
+                    GameManager.Instance.financeManager.assets.hasCrops ||
+                    GameManager.Instance.financeManager.assets.hasLivestock,
+
                 _ => false
             };
 
@@ -249,6 +216,8 @@ public class EventManager : MonoBehaviour
             remainingEventBudget -= eventCost;
 
             triggeredEventCount++;
+            if (ev.severity != EventSeverity.Minor)
+                eventPressure = 0f;
 
             // ---------------- POSITIVE EVENT ----------------
             if (ev.outcomeType == EventOutcomeType.Positive)
@@ -287,14 +256,25 @@ public class EventManager : MonoBehaviour
                 continue;
             }
 
-            float intendedLoss = Random.Range(ev.minLossPercent, ev.maxLossPercent + 1);
+            float lossPercent = Random.Range(ev.minLossPercent, ev.maxLossPercent + 1);
 
-            float income = GameManager.Instance.financeManager.CashOnHand;
+            float cash = GameManager.Instance.financeManager.CashOnHand;
 
-            if (income < 2000)
-                intendedLoss *= 0.6f;
-            else if (income < 4000)
-                intendedLoss *= 0.8f;
+            if (cash < 2000)
+                lossPercent *= 0.6f;
+            else if (cash < 4000)
+                lossPercent *= 0.8f;
+
+            float intendedLoss = GameManager.Instance.financeManager
+                .CalculateEventLoss(ev, lossPercent);
+
+            Debug.Log(
+            $"[LOSS CALC] Event: {ev.eventName} | " +
+            $"Severity: {ev.severity} | " +
+            $"LossPercent: {lossPercent:F1}% | " +
+            $"CalculatedLoss: {intendedLoss:F0} | " +
+            $"CashBefore: {GameManager.Instance.financeManager.CashOnHand:F0}"
+            );
 
             float payout = 0f;
             float finalLoss = 0f;
@@ -302,11 +282,17 @@ public class EventManager : MonoBehaviour
             if (ev.insuranceType != InsuranceType.None)
             {
                 InsuranceManager.InsuranceResult result =
-                    GameManager.Instance.insuranceManager
-                        .HandleEvent(ev.insuranceType, intendedLoss, ev.lossType, ev.fixedLossAmount);
+                GameManager.Instance.insuranceManager
+                .HandleEvent(ev.insuranceType, intendedLoss);
 
                 payout += result.payout;
                 finalLoss = result.finalLoss;
+                Debug.Log(
+                $"[INSURANCE] Event: {ev.eventName} | " +
+                $"Type: {ev.insuranceType} | " +
+                $"Payout: {result.payout:F0} | " +
+                $"FinalPlayerLoss: {result.finalLoss:F0}"
+                );
 
                 if (result.waitingPeriodBlocked)
                     Debug.Log("Claim blocked: waiting period.");
@@ -330,10 +316,17 @@ public class EventManager : MonoBehaviour
                 title = ev.eventName,
                 description = ev.description,
                 type = InsuranceManager.InsuranceType.None,
-                lossPercent = intendedLoss,
+                lossPercent = lossPercent,
                 moneyChange = -finalLoss,
                 insurancePayout = payout
             });
+
+            Debug.Log(
+            $"[FINANCIAL RESULT] Event: {ev.eventName} | " +
+            $"PlayerLoss: {finalLoss:F0} | " +
+            $"InsurancePayout: {payout:F0} | " +
+            $"NetImpact: {-finalLoss + payout:F0}"
+            );
 
             TryScheduleFollowUp(ev, month);
 
@@ -344,15 +337,22 @@ public class EventManager : MonoBehaviour
                     ev.incomeEffectMonths
                 );
             }
+
+            Debug.Log(
+                $"[INCOME EFFECT] Event: {ev.eventName} | " +
+                $"IncomeChange: {ev.incomePercentChange}% | " +
+                $"Duration: {ev.incomeEffectMonths} months"
+            );
         }
 
-        if (triggeredEventCount == 0)
+        if (triggeredEventCount == 0 && Random.value < 0.35f + (eventPressure / maxPressure) * 0.4f)
         {
-            var fallback = GetWeightedEvent(eligibleEvents);
+            var fallback = GetWeightedEvent(eligibleEvents.FindAll(e => !eventsTriggeredThisYear.Contains(e)));
 
             if (fallback != null && Random.value < 0.5f)
             {
                 ResolveEvent(fallback, month, results, ref disasterCount);
+                eventPressure = 0f;
             }
         }
 
@@ -383,7 +383,26 @@ public class EventManager : MonoBehaviour
         if (ev.followUpEvents == null || ev.followUpEvents.Count == 0)
             return;
 
-        if (Random.value > ev.followUpChance)
+        float adjustedChance = ev.followUpChance;
+
+        switch (ev.severity)
+        {
+            case EventSeverity.Minor:
+                adjustedChance *= 0.7f;
+                break;
+
+            case EventSeverity.Moderate:
+                adjustedChance *= 1f;
+                break;
+
+            case EventSeverity.Major:
+                adjustedChance *= 1.25f;
+                break;
+        }
+
+        adjustedChance = Mathf.Clamp01(adjustedChance);
+
+        if (Random.value > adjustedChance)
             return;
 
         EventData next = ev.followUpEvents[Random.Range(0, ev.followUpEvents.Count)];
@@ -395,6 +414,10 @@ public class EventManager : MonoBehaviour
         };
 
         pendingEvents.Add(pending);
+        Debug.Log(
+            $"[CHAIN EVENT] {ev.eventName} triggered follow-up: {next.eventName} " +
+            $"in {ev.followUpDelay} months"
+        );
     }
 
     private EventData GetWeightedEvent(List<EventData> events)
@@ -429,6 +452,13 @@ public class EventManager : MonoBehaviour
         {
             float gained = ev.cashReward;
 
+            Debug.Log(
+            $"[POSITIVE EVENT] {ev.eventName} | " +
+            $"Reward: {gained:F0} | " +
+            $"Momentum: {ev.momentumReward} | " +
+            $"IncomeChange: {ev.incomePercentChange}% for {ev.incomeEffectMonths} months"
+            );
+
             if (gained > 0f)
                 GameManager.Instance.ApplyMoneyChange(
                     FinancialEntry.EntryType.EventReward,
@@ -461,7 +491,11 @@ public class EventManager : MonoBehaviour
             return;
         }
 
-        float intendedLoss = Random.Range(ev.minLossPercent, ev.maxLossPercent + 1);
+        float lossPercent = Random.Range(ev.minLossPercent, ev.maxLossPercent + 1);
+
+float intendedLoss = GameManager.Instance.financeManager
+    .CalculateEventLoss(ev, lossPercent);
+
 
         float income = GameManager.Instance.financeManager.CashOnHand;
 
@@ -471,7 +505,7 @@ public class EventManager : MonoBehaviour
             intendedLoss *= 0.8f;
 
         var result = GameManager.Instance.insuranceManager
-        .HandleEvent(ev.insuranceType, intendedLoss, ev.lossType, ev.fixedLossAmount);
+        .HandleEvent(ev.insuranceType, intendedLoss);
 
         float payout = result.payout;
         float finalLoss = result.finalLoss;
@@ -491,12 +525,38 @@ public class EventManager : MonoBehaviour
             title = ev.eventName,
             description = ev.description,
             type = ev.insuranceType,
-            lossPercent = intendedLoss,
+            lossPercent = lossPercent,
             moneyChange = -finalLoss,
             insurancePayout = payout
         });
 
         TryScheduleFollowUp(ev, month);
+    }
+
+    private bool PlayerOwnsRequiredAsset(EventData ev)
+    {
+        return ev.requiredAsset switch
+        {
+            GameManager.AssetRequirement.None => true,
+
+            GameManager.AssetRequirement.House =>
+                GameManager.Instance.financeManager.assets.hasHouse,
+
+            GameManager.AssetRequirement.Motor =>
+                GameManager.Instance.financeManager.assets.hasMotor,
+
+            GameManager.AssetRequirement.Crops =>
+                GameManager.Instance.financeManager.assets.hasCrops,
+
+            GameManager.AssetRequirement.Livestock =>
+                GameManager.Instance.financeManager.assets.hasLivestock,
+
+            GameManager.AssetRequirement.CropsOrLivestock =>
+                GameManager.Instance.financeManager.assets.hasCrops ||
+                GameManager.Instance.financeManager.assets.hasLivestock,
+
+            _ => false
+        };
     }
 
     public void ResetAll()

@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: Equipment Theft
   m_EditorClassIdentifier: 
   eventName: Equipment Theft
-  description: Tools stolen.
+  description: Farming equipment was stolen when you weren't present.
   financialLesson: Asset insurance protects property.
   category: 4
   pool: 4
-  requiredAsset: 2
+  requiredAsset: 5
   icon: {fileID: 0}
   probability: 4
   weight: 10
@@ -26,13 +26,14 @@ MonoBehaviour:
   affectsIncome: 0
   incomePercentChange: 0
   incomeEffectMonths: 0
-  insuranceType: 6
+  insuranceType: 8
   outcomeType: 0
   cashReward: 0
   momentumReward: 0
   season: 0
+  signal: 6
   severity: 1
-  lossType: 0
+  lossType: 2
   fixedLossAmount: 0
   startsChain: 0
   followUpEvents: []

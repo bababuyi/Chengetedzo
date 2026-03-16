@@ -114,11 +114,6 @@ public class UIManager : MonoBehaviour
 
         callback?.Invoke();
     }
-    public int TotalUnexpectedEvents;
-    public int InsuredEventsCount;
-    public float TotalInsurancePayoutAmount;
-    public int ForcedLoanCount;
-    public int MonthsUnderFinancialPressure;
 
     public enum UIPanelState
     {
@@ -176,25 +171,14 @@ public class UIManager : MonoBehaviour
     }
 
     // Hides all simulation and flow panels (does NOT hide setup, top HUD, or popups)
-    private void HideAllPanelsInternal()
-    {
-        setupPanel.SetActive(false);
-        budgetPanel.SetActive(false);
-        forecastPanel.SetActive(false);
-        insurancePanel.SetActive(false);
-        loanPanel.SetActive(false);
-        reportPanel.SetActive(false);
-        endOfYearScreen.SetActive(false);
-    }
-
-    public void HideAllPanels()
+    private void HideAllPanels()
     {
         if (setupPanel != null) setupPanel.SetActive(false);
+        if (budgetPanel != null) budgetPanel.SetActive(false);
         if (forecastPanel != null) forecastPanel.SetActive(false);
         if (insurancePanel != null) insurancePanel.SetActive(false);
         if (loanPanel != null) loanPanel.SetActive(false);
         if (reportPanel != null) reportPanel.SetActive(false);
-        if (budgetPanel != null) budgetPanel.SetActive(false);
         if (endOfYearScreen != null) endOfYearScreen.SetActive(false);
     }
 
@@ -239,7 +223,7 @@ public class UIManager : MonoBehaviour
         if (IsPopupActive && activePopup != eventPopup)
             CloseActivePopup();
 
-        HideAllPanelsInternal();
+        HideAllPanels();
 
         currentPanelState = newState;
 
@@ -304,18 +288,12 @@ public class UIManager : MonoBehaviour
 
     public void ShowReportPanel(string reportText)
     {
+        // Use the proper close path so all tracked state is cleared
         if (IsPopupActive)
             CloseActivePopup();
 
-        eventPopup?.SetActive(false);
-        mentorPopup?.SetActive(false);
-        IsPopupActive = false;
-
         SwitchPanel(UIPanelState.Report);
         monthlyReportText.text = reportText;
-
-        Debug.Log("Entering Report Phase.");
-        Debug.Log("IsPopupActive at report: " + IsPopupActive);
     }
 
     public void ShowEventPopup(string title, string description, Sprite icon = null)
@@ -428,12 +406,6 @@ public class UIManager : MonoBehaviour
             mentorContinueButton,
             onClose
         );
-    }
-
-    private void CloseMentorPopup()
-    {
-        mentorPopup.SetActive(false);
-        IsPopupActive = false;
     }
 
     public void ShowLoanPanel()

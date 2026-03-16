@@ -27,18 +27,15 @@ public class WindScroller : MonoBehaviour
     {
         while (true)
         {
-            // 20%-40% chance no wind appears for a few seconds
+            yield return new WaitForSeconds(Random.Range(3f, 8f));
+
             if (Random.value < 0.3f)
             {
                 gameObject.SetActive(false);
                 yield return new WaitForSeconds(Random.Range(2f, 5f));
                 gameObject.SetActive(true);
-
-                // Reset position each time wind starts again
                 ResetPositionRandomSide();
             }
-
-            yield return null;
         }
     }
 

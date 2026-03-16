@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: Storage Break-In
   m_EditorClassIdentifier: 
   eventName: Storage Break-In
-  description: Stored goods stolen.
+  description: Stored goods are stolen from your storage facilities.
   financialLesson: Security investment reduces risk.
   category: 4
   pool: 4
-  requiredAsset: 3
+  requiredAsset: 5
   icon: {fileID: 0}
   probability: 3
   weight: 8
@@ -31,6 +31,7 @@ MonoBehaviour:
   cashReward: 0
   momentumReward: 0
   season: 0
+  signal: 6
   severity: 0
   lossType: 0
   fixedLossAmount: 0

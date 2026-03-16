@@ -13,24 +13,26 @@ MonoBehaviour:
   m_Name: Medication Costs
   m_EditorClassIdentifier: 
   eventName: Medication Costs
-  description: Long term medicine required.
+  description: A family member has been diagnosed with a serious ailments and will
+    need long term healthcare
   financialLesson: Chronic illness increases expenses.
   category: 0
   pool: 3
   requiredAsset: 0
   icon: {fileID: 0}
-  probability: 3
+  probability: 20
   weight: 8
   minLossPercent: 0
   maxLossPercent: 0
-  affectsIncome: 0
-  incomePercentChange: 0
-  incomeEffectMonths: 0
+  affectsIncome: 1
+  incomePercentChange: -5
+  incomeEffectMonths: 6
   insuranceType: 2
   outcomeType: 0
   cashReward: 0
   momentumReward: 0
   season: 0
+  signal: 4
   severity: 0
   lossType: 2
   fixedLossAmount: 150

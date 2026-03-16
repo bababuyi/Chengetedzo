@@ -13,14 +13,14 @@ MonoBehaviour:
   m_Name: Currency Depreciation
   m_EditorClassIdentifier: 
   eventName: Currency Depreciation
-  description: Import costs rise.
+  description: Currency weakness raises the cost of imports.
   financialLesson: Currency risk affects markets.
   category: 3
   pool: 2
   requiredAsset: 0
   icon: {fileID: 0}
-  probability: 3
-  weight: 8
+  probability: 8
+  weight: 6
   minLossPercent: 0
   maxLossPercent: 0
   affectsIncome: 1
@@ -31,10 +31,11 @@ MonoBehaviour:
   cashReward: 0
   momentumReward: 0
   season: 0
+  signal: 5
   severity: 0
   lossType: 1
   fixedLossAmount: 0
   startsChain: 0
   followUpEvents: []
-  followUpChance: 0.5
-  followUpDelay: 1
+  followUpChance: 0
+  followUpDelay: 0

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Fraud Scam
   m_EditorClassIdentifier: 
   eventName: Fraud Scam
-  description: Player loses money.
+  description: A scam results in unexpected financial loss.
   financialLesson: Financial literacy prevents fraud.
   category: 4
   pool: 4
@@ -31,10 +31,12 @@ MonoBehaviour:
   cashReward: 0
   momentumReward: 0
   season: 0
+  signal: 6
   severity: 1
   lossType: 2
-  fixedLossAmount: 250
-  startsChain: 0
-  followUpEvents: []
-  followUpChance: 0
-  followUpDelay: 0
+  fixedLossAmount: 500
+  startsChain: 1
+  followUpEvents:
+  - {fileID: 11400000, guid: 1aa31a6b6b23c5e49be2172a13e957fc, type: 2}
+  followUpChance: 0.4
+  followUpDelay: 1

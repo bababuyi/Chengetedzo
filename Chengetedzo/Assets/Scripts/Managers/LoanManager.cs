@@ -19,15 +19,21 @@ public class LoanManager : MonoBehaviour
     public int missedPayments = 0;
     public int onTimePayments = 0;
 
-    //public bool PaidThisMonth { get; private set; }
+    // Tracks whether the player has ever unlocked the loan system (3 months contributed)
     private bool loanUnlocked = false;
+
+    // True once unlocked, stays true even if borrowing power is temporarily 0
+    public bool IsLoanUnlocked => loanUnlocked;
+
+    // True only when there's actually something to borrow
+    public bool CanForceLoan => loanUnlocked && borrowingPower > 0f;
 
     public bool ContributedThisMonth { get; private set; }
     public bool RepaidThisMonth { get; private set; }
 
     public bool BorrowedThisMonth { get; private set; }
-    public bool IsLoanUnlocked => borrowingPower > 0f;
-    public bool CanForceLoan => IsLoanUnlocked && borrowingPower > 0f;
+    //public bool IsLoanUnlocked => borrowingPower > 0f;
+    //public bool CanForceLoan => IsLoanUnlocked && borrowingPower > 0f;
 
     public void ProcessContribution()
     {
@@ -95,12 +101,14 @@ public class LoanManager : MonoBehaviour
         if (GameManager.Instance.financeManager.CashOnHand >= repayment)
         {
             GameManager.Instance.ApplyMoneyChange(
-            FinancialEntry.EntryType.LoanRepayment,
-            "Loan Repayment",
-            repayment,
-            false
+                FinancialEntry.EntryType.LoanRepayment,
+                "Loan Repayment",
+                repayment,
+                false
             );
+
             loanBalance -= repayment;
+            loanBalance = Mathf.Max(0f, loanBalance); // guard against float drift
 
             onTimePayments++;
             RepaidThisMonth = true;
@@ -111,12 +119,14 @@ public class LoanManager : MonoBehaviour
             if (onTimePayments == 2)
             {
                 UIManager.Instance.ShowMentorMessage(
-                    MentorLines.LoanRecovery[
-                        Random.Range(0, MentorLines.LoanRecovery.Length)
-                    ]);
+                    MentorLines.LoanRecovery[Random.Range(0, MentorLines.LoanRecovery.Length)]
+                );
             }
 
             Debug.Log($"[Loan] Repayment: ${repayment:F0}");
+
+            // Recalculate now that loanBalance has changed
+            UpdateBorrowingPower();
         }
         else
         {
@@ -126,24 +136,24 @@ public class LoanManager : MonoBehaviour
 
     private void UpdateBorrowingPower()
     {
-        float previousPower = borrowingPower;
+        if (monthsContributed < 3)
+        {
+            borrowingPower = 0f;
+            return;
+        }
 
-        if (monthsContributed < 3) borrowingPower = 0f;
-        //else if (monthsContributed == 3) borrowingPower = totalContributed;
-        //else if (monthsContributed == 4) borrowingPower = totalContributed * 1.5f;
-        //else borrowingPower = totalContributed * 2f;
+        float gross = monthsContributed switch
+        {
+            3 => totalContributed,
+            4 => totalContributed * 1.5f,
+            _ => totalContributed * 2f
+        };
 
-        else if (monthsContributed == 3) borrowingPower = totalContributed;
-        else if (monthsContributed == 4) borrowingPower = totalContributed * 1.5f;
-        else borrowingPower = totalContributed * 2f;
-
-        borrowingPower = Mathf.Max(0f, borrowingPower - loanBalance);
-
+        borrowingPower = Mathf.Max(0f, gross - loanBalance);
 
         if (!loanUnlocked && borrowingPower > 0f)
         {
             loanUnlocked = true;
-
             UIManager.Instance.ShowLoanTopButton();
         }
     }

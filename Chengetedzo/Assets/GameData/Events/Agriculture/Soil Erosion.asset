@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
+  m_Name: Soil Erosion
+  m_EditorClassIdentifier: 
+  eventName: 'Soil Erosion '
+  description: Floodwaters wash away fertile topsoil from farmland.
+  financialLesson: Soil protection is critical for long term farming
+  category: 5
+  pool: 0
+  requiredAsset: 3
+  icon: {fileID: 0}
+  probability: 25
+  weight: 2
+  minLossPercent: 10
+  maxLossPercent: 20
+  affectsIncome: 1
+  incomePercentChange: -15
+  incomeEffectMonths: 3
+  insuranceType: 0
+  outcomeType: 0
+  cashReward: 0
+  momentumReward: -1
+  season: 1
+  signal: 2
+  severity: 1
+  lossType: 2
+  fixedLossAmount: 150
+  startsChain: 0
+  followUpEvents: []
+  followUpChance: 0.5
+  followUpDelay: 1

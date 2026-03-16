@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Feed Contamination
   m_EditorClassIdentifier: 
   eventName: 'Feed Contamination '
-  description: 'Livestock feed causes illness.
+  description: 'Contaminated feed causes illness among animals.
 
 '
   financialLesson: Supply chains carry risks.
@@ -33,10 +33,11 @@ MonoBehaviour:
   cashReward: 0
   momentumReward: 0
   season: 0
+  signal: 4
   severity: 1
   lossType: 0
   fixedLossAmount: 0
   startsChain: 0
   followUpEvents: []
-  followUpChance: 0.5
-  followUpDelay: 1
+  followUpChance: 0
+  followUpDelay: 0

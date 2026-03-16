@@ -13,13 +13,13 @@ MonoBehaviour:
   m_Name: Government Grant
   m_EditorClassIdentifier: 
   eventName: Government Grant
-  description: Small grant awarded.
+  description: A small government grant supports your operations.
   financialLesson: Opportunities reward preparation.
   category: 3
   pool: 5
-  requiredAsset: 3
+  requiredAsset: 5
   icon: {fileID: 0}
-  probability: 3
+  probability: 3.5
   weight: 6
   minLossPercent: 0
   maxLossPercent: 0
@@ -31,6 +31,7 @@ MonoBehaviour:
   cashReward: 500
   momentumReward: 15
   season: 0
+  signal: 0
   severity: 0
   lossType: 2
   fixedLossAmount: 0

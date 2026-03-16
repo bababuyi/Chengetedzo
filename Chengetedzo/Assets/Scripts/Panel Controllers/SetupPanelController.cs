@@ -128,8 +128,8 @@ public class SetupPanelController : MonoBehaviour
             hasCrops = hasCropsToggle.isOn
         };
 
-        if (InsuranceManager.Instance != null)
-            InsuranceManager.Instance.RefreshEligibility();
+        if (GameManager.Instance.insuranceManager != null)
+            GameManager.Instance.insuranceManager.RefreshEligibility();
     }
 
     private void LockSetupUI()
@@ -280,22 +280,19 @@ public class SetupPanelController : MonoBehaviour
             return;
         }
 
+        if (!ValidateFullSetup())
+            return;
+
         GameManager gm = GameManager.Instance;
 
-        ConfirmSetup();
-        LockSetupUI();
-
-        // Save setup data
         gm.setupData.minIncome = float.Parse(minIncomeInput.text);
         gm.setupData.maxIncome = float.Parse(maxIncomeInput.text);
         gm.setupData.isIncomeStable = stableIncomeToggle.isOn;
 
         int totalAdults = 1;
         int totalChildren = 0;
-
         if (!int.TryParse(adultsInput.text, out totalAdults) || totalAdults < 1)
             totalAdults = 1;
-
         if (!int.TryParse(childrenInput.text, out totalChildren) || totalChildren < 0)
             totalChildren = 0;
 
@@ -306,22 +303,14 @@ public class SetupPanelController : MonoBehaviour
         if (schoolFeesToggle.isOn)
             gm.setupData.schoolFeesAmount = float.Parse(schoolFeesAmountInput.text);
 
-        FinanceManager finance = GameManager.Instance.financeManager;
+        ConfirmSetup();
+        LockSetupUI();
 
-        // Apply expense choices FIRST
+        FinanceManager finance = gm.financeManager;
         expensesPanelController.ApplyExpensesToFinance(finance);
-
-        // Initialize finance (income, starting cash)
         finance.InitializeFromSetup();
 
-        // SHOW BUDGET PANEL (do NOT start simulation yet)
-        GameManager.Instance.BeginBudgetSetup();
-
-        if (expensesPanelController != null)
-            expensesPanelController.ApplyExpensesToFinance(finance);
-
-        if (!ValidateFullSetup())
-            return;
+        gm.BeginBudgetSetup();
     }
 
     private void BuildReviewSummary()
@@ -423,6 +412,9 @@ public class SetupPanelController : MonoBehaviour
         stableIncomeToggle?.onValueChanged.RemoveAllListeners();
         schoolFeesToggle?.onValueChanged.RemoveAllListeners();
         hasHouseToggle?.onValueChanged.RemoveAllListeners();
+        hasLivestockToggle?.onValueChanged.RemoveAllListeners();
+        hasMotorToggle?.onValueChanged.RemoveAllListeners();
+        hasCropsToggle?.onValueChanged.RemoveAllListeners();
         minIncomeInput?.onValueChanged.RemoveAllListeners();
         adultsInput?.onEndEdit.RemoveAllListeners();
     }
@@ -462,7 +454,7 @@ public class SetupPanelController : MonoBehaviour
             hasCrops = hasCropsToggle.isOn
         };
 
-        if (InsuranceManager.Instance != null)
-            InsuranceManager.Instance.RefreshEligibility();
+        if (GameManager.Instance.insuranceManager != null)
+            GameManager.Instance.insuranceManager.RefreshEligibility();
     }
 }

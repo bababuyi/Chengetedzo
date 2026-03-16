@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
+  m_Name: Storage Pressure
+  m_EditorClassIdentifier: 
+  eventName: 'Storage Pressure '
+  description: Excess production creates costly storage demands.
+  financialLesson: Supply shocks can create logistical costs
+  category: 3
+  pool: 1
+  requiredAsset: 5
+  icon: {fileID: 0}
+  probability: 6
+  weight: 2
+  minLossPercent: 5
+  maxLossPercent: 15
+  affectsIncome: 0
+  incomePercentChange: 0
+  incomeEffectMonths: 0
+  insuranceType: 0
+  outcomeType: 0
+  cashReward: 0
+  momentumReward: 0
+  season: 0
+  signal: 5
+  severity: 0
+  lossType: 1
+  fixedLossAmount: 120
+  startsChain: 0
+  followUpEvents: []
+  followUpChance: 0
+  followUpDelay: 0

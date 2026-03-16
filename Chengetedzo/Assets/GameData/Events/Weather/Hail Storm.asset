@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: Hail Storm
   m_EditorClassIdentifier: 
   eventName: Hail storm
-  description: Hail destroys crops.
+  description: A violent hailstorm batters fields, destroying crops.
   financialLesson: Insurance is even more important during rough weather
-  category: 0
+  category: 5
   pool: 0
   requiredAsset: 3
   icon: {fileID: 0}
@@ -31,10 +31,11 @@ MonoBehaviour:
   cashReward: 0
   momentumReward: 0
   season: 2
+  signal: 2
   severity: 1
   lossType: 0
   fixedLossAmount: 0
   startsChain: 0
   followUpEvents: []
-  followUpChance: 0.5
-  followUpDelay: 1
+  followUpChance: 0
+  followUpDelay: 0

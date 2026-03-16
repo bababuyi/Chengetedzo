@@ -13,16 +13,16 @@ MonoBehaviour:
   m_Name: Strong Winds
   m_EditorClassIdentifier: 
   eventName: Strong Winds
-  description: High winds damage buildings.
+  description: Powerful winds damage buildings and exposed equipment.
   financialLesson: 'Weather preparedness reduces losses.
 
 '
   category: 5
   pool: 0
-  requiredAsset: 1
+  requiredAsset: 0
   icon: {fileID: 0}
   probability: 4
-  weight: 8
+  weight: 10
   minLossPercent: 5
   maxLossPercent: 15
   affectsIncome: 0
@@ -33,10 +33,11 @@ MonoBehaviour:
   cashReward: 0
   momentumReward: 0
   season: 0
+  signal: 0
   severity: 0
   lossType: 0
   fixedLossAmount: 0
   startsChain: 0
   followUpEvents: []
-  followUpChance: 0.5
-  followUpDelay: 1
+  followUpChance: 0
+  followUpDelay: 0

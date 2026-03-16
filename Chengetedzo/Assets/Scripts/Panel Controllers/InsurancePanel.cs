@@ -115,8 +115,6 @@ public class InsurancePanel : MonoBehaviour
 
     public void ConfirmInsurance()
     {
-        Debug.Log("Current Phase: " + GameManager.Instance.CurrentPhase);
-
         if (GameManager.Instance == null)
             return;
 

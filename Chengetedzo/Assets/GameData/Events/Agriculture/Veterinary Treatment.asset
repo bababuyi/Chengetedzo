@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
+  m_Name: Veterinary Treatment
+  m_EditorClassIdentifier: 
+  eventName: 'Veterinary Treatment '
+  description: 'Sick animals require veterinary care
+
+'
+  financialLesson: Animal health issues require quick action
+  category: 1
+  pool: 1
+  requiredAsset: 4
+  icon: {fileID: 0}
+  probability: 6
+  weight: 4
+  minLossPercent: 5
+  maxLossPercent: 10
+  affectsIncome: 0
+  incomePercentChange: 0
+  incomeEffectMonths: 1
+  insuranceType: 8
+  outcomeType: 0
+  cashReward: 0
+  momentumReward: -1
+  season: 0
+  signal: 4
+  severity: 1
+  lossType: 1
+  fixedLossAmount: 200
+  startsChain: 0
+  followUpEvents: []
+  followUpChance: 0
+  followUpDelay: 0

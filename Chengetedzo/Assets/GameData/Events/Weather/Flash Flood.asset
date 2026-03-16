@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Flash Flood
   m_EditorClassIdentifier: 
   eventName: Flash Flood
-  description: Sudden flooding damages property.
+  description: Sudden flooding sweeps through the area, damaging property.
   financialLesson: 'Flood protection is critical.
 
 '
@@ -22,7 +22,7 @@ MonoBehaviour:
   requiredAsset: 1
   icon: {fileID: 0}
   probability: 4
-  weight: 10
+  weight: 8
   minLossPercent: 10
   maxLossPercent: 25
   affectsIncome: 0
@@ -33,10 +33,13 @@ MonoBehaviour:
   cashReward: 0
   momentumReward: 0
   season: 1
+  signal: 2
   severity: 2
   lossType: 0
   fixedLossAmount: 0
   startsChain: 1
-  followUpEvents: []
+  followUpEvents:
+  - {fileID: 11400000, guid: e56120e73eb493f48b2cb5f5523c175e, type: 2}
+  - {fileID: 11400000, guid: a32c7f69bf1ae80479d02da1876190ae, type: 2}
   followUpChance: 0.5
   followUpDelay: 1

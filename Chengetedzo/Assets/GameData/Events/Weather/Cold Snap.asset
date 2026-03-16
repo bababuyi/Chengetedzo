@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: Cold Snap
   m_EditorClassIdentifier: 
   eventName: Cold snap
-  description: Sudden cold damages crops.
+  description: A sudden freeze damages vulnerable crops.
   financialLesson: Seasonal risk planning matters.
-  category: 0
+  category: 5
   pool: 0
   requiredAsset: 3
   icon: {fileID: 0}
@@ -31,10 +31,11 @@ MonoBehaviour:
   cashReward: 0
   momentumReward: 0
   season: 2
+  signal: 0
   severity: 1
   lossType: 0
   fixedLossAmount: 0
   startsChain: 0
   followUpEvents: []
-  followUpChance: 0.5
-  followUpDelay: 1
+  followUpChance: 0
+  followUpDelay: 0

@@ -13,14 +13,14 @@ MonoBehaviour:
   m_Name: Lightning Strike
   m_EditorClassIdentifier: 
   eventName: Lightning Strike
-  description: Lightning damages property.
+  description: A lightning strike damages equipment or structures.
   financialLesson: Rare events still carry risk.
   category: 5
   pool: 0
   requiredAsset: 0
   icon: {fileID: 0}
   probability: 3
-  weight: 8
+  weight: 6
   minLossPercent: 5
   maxLossPercent: 10
   affectsIncome: 0
@@ -31,10 +31,11 @@ MonoBehaviour:
   cashReward: 0
   momentumReward: 0
   season: 1
+  signal: 2
   severity: 0
   lossType: 0
   fixedLossAmount: 0
   startsChain: 0
   followUpEvents: []
-  followUpChance: 0.5
-  followUpDelay: 1
+  followUpChance: 0
+  followUpDelay: 0

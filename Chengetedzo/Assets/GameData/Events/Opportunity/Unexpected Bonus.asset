@@ -13,13 +13,13 @@ MonoBehaviour:
   m_Name: Unexpected Bonus
   m_EditorClassIdentifier: 
   eventName: Unexpected Bonus
-  description: Unexpected extra income.
+  description: An unexpected payment improves your finances.
   financialLesson: Saving windfalls builds resilience.
   category: 3
   pool: 5
   requiredAsset: 0
   icon: {fileID: 0}
-  probability: 3
+  probability: 3.5
   weight: 6
   minLossPercent: 0
   maxLossPercent: 0
@@ -31,6 +31,7 @@ MonoBehaviour:
   cashReward: 300
   momentumReward: 12
   season: 0
+  signal: 0
   severity: 0
   lossType: 2
   fixedLossAmount: 0

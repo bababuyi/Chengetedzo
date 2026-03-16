@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using static ForecastManager;
 using static GameManager;
 using static InsuranceManager;
 
@@ -55,6 +56,7 @@ public class EventData : ScriptableObject
 
     [Header("Season")]
     public Season season = Season.Any;
+    public ForecastSignal signal;
 
     [Header("Severity")]
     public EventSeverity severity;

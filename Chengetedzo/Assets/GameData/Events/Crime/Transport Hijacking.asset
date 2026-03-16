@@ -13,16 +13,16 @@ MonoBehaviour:
   m_Name: Transport Hijacking
   m_EditorClassIdentifier: 
   eventName: Transport Hijacking
-  description: Goods stolen in transit.
+  description: Goods are stolen while being transported to market.
   financialLesson: Transport security matters.
   category: 4
   pool: 4
-  requiredAsset: 0
+  requiredAsset: 5
   icon: {fileID: 0}
   probability: 2
   weight: 6
   minLossPercent: 10
-  maxLossPercent: 30
+  maxLossPercent: 25
   affectsIncome: 0
   incomePercentChange: 0
   incomeEffectMonths: 0
@@ -31,6 +31,7 @@ MonoBehaviour:
   cashReward: 0
   momentumReward: 0
   season: 0
+  signal: 6
   severity: 2
   lossType: 0
   fixedLossAmount: 0

@@ -104,7 +104,7 @@ public static class MentorLines
     "You’re responding instead of avoiding."
     };
     
-    public static string[] PatternWarning =
+    public static readonly string[] PatternWarning =
     {
     "This isn’t a single bad month anymore. A pattern is starting to form.",
     "Small choices repeat quietly — until they don’t feel small anymore.",
