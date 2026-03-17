@@ -442,10 +442,6 @@ public class FinanceManager : MonoBehaviour
 
     private void UpdateHUD()
     {
-        Debug.Log("Updating HUD with: " + cashOnHand);
-        Debug.Log("UIManager Instance ID: " + UIManager.Instance.GetInstanceID());
-        Debug.Log("moneyText object ID: " + UIManager.Instance.moneyText.GetInstanceID());
-
         if (UIManager.Instance == null)
             Debug.LogError("UIManager.Instance is NULL");
 

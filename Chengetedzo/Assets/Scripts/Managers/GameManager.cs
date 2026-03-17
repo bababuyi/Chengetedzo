@@ -454,58 +454,56 @@ public class GameManager : MonoBehaviour
 
     public void EndMonthAndAdvance()
     {
+        if (currentMonth > totalMonths)
+        {
+            Debug.LogWarning("[GameManager] EndMonthAndAdvance called beyond totalMonths. Ignoring.");
+            uiManager.SwitchPanel(UIManager.UIPanelState.None);
+            return;
+        }
+
         Debug.Log($"=== Month {currentMonth} END ===");
 
         SaveSystem.SaveGame(this);
 
         int finishedMonth = currentMonth;
-
         currentMonth++;
         UIManager.Instance.UpdateMonthText(currentMonth, totalMonths);
-
         OnSeasonChanged?.Invoke();
-
         monthsSinceMajorEvent++;
 
-        // Mid-year checkpoints
-        if (finishedMonth == 6 || finishedMonth == 12 || finishedMonth == 18)
+        // Mid-year checkpoints — scale with totalMonths
+        int half = totalMonths / 2;
+        int third = totalMonths / 3;
+        int twoThirds = (totalMonths * 2) / 3;
+
+        bool isMidYearCheckpoint = totalMonths == 24
+            ? (finishedMonth == 6 || finishedMonth == 12 || finishedMonth == 18)
+            : (finishedMonth == third || finishedMonth == half || finishedMonth == twoThirds);
+
+        if (isMidYearCheckpoint)
         {
             if (IsHeadlessSimulation)
-            {
                 StartNewMonth();
-                return;
-            }
-            uiManager.ShowMentorMessage(
-                GetMidYearMentorReflection(),
-                () => StartNewMonth()
-            );
+            else
+                uiManager.ShowMentorMessage(GetMidYearMentorReflection(), () => StartNewMonth());
             return;
         }
 
-        // Final year
-        if (finishedMonth == 24)
+        if (finishedMonth >= totalMonths)
         {
-            uiManager.ShowEndOfYearSummary(GetYearEndMentorReflection());
+            if (!IsHeadlessSimulation)
+                uiManager.ShowEndOfYearSummary(GetYearEndMentorReflection());
             CurrentLedger = null;
             return;
         }
 
-        // --- NEW: yearly savings interest ---
         if (finishedMonth % 12 == 0)
         {
             float savings = financeManager.generalSavingsBalance;
-
             if (savings > 0)
             {
                 float interest = savings * 0.03f;
-
-                ApplyMoneyChange(
-                    FinancialEntry.EntryType.Income,
-                    "Savings Interest",
-                    interest,
-                    true
-                );
-
+                ApplyMoneyChange(FinancialEntry.EntryType.Income, "Savings Interest", interest, true);
                 Debug.Log($"[Savings] Interest gained: {interest}");
             }
         }
@@ -1110,6 +1108,11 @@ public class GameManager : MonoBehaviour
         setupData.hasSchoolFees = false;
         setupData.schoolFeesAmount = 0f;
         financeManager.assets = new PlayerAssets();
+        setupData.adults = 1;
+        setupData.children = 0;
+        setupData.housing = HousingType.Renting;
+        setupData.ownsCar = false;
+        setupData.ownsFarm = false;
         if (forecastManager != null)
         {
             forecastManager.forecastGeneratedThisMonth = false;
@@ -1120,6 +1123,7 @@ public class GameManager : MonoBehaviour
         totalInsurancePayoutAmount = 0f;
         forcedLoanCount = 0;
         monthsUnderFinancialPressure = 0;
+        monthsSinceMajorEvent = 3;
 
         // Reset GameManager state
         currentMonth = 1;
@@ -1129,6 +1133,7 @@ public class GameManager : MonoBehaviour
         yearPremiums = 0f;
         yearPayouts = 0f;
         yearEventLosses = 0f;
+        previousMomentum = 0f;
 
         monthlyDamageTaken = 0f;
 
@@ -1143,6 +1148,9 @@ public class GameManager : MonoBehaviour
         monthResolutionStarted = false;
         recoveryAcknowledged = false;
         patternWarningIssued = false;
+        IsLoanDecisionActive = false;
+        IsSavingsDecisionActive = false;
+        forcedLoanThisMonth = false;
         lastMomentumZone = int.MinValue;
 
         CurrentLedger = null;
@@ -1175,75 +1183,36 @@ public class GameManager : MonoBehaviour
     }
 
 #if UNITY_EDITOR
-    [ContextMenu("DEBUG_StressTest_24Months")]
-    public void DEBUG_StressTest_24Months()
+
+    // ============================================================
+    // SHARED HELPER — runs the headless loop for any test profile
+    // ============================================================
+    private void RunHeadlessLoop(string testName)
     {
-        Debug.Log("===== STARTING 24 MONTH STRESS TEST =====");
-
-        IsHeadlessSimulation = true;
-
-        yearIncome = 0f;
-        yearExpenses = 0f;
-        yearPremiums = 0f;
-        yearPayouts = 0f;
-        yearEventLosses = 0f;
-
-        if (setupData == null)
-        {
-            Debug.LogError("❌ SetupData not assigned. Assign a real asset in inspector.");
-            return;
-        }
-
-        if (financeManager == null)
-        {
-            Debug.LogError("❌ FinanceManager not assigned in inspector.");
-            return;
-        }
-        setupData.minIncome = 400f;
-        setupData.maxIncome = 700f;
-        setupData.isIncomeStable = false;
-        setupData.housing = HousingType.Renting;
-        financeManager.rentCost = 100f;
-        financeManager.groceries = 80f;
-        financeManager.transport = 40f;
-        financeManager.utilities = 30f;
+        financeManager.generalSavingsMonthly = 0f;
         financeManager.InitializeFromSetup();
 
         if (CurrentPhase == GamePhase.Idle)
             StartNewMonth();
 
         int safetyCounter = 0;
-        int maxSteps = 10000;
-
-        financeManager.generalSavingsMonthly = 0f;
-        //insuranceManager.DisableAllPlans(); // if you have it
+        const int maxSteps = 10000;
 
         while (currentMonth <= totalMonths)
         {
             if (++safetyCounter > maxSteps)
             {
-                Debug.LogError("❌ STRESS TEST ABORTED: Infinite loop detected.");
+                Debug.LogError($"❌ {testName} ABORTED: Infinite loop at Month {currentMonth}, Phase {CurrentPhase}.");
+                IsHeadlessSimulation = false; // ← RESET on abort
                 return;
             }
 
             switch (CurrentPhase)
             {
-                case GamePhase.Forecast:
-                    OnForecastConfirmed();
-                    break;
-
-                case GamePhase.Insurance:
-                    //insuranceManager.EnableBasicPlan();
-                    OnInsuranceConfirmed();
-                    break;
-
-                case GamePhase.Loan:
-                    OnLoanDecisionFinished();
-                    break;
-
-                case GamePhase.Savings:
-                    OnSavingsDecisionFinished();
-                    break;
+                case GamePhase.Forecast: OnForecastConfirmed(); break;
+                case GamePhase.Insurance: OnInsuranceConfirmed(); break;
+                case GamePhase.Loan: OnLoanDecisionFinished(); break;
+                case GamePhase.Savings: OnSavingsDecisionFinished(); break;
 
                 case GamePhase.Simulation:
                     if (pendingEvents.Count > 0)
@@ -1257,12 +1226,247 @@ public class GameManager : MonoBehaviour
                     break;
 
                 default:
-                    Debug.LogError($"❌ Unknown phase: {CurrentPhase}");
+                    Debug.LogError($"❌ {testName} hit unknown phase: {CurrentPhase}");
+                    IsHeadlessSimulation = false; // ← RESET on unknown phase abort
                     return;
             }
         }
 
-        Debug.Log("✅ STRESS TEST COMPLETE SUCCESSFULLY.");
+        IsHeadlessSimulation = false; // ← RESET on successful completion
+
+        Debug.Log($"✅ {testName} COMPLETE — " +
+                  $"Final Cash: ${financeManager.CashOnHand:F0} | " +
+                  $"Income: ${yearIncome:F0} | " +
+                  $"Expenses: ${yearExpenses:F0} | " +
+                  $"Event Losses: ${yearEventLosses:F0} | " +
+                  $"Forced Loans: {forcedLoanCount} | " +
+                  $"Months Under Pressure: {monthsUnderFinancialPressure}");
     }
+
+    // ============================================================
+    // SHARED SETUP GUARD — validates references before any test
+    // ============================================================
+    private bool StressTestPreCheck(string testName)
+    {
+        if (setupData == null)
+        {
+            Debug.LogError($"❌ {testName}: SetupData not assigned in inspector.");
+            return false;
+        }
+        if (financeManager == null)
+        {
+            Debug.LogError($"❌ {testName}: FinanceManager not assigned in inspector.");
+            return false;
+        }
+
+        // ← FIX: reset all simulation state so tests are always deterministic
+        currentMonth = 1;
+        monthsSinceMajorEvent = 3;
+        monthlyDamageTaken = 0f;
+        monthResolutionStarted = false;
+        isWaitingForEventConfirmation = false;
+        forecastBackLocked = false;
+        forcedLoanThisMonth = false;
+        IsLoanDecisionActive = false;
+        IsSavingsDecisionActive = false;
+        loanIntroShown = false;
+        mentorSpokeThisMonth = false;
+        CurrentLedger = null;
+        pendingEvents.Clear();
+        monthlyEvents.Clear();
+        activeIncomeEffects.Clear();
+        activeExpenseEffects.Clear();
+        savingsStreak = 0;
+        overBudgetStreak = 0;
+        skipHistory.Clear();
+        forcedLoanHistory.Clear();
+        previousMomentum = 0f;
+        recoveryAcknowledged = false;
+        patternWarningIssued = false;
+        lastMomentumZone = int.MinValue;
+        totalUnexpectedEvents = 0;
+        insuredEventsCount = 0;
+        totalRawEventDamage = 0f;
+        totalInsurancePayoutAmount = 0f;
+        forcedLoanCount = 0;
+        monthsUnderFinancialPressure = 0;
+
+        yearIncome = 0f;
+        yearExpenses = 0f;
+        yearPremiums = 0f;
+        yearPayouts = 0f;
+        yearEventLosses = 0f;
+
+        eventManager?.ResetAll();
+        loanManager?.ResetAll();
+        insuranceManager?.ResetAll();
+        PlayerDataManager.Instance?.ResetPlayerData();
+        financeManager?.ResetFinance();
+
+        SetPhase(GamePhase.Idle);
+        IsHeadlessSimulation = true;
+        return true;
+    }
+
+    // ============================================================
+    // TEST 1 — DEFAULT (original middle-class baseline, now fixed)
+    // ============================================================
+    [ContextMenu("DEBUG_StressTest_24Months")]
+    public void DEBUG_StressTest_24Months()
+    {
+        const string NAME = "StressTest [DEFAULT]";
+        if (!StressTestPreCheck(NAME)) return;
+
+        Debug.Log($"===== STARTING {NAME} =====");
+
+        setupData.adults = 1;
+        setupData.children = 0;
+        setupData.isIncomeStable = false;
+        setupData.housing = HousingType.Renting;
+        setupData.ownsCar = false;
+        setupData.ownsFarm = false;
+        setupData.hasSchoolFees = false;
+        setupData.schoolFeesAmount = 0f;
+        setupData.minIncome = 400f;
+        setupData.maxIncome = 700f;
+
+        financeManager.rentCost = 100f;
+        financeManager.groceries = 80f;
+        financeManager.transport = 40f;
+        financeManager.utilities = 30f;
+        financeManager.assets = new PlayerAssets();
+
+        RunHeadlessLoop(NAME);
+    }
+
+    // ============================================================
+    // TEST 2 — ZIMBABWE LOW CLASS
+    // Informal sector worker, renting a single room in a high-density
+    // suburb (Mbare / Dzivarasekwa). 2 adults, 2 kids in school.
+    // Tight budget — nearly every month is a struggle.
+    // Income: $150–$280/month (USD)
+    // ============================================================
+    [ContextMenu("DEBUG_StressTest_ZW_LowClass")]
+    public void DEBUG_StressTest_ZW_LowClass()
+    {
+        const string NAME = "StressTest [ZW LOW CLASS]";
+        if (!StressTestPreCheck(NAME)) return;
+
+        Debug.Log($"===== STARTING {NAME} =====");
+        Debug.Log("Profile: Informal sector, 2 adults, 2 kids, renting, no car, no farm.");
+
+        setupData.adults = 2;
+        setupData.children = 2;
+        setupData.isIncomeStable = false;       // irregular informal work
+        setupData.housing = HousingType.Renting;
+        setupData.ownsCar = false;
+        setupData.ownsFarm = false;
+        setupData.hasSchoolFees = true;
+        setupData.schoolFeesAmount = 30f;        // ~$30/term per child, ZW govt school
+        setupData.minIncome = 150f;
+        setupData.maxIncome = 280f;
+
+        // Room rental in high-density suburb
+        financeManager.rentCost = 60f;
+        // Basic groceries — maize meal, cooking oil, vegetables
+        financeManager.groceries = 70f;
+        // Commuter omnibus (ZUPCO / kombis)
+        financeManager.transport = 20f;
+        // Prepaid electricity (token), water shared
+        financeManager.utilities = 15f;
+        financeManager.assets = new PlayerAssets();
+
+        RunHeadlessLoop(NAME);
+    }
+
+    // ============================================================
+    // TEST 3 — ZIMBABWE MIDDLE CLASS
+    // Civil servant or NGO worker, renting a 3-room house in
+    // a medium-density suburb (Budiriro / Waterfalls / Msasa).
+    // 2 adults, 2 kids, owns a motor vehicle, no farm.
+    // Income: $500–$900/month (USD)
+    // ============================================================
+    [ContextMenu("DEBUG_StressTest_ZW_MiddleClass")]
+    public void DEBUG_StressTest_ZW_MiddleClass()
+    {
+        const string NAME = "StressTest [ZW MIDDLE CLASS]";
+        if (!StressTestPreCheck(NAME)) return;
+
+        Debug.Log($"===== STARTING {NAME} =====");
+        Debug.Log("Profile: Civil servant / NGO, 2 adults, 2 kids, renting, owns car.");
+
+        setupData.adults = 2;
+        setupData.children = 2;
+        setupData.isIncomeStable = true;        // formal employment, monthly pay
+        setupData.housing = HousingType.Renting;
+        setupData.ownsCar = true;
+        setupData.ownsFarm = false;
+        setupData.hasSchoolFees = true;
+        setupData.schoolFeesAmount = 80f;        // ~$80/term, private primary school
+        setupData.minIncome = 500f;
+        setupData.maxIncome = 900f;
+
+        // 3-room house rental in medium-density suburb
+        financeManager.rentCost = 180f;
+        // Groceries for family of 4
+        financeManager.groceries = 130f;
+        // Car fuel (petrol ~$1.50/litre in ZW) + occasional kombi
+        financeManager.transport = 70f;
+        // ZESA prepaid electricity, borehole water rates
+        financeManager.utilities = 45f;
+        financeManager.assets = new PlayerAssets
+        {
+            hasMotor = true
+        };
+
+        RunHeadlessLoop(NAME);
+    }
+
+    // ============================================================
+    // TEST 4 — ZIMBABWE HIGH CLASS
+    // Business owner or senior professional, owns house in a
+    // low-density suburb (Borrowdale / Mount Pleasant / Highlands).
+    // 2 adults, 2 kids, owns car, owns a small farm plot.
+    // Income: $1,500–$3,000/month (USD)
+    // ============================================================
+    [ContextMenu("DEBUG_StressTest_ZW_HighClass")]
+    public void DEBUG_StressTest_ZW_HighClass()
+    {
+        const string NAME = "StressTest [ZW HIGH CLASS]";
+        if (!StressTestPreCheck(NAME)) return;
+
+        Debug.Log($"===== STARTING {NAME} =====");
+        Debug.Log("Profile: Business owner, 2 adults, 2 kids, owns house + car + farm.");
+
+        setupData.adults = 2;
+        setupData.children = 2;
+        setupData.isIncomeStable = false;       // business income varies
+        setupData.housing = HousingType.OwnsHouse;
+        setupData.ownsCar = true;
+        setupData.ownsFarm = true;
+        setupData.hasSchoolFees = true;
+        setupData.schoolFeesAmount = 350f;       // ~$350/term, private secondary school
+        setupData.minIncome = 1500f;
+        setupData.maxIncome = 3000f;
+
+        // Owns house — no rent, but maintenance costs covered by events
+        financeManager.rentCost = 0f;
+        // Full family groceries + domestic worker
+        financeManager.groceries = 280f;
+        // 4x4 fuel, vehicle servicing
+        financeManager.transport = 160f;
+        // Generator fuel (load shedding), solar top-up, water bills
+        financeManager.utilities = 120f;
+        financeManager.assets = new PlayerAssets
+        {
+            hasHouse = true,
+            hasMotor = true,
+            hasCrops = true,
+            hasLivestock = true
+        };
+
+        RunHeadlessLoop(NAME);
+    }
+
 #endif
 }

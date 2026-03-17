@@ -608,5 +608,6 @@ float intendedLoss = GameManager.Instance.financeManager
         pendingEvents.Clear();
         eventsTriggeredThisYear.Clear();
         remainingEventBudget = monthlyEventBudget;
+        eventPressure = 0f;
     }
 }
