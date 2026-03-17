@@ -1203,7 +1203,7 @@ public class GameManager : MonoBehaviour
             if (++safetyCounter > maxSteps)
             {
                 Debug.LogError($"❌ {testName} ABORTED: Infinite loop at Month {currentMonth}, Phase {CurrentPhase}.");
-                IsHeadlessSimulation = false; // ← RESET on abort
+                IsHeadlessSimulation = false;
                 return;
             }
 
@@ -1233,6 +1233,8 @@ public class GameManager : MonoBehaviour
         }
 
         IsHeadlessSimulation = false; // ← RESET on successful completion
+        uiManager.SwitchPanel(UIManager.UIPanelState.None); // ← ADD: clear UI after test
+        uiManager.UpdateMoneyText(financeManager.CashOnHand);
 
         Debug.Log($"✅ {testName} COMPLETE — " +
                   $"Final Cash: ${financeManager.CashOnHand:F0} | " +
