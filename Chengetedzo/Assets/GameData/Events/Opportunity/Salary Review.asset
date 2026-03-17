@@ -10,40 +10,31 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
-  m_Name: School Fee Crisis
+  m_Name: Salary Review
   m_EditorClassIdentifier: 
-  eventName: School Fee Crisis
-  description: School fees increase unexpectedly and must be paid immediately.
-  financialLesson: Education expenses require planning and savings.
+  eventName: Salary Review
+  description: Your employer recognises your contributions with a pay increase.
+  financialLesson: Consistent performance builds financial stability.
   category: 3
-  pool: 2
+  pool: 5
   requiredAsset: 0
   icon: {fileID: 0}
-  probability: 7
-  weight: 10
+  probability: 6
+  weight: 8
   minLossPercent: 0
   maxLossPercent: 0
-  affectsIncome: 0
-  incomePercentChange: 0
-  incomeEffectMonths: 0
+  affectsIncome: 1
+  incomePercentChange: 15
+  incomeEffectMonths: -1
   insuranceType: 0
-  outcomeType: 0
+  outcomeType: 1
   cashReward: 0
-  momentumReward: 0
+  momentumReward: 8
   season: 0
-  signal: 5
-  severity: 1
-  affectsHousehold: 0
-  adultsLost: 0
-  childrenLost: 0
-  affectsExpenses: 1
-  expenseCategory: 4
-  expenseFlatChange: 150
-  expenseEffectMonths: 1
+  signal: 0
+  severity: 0
   lossType: 2
-  fixedLossAmount: 450
-  affectsLoan: 0
-  borrowingPowerChange: 0
+  fixedLossAmount: 0
   startsChain: 0
   followUpEvents: []
   followUpChance: 0

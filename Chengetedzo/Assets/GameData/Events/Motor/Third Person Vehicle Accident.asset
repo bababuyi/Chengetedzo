@@ -16,7 +16,7 @@ MonoBehaviour:
   description: You were side swipped by a kombi at an intersection.
   financialLesson: Motor insurance protects against road accidents. There are various
     types of motor insurance so pick the right one for you
-  category: 4
+  category: 3
   pool: 4
   requiredAsset: 2
   icon: {fileID: 0}
@@ -34,8 +34,17 @@ MonoBehaviour:
   season: 0
   signal: 0
   severity: 1
+  affectsHousehold: 0
+  adultsLost: 0
+  childrenLost: 0
+  affectsExpenses: 0
+  expenseCategory: 0
+  expenseFlatChange: 0
+  expenseEffectMonths: 0
   lossType: 0
   fixedLossAmount: 0
+  affectsLoan: 0
+  borrowingPowerChange: 0
   startsChain: 0
   followUpEvents: []
   followUpChance: 0

@@ -25,8 +25,8 @@ MonoBehaviour:
   minLossPercent: 0
   maxLossPercent: 0
   affectsIncome: 0
-  incomePercentChange: 0
-  incomeEffectMonths: 0
+  incomePercentChange: -30
+  incomeEffectMonths: -1
   insuranceType: 1
   outcomeType: 0
   cashReward: 0
@@ -34,9 +34,19 @@ MonoBehaviour:
   season: 0
   signal: 4
   severity: 1
+  affectsHousehold: 1
+  adultsLost: 1
+  childrenLost: 0
+  affectsExpenses: 0
+  expenseCategory: 0
+  expenseFlatChange: 0
+  expenseEffectMonths: 0
   lossType: 2
   fixedLossAmount: 500
+  affectsLoan: 0
+  borrowingPowerChange: 0
   startsChain: 0
-  followUpEvents: []
-  followUpChance: 0
-  followUpDelay: 0
+  followUpEvents:
+  - {fileID: 11400000, guid: 6d1286b357621fa499ed5b66213435d9, type: 2}
+  followUpChance: 0.25
+  followUpDelay: 3

@@ -13,14 +13,14 @@ MonoBehaviour:
   m_Name: Market Price Drop
   m_EditorClassIdentifier: 
   eventName: 'Market Price Drop '
-  description: Crop prices fall.
-  financialLesson: Markets are volatile.
+  description: A sudden oversupply causes crop prices to fall just after your harvest.
+  financialLesson: Good harvests don't always guarantee good returns. Timing matters.
   category: 3
-  pool: 2
-  requiredAsset: 3
+  pool: 1
+  requiredAsset: 5
   icon: {fileID: 0}
-  probability: 4
-  weight: 10
+  probability: 10
+  weight: 6
   minLossPercent: 0
   maxLossPercent: 0
   affectsIncome: 1
@@ -31,10 +31,20 @@ MonoBehaviour:
   cashReward: 0
   momentumReward: 0
   season: 0
-  severity: 1
+  signal: 5
+  severity: 0
+  affectsHousehold: 0
+  adultsLost: 0
+  childrenLost: 0
+  affectsExpenses: 0
+  expenseCategory: 0
+  expenseFlatChange: 0
+  expenseEffectMonths: 0
   lossType: 1
   fixedLossAmount: 0
+  affectsLoan: 0
+  borrowingPowerChange: 0
   startsChain: 0
   followUpEvents: []
-  followUpChance: 0.5
-  followUpDelay: 1
+  followUpChance: 0
+  followUpDelay: 0

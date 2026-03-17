@@ -170,11 +170,11 @@ public class InsuranceManager : MonoBehaviour
         {
             planName = "Motor Insurance",
             type = InsuranceType.Motor,
-            premium = 26.25f,
+            premium = 600f, //5% of a vehicle worth using a imported Honda fit for reference making it 12,000x5%
             coverageLimit = 3000f,
             waitingPeriodMonths = 0,
             requiredAsset = GameManager.AssetRequirement.Motor,
-            coverageDescription = "Covers damage caused to third-party vehicles in a motor accident."
+            coverageDescription = "Covers liability for death, bodily injury, and property damage to others"
         });
 
         allPlans.Add(new InsurancePlan
@@ -182,7 +182,7 @@ public class InsuranceManager : MonoBehaviour
             planName = "Home Insurance",
             type = InsuranceType.Home,
             premiumIsAssetBased = true,
-            premiumRate = 0.015f, // 1.5%
+            premiumRate = 0.015f,
             deductiblePercent = 0f,
             waitingPeriodMonths = 0,
             requiredAsset = GameManager.AssetRequirement.House,
@@ -192,13 +192,13 @@ public class InsuranceManager : MonoBehaviour
         allPlans.Add(new InsurancePlan
         {
             planName = "Agricultural Insurance",
-            type = InsuranceType.Crop,         // keep the enum value to avoid breaking anything
+            type = InsuranceType.Crop,
             premiumIsAssetBased = false,
             premium = 5f,
             coverageLimit = 2000f,
             deductiblePercent = 0.05f,
             waitingPeriodMonths = 0,
-            requiredAsset = GameManager.AssetRequirement.CropsOrLivestock, // CHANGE from Crops
+            requiredAsset = GameManager.AssetRequirement.CropsOrLivestock,
             coverageDescription = "Covers financial losses from crop failure or livestock disease. " +
                           "Protects farmers and smallholders against the unexpected costs " +
                           "of agricultural setbacks."

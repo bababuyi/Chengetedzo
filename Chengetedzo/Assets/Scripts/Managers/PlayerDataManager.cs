@@ -56,4 +56,21 @@ public class PlayerDataManager : MonoBehaviour
         adults = 1;
         children = 0;
     }
+    public void RemoveAdult()
+    {
+        if (adults > 1)
+        {
+            adults--;
+            Debug.Log($"[Household] Adult removed. Adults remaining: {adults}");
+        }
+    }
+
+    public void RemoveChild()
+    {
+        if (children > 0)
+        {
+            children--;
+            Debug.Log($"[Household] Child removed. Children remaining: {children}");
+        }
+    }
 }

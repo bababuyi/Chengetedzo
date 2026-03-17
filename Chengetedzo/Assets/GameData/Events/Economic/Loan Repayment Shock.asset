@@ -33,8 +33,17 @@ MonoBehaviour:
   season: 0
   signal: 5
   severity: 1
+  affectsHousehold: 0
+  adultsLost: 0
+  childrenLost: 0
+  affectsExpenses: 0
+  expenseCategory: 0
+  expenseFlatChange: 0
+  expenseEffectMonths: 0
   lossType: 2
   fixedLossAmount: 300
+  affectsLoan: 1
+  borrowingPowerChange: -200
   startsChain: 0
   followUpEvents: []
   followUpChance: 0

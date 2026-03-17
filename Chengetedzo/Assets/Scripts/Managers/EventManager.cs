@@ -219,6 +219,31 @@ public class EventManager : MonoBehaviour
             if (ev.severity != EventSeverity.Minor)
                 eventPressure = 0f;
 
+            // Household changes
+            if (ev.affectsHousehold)
+            {
+                for (int i = 0; i < ev.adultsLost; i++)
+                    PlayerDataManager.Instance.RemoveAdult();
+                for (int i = 0; i < ev.childrenLost; i++)
+                    PlayerDataManager.Instance.RemoveChild();
+
+                Debug.Log($"[HOUSEHOLD] Event: {ev.eventName} | " +
+                          $"Adults lost: {ev.adultsLost} | Children lost: {ev.childrenLost} | " +
+                          $"Remaining adults: {PlayerDataManager.Instance.Adults}");
+            }
+
+            // Expense effects
+            if (ev.affectsExpenses)
+            {
+                GameManager.Instance.ApplyExpenseEffect(
+                    ev.expenseCategory,
+                    ev.expenseFlatChange,
+                    ev.expenseEffectMonths
+                );
+            }
+            if (ev.affectsLoan)
+                GameManager.Instance.loanManager?.ModifyBorrowingPower(ev.borrowingPowerChange);
+
             // ---------------- POSITIVE EVENT ----------------
             if (ev.outcomeType == EventOutcomeType.Positive)
             {
@@ -531,6 +556,25 @@ float intendedLoss = GameManager.Instance.financeManager
         });
 
         TryScheduleFollowUp(ev, month);
+
+        if (ev.affectsHousehold)
+        {
+            for (int i = 0; i < ev.adultsLost; i++)
+                PlayerDataManager.Instance.RemoveAdult();
+            for (int i = 0; i < ev.childrenLost; i++)
+                PlayerDataManager.Instance.RemoveChild();
+        }
+
+        if (ev.affectsExpenses)
+        {
+            GameManager.Instance.ApplyExpenseEffect(
+                ev.expenseCategory,
+                ev.expenseFlatChange,
+                ev.expenseEffectMonths
+            );
+        }
+        if (ev.affectsLoan)
+            GameManager.Instance.loanManager?.ModifyBorrowingPower(ev.borrowingPowerChange);
     }
 
     private bool PlayerOwnsRequiredAsset(EventData ev)

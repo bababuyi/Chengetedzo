@@ -61,8 +61,23 @@ public class EventData : ScriptableObject
     [Header("Severity")]
     public EventSeverity severity;
 
+    [Header("Household Effects")]
+    public bool affectsHousehold;
+    public int adultsLost;
+    public int childrenLost;
+
+    [Header("Expense Effects")]
+    public bool affectsExpenses;
+    public ExpenseCategory expenseCategory;
+    public float expenseFlatChange;
+    public int expenseEffectMonths; // -1 = permanent
+
     public LossCalculationType lossType;
     public float fixedLossAmount;
+
+    [Header("Loan Effects")]
+    public bool affectsLoan;
+    public float borrowingPowerChange;
 
     [Header("Event Chain")]
     public bool startsChain;

@@ -214,6 +214,12 @@ public class LoanManager : MonoBehaviour
         repaymentRate = Mathf.Clamp(value, minRepaymentRate, maxRepaymentRate);
     }
 
+    public void ModifyBorrowingPower(float amount)
+    {
+        borrowingPower = Mathf.Max(0f, borrowingPower + amount);
+        Debug.Log($"[Loan] Borrowing power changed by ${amount:F0}. Now: ${borrowingPower:F0}");
+    }
+
     public void ResetAll()
     {
         contribution = 50f;

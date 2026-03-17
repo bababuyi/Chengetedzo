@@ -23,9 +23,9 @@ MonoBehaviour:
   weight: 6
   minLossPercent: 0
   maxLossPercent: 0
-  affectsIncome: 1
-  incomePercentChange: -10
-  incomeEffectMonths: 2
+  affectsIncome: 0
+  incomePercentChange: 0
+  incomeEffectMonths: 0
   insuranceType: 0
   outcomeType: 0
   cashReward: 0
@@ -33,8 +33,17 @@ MonoBehaviour:
   season: 0
   signal: 5
   severity: 0
+  affectsHousehold: 0
+  adultsLost: 0
+  childrenLost: 0
+  affectsExpenses: 1
+  expenseCategory: 0
+  expenseFlatChange: 20
+  expenseEffectMonths: 2
   lossType: 1
   fixedLossAmount: 0
+  affectsLoan: 0
+  borrowingPowerChange: 0
   startsChain: 0
   followUpEvents: []
   followUpChance: 0

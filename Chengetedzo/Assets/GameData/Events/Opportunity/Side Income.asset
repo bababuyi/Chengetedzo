@@ -10,40 +10,31 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
-  m_Name: Lightning Strike
+  m_Name: Side Income
   m_EditorClassIdentifier: 
-  eventName: Lightning Strike
-  description: A lightning strike damages equipment or structures.
-  financialLesson: Rare events still carry risk.
-  category: 5
-  pool: 0
+  eventName: Side Income
+  description: A small piece of work on the side brings in extra income this month.
+  financialLesson: Multiple income streams reduce dependence on one source.
+  category: 3
+  pool: 5
   requiredAsset: 0
   icon: {fileID: 0}
-  probability: 3
-  weight: 6
-  minLossPercent: 5
-  maxLossPercent: 10
+  probability: 8
+  weight: 10
+  minLossPercent: 0
+  maxLossPercent: 0
   affectsIncome: 0
   incomePercentChange: 0
   incomeEffectMonths: 0
-  insuranceType: 7
-  outcomeType: 0
-  cashReward: 0
-  momentumReward: 0
-  season: 1
-  signal: 2
+  insuranceType: 0
+  outcomeType: 1
+  cashReward: 250
+  momentumReward: 5
+  season: 0
+  signal: 0
   severity: 0
-  affectsHousehold: 0
-  adultsLost: 0
-  childrenLost: 0
-  affectsExpenses: 0
-  expenseCategory: 0
-  expenseFlatChange: 0
-  expenseEffectMonths: 0
-  lossType: 0
+  lossType: 2
   fixedLossAmount: 0
-  affectsLoan: 0
-  borrowingPowerChange: 0
   startsChain: 0
   followUpEvents: []
   followUpChance: 0

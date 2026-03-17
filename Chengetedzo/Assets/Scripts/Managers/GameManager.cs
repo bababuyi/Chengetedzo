@@ -70,6 +70,16 @@ public class GameManager : MonoBehaviour
     private bool forecastBackLocked = false;
     public bool IsForecastBackLocked => forecastBackLocked;
 
+    [System.Serializable]
+    public class ExpenseEffect
+    {
+        public ExpenseCategory category;
+        public float flatIncrease;
+        public int remainingMonths; // -1 = permanent
+    }
+
+    private List<ExpenseEffect> activeExpenseEffects = new();
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -170,6 +180,7 @@ public class GameManager : MonoBehaviour
         EnterForecastPhase();
         loanManager?.ResetMonthlyFlags();
         UpdateIncomeEffects();
+        UpdateExpenseEffects();
     }
 
     //Month Controls
@@ -459,6 +470,11 @@ public class GameManager : MonoBehaviour
         // Mid-year checkpoints
         if (finishedMonth == 6 || finishedMonth == 12 || finishedMonth == 18)
         {
+            if (IsHeadlessSimulation)
+            {
+                StartNewMonth();
+                return;
+            }
             uiManager.ShowMentorMessage(
                 GetMidYearMentorReflection(),
                 () => StartNewMonth()
@@ -739,6 +755,41 @@ public class GameManager : MonoBehaviour
         );
     }
 
+    public void ApplyExpenseEffect(ExpenseCategory category, float increase, int months)
+    {
+        activeExpenseEffects.Add(new ExpenseEffect
+        {
+            category = category,
+            flatIncrease = increase,
+            remainingMonths = months <= 0 ? -1 : months
+        });
+
+        Debug.Log($"[Expense] {category} increased by ${increase:F0} for " +
+                  $"{(months <= 0 ? "permanent" : months + " months")}");
+    }
+
+    public float GetExpenseModifier(ExpenseCategory category)
+    {
+        float total = 0f;
+        foreach (var effect in activeExpenseEffects)
+            if (effect.category == category)
+                total += effect.flatIncrease;
+        return total;
+    }
+
+    private void UpdateExpenseEffects()
+    {
+        for (int i = activeExpenseEffects.Count - 1; i >= 0; i--)
+        {
+            if (activeExpenseEffects[i].remainingMonths == -1)
+                continue;
+
+            activeExpenseEffects[i].remainingMonths--;
+
+            if (activeExpenseEffects[i].remainingMonths <= 0)
+                activeExpenseEffects.RemoveAt(i);
+        }
+    }
     public float GetIncomeMultiplier()
     {
         float netChange = 0f;
@@ -1050,6 +1101,7 @@ public class GameManager : MonoBehaviour
         loanManager?.ResetAll();
         insuranceManager.ResetAll();
         PlayerDataManager.Instance?.ResetPlayerData();
+        activeExpenseEffects.Clear();
 
         // Reset setup data
         setupData.minIncome = 0f;
@@ -1147,7 +1199,14 @@ public class GameManager : MonoBehaviour
             Debug.LogError("❌ FinanceManager not assigned in inspector.");
             return;
         }
-
+        setupData.minIncome = 400f;
+        setupData.maxIncome = 700f;
+        setupData.isIncomeStable = false;
+        setupData.housing = HousingType.Renting;
+        financeManager.rentCost = 100f;
+        financeManager.groceries = 80f;
+        financeManager.transport = 40f;
+        financeManager.utilities = 30f;
         financeManager.InitializeFromSetup();
 
         if (CurrentPhase == GamePhase.Idle)

@@ -24,7 +24,7 @@ MonoBehaviour:
   minLossPercent: 0
   maxLossPercent: 0
   affectsIncome: 1
-  incomePercentChange: -10
+  incomePercentChange: -5
   incomeEffectMonths: 2
   insuranceType: 0
   outcomeType: 0
@@ -33,8 +33,17 @@ MonoBehaviour:
   season: 0
   signal: 5
   severity: 0
-  lossType: 1
+  affectsHousehold: 0
+  adultsLost: 0
+  childrenLost: 0
+  affectsExpenses: 1
+  expenseCategory: 1
+  expenseFlatChange: 30
+  expenseEffectMonths: 2
+  lossType: 2
   fixedLossAmount: 0
+  affectsLoan: 0
+  borrowingPowerChange: 0
   startsChain: 0
   followUpEvents: []
   followUpChance: 0

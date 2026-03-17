@@ -10,6 +10,15 @@ public struct PlayerAssets
     public bool hasCrops;
 }
 
+public enum ExpenseCategory
+{
+    Transport,
+    Groceries,
+    Utilities,
+    Housing,
+    SchoolFees
+}
+
 /// <summary>
 /// Handles all financial calculations and tracking for the player,
 /// including income, expenses, cash flow, and monthly summaries.
@@ -134,12 +143,17 @@ public class FinanceManager : MonoBehaviour
 
         // 2. Fixed expenses
         float housingCost = GetHousingCost();
-        totalExpenses = housingCost + groceries + transport + utilities;
+        float effectiveTransport = transport + GameManager.Instance.GetExpenseModifier(ExpenseCategory.Transport);
+        float effectiveGroceries = groceries + GameManager.Instance.GetExpenseModifier(ExpenseCategory.Groceries);
+        float effectiveUtilities = utilities + GameManager.Instance.GetExpenseModifier(ExpenseCategory.Utilities);
+
+        totalExpenses = housingCost + effectiveGroceries + effectiveTransport + effectiveUtilities;
+
         GameManager.Instance.ApplyMoneyChange(
-        FinancialEntry.EntryType.Expense,
-        "Fixed Expenses",
-        totalExpenses,
-        false
+            FinancialEntry.EntryType.Expense,
+            "Fixed Expenses",
+            totalExpenses,
+            false
         );
 
         balance = effectiveIncome - totalExpenses;
@@ -251,18 +265,27 @@ public class FinanceManager : MonoBehaviour
         if (!schoolFeesOutstanding)
             return false;
 
-        if (cashOnHand >= schoolFeesPerTerm)
+        int childCount = Mathf.Max(0, PlayerDataManager.Instance?.Children ?? 0);
+        if (childCount == 0)
+        {
+            schoolFeesOutstanding = false;
+            return false;
+        }
+
+        float effectiveFees = (schoolFeesPerTerm * childCount)
+            + GameManager.Instance.GetExpenseModifier(ExpenseCategory.SchoolFees);
+
+        if (cashOnHand >= effectiveFees)
         {
             GameManager.Instance.ApplyMoneyChange(
-            FinancialEntry.EntryType.Expense,
-            "School Fees",
-            schoolFeesPerTerm,
-            false
+                FinancialEntry.EntryType.Expense,
+                "School Fees",
+                effectiveFees,
+                false
             );
-            totalSpent += schoolFeesPerTerm;
+            totalSpent += effectiveFees;
             schoolFeesOutstanding = false;
-
-            Debug.Log($"[School Fees] Paid ${schoolFeesPerTerm}");
+            Debug.Log($"[School Fees] Paid ${effectiveFees} for {childCount} child(ren)");
             return false;
         }
 
@@ -438,15 +461,14 @@ public class FinanceManager : MonoBehaviour
 
         float projected =
             housingCost +
-            groceries +
-            transport +
-            utilities;
+            groceries + GameManager.Instance.GetExpenseModifier(ExpenseCategory.Groceries) +
+            transport + GameManager.Instance.GetExpenseModifier(ExpenseCategory.Transport) +
+            utilities + GameManager.Instance.GetExpenseModifier(ExpenseCategory.Utilities);
 
-        // Include school fees if active (monthly average across terms)
         if (schoolFeesPerTerm > 0f)
         {
-            // Spread term fees across 12 months for projection
-            projected += (schoolFeesPerTerm * 3f) / 12f;
+            int childCount = Mathf.Max(0, PlayerDataManager.Instance?.Children ?? 0);
+            projected += ((schoolFeesPerTerm * childCount) * 3f) / 12f;
         }
 
         return projected;
