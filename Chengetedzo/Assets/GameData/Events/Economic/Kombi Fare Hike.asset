@@ -10,39 +10,39 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
-  m_Name: Medication Costs
+  m_Name: Kombi Fare Hike
   m_EditorClassIdentifier: 
-  eventName: Medication Costs
-  description: A family member has been diagnosed with a serious ailments and will
-    need long term healthcare
-  financialLesson: Chronic illness increases expenses.
-  category: 0
-  pool: 3
+  eventName: Kombi Fare Hike
+  description: Kombi and ZUPCO fares have jumped overnight. Getting to work costs
+    more.
+  financialLesson: Sudden cost changes can strain a tight budget quickly.
+  category: 3
+  pool: 2
   requiredAsset: 0
   icon: {fileID: 0}
-  probability: 20
-  weight: 8
+  probability: 35
+  weight: 12
   minLossPercent: 0
   maxLossPercent: 0
   affectsIncome: 0
   incomePercentChange: 0
   incomeEffectMonths: 0
-  insuranceType: 2
+  insuranceType: 0
   outcomeType: 0
   cashReward: 0
   momentumReward: 0
   season: 0
-  signal: 4
+  signal: 5
   severity: 0
   affectsHousehold: 0
   adultsLost: 0
   childrenLost: 0
-  affectsExpenses: 0
+  affectsExpenses: 1
   expenseCategory: 0
-  expenseFlatChange: 0
-  expenseEffectMonths: 0
-  lossType: 2
-  fixedLossAmount: 150
+  expenseFlatChange: 25
+  expenseEffectMonths: 1
+  lossType: 1
+  fixedLossAmount: 0
   affectsLoan: 0
   borrowingPowerChange: 0
   startsChain: 0

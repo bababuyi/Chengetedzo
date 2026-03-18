@@ -26,7 +26,7 @@ MonoBehaviour:
   affectsIncome: 0
   incomePercentChange: 0
   incomeEffectMonths: 0
-  insuranceType: 8
+  insuranceType: 0
   outcomeType: 0
   cashReward: 0
   momentumReward: 0

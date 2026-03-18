@@ -98,6 +98,31 @@ public class FinanceManager : MonoBehaviour
         Debug.Log("Starting cash: " + cashOnHand);
 
         UpdateHUD();
+        // ---- Auto-calculate asset values ----
+
+        // House: value comes from player setup
+        houseInsuredValue = (setup.housing == HousingType.OwnsHouse) ? setup.houseValue : 0f;
+
+        // Motor: inferred from income bracket
+        float avgIncome = (minIncome + maxIncome) / 2f;
+        motorInsuredValue = assets.hasMotor
+            ? (avgIncome >= 1500f ? 50000f : avgIncome >= 500f ? 12000f : 2000f)
+            : 0f;
+
+        // Livestock: subsistence = 3 cows x $300, commercial (has both crops AND livestock) = 15 cows x $750
+        bool isCommercial = assets.hasCrops && assets.hasLivestock;
+        livestockInsuredValue = assets.hasLivestock
+            ? (isCommercial ? 750f : 300f) * (isCommercial ? 15 : 3)
+            : 0f;
+
+        // Crops: 1.5x monthly income if crops only, 2x if commercial farm
+        cropsInsuredValue = assets.hasCrops
+            ? avgIncome * (isCommercial ? 2f : 1.5f)
+            : 0f;
+
+        Debug.Log($"[Assets] House:${houseInsuredValue:F0} Motor:${motorInsuredValue:F0} " +
+                  $"Livestock:${livestockInsuredValue:F0} Crops:${cropsInsuredValue:F0} " +
+                  $"(commercial:{isCommercial})");
     }
 
     public void ApplyCashDelta(float amount)
@@ -389,6 +414,9 @@ public class FinanceManager : MonoBehaviour
 
     public float rentCost;
     public float houseInsuredValue;
+    public float motorInsuredValue;
+    public float cropsInsuredValue;
+    public float livestockInsuredValue;
     public float houseMaintenanceCost;
 
     public float GetHousingCost()
@@ -402,11 +430,10 @@ public class FinanceManager : MonoBehaviour
     {
         switch (type)
         {
-            case InsuranceManager.InsuranceType.Home:
-                return houseInsuredValue;
-
-            default:
-                return 0f;
+            case InsuranceManager.InsuranceType.Home: return houseInsuredValue;
+            case InsuranceManager.InsuranceType.Motor: return motorInsuredValue;
+            case InsuranceManager.InsuranceType.Crop: return cropsInsuredValue + livestockInsuredValue;
+            default: return 0f;
         }
     }
 
@@ -499,22 +526,21 @@ public class FinanceManager : MonoBehaviour
 
     public float CalculateEventLoss(EventData ev, float percentLoss)
     {
-        float baseValue = 0f;
-
         switch (ev.lossType)
         {
-            case LossCalculationType.AssetValue:
-                baseValue = GetAssetValue(ev.insuranceType);
-                break;
-
-            case LossCalculationType.CashOnHand:
-                baseValue = CashOnHand;
-                break;
-
             case LossCalculationType.FixedAmount:
                 return ev.fixedLossAmount;
+
+            case LossCalculationType.CashOnHand:
+                return CashOnHand * (percentLoss / 100f);
+
+            case LossCalculationType.AssetValue:
+                float assetValue = GetAssetValue(ev.insuranceType);
+                // If no tracked dollar value, fall back to CashOnHand
+                float baseValue = (assetValue > 0f) ? assetValue : CashOnHand;
+                return baseValue * (percentLoss / 100f);
         }
 
-        return baseValue * (percentLoss / 100f);
+        return 0f;
     }
 }

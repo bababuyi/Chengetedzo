@@ -19,7 +19,7 @@ public class PlayerSetupData
     [Header("Assets")]
     public HousingType housing;
     public bool ownsCar;
-    public bool ownsFarm;
+    public float houseValue;
 }
 
 public enum HousingType

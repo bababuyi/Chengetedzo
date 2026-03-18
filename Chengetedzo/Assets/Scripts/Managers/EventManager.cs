@@ -129,97 +129,77 @@ public class EventManager : MonoBehaviour
             (poolList[i], poolList[rand]) = (poolList[rand], poolList[i]);
         }
 
+        List<EventData> passedEvents = new List<EventData>();
+
         foreach (var pool in poolList)
         {
-            if (triggeredEventCount >= maxEventsPerMonth)
-                break;
-
             EventData ev = GetWeightedEvent(pool.Value);
-
-            if (ev == null)
-                continue;
+            if (ev == null) continue;
 
             Debug.Log($"[EVENT] {ev.eventName} | Severity: {ev.severity} | Pool: {ev.pool}");
 
-            if (eventsTriggeredThisYear.Contains(ev))
-                continue;
-
-            int eventCost = GetEventCost(ev);
-
-            if (eventCost > remainingEventBudget)
-                continue;
+            if (eventsTriggeredThisYear.Contains(ev)) continue;
+            if (GetEventCost(ev) > remainingEventBudget) continue;
 
             eventsTriggeredThisYear.Add(ev);
+
             float pressureMultiplier = Mathf.Lerp(1f, 1.6f, eventPressure / maxPressure);
             float adjustedProbability = ev.probability * pressureMultiplier;
             if (ev.severity == EventSeverity.Major)
                 adjustedProbability *= 0.75f;
 
             var forecast = GameManager.Instance.GetCurrentForecast();
-
             if (forecast != null)
             {
-                // Category influence
                 if (forecast.categoryRiskMultiplier.TryGetValue(ev.category, out float multiplier))
                     adjustedProbability *= multiplier;
-
-                // Signal influence
-                var signal = ev.signal;
-
-                if (forecast.signalRiskMultiplier.TryGetValue(signal, out float signalMultiplier))
+                if (forecast.signalRiskMultiplier.TryGetValue(ev.signal, out float signalMultiplier))
                     adjustedProbability *= signalMultiplier;
-
             }
 
-            if (Random.value * 100f > adjustedProbability)
-                continue;
+            if (Random.value * 100f > adjustedProbability) continue;
 
-            // Prevent disaster streaks
             if (ev.severity == EventSeverity.Major)
             {
-                if (GameManager.Instance.monthsSinceMajorEvent <
-                    GameManager.Instance.majorEventGraceMonths)
-                    continue;
-
-                if (disasterCount >= 1)
-                    continue;
-
+                if (GameManager.Instance.monthsSinceMajorEvent<
+                    GameManager.Instance.majorEventGraceMonths) continue;
+                if (disasterCount >= 1) continue;
                 disasterCount++;
             }
 
             bool ownsRequiredAsset = ev.requiredAsset switch
             {
                 GameManager.AssetRequirement.None => true,
-
-                GameManager.AssetRequirement.House =>
-                    GameManager.Instance.financeManager.assets.hasHouse,
-
-                GameManager.AssetRequirement.Motor =>
-                    GameManager.Instance.financeManager.assets.hasMotor,
-
-                GameManager.AssetRequirement.Crops =>
-                    GameManager.Instance.financeManager.assets.hasCrops,
-
-                GameManager.AssetRequirement.Livestock =>
-                    GameManager.Instance.financeManager.assets.hasLivestock,
-
+                GameManager.AssetRequirement.House => GameManager.Instance.financeManager.assets.hasHouse,
+                GameManager.AssetRequirement.Motor => GameManager.Instance.financeManager.assets.hasMotor,
+                GameManager.AssetRequirement.Crops => GameManager.Instance.financeManager.assets.hasCrops,
+                GameManager.AssetRequirement.Livestock => GameManager.Instance.financeManager.assets.hasLivestock,
                 GameManager.AssetRequirement.CropsOrLivestock =>
                     GameManager.Instance.financeManager.assets.hasCrops ||
                     GameManager.Instance.financeManager.assets.hasLivestock,
-
                 _ => false
             };
 
-            if (!ownsRequiredAsset)
-                continue;
+            if (!ownsRequiredAsset) continue;
+
+            passedEvents.Add(ev);
+        }
+
+        passedEvents.Sort((a, b) => b.severity.CompareTo(a.severity));
+
+        foreach (var ev in passedEvents)
+        {
+            if (triggeredEventCount >= maxEventsPerMonth) break;
+
+            int eventCost = GetEventCost(ev);
+            if (eventCost > remainingEventBudget) continue;
 
             remainingEventBudget -= eventCost;
-
             triggeredEventCount++;
+
             if (ev.severity != EventSeverity.Minor)
                 eventPressure = 0f;
 
-            // Household changes
             if (ev.affectsHousehold)
             {
                 for (int i = 0; i < ev.adultsLost; i++)
@@ -232,7 +212,6 @@ public class EventManager : MonoBehaviour
                           $"Remaining adults: {PlayerDataManager.Instance.Adults}");
             }
 
-            // Expense effects
             if (ev.affectsExpenses)
             {
                 GameManager.Instance.ApplyExpenseEffect(
@@ -241,6 +220,7 @@ public class EventManager : MonoBehaviour
                     ev.expenseEffectMonths
                 );
             }
+
             if (ev.affectsLoan)
                 GameManager.Instance.loanManager?.ModifyBorrowingPower(ev.borrowingPowerChange);
 
@@ -261,12 +241,7 @@ public class EventManager : MonoBehaviour
                     PlayerDataManager.Instance.ModifyMomentum(ev.momentumReward);
 
                 if (ev.affectsIncome)
-                {
-                    GameManager.Instance.ApplyIncomeEffect(
-                        ev.incomePercentChange,
-                        ev.incomeEffectMonths
-                    );
-                }
+                    GameManager.Instance.ApplyIncomeEffect(ev.incomePercentChange, ev.incomeEffectMonths);
 
                 results.Add(new ResolvedEvent
                 {
@@ -281,60 +256,44 @@ public class EventManager : MonoBehaviour
                 continue;
             }
 
+            // ---------------- NEGATIVE EVENT ----------------
             float lossPercent = Random.Range(ev.minLossPercent, ev.maxLossPercent + 1);
 
             float cash = GameManager.Instance.financeManager.CashOnHand;
+            if (cash < 2000) lossPercent *= 0.6f;
+            else if (cash < 4000) lossPercent *= 0.8f;
 
-            if (cash < 2000)
-                lossPercent *= 0.6f;
-            else if (cash < 4000)
-                lossPercent *= 0.8f;
+            float intendedLoss = GameManager.Instance.financeManager.CalculateEventLoss(ev, lossPercent);
 
-            float intendedLoss = GameManager.Instance.financeManager
-                .CalculateEventLoss(ev, lossPercent);
-
-            Debug.Log(
-            $"[LOSS CALC] Event: {ev.eventName} | " +
-            $"Severity: {ev.severity} | " +
-            $"LossPercent: {lossPercent:F1}% | " +
-            $"CalculatedLoss: {intendedLoss:F0} | " +
-            $"CashBefore: {GameManager.Instance.financeManager.CashOnHand:F0}"
-            );
+            Debug.Log($"[LOSS CALC] Event: {ev.eventName} | Severity: {ev.severity} | " +
+                      $"LossPercent: {lossPercent:F1}% | CalculatedLoss: {intendedLoss:F0} | " +
+                      $"CashBefore: {GameManager.Instance.financeManager.CashOnHand:F0}");
 
             float payout = 0f;
-            float finalLoss = 0f;
+            float finalLoss = intendedLoss;
 
             if (ev.insuranceType != InsuranceType.None)
             {
                 InsuranceManager.InsuranceResult result =
-                GameManager.Instance.insuranceManager
-                .HandleEvent(ev.insuranceType, intendedLoss);
+                    GameManager.Instance.insuranceManager.HandleEvent(ev.insuranceType, intendedLoss);
 
                 payout += result.payout;
                 finalLoss = result.finalLoss;
-                Debug.Log(
-                $"[INSURANCE] Event: {ev.eventName} | " +
-                $"Type: {ev.insuranceType} | " +
-                $"Payout: {result.payout:F0} | " +
-                $"FinalPlayerLoss: {result.finalLoss:F0}"
-                );
 
-                if (result.waitingPeriodBlocked)
-                    Debug.Log("Claim blocked: waiting period.");
+                Debug.Log($"[INSURANCE] Event: {ev.eventName} | Type: {ev.insuranceType} | " +
+                          $"Payout: {result.payout:F0} | FinalPlayerLoss: {result.finalLoss:F0}");
 
-                if (result.lapsedBlocked)
-                    Debug.Log("Claim blocked: policy lapsed.");
+                if (result.waitingPeriodBlocked) Debug.Log("Claim blocked: waiting period.");
+                if (result.lapsedBlocked) Debug.Log("Claim blocked: policy lapsed.");
             }
 
             if (payout > 0f)
-            {
                 GameManager.Instance.ApplyMoneyChange(
                     FinancialEntry.EntryType.InsurancePayout,
                     "Insurance Payout",
                     payout,
                     true
                 );
-            }
 
             results.Add(new ResolvedEvent
             {
@@ -346,28 +305,16 @@ public class EventManager : MonoBehaviour
                 insurancePayout = payout
             });
 
-            Debug.Log(
-            $"[FINANCIAL RESULT] Event: {ev.eventName} | " +
-            $"PlayerLoss: {finalLoss:F0} | " +
-            $"InsurancePayout: {payout:F0} | " +
-            $"NetImpact: {-finalLoss + payout:F0}"
-            );
+            Debug.Log($"[FINANCIAL RESULT] Event: {ev.eventName} | PlayerLoss: {finalLoss:F0} | " +
+                      $"InsurancePayout: {payout:F0} | NetImpact: {-finalLoss + payout:F0}");
 
             TryScheduleFollowUp(ev, month);
 
             if (ev.affectsIncome)
-            {
-                GameManager.Instance.ApplyIncomeEffect(
-                    ev.incomePercentChange,
-                    ev.incomeEffectMonths
-                );
-            }
+                GameManager.Instance.ApplyIncomeEffect(ev.incomePercentChange, ev.incomeEffectMonths);
 
-            Debug.Log(
-                $"[INCOME EFFECT] Event: {ev.eventName} | " +
-                $"IncomeChange: {ev.incomePercentChange}% | " +
-                $"Duration: {ev.incomeEffectMonths} months"
-            );
+            Debug.Log($"[INCOME EFFECT] Event: {ev.eventName} | " +
+                      $"IncomeChange: {ev.incomePercentChange}% | Duration: {ev.incomeEffectMonths} months");
         }
 
         if (triggeredEventCount == 0 && Random.value < 0.35f + (eventPressure / maxPressure) * 0.4f)

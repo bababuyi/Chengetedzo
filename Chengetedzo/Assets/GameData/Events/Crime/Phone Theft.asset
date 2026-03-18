@@ -10,29 +10,30 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
-  m_Name: Medication Costs
+  m_Name: Phone Theft
   m_EditorClassIdentifier: 
-  eventName: Medication Costs
-  description: A family member has been diagnosed with a serious ailments and will
-    need long term healthcare
-  financialLesson: Chronic illness increases expenses.
-  category: 0
-  pool: 3
+  eventName: Phone Theft
+  description: Your basic mobile phone was stolen. It was your only means of mobile
+    money and communication.
+  financialLesson: "A stolen phone disrupts more than communication \u2014 it cuts
+    off financial access."
+  category: 4
+  pool: 4
   requiredAsset: 0
   icon: {fileID: 0}
-  probability: 20
-  weight: 8
+  probability: 25
+  weight: 10
   minLossPercent: 0
   maxLossPercent: 0
   affectsIncome: 0
   incomePercentChange: 0
   incomeEffectMonths: 0
-  insuranceType: 2
+  insuranceType: 0
   outcomeType: 0
   cashReward: 0
   momentumReward: 0
   season: 0
-  signal: 4
+  signal: 6
   severity: 0
   affectsHousehold: 0
   adultsLost: 0
@@ -42,7 +43,7 @@ MonoBehaviour:
   expenseFlatChange: 0
   expenseEffectMonths: 0
   lossType: 2
-  fixedLossAmount: 150
+  fixedLossAmount: 40
   affectsLoan: 0
   borrowingPowerChange: 0
   startsChain: 0

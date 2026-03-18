@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
-  m_Name: Medication Costs
+  m_Name: Funeral Contribution
   m_EditorClassIdentifier: 
-  eventName: Medication Costs
-  description: A family member has been diagnosed with a serious ailments and will
-    need long term healthcare
-  financialLesson: Chronic illness increases expenses.
+  eventName: Funeral Contribution
+  description: A neighbour or relative passed away. Community tradition requires
+    a contribution.
+  financialLesson: Social obligations are real financial costs. Plan for them.
   category: 0
   pool: 3
   requiredAsset: 0
@@ -27,7 +27,7 @@ MonoBehaviour:
   affectsIncome: 0
   incomePercentChange: 0
   incomeEffectMonths: 0
-  insuranceType: 2
+  insuranceType: 0
   outcomeType: 0
   cashReward: 0
   momentumReward: 0
@@ -42,7 +42,7 @@ MonoBehaviour:
   expenseFlatChange: 0
   expenseEffectMonths: 0
   lossType: 2
-  fixedLossAmount: 150
+  fixedLossAmount: 60
   affectsLoan: 0
   borrowingPowerChange: 0
   startsChain: 0

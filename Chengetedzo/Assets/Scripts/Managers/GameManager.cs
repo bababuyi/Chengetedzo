@@ -14,7 +14,7 @@ public class GameManager : MonoBehaviour
     [Header("Momentum")]
     private int savingsStreak = 0;
     private int overBudgetStreak = 0;
-    private Queue<bool> skipHistory = new Queue<bool>(); // last 6 months
+    private Queue<bool> skipHistory = new Queue<bool>();
     private float previousMomentum = 0f;
     private bool recoveryAcknowledged = false;
     private int lastMomentumZone = int.MinValue;
@@ -35,7 +35,6 @@ public class GameManager : MonoBehaviour
     public float maxMonthlyDamagePercent = 0.35f;
     private float monthlyDamageCapBase;
 
-    // --- NEW: Disaster grace protection ---
     [Header("Event Protection")]
     public int monthsSinceMajorEvent = 3;
     public int majorEventGraceMonths = 2;
@@ -55,7 +54,7 @@ public class GameManager : MonoBehaviour
     private List<ResolvedEvent> monthlyEvents = new();
     public bool IsLoanDecisionActive { get; private set; }
     public bool IsSavingsDecisionActive { get; private set; }
-    private Queue<bool> forcedLoanHistory = new(); // last 6 months
+    private Queue<bool> forcedLoanHistory = new();
     private bool forcedLoanThisMonth = false;
     private List<IncomeEffect> activeIncomeEffects = new();
     public bool IsHeadlessSimulation = false;
@@ -75,7 +74,7 @@ public class GameManager : MonoBehaviour
     {
         public ExpenseCategory category;
         public float flatIncrease;
-        public int remainingMonths; // -1 = permanent
+        public int remainingMonths; //Remember -1 = permanent
     }
 
     private List<ExpenseEffect> activeExpenseEffects = new();
@@ -115,10 +114,6 @@ public class GameManager : MonoBehaviour
         financeManager.InitializeFromSetup();
     }
 
-    // ============================
-    // BEHAVIOR TRACKING (YEAR)
-    // ============================
-
     private int totalUnexpectedEvents = 0;
     private int insuredEventsCount = 0;
     private float totalRawEventDamage = 0f;
@@ -133,7 +128,6 @@ public class GameManager : MonoBehaviour
     public int ForcedLoanCount => forcedLoanCount;
     public int MonthsUnderFinancialPressure => monthsUnderFinancialPressure;
 
-    //Enums and Structs
     public enum GamePhase
     {
         Idle,
@@ -167,7 +161,7 @@ public class GameManager : MonoBehaviour
     public class IncomeEffect
     {
         public float reductionPercent;
-        public int remainingMonths; // -1 = permanent
+        public int remainingMonths; // Remember -1 = permanent
     }
 
     public void StartNewMonth()
@@ -182,8 +176,6 @@ public class GameManager : MonoBehaviour
         UpdateIncomeEffects();
         UpdateExpenseEffects();
     }
-
-    //Month Controls
 
     public void ConfirmMonthAndResolve()
     {
@@ -203,17 +195,11 @@ public class GameManager : MonoBehaviour
         monthlyDamageTaken = 0f;
         monthlyDamageCapBase = financeManager.CashOnHand;
 
-        // 1. Apply Income & Budget
         financeManager.ProcessMonthlyBudget();
-
-        // 2. Insurance Premiums
         insuranceManager.ProcessMonthlyPremiums();
-
-        // 3. Loan Contribution
         loanManager?.ProcessContribution();
         loanManager?.UpdateLoans();
 
-        // 4. Generate Events
         monthlyEvents = eventManager.GenerateMonthlyEvents(currentMonth);
         Debug.Log($"[Events] Generated: {monthlyEvents.Count} events for month {currentMonth}");
 
@@ -221,7 +207,6 @@ public class GameManager : MonoBehaviour
         foreach (var ev in monthlyEvents)
             pendingEvents.Enqueue(ev);
 
-        // 5. Start stepping through events
         ProcessNextEvent();
     }
 
@@ -271,7 +256,6 @@ public class GameManager : MonoBehaviour
     {
         var player = PlayerDataManager.Instance;
 
-        // --- SIGNAL A: Consistency ---
         bool savedThisMonth = financeManager.LastMonthSavingsDelta > 0f;
         bool paidInsurance = insuranceManager.AnyPremiumPaidThisMonth;
 
@@ -289,7 +273,6 @@ public class GameManager : MonoBehaviour
             savingsStreak = 0;
         }
 
-        // --- SIGNAL B: Overextension ---
         if (financeManager.WasOverBudgetThisMonth)
             overBudgetStreak++;
         else
@@ -302,7 +285,6 @@ public class GameManager : MonoBehaviour
             overBudgetStreak = 0;
         }
 
-        // --- SIGNAL C: Skipping Habit ---
         bool skippedImportant = !savedThisMonth && !paidInsurance;
 
         skipHistory.Enqueue(skippedImportant);
@@ -337,27 +319,23 @@ public class GameManager : MonoBehaviour
 
         string lineToShow = null;
 
-        // PRIORITY 1 — Recovery
         if (IsRecovery(momentum))
         {
             lineToShow = MentorLines.RecoveryLines[
                 Random.Range(0, MentorLines.RecoveryLines.Length)];
         }
 
-        // PRIORITY 2 — Forced Loan Pattern
         else if (CountForcedLoans() >= 2)
         {
             lineToShow = MentorLines.ForcedLoanPattern[
                 Random.Range(0, MentorLines.ForcedLoanPattern.Length)];
         }
 
-        // PRIORITY 3 — Zone Change
         else if (HasZoneChanged(momentum))
         {
             lineToShow = GetZoneLine(momentum);
         }
 
-        // PRIORITY 4 — Pattern Warning
         else if (!patternWarningIssued && IsNegativePatternForming())
         {
             lineToShow = MentorLines.PatternWarning[
@@ -369,14 +347,11 @@ public class GameManager : MonoBehaviour
         if (IsHeadlessSimulation)
             return;
 
-        // Base monthly mentor chance
-        float monthlyChance = 0.35f; // 35%
+        float monthlyChance = 0.35f;
 
-        // Stronger chance if momentum is extreme
         if (momentum >= 15f || momentum <= -15f)
             monthlyChance = 0.60f;
 
-        // Only trigger if chance succeeds
         if (lineToShow != null && Random.value < monthlyChance)
         {
             uiManager.ShowMentorMessage(lineToShow);
@@ -471,7 +446,6 @@ public class GameManager : MonoBehaviour
         OnSeasonChanged?.Invoke();
         monthsSinceMajorEvent++;
 
-        // Mid-year checkpoints — scale with totalMonths
         int half = totalMonths / 2;
         int third = totalMonths / 3;
         int twoThirds = (totalMonths * 2) / 3;
@@ -544,7 +518,6 @@ public class GameManager : MonoBehaviour
 
         currentEvent = pendingEvents.Dequeue();
 
-        // --- NEW: detect major disasters ---
         float lossPercent = Mathf.Abs(currentEvent.moneyChange) /
                             Mathf.Max(1f, financeManager.CashOnHand);
 
@@ -641,7 +614,6 @@ public class GameManager : MonoBehaviour
 
     public void OnInsuranceConfirmed()
     {
-        // Only force loan panel once, on first unlock
         if (!loanIntroShown &&
             loanManager != null &&
             loanManager.IsLoanUnlocked)
@@ -662,7 +634,6 @@ public class GameManager : MonoBehaviour
     {
         IsLoanDecisionActive = false;
 
-        // If month hasn't started resolving yet, start it now
         if (!monthResolutionStarted)
         {
             SetPhase(GamePhase.Simulation);
@@ -670,7 +641,6 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        // If month is already resolving
         if (isWaitingForEventConfirmation)
         {
             SetPhase(GamePhase.Simulation);
@@ -685,7 +655,6 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        // If no events and resolution already done → go to report
         if (CurrentPhase != GamePhase.Report)
         {
             EndMonthlyResolution();
@@ -732,7 +701,6 @@ public class GameManager : MonoBehaviour
 
     public void ApplyIncomeEffect(float percent, int months)
     {
-        // FUTURE GUARD: prevent stacking permanent effects
         if (months <= 0 &&
         activeIncomeEffects.Exists(e =>
         e.remainingMonths == -1 &&
@@ -823,7 +791,6 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        // CurrentPhase == Simulation is already guaranteed here
         bool canShowLoan =
             loanManager != null &&
             loanManager.IsLoanUnlocked &&
@@ -1003,7 +970,6 @@ public class GameManager : MonoBehaviour
 
         if (CurrentLedger == null)
         {
-            // Pre-resolution financial mutation (e.g., insurance purchase)
             financeManager.ApplyCashDelta(isCredit ? amount : -amount);
             Debug.Log("[Ledger] Pre-resolution transaction applied without ledger.");
             return;
@@ -1021,20 +987,17 @@ public class GameManager : MonoBehaviour
     {
         string text = ev.description;
 
-        // Direct money
         if (ev.moneyChange != 0f)
         {
             string sign = ev.moneyChange > 0 ? "+" : "-";
             text += $"\n\nMoney: {sign}${Mathf.Abs(ev.moneyChange):F0}";
         }
 
-        // Insurance payout
         if (ev.insurancePayout > 0f)
         {
             text += $"\nInsurance Payout: +${ev.insurancePayout:F0}";
         }
 
-        // Income percent change
         if (ev.incomePercentChange != 0f)
         {
             string sign = ev.incomePercentChange > 0 ? "+" : "";
@@ -1092,7 +1055,6 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("=== FULL GAME RESET ===");
 
-        // Reset systems
         financeManager?.ResetFinance();
         eventManager?.ResetAll();
         uiManager.UpdateMoneyText(financeManager.CashOnHand);
@@ -1101,7 +1063,6 @@ public class GameManager : MonoBehaviour
         PlayerDataManager.Instance?.ResetPlayerData();
         activeExpenseEffects.Clear();
 
-        // Reset setup data
         setupData.minIncome = 0f;
         setupData.maxIncome = 0f;
         setupData.isIncomeStable = true;
@@ -1112,7 +1073,6 @@ public class GameManager : MonoBehaviour
         setupData.children = 0;
         setupData.housing = HousingType.Renting;
         setupData.ownsCar = false;
-        setupData.ownsFarm = false;
         if (forecastManager != null)
         {
             forecastManager.forecastGeneratedThisMonth = false;
@@ -1125,7 +1085,6 @@ public class GameManager : MonoBehaviour
         monthsUnderFinancialPressure = 0;
         monthsSinceMajorEvent = 3;
 
-        // Reset GameManager state
         currentMonth = 1;
 
         yearIncome = 0f;
@@ -1162,7 +1121,6 @@ public class GameManager : MonoBehaviour
         uiManager.UpdateMonthText(currentMonth, totalMonths);
         uiManager.UpdateMoneyText(0f);
 
-        // HARD STOP SIMULATION STATE
         pendingEvents.Clear();
         monthlyEvents.Clear();
         IsHeadlessSimulation = false;
@@ -1183,10 +1141,6 @@ public class GameManager : MonoBehaviour
     }
 
 #if UNITY_EDITOR
-
-    // ============================================================
-    // SHARED HELPER — runs the headless loop for any test profile
-    // ============================================================
     private void RunHeadlessLoop(string testName)
     {
         financeManager.generalSavingsMonthly = 0f;
@@ -1245,9 +1199,6 @@ public class GameManager : MonoBehaviour
                   $"Months Under Pressure: {monthsUnderFinancialPressure}");
     }
 
-    // ============================================================
-    // SHARED SETUP GUARD — validates references before any test
-    // ============================================================
     private bool StressTestPreCheck(string testName)
     {
         if (setupData == null)
@@ -1261,7 +1212,6 @@ public class GameManager : MonoBehaviour
             return false;
         }
 
-        // ← FIX: reset all simulation state so tests are always deterministic
         currentMonth = 1;
         monthsSinceMajorEvent = 3;
         monthlyDamageTaken = 0f;
@@ -1326,7 +1276,6 @@ public class GameManager : MonoBehaviour
         setupData.isIncomeStable = false;
         setupData.housing = HousingType.Renting;
         setupData.ownsCar = false;
-        setupData.ownsFarm = false;
         setupData.hasSchoolFees = false;
         setupData.schoolFeesAmount = 0f;
         setupData.minIncome = 400f;
@@ -1338,15 +1287,12 @@ public class GameManager : MonoBehaviour
         financeManager.utilities = 30f;
         financeManager.assets = new PlayerAssets();
 
+        insuranceManager?.EnableBasicPlan();
         RunHeadlessLoop(NAME);
     }
 
     // ============================================================
     // TEST 2 — ZIMBABWE LOW CLASS
-    // Informal sector worker, renting a single room in a high-density
-    // suburb (Mbare / Dzivarasekwa). 2 adults, 2 kids in school.
-    // Tight budget — nearly every month is a struggle.
-    // Income: $150–$280/month (USD)
     // ============================================================
     [ContextMenu("DEBUG_StressTest_ZW_LowClass")]
     public void DEBUG_StressTest_ZW_LowClass()
@@ -1359,34 +1305,26 @@ public class GameManager : MonoBehaviour
 
         setupData.adults = 2;
         setupData.children = 2;
-        setupData.isIncomeStable = false;       // irregular informal work
+        setupData.isIncomeStable = false;
         setupData.housing = HousingType.Renting;
         setupData.ownsCar = false;
-        setupData.ownsFarm = false;
         setupData.hasSchoolFees = true;
-        setupData.schoolFeesAmount = 30f;        // ~$30/term per child, ZW govt school
+        setupData.schoolFeesAmount = 30f;
         setupData.minIncome = 150f;
-        setupData.maxIncome = 280f;
+        setupData.maxIncome = 350f;
 
-        // Room rental in high-density suburb
         financeManager.rentCost = 60f;
-        // Basic groceries — maize meal, cooking oil, vegetables
         financeManager.groceries = 70f;
-        // Commuter omnibus (ZUPCO / kombis)
         financeManager.transport = 20f;
-        // Prepaid electricity (token), water shared
         financeManager.utilities = 15f;
         financeManager.assets = new PlayerAssets();
 
+        insuranceManager?.EnableBasicPlan();
         RunHeadlessLoop(NAME);
     }
 
     // ============================================================
     // TEST 3 — ZIMBABWE MIDDLE CLASS
-    // Civil servant or NGO worker, renting a 3-room house in
-    // a medium-density suburb (Budiriro / Waterfalls / Msasa).
-    // 2 adults, 2 kids, owns a motor vehicle, no farm.
-    // Income: $500–$900/month (USD)
     // ============================================================
     [ContextMenu("DEBUG_StressTest_ZW_MiddleClass")]
     public void DEBUG_StressTest_ZW_MiddleClass()
@@ -1399,37 +1337,31 @@ public class GameManager : MonoBehaviour
 
         setupData.adults = 2;
         setupData.children = 2;
-        setupData.isIncomeStable = true;        // formal employment, monthly pay
+        setupData.isIncomeStable = false;
         setupData.housing = HousingType.Renting;
         setupData.ownsCar = true;
-        setupData.ownsFarm = false;
         setupData.hasSchoolFees = true;
-        setupData.schoolFeesAmount = 80f;        // ~$80/term, private primary school
+        setupData.schoolFeesAmount = 900f;
         setupData.minIncome = 500f;
-        setupData.maxIncome = 900f;
+        setupData.maxIncome = 1500f;
 
         // 3-room house rental in medium-density suburb
-        financeManager.rentCost = 180f;
-        // Groceries for family of 4
-        financeManager.groceries = 130f;
-        // Car fuel (petrol ~$1.50/litre in ZW) + occasional kombi
-        financeManager.transport = 70f;
-        // ZESA prepaid electricity, borehole water rates
+        financeManager.rentCost = 900f;
+        financeManager.groceries = 200f;
+        financeManager.transport = 80f;
         financeManager.utilities = 45f;
         financeManager.assets = new PlayerAssets
         {
             hasMotor = true
         };
+        financeManager.motorInsuredValue = 12000f;
 
+        insuranceManager?.EnableBasicPlan();
         RunHeadlessLoop(NAME);
     }
 
     // ============================================================
     // TEST 4 — ZIMBABWE HIGH CLASS
-    // Business owner or senior professional, owns house in a
-    // low-density suburb (Borrowdale / Mount Pleasant / Highlands).
-    // 2 adults, 2 kids, owns car, owns a small farm plot.
-    // Income: $1,500–$3,000/month (USD)
     // ============================================================
     [ContextMenu("DEBUG_StressTest_ZW_HighClass")]
     public void DEBUG_StressTest_ZW_HighClass()
@@ -1442,22 +1374,16 @@ public class GameManager : MonoBehaviour
 
         setupData.adults = 2;
         setupData.children = 2;
-        setupData.isIncomeStable = false;       // business income varies
+        setupData.isIncomeStable = false;
         setupData.housing = HousingType.OwnsHouse;
         setupData.ownsCar = true;
-        setupData.ownsFarm = true;
         setupData.hasSchoolFees = true;
-        setupData.schoolFeesAmount = 350f;       // ~$350/term, private secondary school
+        setupData.schoolFeesAmount = 2000f;
         setupData.minIncome = 1500f;
         setupData.maxIncome = 3000f;
-
-        // Owns house — no rent, but maintenance costs covered by events
         financeManager.rentCost = 0f;
-        // Full family groceries + domestic worker
-        financeManager.groceries = 280f;
-        // 4x4 fuel, vehicle servicing
+        financeManager.groceries = 400f;
         financeManager.transport = 160f;
-        // Generator fuel (load shedding), solar top-up, water bills
         financeManager.utilities = 120f;
         financeManager.assets = new PlayerAssets
         {
@@ -1467,6 +1393,12 @@ public class GameManager : MonoBehaviour
             hasLivestock = true
         };
 
+        setupData.houseValue = 150000f;
+        financeManager.motorInsuredValue = 50000f;
+        financeManager.cropsInsuredValue = 4000f;
+        financeManager.livestockInsuredValue = 6000f;
+
+        insuranceManager?.EnableBasicPlan();
         RunHeadlessLoop(NAME);
     }
 
