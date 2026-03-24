@@ -50,6 +50,8 @@ public class EventManager : MonoBehaviour
         }
     }
 
+    public float GetEventPressure() => eventPressure;
+
     public List<ResolvedEvent> GenerateMonthlyEvents(int month)
     {
         if (GameManager.Instance.CurrentPhase != GameManager.GamePhase.Simulation)
@@ -260,10 +262,9 @@ public class EventManager : MonoBehaviour
             float lossPercent = Random.Range(ev.minLossPercent, ev.maxLossPercent + 1);
 
             float cash = GameManager.Instance.financeManager.CashOnHand;
-            if (cash < 2000) lossPercent *= 0.6f;
-            else if (cash < 4000) lossPercent *= 0.8f;
-
             float intendedLoss = GameManager.Instance.financeManager.CalculateEventLoss(ev, lossPercent);
+            if (cash < 2000) intendedLoss *= 0.6f;
+            else if (cash < 4000) intendedLoss *= 0.8f;
 
             Debug.Log($"[LOSS CALC] Event: {ev.eventName} | Severity: {ev.severity} | " +
                       $"LossPercent: {lossPercent:F1}% | CalculatedLoss: {intendedLoss:F0} | " +
@@ -548,6 +549,11 @@ float intendedLoss = GameManager.Instance.financeManager
 
             _ => false
         };
+    }
+
+    public void SetEventPressure(float value)
+    {
+        eventPressure = Mathf.Clamp(value, 0f, maxPressure);
     }
 
     public void ResetAll()

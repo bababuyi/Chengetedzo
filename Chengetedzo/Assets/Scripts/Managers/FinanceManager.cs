@@ -282,7 +282,8 @@ public class FinanceManager : MonoBehaviour
         if (schoolFeesPerTerm <= 0f)
             return false;
 
-        bool isTermStart = (month == 1 || month == 5 || month == 9);
+        int normalizedMonth = ((month - 1) % 12) + 1;
+        bool isTermStart = (normalizedMonth == 1 || normalizedMonth == 5 || normalizedMonth == 9);
 
         if (isTermStart)
             schoolFeesOutstanding = true;

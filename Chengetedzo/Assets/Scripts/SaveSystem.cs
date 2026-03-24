@@ -40,6 +40,15 @@ public static class SaveSystem
         data.monthsUnderFinancialPressure = gm.MonthsUnderFinancialPressure;
         data.financialMomentum = PlayerDataManager.Instance.FinancialMomentum;
 
+        data.savingsStreak = gm.SavedSavingsStreak;
+        data.overBudgetStreak = gm.SavedOverBudgetStreak;
+        data.patternWarningIssued = gm.SavedPatternWarningIssued;
+        data.recoveryAcknowledged = gm.SavedRecoveryAcknowledged;
+        data.lastMomentumZone = gm.SavedLastMomentumZone;
+        data.previousMomentum = gm.SavedPreviousMomentum;
+        data.monthsSinceMajorEvent = gm.monthsSinceMajorEvent;
+        data.eventPressure = gm.eventManager.GetEventPressure();
+
         string json = JsonUtility.ToJson(data, true);
 
         File.WriteAllText(SavePath, json);

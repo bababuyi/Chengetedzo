@@ -67,8 +67,10 @@ public class BudgetPanelController : MonoBehaviour
 
     public void LoadDefaultsFromSetup()
     {
-        if (finance == null || GameManager.Instance == null)
+        if (finance == null)
+            finance = GameManager.Instance?.financeManager;
 
+        if (finance == null || GameManager.Instance == null)
         {
             Debug.LogError("[BudgetPanelController] FinanceManager not found.");
             return;
@@ -189,9 +191,13 @@ public class BudgetPanelController : MonoBehaviour
         if (confirmButton != null)
             confirmButton.interactable = true;
     }
+
     private void OnBackPressed()
     {
-        GameManager.Instance.OnBudgetBackRequested();
+        if (GameManager.Instance.IsGuidedMode)
+            UIManager.Instance.SwitchPanel(UIManager.UIPanelState.ProfileSelect);
+        else
+            GameManager.Instance.OnBudgetBackRequested();
     }
 
     private void ConfigureSliderBounds()

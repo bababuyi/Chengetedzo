@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using static EventManager;
 
@@ -150,7 +150,7 @@ public class InsuranceManager : MonoBehaviour
             planName = "Hospital Cash Back",
             type = InsuranceType.HospitalCash,
             premium = 1f,
-            coverageLimit = 3000f, // 100 � 30 days
+            coverageLimit = 3000f, // 100 × 30 days
             waitingPeriodMonths = 3,
             coverageDescription = "Provides daily cash support during hospitalization, up to 30 days per month."
         });
@@ -170,7 +170,9 @@ public class InsuranceManager : MonoBehaviour
         {
             planName = "Motor Insurance",
             type = InsuranceType.Motor,
-            premium = 600f, //5% of a vehicle worth using a imported Honda fit for reference making it 12,000x5%
+            premiumIsAssetBased = true,
+            premiumRate = 0.05f / 12f,  // 5% annual → 0.417% monthly
+            premium = 0f,  //5% of a vehicle worth using a 5%x6000 for an old second hand car if low income imported Honda Vezel for reference making it 12,000x5% for middle income and then 55,000x5% for high income
             coverageLimit = 3000f,
             waitingPeriodMonths = 0,
             requiredAsset = GameManager.AssetRequirement.Motor,
@@ -402,7 +404,7 @@ public class InsuranceManager : MonoBehaviour
                 if (plan.missedPayments == 1)
                 {
                     // enters grace
-                    Debug.Log($"[Insurance] {plan.planName} missed payment � grace month.");
+                    Debug.Log($"[Insurance] {plan.planName} missed payment — grace month.");
                 }
                 else if (plan.missedPayments >= 2)
                 {

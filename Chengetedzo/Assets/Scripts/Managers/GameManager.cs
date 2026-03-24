@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using static GameManager;
+using static UIManager;
 
 public class GameManager : MonoBehaviour
 {
@@ -72,7 +73,12 @@ public class GameManager : MonoBehaviour
     private bool isWaitingForEventConfirmation = false;
     private bool forecastBackLocked = false;
     public bool IsForecastBackLocked => forecastBackLocked;
-
+    public int SavedSavingsStreak => savingsStreak;
+    public int SavedOverBudgetStreak => overBudgetStreak;
+    public bool SavedPatternWarningIssued => patternWarningIssued;
+    public bool SavedRecoveryAcknowledged => recoveryAcknowledged;
+    public int SavedLastMomentumZone => lastMomentumZone;
+    public float SavedPreviousMomentum => previousMomentum;
     [System.Serializable]
     public class ExpenseEffect
     {
@@ -111,11 +117,9 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        uiManager.UpdateMoneyText(financeManager.CashOnHand);
+        uiManager.UpdateMoneyText(0f);
         uiManager.UpdateMonthText(currentMonth, totalMonths);
-
         visualManager?.UpdateVisuals();
-        financeManager.InitializeFromSetup();
     }
 
     private int totalUnexpectedEvents = 0;
@@ -180,7 +184,10 @@ public class GameManager : MonoBehaviour
         monthResolutionStarted = false;
         mentorSpokeThisMonth = false;
         forcedLoanThisMonth = false;
+        forecastBackLocked = false;
         forecastManager.forecastGeneratedThisMonth = false;
+        CurrentLedger = null;
+
         Debug.Log($"=== Month {currentMonth} START ===");
         EnterForecastPhase();
         loanManager?.ResetMonthlyFlags();
@@ -362,8 +369,9 @@ public class GameManager : MonoBehaviour
 
         if (momentum >= 15f || momentum <= -15f)
             monthlyChance = 0.60f;
+        bool forceShow = momentum <= -15f || momentum >= 20f;
 
-        if (lineToShow != null && Random.value < monthlyChance)
+        if (lineToShow != null && (forceShow || Random.value < monthlyChance))
         {
             uiManager.ShowMentorMessage(lineToShow);
             mentorSpokeThisMonth = true;
@@ -594,6 +602,9 @@ public class GameManager : MonoBehaviour
         Debug.Log(CurrentLedger.GetMonthlyBreakdown());
 
         SetPhase(GamePhase.Report);
+
+        if (financeManager.LastMonthSavingsDelta > 0)
+            patternWarningIssued = false;
 
         uiManager.ShowReportPanel(
         CurrentLedger.GetMonthlyBreakdown()
@@ -1056,6 +1067,15 @@ public class GameManager : MonoBehaviour
         monthsUnderFinancialPressure = save.monthsUnderFinancialPressure;
         PlayerDataManager.Instance.SetMomentum(save.financialMomentum);
 
+        savingsStreak = save.savingsStreak;
+        overBudgetStreak = save.overBudgetStreak;
+        patternWarningIssued = save.patternWarningIssued;
+        recoveryAcknowledged = save.recoveryAcknowledged;
+        lastMomentumZone = save.lastMomentumZone;
+        previousMomentum = save.previousMomentum;
+        monthsSinceMajorEvent = save.monthsSinceMajorEvent;
+        eventManager.SetEventPressure(save.eventPressure);
+
         uiManager.UpdateMonthText(currentMonth, totalMonths);
         uiManager.UpdateMoneyText(financeManager.CashOnHand);
 
@@ -1065,7 +1085,7 @@ public class GameManager : MonoBehaviour
     public void FullRestart()
     {
         Debug.Log("=== FULL GAME RESET ===");
-
+        uiManager.SwitchPanel(UIManager.UIPanelState.None);
         financeManager?.ResetFinance();
         eventManager?.ResetAll();
         uiManager.UpdateMoneyText(financeManager.CashOnHand);
@@ -1121,6 +1141,7 @@ public class GameManager : MonoBehaviour
         IsLoanDecisionActive = false;
         IsSavingsDecisionActive = false;
         forcedLoanThisMonth = false;
+        isWaitingForEventConfirmation = false;
         lastMomentumZone = int.MinValue;
 
         CurrentLedger = null;
@@ -1136,7 +1157,7 @@ public class GameManager : MonoBehaviour
         monthlyEvents.Clear();
         IsHeadlessSimulation = false;
 
-        uiManager.SwitchPanel(UIManager.UIPanelState.Setup);
+        uiManager.SwitchPanel(UIManager.UIPanelState.MainMenu);
 
         var setup = uiManager.setupPanel.GetComponent<SetupPanelController>();
         setup?.OnPanelOpened();

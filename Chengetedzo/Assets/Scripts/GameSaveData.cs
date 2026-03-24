@@ -30,4 +30,13 @@ public class GameSaveData
     public int missedPayments;
     public int onTimePayments;
     public bool loanUnlocked;
+
+    public int savingsStreak;
+    public int overBudgetStreak;
+    public bool patternWarningIssued;
+    public bool recoveryAcknowledged;
+    public int lastMomentumZone;
+    public float previousMomentum;
+    public int monthsSinceMajorEvent;
+    public float eventPressure;
 }

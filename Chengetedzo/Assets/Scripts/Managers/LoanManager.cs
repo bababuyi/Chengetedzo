@@ -108,9 +108,14 @@ public class LoanManager : MonoBehaviour
             );
 
             loanBalance -= repayment;
-            loanBalance = Mathf.Max(0f, loanBalance); // guard against float drift
+            loanBalance = Mathf.Max(0f, loanBalance);
 
             onTimePayments++;
+            if (missedPayments == 0 && onTimePayments % 3 == 0)
+            {
+                repaymentRate = Mathf.Max(minRepaymentRate, repaymentRate - 0.05f);
+                Debug.Log($"[Loan] Good streak — repayment rate reduced to {repaymentRate * 100f}%");
+            }
             RepaidThisMonth = true;
 
             if (missedPayments > 0)

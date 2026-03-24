@@ -414,6 +414,11 @@ public class UIManager : MonoBehaviour
         GameManager.Instance.FullRestart();
     }
 
+    public void ResetPanelState()
+    {
+        currentPanelState = UIPanelState.None;
+    }
+
     public void ShowMentorMessage(string message, System.Action onClose = null)
     {
         mentorText.text = message;
