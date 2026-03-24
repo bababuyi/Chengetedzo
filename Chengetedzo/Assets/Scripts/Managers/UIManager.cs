@@ -60,6 +60,9 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI mentorText;
     public Button mentorContinueButton;
 
+    [Header("Main Menu Panels")]
+    public GameObject mainMenuPanel;
+    public GameObject profileSelectPanel;
 
     // Popup state property (correct, single version)
     private UIPanelState currentPanelState = UIPanelState.None;
@@ -72,6 +75,7 @@ public class UIManager : MonoBehaviour
     private System.Action activeOnClose;
 
     public bool IsPopupActive { get; private set; }
+    public bool IsGuidedMode { get; private set; }
 
     private void ShowPopup(
         GameObject popupObject,
@@ -118,6 +122,8 @@ public class UIManager : MonoBehaviour
     public enum UIPanelState
     {
         None,
+        MainMenu,
+        ProfileSelect,
         Setup,
         Budget,
         Forecast,
@@ -142,8 +148,7 @@ public class UIManager : MonoBehaviour
 
     private void Start()
     {
-        SwitchPanel(UIPanelState.None);
-        ShowSetupPanel();
+        SwitchPanel(UIPanelState.MainMenu);
     }
 
     public void ShowSetupPanel()
@@ -180,6 +185,8 @@ public class UIManager : MonoBehaviour
         if (loanPanel != null) loanPanel.SetActive(false);
         if (reportPanel != null) reportPanel.SetActive(false);
         if (endOfYearScreen != null) endOfYearScreen.SetActive(false);
+        if (mainMenuPanel != null) mainMenuPanel.SetActive(false);
+        if (profileSelectPanel != null) profileSelectPanel.SetActive(false);
     }
 
     public void ShowPanel(UIPanelState state)
@@ -218,8 +225,9 @@ public class UIManager : MonoBehaviour
     {
         if (currentPanelState == newState)
             return;
-
+        //------------------------------------//
         // FUTURE BARAKA. BE VERY CAREFUL WITH EVENT AND MENTOR POPUPS. YOU WILL REGRET TOUCHING ANYTHING
+        //-----------------------------------//
         if (IsPopupActive && activePopup != eventPopup)
             CloseActivePopup();
 
@@ -266,6 +274,15 @@ public class UIManager : MonoBehaviour
 
             case UIPanelState.Simulation:
                 topHUD.SetActive(true);
+                break;
+            case UIPanelState.MainMenu:
+                mainMenuPanel.SetActive(true);
+                topHUD.SetActive(false);
+                break;
+
+            case UIPanelState.ProfileSelect:
+                profileSelectPanel.SetActive(true);
+                topHUD.SetActive(false);
                 break;
         }
     }
@@ -479,5 +496,39 @@ public class UIManager : MonoBehaviour
         Vector2 pos = rect.anchoredPosition;
         pos.x = xPos;
         rect.anchoredPosition = pos;
+    }
+
+    public void OnStartGameClicked()
+    {
+        SwitchPanel(UIPanelState.ProfileSelect);
+    }
+
+    public void OnSelectInformalWorker()
+    {
+        GameManager.Instance.ApplyProfile(ProfileType.Informal);
+        ShowBudgetPanel();
+    }
+
+    public void OnSelectFormalWorker()
+    {
+        GameManager.Instance.ApplyProfile(ProfileType.Formal);
+        ShowBudgetPanel();
+    }
+
+    public void OnSelectFarmer()
+    {
+        GameManager.Instance.ApplyProfile(ProfileType.Farmer);
+        ShowBudgetPanel();
+    }
+
+    public void OnFreeModeClicked()
+    {
+        GameManager.Instance.ClearProfile(); // we’ll create this
+        SwitchPanel(UIPanelState.Setup);
+    }
+
+    public void OnBackToMenu()
+    {
+        SwitchPanel(UIPanelState.MainMenu);
     }
 }

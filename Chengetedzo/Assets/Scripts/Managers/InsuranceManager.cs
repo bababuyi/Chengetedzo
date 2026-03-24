@@ -182,7 +182,7 @@ public class InsuranceManager : MonoBehaviour
             planName = "Home Insurance",
             type = InsuranceType.Home,
             premiumIsAssetBased = true,
-            premiumRate = 0.015f,
+            premiumRate = 0.00075f,
             deductiblePercent = 0f,
             waitingPeriodMonths = 0,
             requiredAsset = GameManager.AssetRequirement.House,

@@ -45,6 +45,10 @@ public class GameManager : MonoBehaviour
     private float yearPremiums = 0f;
     private float yearPayouts = 0f;
     private float yearEventLosses = 0f;
+
+    [Header("Mode")]
+    public bool IsGuidedMode = false;
+
     public float YearIncome => yearIncome;
     public float YearExpenses => yearExpenses;
     public float YearPremiums => yearPremiums;
@@ -155,6 +159,13 @@ public class GameManager : MonoBehaviour
         Crops,
         Livestock,
         CropsOrLivestock
+    }
+
+    public enum ProfileType
+    {
+        Informal,
+        Formal,
+        Farmer
     }
 
     [System.Serializable]
@@ -1140,11 +1151,128 @@ public class GameManager : MonoBehaviour
         return monthResolutionStarted;
     }
 
+    public void ClearProfile()
+    {
+        IsGuidedMode = false;
+        if (setupData == null || financeManager == null)
+            return;
+
+        Debug.Log("[Profile] Free Mode selected");
+
+        // Reset to neutral defaults
+        setupData.adults = 1;
+        setupData.children = 0;
+        setupData.isIncomeStable = true;
+        setupData.housing = HousingType.Renting;
+        setupData.ownsCar = false;
+
+        setupData.minIncome = 0f;
+        setupData.maxIncome = 0f;
+
+        financeManager.rentCost = 0f;
+        financeManager.groceries = 0f;
+        financeManager.transport = 0f;
+        financeManager.utilities = 0f;
+
+        setupData.hasSchoolFees = false;
+        setupData.schoolFeesAmount = 0f;
+
+        financeManager.assets = new PlayerAssets();
+
+        financeManager.InitializeFromSetup();
+    }
+
+    public void ApplyProfile(ProfileType profile)
+    {
+        IsGuidedMode = true;
+        if (setupData == null || financeManager == null)
+        {
+            Debug.LogError("SetupData or FinanceManager missing.");
+            return;
+        }
+
+        Debug.Log($"[Profile] Applying: {profile}");
+
+        switch (profile)
+        {
+            case ProfileType.Informal:
+
+                setupData.adults = 1;
+                setupData.children = 2;
+                setupData.isIncomeStable = false;
+                setupData.housing = HousingType.Renting;
+                setupData.ownsCar = false;
+
+                setupData.minIncome = 150f;
+                setupData.maxIncome = 350f;
+
+                financeManager.rentCost = 60f;
+                financeManager.groceries = 70f;
+                financeManager.transport = 20f;
+                financeManager.utilities = 15f;
+
+                financeManager.assets = new PlayerAssets();
+                break;
+
+            case ProfileType.Formal:
+
+                setupData.adults = 1;
+                setupData.children = 1;
+                setupData.isIncomeStable = true;
+                setupData.housing = HousingType.Renting;
+                setupData.ownsCar = true;
+
+                setupData.minIncome = 500f;
+                setupData.maxIncome = 1200f;
+
+                financeManager.rentCost = 400f;
+                financeManager.groceries = 150f;
+                financeManager.transport = 80f;
+                financeManager.utilities = 50f;
+
+                financeManager.assets = new PlayerAssets
+                {
+                    hasMotor = true
+                };
+                break;
+
+            case ProfileType.Farmer:
+
+                setupData.adults = 2;
+                setupData.children = 2;
+                setupData.isIncomeStable = false;
+                setupData.housing = HousingType.OwnsHouse;
+                setupData.ownsCar = false;
+
+                setupData.minIncome = 200f;
+                setupData.maxIncome = 800f;
+
+                financeManager.rentCost = 0f;
+                financeManager.groceries = 120f;
+                financeManager.transport = 40f;
+                financeManager.utilities = 25f;
+
+                financeManager.assets = new PlayerAssets
+                {
+                    hasCrops = true,
+                    hasLivestock = true
+                };
+
+                financeManager.cropsInsuredValue = 3000f;
+                financeManager.livestockInsuredValue = 4000f;
+                break;
+        }
+
+        financeManager.InitializeFromSetup();
+        uiManager.UpdateMoneyText(financeManager.CashOnHand);
+    }
+
 #if UNITY_EDITOR
     private void RunHeadlessLoop(string testName)
     {
         financeManager.generalSavingsMonthly = 0f;
         financeManager.InitializeFromSetup();
+        //insuranceManager?.EnableBasicPlan();
 
         if (CurrentPhase == GamePhase.Idle)
             StartNewMonth();
@@ -1287,7 +1415,6 @@ public class GameManager : MonoBehaviour
         financeManager.utilities = 30f;
         financeManager.assets = new PlayerAssets();
 
-        insuranceManager?.EnableBasicPlan();
         RunHeadlessLoop(NAME);
     }
 
@@ -1319,7 +1446,6 @@ public class GameManager : MonoBehaviour
         financeManager.utilities = 15f;
         financeManager.assets = new PlayerAssets();
 
-        insuranceManager?.EnableBasicPlan();
         RunHeadlessLoop(NAME);
     }
 
@@ -1356,7 +1482,6 @@ public class GameManager : MonoBehaviour
         };
         financeManager.motorInsuredValue = 12000f;
 
-        insuranceManager?.EnableBasicPlan();
         RunHeadlessLoop(NAME);
     }
 
@@ -1398,9 +1523,7 @@ public class GameManager : MonoBehaviour
         financeManager.cropsInsuredValue = 4000f;
         financeManager.livestockInsuredValue = 6000f;
 
-        insuranceManager?.EnableBasicPlan();
         RunHeadlessLoop(NAME);
     }
-
 #endif
 }
