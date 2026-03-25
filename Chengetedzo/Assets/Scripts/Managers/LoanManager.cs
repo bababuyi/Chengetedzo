@@ -160,6 +160,7 @@ public class LoanManager : MonoBehaviour
         {
             loanUnlocked = true;
             UIManager.Instance.ShowLoanTopButton();
+            TutorialManager.Instance?.OnLoanUnlocked();
         }
     }
 

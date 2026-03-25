@@ -555,8 +555,21 @@ public class GameManager : MonoBehaviour
         }
 
         isWaitingForEventConfirmation = true;
-        ShowEvent(currentEvent);
         Debug.Log($"[Event] Processing: {currentEvent.title} | MoneyChange: {currentEvent.moneyChange}");
+
+        // First event ever: show tutorial explaining what the player is seeing
+        if (TutorialManager.Instance != null && totalUnexpectedEvents == 1)
+        {
+            TutorialManager.Instance.OnFirstEvent(
+                currentEvent.insurancePayout > 0f,
+                currentEvent.insurancePayout,
+                () => ShowEvent(currentEvent)
+            );
+        }
+        else
+        {
+            ShowEvent(currentEvent);
+        }
     }
 
     private void ShowEvent(ResolvedEvent ev)
@@ -641,7 +654,6 @@ public class GameManager : MonoBehaviour
             loanManager.IsLoanUnlocked)
         {
             loanIntroShown = true;
-
             SetPhase(GamePhase.Loan);
             uiManager.ShowLoanPanel();
             return;
@@ -649,7 +661,16 @@ public class GameManager : MonoBehaviour
 
         uiManager.SwitchPanel(UIManager.UIPanelState.None);
         SetPhase(GamePhase.Simulation);
-        ConfirmMonthAndResolve();
+
+        // First-ever simulation start: show tutorial before processing begins
+        if (TutorialManager.Instance != null)
+        {
+            TutorialManager.Instance.OnSimulationFirstStart(ConfirmMonthAndResolve);
+        }
+        else
+        {
+            ConfirmMonthAndResolve();
+        }
     }
 
     public void OnLoanDecisionFinished()

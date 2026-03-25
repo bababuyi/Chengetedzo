@@ -59,10 +59,12 @@ public class UIManager : MonoBehaviour
     public GameObject mentorPopup;
     public TextMeshProUGUI mentorText;
     public Button mentorContinueButton;
+    public UnityEngine.UI.Image mentorBackground;
 
     [Header("Main Menu Panels")]
     public GameObject mainMenuPanel;
     public GameObject profileSelectPanel;
+    public UnityEngine.UI.Button freeModeButton;
 
     // Popup state property (correct, single version)
     private UIPanelState currentPanelState = UIPanelState.None;
@@ -283,6 +285,9 @@ public class UIManager : MonoBehaviour
             case UIPanelState.ProfileSelect:
                 profileSelectPanel.SetActive(true);
                 topHUD.SetActive(false);
+                
+                if (freeModeButton != null)
+                    freeModeButton.interactable = TutorialManager.HasAttemptedGuided;
                 break;
         }
     }
@@ -296,21 +301,23 @@ public class UIManager : MonoBehaviour
     public void ShowForecastPanel()
     {
         SwitchPanel(UIPanelState.Forecast);
+        TutorialManager.Instance?.OnForecastOpened();
     }
 
     public void ShowInsurancePanel()
     {
         SwitchPanel(UIPanelState.Insurance);
+        TutorialManager.Instance?.OnInsuranceOpened();
     }
 
     public void ShowReportPanel(string reportText)
     {
-        // Use the proper close path so all tracked state is cleared
         if (IsPopupActive)
             CloseActivePopup();
 
         SwitchPanel(UIPanelState.Report);
         monthlyReportText.text = reportText;
+        TutorialManager.Instance?.OnReportOpened();
     }
 
     public void ShowEventPopup(string title, string description, Sprite icon = null)
@@ -430,6 +437,33 @@ public class UIManager : MonoBehaviour
         );
     }
 
+    public void ShowMentorMessageTransparent(string message, System.Action onClose = null)
+    {
+        // If something else is already showing a popup, wait until it clears
+        if (IsPopupActive)
+        {
+            StartCoroutine(WaitThenShowTransparent(message, onClose));
+            return;
+        }
+
+        if (mentorBackground != null)
+            mentorBackground.enabled = false;
+
+        ShowMentorMessage(message, () =>
+        {
+            if (mentorBackground != null)
+                mentorBackground.enabled = true;
+            onClose?.Invoke();
+        });
+    }
+
+    private System.Collections.IEnumerator WaitThenShowTransparent(
+        string message, System.Action onClose)
+    {
+        yield return new UnityEngine.WaitUntil(() => !IsPopupActive);
+        ShowMentorMessageTransparent(message, onClose);
+    }
+
     public void ShowLoanPanel()
     {
         SwitchPanel(UIPanelState.Loan);
@@ -512,24 +546,30 @@ public class UIManager : MonoBehaviour
     {
         GameManager.Instance.ApplyProfile(ProfileType.Informal);
         ShowBudgetPanel();
+        TutorialManager.Instance?.OnProfileSelected(ProfileType.Informal);
     }
 
     public void OnSelectFormalWorker()
     {
         GameManager.Instance.ApplyProfile(ProfileType.Formal);
         ShowBudgetPanel();
+        TutorialManager.Instance?.OnProfileSelected(ProfileType.Formal);
     }
 
     public void OnSelectFarmer()
     {
         GameManager.Instance.ApplyProfile(ProfileType.Farmer);
         ShowBudgetPanel();
+        TutorialManager.Instance?.OnProfileSelected(ProfileType.Farmer);
     }
 
     public void OnFreeModeClicked()
     {
-        GameManager.Instance.ClearProfile(); // we’ll create this
+        TutorialManager.Instance?.OnFreeModeSelected();
+        GameManager.Instance.ClearProfile();
         SwitchPanel(UIPanelState.Setup);
+
+        TutorialManager.Instance?.OnFreeSetupOpened();
     }
 
     public void OnBackToMenu()
