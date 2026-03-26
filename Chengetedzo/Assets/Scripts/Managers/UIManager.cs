@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Globalization;
 using TMPro;
 using UnityEngine;
@@ -362,26 +362,68 @@ public class UIManager : MonoBehaviour
             $"<i>{mentorReflection}</i>";
 
         // ===== PART 2 =====
-        yearPartTwoText = "";
+        // === SECTION 1 — Insurance ROI ===
+        yearPartTwoText = "<b>Insurance</b>\n";
 
-        yearPartTwoText += $"Unexpected events happened {gm.TotalUnexpectedEvents} times.\n\n";
-
-        if (gm.TotalUnexpectedEvents > 0)
+        if (gm.YearPremiums == 0f)
         {
-            yearPartTwoText += $"You were insured during {gm.InsuredEventsCount} of those events.\n";
-            yearPartTwoText += $"Insurance reduced your losses by ${gm.TotalInsurancePayoutAmount:F0}.\n\n";
+            yearPartTwoText += $"You carried no insurance this year. Your ${gm.YearEventLosses:F0} in event losses came entirely out of pocket.\n\n";
+        }
+        else
+        {
+            float netInsuranceBenefit = gm.TotalInsurancePayoutAmount - gm.YearPremiums;
+
+            if (gm.TotalInsurancePayoutAmount == 0f)
+            {
+                yearPartTwoText += $"You paid ${gm.YearPremiums:F0} in premiums and made no claims. That's not money wasted — that's the cost of protection you fortunately didn't need.\n\n";
+            }
+            else if (netInsuranceBenefit >= 0f)
+            {
+                yearPartTwoText += $"Your insurance paid out ${gm.TotalInsurancePayoutAmount:F0} against ${gm.YearPremiums:F0} in premiums — a net benefit of ${netInsuranceBenefit:F0}.\n\n";
+            }
+            else
+            {
+                yearPartTwoText += $"You paid ${gm.YearPremiums:F0} in premiums and received ${gm.TotalInsurancePayoutAmount:F0} back. You came out ${Mathf.Abs(netInsuranceBenefit):F0} behind — but that coverage was there if something serious had hit.\n\n";
+            }
         }
 
-        yearPartTwoText += $"Emergency loans were required in {gm.ForcedLoanCount} months.\n";
-        yearPartTwoText += $"Financial pressure occurred in {gm.MonthsUnderFinancialPressure} months.\n\n";
-        yearPartTwoText += $"Final cash remaining: ${gm.financeManager.CashOnHand:F0}";
+        // === SECTION 2 — Resilience ===
+        yearPartTwoText += "<b>Resilience</b>\n";
+        yearPartTwoText += $"You faced {gm.TotalUnexpectedEvents} unexpected events. {gm.InsuredEventsCount} were covered by insurance.\n";
+
+        if (gm.ForcedLoanCount > 0)
+            yearPartTwoText += $"You needed emergency loans in {gm.ForcedLoanCount} months — a signal that the gap between income and expenses was too thin.\n";
+
+        if (gm.MonthsUnderFinancialPressure > 0)
+            yearPartTwoText += $"Your cash went negative in {gm.MonthsUnderFinancialPressure} months.\n";
+
+        if (gm.ForcedLoanCount == 0 && gm.MonthsUnderFinancialPressure == 0)
+            yearPartTwoText += "You never went negative and never needed an emergency loan. That's genuine financial resilience.\n";
+
+        yearPartTwoText += "\n";
+
+        // === SECTION 3 — One takeaway ===
+        yearPartTwoText += "<b>Key Takeaway</b>\n";
+
+        float netBenefit = gm.TotalInsurancePayoutAmount - gm.YearPremiums;
+
+        if (netBenefit > 0f)
+            yearPartTwoText += "Insurance paid for itself this year. The lesson: start early, stay consistent.";
+        else if (gm.ForcedLoanCount >= 3)
+            yearPartTwoText += "Repeated forced loans point to one gap — an emergency fund of even one month's expenses would have broken the cycle.";
+        else if (gm.TotalUnexpectedEvents > 0 && gm.InsuredEventsCount == 0)
+            yearPartTwoText += "Every loss this year was uninsured. Even basic cover would have reduced the damage.";
+        else if (gm.financeManager.CashOnHand > 0f && gm.ForcedLoanCount == 0)
+            yearPartTwoText += "You finished with cash in hand and no emergency debt. Build on that.";
+        else
+            yearPartTwoText += "Every year teaches something. The question is whether next year's decisions reflect what this one showed you.";
 
         // Start on Part 1
         isShowingYearPartTwo = false;
         resultsText.text = yearPartOneText;
         SetEndOfYearButtonPosition(CONTINUE_X);
 
-        endOfYearContinueButton.GetComponentInChildren<TextMeshProUGUI>().text = "Continue";
+        endOfYearContinueButton.GetComponentInChildren<TextMeshProUGUI>().text = "Key Takeaways →";
 
         restartButton.interactable = false;
     }
@@ -393,7 +435,7 @@ public class UIManager : MonoBehaviour
             // Switch to Part 2
             resultsText.text = yearPartTwoText;
 
-            endOfYearContinueButton.GetComponentInChildren<TextMeshProUGUI>().text = "Back";
+            endOfYearContinueButton.GetComponentInChildren<TextMeshProUGUI>().text = "← Back";
 
             restartButton.interactable = true;
 

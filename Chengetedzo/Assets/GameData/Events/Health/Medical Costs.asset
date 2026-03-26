@@ -19,10 +19,10 @@ MonoBehaviour:
   pool: 3
   requiredAsset: 0
   icon: {fileID: 0}
-  probability: 0
+  probability: 20
   weight: 10
-  minLossPercent: 20
-  maxLossPercent: 8
+  minLossPercent: 0
+  maxLossPercent: 0
   affectsIncome: 0
   incomePercentChange: 0
   incomeEffectMonths: 6
@@ -33,8 +33,17 @@ MonoBehaviour:
   season: 0
   signal: 4
   severity: 0
+  affectsHousehold: 0
+  adultsLost: 0
+  childrenLost: 0
+  affectsExpenses: 0
+  expenseCategory: 0
+  expenseFlatChange: 0
+  expenseEffectMonths: 0
   lossType: 2
   fixedLossAmount: 150
+  affectsLoan: 0
+  borrowingPowerChange: 0
   startsChain: 0
   followUpEvents: []
   followUpChance: 0

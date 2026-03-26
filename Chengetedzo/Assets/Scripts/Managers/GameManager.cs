@@ -79,6 +79,8 @@ public class GameManager : MonoBehaviour
     public bool SavedRecoveryAcknowledged => recoveryAcknowledged;
     public int SavedLastMomentumZone => lastMomentumZone;
     public float SavedPreviousMomentum => previousMomentum;
+    public List<IncomeEffect> ActiveIncomeEffects => activeIncomeEffects;
+    public List<ExpenseEffect> ActiveExpenseEffects => activeExpenseEffects;
 
     [ContextMenu("DEV — Full Reset (Save + Prefs)")]
     public void DEV_FullReset()
@@ -495,7 +497,6 @@ public class GameManager : MonoBehaviour
 
         int finishedMonth = currentMonth;
         currentMonth++;
-        UIManager.Instance.UpdateMonthText(currentMonth, totalMonths);
         OnSeasonChanged?.Invoke();
         monthsSinceMajorEvent++;
 
@@ -523,6 +524,8 @@ public class GameManager : MonoBehaviour
             CurrentLedger = null;
             return;
         }
+
+        UIManager.Instance.UpdateMonthText(currentMonth, totalMonths);
 
         if (finishedMonth % 12 == 0)
         {
@@ -754,11 +757,19 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        if (loanManager == null || !loanManager.CanForceLoan)
+        if (loanManager == null)
             return;
 
         float shortfall = Mathf.Abs(cash);
-        loanManager.ForceBorrow(shortfall);
+
+        if (!loanManager.CanForceLoan)
+        {
+            loanManager.ForceBorrow(shortfall * 0.75f);
+        }
+        else
+        {
+            loanManager.ForceBorrow(shortfall);
+        }
         
         forcedLoanCount++;
         PlayerDataManager.Instance.ModifyMomentum(-3f);
@@ -1102,6 +1113,19 @@ public class GameManager : MonoBehaviour
             loanManager.onTimePayments = save.onTimePayments;
         }
 
+        if (save.insurancePlans != null)
+        {
+            foreach (var saved in save.insurancePlans)
+            {
+                var plan = insuranceManager.allPlans.Find(p => p.type == saved.type);
+                if (plan == null) continue;
+                plan.isSubscribed = saved.isSubscribed;
+                plan.isLapsed = saved.isLapsed;
+                plan.monthsPaid = saved.monthsPaid;
+                plan.missedPayments = saved.missedPayments;
+            }
+        }
+
         currentMonth = save.currentMonth;
 
         financeManager.SetCash(save.cashOnHand);
@@ -1348,7 +1372,10 @@ public class GameManager : MonoBehaviour
     {
         financeManager.generalSavingsMonthly = 0f;
         financeManager.InitializeFromSetup();
+
+
         //insuranceManager?.EnableBasicPlan();
+
 
         if (CurrentPhase == GamePhase.Idle)
             StartNewMonth();
@@ -1385,13 +1412,13 @@ public class GameManager : MonoBehaviour
 
                 default:
                     Debug.LogError($"❌ {testName} hit unknown phase: {CurrentPhase}");
-                    IsHeadlessSimulation = false; // ← RESET on unknown phase abort
+                    IsHeadlessSimulation = false;
                     return;
             }
         }
 
-        IsHeadlessSimulation = false; // ← RESET on successful completion
-        uiManager.SwitchPanel(UIManager.UIPanelState.None); // ← ADD: clear UI after test
+        IsHeadlessSimulation = false;
+        uiManager.SwitchPanel(UIManager.UIPanelState.None);
         uiManager.UpdateMoneyText(financeManager.CashOnHand);
 
         Debug.Log($"✅ {testName} COMPLETE — " +
@@ -1415,7 +1442,7 @@ public class GameManager : MonoBehaviour
             Debug.LogError($"❌ {testName}: FinanceManager not assigned in inspector.");
             return false;
         }
-
+        loanManager?.ForceUnlock();
         currentMonth = 1;
         monthsSinceMajorEvent = 3;
         monthlyDamageTaken = 0f;
@@ -1512,7 +1539,7 @@ public class GameManager : MonoBehaviour
         setupData.housing = HousingType.Renting;
         setupData.ownsCar = false;
         setupData.hasSchoolFees = true;
-        setupData.schoolFeesAmount = 30f;
+        setupData.schoolFeesAmount = 60f;
         setupData.minIncome = 150f;
         setupData.maxIncome = 350f;
 
@@ -1543,12 +1570,12 @@ public class GameManager : MonoBehaviour
         setupData.housing = HousingType.Renting;
         setupData.ownsCar = true;
         setupData.hasSchoolFees = true;
-        setupData.schoolFeesAmount = 900f;
-        setupData.minIncome = 500f;
-        setupData.maxIncome = 1500f;
+        setupData.schoolFeesAmount = 450f; //Waterfalls Highschool
+        setupData.minIncome = 850f;
+        setupData.maxIncome = 1300f;
 
-        // 3-room house rental in medium-density suburb
-        financeManager.rentCost = 900f;
+        // Waterfalls 3-room house rental in medium-density suburb
+        financeManager.rentCost = 650f;
         financeManager.groceries = 200f;
         financeManager.transport = 80f;
         financeManager.utilities = 45f;
@@ -1583,9 +1610,9 @@ public class GameManager : MonoBehaviour
         setupData.minIncome = 1500f;
         setupData.maxIncome = 3000f;
         financeManager.rentCost = 0f;
-        financeManager.groceries = 400f;
+        financeManager.groceries = 500f;
         financeManager.transport = 160f;
-        financeManager.utilities = 120f;
+        financeManager.utilities = 200f;
         financeManager.assets = new PlayerAssets
         {
             hasHouse = true,

@@ -1,5 +1,6 @@
-using UnityEngine;
+using System.Collections.Generic;
 using System.IO;
+using UnityEngine;
 
 public static class SaveSystem
 {
@@ -48,6 +49,37 @@ public static class SaveSystem
         data.previousMomentum = gm.SavedPreviousMomentum;
         data.monthsSinceMajorEvent = gm.monthsSinceMajorEvent;
         data.eventPressure = gm.eventManager.GetEventPressure();
+        data.insurancePlans = new List<GameSaveData.InsurancePlanSaveData>();
+        foreach (var plan in gm.insuranceManager.allPlans)
+        {
+            data.insurancePlans.Add(new GameSaveData.InsurancePlanSaveData
+            {
+                type = plan.type,
+                isSubscribed = plan.isSubscribed,
+                isLapsed = plan.isLapsed,
+                monthsPaid = plan.monthsPaid,
+                missedPayments = plan.missedPayments
+            });
+        }
+        data.incomeEffects = new List<GameSaveData.IncomeEffectSaveData>();
+        foreach (var effect in gm.ActiveIncomeEffects)
+        {
+            data.incomeEffects.Add(new GameSaveData.IncomeEffectSaveData
+            {
+                reductionPercent = effect.reductionPercent,
+                remainingMonths = effect.remainingMonths
+            });
+        }
+        data.expenseEffects = new List<GameSaveData.ExpenseEffectSaveData>();
+        foreach (var effect in gm.ActiveExpenseEffects)
+        {
+            data.expenseEffects.Add(new GameSaveData.ExpenseEffectSaveData
+            {
+                category = (int)effect.category,
+                flatIncrease = effect.flatIncrease,
+                remainingMonths = effect.remainingMonths
+            });
+        }
 
         string json = JsonUtility.ToJson(data, true);
 

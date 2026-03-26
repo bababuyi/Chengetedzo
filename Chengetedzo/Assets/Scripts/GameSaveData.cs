@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 [Serializable]
 public class GameSaveData
@@ -39,4 +40,33 @@ public class GameSaveData
     public float previousMomentum;
     public int monthsSinceMajorEvent;
     public float eventPressure;
+
+    public List<InsurancePlanSaveData> insurancePlans = new List<InsurancePlanSaveData>();
+    public List<IncomeEffectSaveData> incomeEffects = new List<IncomeEffectSaveData>();
+    public List<ExpenseEffectSaveData> expenseEffects = new List<ExpenseEffectSaveData>();
+
+    [Serializable]
+    public class IncomeEffectSaveData
+    {
+        public float reductionPercent;
+        public int remainingMonths;
+    }
+
+    [Serializable]
+    public class ExpenseEffectSaveData
+    {
+        public int category; // store as int to avoid enum serialization issues
+        public float flatIncrease;
+        public int remainingMonths;
+    }
+
+    [Serializable]
+    public class InsurancePlanSaveData
+    {
+        public InsuranceManager.InsuranceType type;
+        public bool isSubscribed;
+        public bool isLapsed;
+        public int monthsPaid;
+        public int missedPayments;
+    }
 }

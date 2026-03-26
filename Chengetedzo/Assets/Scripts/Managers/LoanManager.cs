@@ -19,14 +19,21 @@ public class LoanManager : MonoBehaviour
     public int missedPayments = 0;
     public int onTimePayments = 0;
 
-    // Tracks whether the player has ever unlocked the loan system (3 months contributed)
     private bool loanUnlocked = false;
-
-    // True once unlocked, stays true even if borrowing power is temporarily 0
     public bool IsLoanUnlocked => loanUnlocked;
+    public bool CanForceLoan
+    {
+        get
+        {
+            if (GameManager.Instance != null &&
+                GameManager.Instance.IsHeadlessSimulation)
+            {
+                return borrowingPower > 0f;
+            }
 
-    // True only when there's actually something to borrow
-    public bool CanForceLoan => loanUnlocked && borrowingPower > 0f;
+            return loanUnlocked && borrowingPower > 0f;
+        }
+    }
 
     public bool ContributedThisMonth { get; private set; }
     public bool RepaidThisMonth { get; private set; }
@@ -224,6 +231,14 @@ public class LoanManager : MonoBehaviour
     {
         borrowingPower = Mathf.Max(0f, borrowingPower + amount);
         Debug.Log($"[Loan] Borrowing power changed by ${amount:F0}. Now: ${borrowingPower:F0}");
+    }
+
+    public void ForceUnlock(float baseAmount = 150f)
+    {
+        monthsContributed = 3;
+        totalContributed = baseAmount;
+        borrowingPower = baseAmount;
+        loanUnlocked = true;
     }
 
     public void ResetAll()
