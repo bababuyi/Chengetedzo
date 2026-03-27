@@ -7773,7 +7773,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0.00079345703, y: -0.0008836634}
+  m_AnchoredPosition: {x: 0, y: -0.0008836634}
   m_SizeDelta: {x: -18.592855, y: 0}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &710781136
@@ -18330,7 +18330,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1552810409}
   m_Direction: 0
   m_Value: 0
-  m_Size: 0.9999795
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -21553,6 +21553,8 @@ GameObject:
   - component: {fileID: 1855952300}
   - component: {fileID: 1855952301}
   - component: {fileID: 1855952302}
+  - component: {fileID: 1855952303}
+  - component: {fileID: 1855952304}
   m_Layer: 0
   m_Name: Managers
   m_TagString: Untagged
@@ -21820,8 +21822,65 @@ MonoBehaviour:
   savingsSlider: {fileID: 339578397}
   eventPopupRoot: {fileID: 1187311663}
   budgetConfirmButton: {fileID: 1248129211}
-  pulseAmount: 0.04
-  pulseSpeed: 3
+  pulseAmount: 0.025
+  pulseSpeed: 1.8
+--- !u!114 &1855952303
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1855952290}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a5693a9036253e49bd71ca7bb84169b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  eventMinor: {fileID: 0}
+  eventModerate: {fileID: 0}
+  eventMajor: {fileID: 0}
+  eventPositive: {fileID: 0}
+  mentorMessage: {fileID: 8300000, guid: b95a8939a763f0d4c9041f8ddbb05a4a, type: 3}
+  loanMessage: {fileID: 8300000, guid: 74d0df5d37f5d9442bd211c62e087b5e, type: 3}
+  loanConfirm: {fileID: 0}
+  insuranceToggleOn: {fileID: 0}
+  insuranceToggleOff: {fileID: 0}
+  insuranceConfirm: {fileID: 0}
+  panelOpen: {fileID: 0}
+  buttonClick: {fileID: 8300000, guid: 3a296ae876984df4ab09e4f8abdf2cb3, type: 3}
+  reportAppear: {fileID: 8300000, guid: 23a6ba0b04b9cdd4d8f256778a4240cd, type: 3}
+  forecastCard: {fileID: 8300000, guid: 23a6ba0b04b9cdd4d8f256778a4240cd, type: 3}
+  moneyGain: {fileID: 0}
+  moneyLoss: {fileID: 0}
+  savingsDeposit: {fileID: 0}
+  yearComplete: {fileID: 0}
+  sfxVolume: 1
+  musicVolume: 0.4
+--- !u!114 &1855952304
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1855952290}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b28af21e90b52d148b8dbb5926fa8caa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  panelFadeDuration: 0.15
+  panelFadeOutDuration: 0.1
+  eventPopupFadeDuration: 0.2
+  eventPopupDropAmount: 10
+  chatSlideDuration: 0.22
+  chatSlideAmount: 50
+  forecastStagger: 0.1
+  forecastSlideDuration: 0.16
+  forecastSlideOffsetX: 70
+  moneyPunchDuration: 0.22
+  moneyPunchScale: 1.1
+  moneyGainColor: {r: 0.45, g: 0.78, b: 0.5, a: 1}
+  moneyLossColor: {r: 0.8, g: 0.35, b: 0.35, a: 1}
 --- !u!1 &1861761809
 GameObject:
   m_ObjectHideFlags: 0

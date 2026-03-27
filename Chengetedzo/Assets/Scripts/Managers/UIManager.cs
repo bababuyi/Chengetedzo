@@ -471,17 +471,14 @@ public class UIManager : MonoBehaviour
     public void ShowMentorMessage(string message, System.Action onClose = null)
     {
         mentorText.text = message;
-
-        ShowPopup(
-            mentorPopup,
-            mentorContinueButton,
-            onClose
-        );
+        ShowPopup(mentorPopup, mentorContinueButton, onClose);
+        var rect = mentorPopup.GetComponent<RectTransform>();
+        UIAnimator.Instance?.SlideUpChat(rect);
+        AudioManager.Instance?.OnMentorMessage();
     }
 
     public void ShowMentorMessageTransparent(string message, System.Action onClose = null)
     {
-        // If something else is already showing a popup, wait until it clears
         if (IsPopupActive)
         {
             StartCoroutine(WaitThenShowTransparent(message, onClose));
@@ -491,12 +488,14 @@ public class UIManager : MonoBehaviour
         if (mentorBackground != null)
             mentorBackground.enabled = false;
 
-        ShowMentorMessage(message, () =>
+        mentorText.text = message;
+        ShowPopup(mentorPopup, mentorContinueButton, () =>
         {
             if (mentorBackground != null)
                 mentorBackground.enabled = true;
             onClose?.Invoke();
         });
+        UIAnimator.Instance?.FadeIn(mentorPopup);
     }
 
     private System.Collections.IEnumerator WaitThenShowTransparent(
