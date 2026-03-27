@@ -7773,7 +7773,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -0.0008836634}
+  m_AnchoredPosition: {x: 0.00018310547, y: -0.0008836634}
   m_SizeDelta: {x: -18.592855, y: 0}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &710781136
@@ -21679,6 +21679,11 @@ MonoBehaviour:
   eventTitleText: {fileID: 1982551001}
   eventDescriptionText: {fileID: 1797439577}
   continueButton: {fileID: 85253163}
+  choiceEventPopup: {fileID: 0}
+  choiceTitleText: {fileID: 0}
+  choiceDescriptionText: {fileID: 0}
+  choiceButtons: []
+  choiceButtonLabels: []
   mentorPopup: {fileID: 1077850324}
   mentorText: {fileID: 1996006187}
   mentorContinueButton: {fileID: 1537611049}
@@ -21836,13 +21841,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7a5693a9036253e49bd71ca7bb84169b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  eventMinor: {fileID: 0}
-  eventModerate: {fileID: 0}
-  eventMajor: {fileID: 0}
-  eventPositive: {fileID: 0}
+  marketAmbience: {fileID: 0}
+  birdsAmbience: {fileID: 0}
+  sirenAmbience: {fileID: 0}
+  calmMusic: {fileID: 0}
+  tensionMusic: {fileID: 0}
+  monthEnd: {fileID: 8300000, guid: ed0a58bda561e3841a78e195cf52bfd6, type: 3}
+  yearTransition: {fileID: 8300000, guid: 4aa79edbf03ff5b4fa013aed799c89fd, type: 3}
+  gameEnd: {fileID: 8300000, guid: 4aa79edbf03ff5b4fa013aed799c89fd, type: 3}
+  eventMinor: {fileID: 8300000, guid: 28be8f0cff388354699b29a3dc92d8d3, type: 3}
+  eventModerate: {fileID: 8300000, guid: 5949a664ccb5814458f661fc7d5c7459, type: 3}
+  eventMajor: {fileID: 8300000, guid: 5949a664ccb5814458f661fc7d5c7459, type: 3}
+  eventPositive: {fileID: 8300000, guid: 67d688ce2b1e5b14e855eaa5b502ae69, type: 3}
   mentorMessage: {fileID: 8300000, guid: b95a8939a763f0d4c9041f8ddbb05a4a, type: 3}
   loanMessage: {fileID: 8300000, guid: 74d0df5d37f5d9442bd211c62e087b5e, type: 3}
-  loanConfirm: {fileID: 0}
+  loanConfirm: {fileID: 8300000, guid: 266158519035cd049b93b24adf3049e8, type: 3}
   insuranceToggleOn: {fileID: 0}
   insuranceToggleOff: {fileID: 0}
   insuranceConfirm: {fileID: 0}

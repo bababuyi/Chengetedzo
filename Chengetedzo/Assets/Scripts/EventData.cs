@@ -7,6 +7,23 @@ using static InsuranceManager;
 [CreateAssetMenu(fileName = "New Event", menuName = "Chengetedzo/Event")]
 public class EventData : ScriptableObject
 {
+    [Header("Choice System")]
+    public bool hasChoices;
+    public List<ChoiceOption> choices;
+
+    [System.Serializable]
+    public class ChoiceOption
+    {
+        public string label;               // e.g. "Help them"
+        public string resultDescription;   // shown after pick
+        public float moneyChange;          // negative = cost, positive = gain
+        public float momentumChange;
+        public float incomePercentChange;
+        public int incomeEffectMonths;   // -1 = permanent
+        public bool affectsLoan;
+        public float borrowingPowerChange;
+    }
+
     [Header("Basic Info")]
     public string eventName;
 

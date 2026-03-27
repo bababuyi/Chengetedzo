@@ -594,18 +594,17 @@ public class GameManager : MonoBehaviour
         isWaitingForEventConfirmation = true;
         Debug.Log($"[Event] Processing: {currentEvent.title} | MoneyChange: {currentEvent.moneyChange}");
 
-        // First event ever: show tutorial explaining what the player is seeing
         if (TutorialManager.Instance != null && totalUnexpectedEvents == 1)
         {
             TutorialManager.Instance.OnFirstEvent(
                 currentEvent.insurancePayout > 0f,
                 currentEvent.insurancePayout,
-                () => ShowEvent(currentEvent)
+                () => ShowOrChooseEvent(currentEvent)
             );
         }
         else
         {
-            ShowEvent(currentEvent);
+            ShowOrChooseEvent(currentEvent);
         }
     }
 
@@ -1098,6 +1097,68 @@ public class GameManager : MonoBehaviour
         }
 
         return text;
+    }
+
+    private void ShowOrChooseEvent(ResolvedEvent ev)
+    {
+        if (IsHeadlessSimulation)
+        {
+            // Headless: auto-pick first choice (or just close)
+            if (ev.hasChoices && ev.choices != null && ev.choices.Count > 0)
+                ApplyEventChoice(ev, 0);
+            OnEventPopupClosed();
+            return;
+        }
+
+        if (ev.hasChoices && ev.choices != null && ev.choices.Count > 0)
+        {
+            UIManager.Instance.ShowChoicePopup(
+                ev.title,
+                ev.description,
+                ev.choices,
+                choiceIndex =>
+                {
+                    ApplyEventChoice(ev, choiceIndex);
+                    OnEventPopupClosed();
+                }
+            );
+        }
+        else
+        {
+            ShowEvent(ev);
+        }
+    }
+
+    private void ApplyEventChoice(ResolvedEvent ev, int choiceIndex)
+    {
+        if (ev.choices == null || choiceIndex < 0 || choiceIndex >= ev.choices.Count)
+            return;
+
+        var choice = ev.choices[choiceIndex];
+
+        Debug.Log($"[CHOICE] {ev.title} → '{choice.label}' | Money: {choice.moneyChange:+0;-0} | Momentum: {choice.momentumChange:+0;-0}");
+
+        if (choice.moneyChange != 0f)
+        {
+            bool isCredit = choice.moneyChange > 0f;
+            ApplyMoneyChange(
+                isCredit ? FinancialEntry.EntryType.EventReward
+                         : FinancialEntry.EntryType.EventLoss,
+                $"{ev.title} — {choice.label}",
+                Mathf.Abs(choice.moneyChange),
+                isCredit
+            );
+            totalRawEventDamage += Mathf.Max(0f, -choice.moneyChange);
+        }
+
+        if (choice.momentumChange != 0f)
+            PlayerDataManager.Instance.ModifyMomentum(choice.momentumChange);
+
+        if (choice.incomePercentChange != 0f)
+            ApplyIncomeEffect(choice.incomePercentChange, choice.incomeEffectMonths);
+
+        if (choice.affectsLoan && loanManager != null)
+            loanManager.ModifyBorrowingPower(choice.borrowingPowerChange);
     }
 
     public void LoadFromSave(GameSaveData save)

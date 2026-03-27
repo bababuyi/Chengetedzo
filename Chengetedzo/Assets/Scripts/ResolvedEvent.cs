@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 [System.Serializable]
 public class ResolvedEvent
@@ -15,6 +16,8 @@ public class ResolvedEvent
     public InsuranceManager.InsuranceType type;
 
     public float lossPercent;
-
     public float insurancePayout;
+
+    public bool hasChoices;
+    public List<EventData.ChoiceOption> choices;
 }

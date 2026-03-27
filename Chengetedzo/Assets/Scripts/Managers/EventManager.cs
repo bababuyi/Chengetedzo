@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using static ForecastLines;
 using static GameManager;
@@ -192,6 +192,22 @@ public class EventManager : MonoBehaviour
         foreach (var ev in passedEvents)
         {
             if (triggeredEventCount >= maxEventsPerMonth) break;
+
+            // ── Choice event: defer resolution to the player ──
+            if (ev.hasChoices && ev.choices != null && ev.choices.Count > 0)
+            {
+                results.Add(new ResolvedEvent
+                {
+                    title = ev.eventName,
+                    description = ev.description,
+                    icon = ev.icon,
+                    hasChoices = true,
+                    choices = ev.choices
+                });
+
+                TryScheduleFollowUp(ev, month);
+                continue;  // skip normal loss/reward resolution
+            }
 
             int eventCost = GetEventCost(ev);
             if (eventCost > remainingEventBudget) continue;

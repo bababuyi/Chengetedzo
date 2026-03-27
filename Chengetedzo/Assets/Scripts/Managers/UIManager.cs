@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using System.Globalization;
 using TMPro;
 using UnityEngine;
@@ -54,6 +55,15 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI eventTitleText;
     public TextMeshProUGUI eventDescriptionText;
     public Button continueButton;
+
+    [Header("Choice Popup")]
+    public GameObject choiceEventPopup;
+    public TextMeshProUGUI choiceTitleText;
+    public TextMeshProUGUI choiceDescriptionText;
+    public Button[] choiceButtons;
+    public TextMeshProUGUI[] choiceButtonLabels;
+
+    private System.Action<int> _onChoicePicked;
 
     [Header("Mentor Popup")]
     public GameObject mentorPopup;
@@ -143,6 +153,7 @@ public class UIManager : MonoBehaviour
 
         eventPopup?.SetActive(false);
         mentorPopup?.SetActive(false);
+        choiceEventPopup?.SetActive(false);
 
         HideLoanTopButton();
         HideSavingsTopButton();
@@ -333,6 +344,54 @@ public class UIManager : MonoBehaviour
             continueButton,
             () => GameManager.Instance.OnEventPopupClosed()
         );
+    }
+
+    public void ShowChoicePopup(
+    string title,
+    string description,
+    List<EventData.ChoiceOption> choices,
+    System.Action<int> onChoicePicked)
+    {
+        if (IsPopupActive)
+        {
+            Debug.LogWarning("[UI] Choice popup requested while another popup is active.");
+            return;
+        }
+
+        _onChoicePicked = onChoicePicked;
+
+        choiceTitleText.text = title;
+        choiceDescriptionText.text = description;
+
+        for (int i = 0; i < choiceButtons.Length; i++)
+        {
+            if (i < choices.Count)
+            {
+                choiceButtons[i].gameObject.SetActive(true);
+                choiceButtonLabels[i].text = choices[i].label;
+
+                int captured = i;
+                choiceButtons[i].onClick.RemoveAllListeners();
+                choiceButtons[i].onClick.AddListener(() => OnChoiceSelected(captured));
+            }
+            else
+            {
+                choiceButtons[i].gameObject.SetActive(false);
+            }
+        }
+
+        choiceEventPopup.SetActive(true);
+        IsPopupActive = true;
+    }
+
+    private void OnChoiceSelected(int index)
+    {
+        choiceEventPopup.SetActive(false);
+        IsPopupActive = false;
+
+        var callback = _onChoicePicked;
+        _onChoicePicked = null;
+        callback?.Invoke(index);
     }
 
     // ===== End-of-Year Screen =====
