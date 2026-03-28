@@ -12,9 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
   m_Name: Heavy Rainfall
   m_EditorClassIdentifier: 
+  hasChoices: 0
+  senderName: 
+  senderRelation: 
+  choices: []
   eventName: Heavy Rainfall
   description: Days of heavy rain damage buildings and infrastructure.
-  financialLesson: Weather risk affects assets.
+  financialLesson: Heavy rain damages structures and infrastructure that took years
+    to build. Home insurance covers repair costs that savings alone rarely can.
   category: 5
   pool: 0
   requiredAsset: 1
@@ -33,8 +38,17 @@ MonoBehaviour:
   season: 1
   signal: 2
   severity: 1
+  affectsHousehold: 0
+  adultsLost: 0
+  childrenLost: 0
+  affectsExpenses: 0
+  expenseCategory: 0
+  expenseFlatChange: 0
+  expenseEffectMonths: 0
   lossType: 0
   fixedLossAmount: 0
+  affectsLoan: 0
+  borrowingPowerChange: 0
   startsChain: 1
   followUpEvents:
   - {fileID: 11400000, guid: a6cc881257b00b349a68b80b0c25dfc3, type: 2}

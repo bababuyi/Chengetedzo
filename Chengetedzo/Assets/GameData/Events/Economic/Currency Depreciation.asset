@@ -12,9 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
   m_Name: Currency Depreciation
   m_EditorClassIdentifier: 
+  hasChoices: 0
+  senderName: 
+  senderRelation: 
+  choices: []
   eventName: Currency Depreciation
   description: Currency weakness raises the cost of imports.
-  financialLesson: Currency risk affects markets.
+  financialLesson: A weak currency raises the price of imported goods even when your
+    income stays the same. Households feel the squeeze in groceries, fuel, and medication
+    first.
   category: 3
   pool: 2
   requiredAsset: 0

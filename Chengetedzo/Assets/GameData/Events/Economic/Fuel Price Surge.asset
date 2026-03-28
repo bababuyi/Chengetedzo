@@ -12,9 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
   m_Name: Fuel Price Surge
   m_EditorClassIdentifier: 
+  hasChoices: 0
+  senderName: 
+  senderRelation: 
+  choices: []
   eventName: Fuel Price Surge
   description: Rising fuel prices increase transport costs.
-  financialLesson: Fuel affects supply chains.
+  financialLesson: "Rising fuel prices ripple through every part of the economy.
+    Transport costs, food prices, and utility bills all rise together \u2014 squeezing
+    household budgets from every direction."
   category: 3
   pool: 2
   requiredAsset: 0

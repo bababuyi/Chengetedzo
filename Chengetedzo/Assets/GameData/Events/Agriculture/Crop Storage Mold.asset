@@ -12,9 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
   m_Name: Crop Storage Mold
   m_EditorClassIdentifier: 
+  hasChoices: 0
+  senderName: 
+  senderRelation: 
+  choices: []
   eventName: 'Crop Storage Mold '
   description: Poor storage conditions cause mold in stored crops.
-  financialLesson: Proper storage reduces losses.
+  financialLesson: Improper storage destroys value that took months to grow. Investing
+    in safe, dry storage facilities is part of the cost of farming.
   category: 2
   pool: 1
   requiredAsset: 3
@@ -33,8 +38,17 @@ MonoBehaviour:
   season: 0
   signal: 4
   severity: 0
+  affectsHousehold: 0
+  adultsLost: 0
+  childrenLost: 0
+  affectsExpenses: 0
+  expenseCategory: 0
+  expenseFlatChange: 0
+  expenseEffectMonths: 0
   lossType: 1
   fixedLossAmount: 0
+  affectsLoan: 0
+  borrowingPowerChange: 0
   startsChain: 0
   followUpEvents: []
   followUpChance: 0

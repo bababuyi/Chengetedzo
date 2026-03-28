@@ -12,9 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
   m_Name: Lightning Strike
   m_EditorClassIdentifier: 
+  hasChoices: 0
+  senderName: 
+  senderRelation: 
+  choices: []
   eventName: Lightning Strike
   description: A lightning strike damages equipment or structures.
-  financialLesson: Rare events still carry risk.
+  financialLesson: "Low-probability events still happen. Insurance isn't about expecting
+    the worst \u2014 it's about being protected when the unexpected occurs."
   category: 5
   pool: 0
   requiredAsset: 0

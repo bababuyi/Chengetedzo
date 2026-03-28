@@ -12,9 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
   m_Name: Bonus pay
   m_EditorClassIdentifier: 
+  hasChoices: 0
+  senderName: 
+  senderRelation: 
+  choices: []
   eventName: Bonus Pay
   description: Your employer pays a festive season bonus.
-  financialLesson: Seasonal bonuses can boost household finances.
+  financialLesson: A bonus is an opportunity, not a guarantee. Directing it toward
+    savings, debt repayment, or insurance premiums builds lasting stability rather
+    than temporary relief.
   category: 3
   pool: 5
   requiredAsset: 0
@@ -23,18 +29,27 @@ MonoBehaviour:
   weight: 10
   minLossPercent: 0
   maxLossPercent: 0
-  affectsIncome: 0
-  incomePercentChange: 0
-  incomeEffectMonths: 0
+  affectsIncome: 1
+  incomePercentChange: 10
+  incomeEffectMonths: 1
   insuranceType: 0
   outcomeType: 1
-  cashReward: 350
+  cashReward: 0
   momentumReward: 1
   season: 1
   signal: 0
   severity: 0
+  affectsHousehold: 0
+  adultsLost: 0
+  childrenLost: 0
+  affectsExpenses: 0
+  expenseCategory: 0
+  expenseFlatChange: 0
+  expenseEffectMonths: 0
   lossType: 2
   fixedLossAmount: 0
+  affectsLoan: 0
+  borrowingPowerChange: 0
   startsChain: 0
   followUpEvents: []
   followUpChance: 0

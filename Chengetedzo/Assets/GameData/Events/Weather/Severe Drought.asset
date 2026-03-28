@@ -12,9 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
   m_Name: Severe Drought
   m_EditorClassIdentifier: 
+  hasChoices: 0
+  senderName: 
+  senderRelation: 
+  choices: []
   eventName: Severe Drought
   description: Prolonged dry conditions reduce water for crops and livestock.
-  financialLesson: Climate risk affects income.
+  financialLesson: Drought can reduce income for months at a time. Households without
+    savings or insurance are forced into debt just to survive a dry season.
   category: 5
   pool: 0
   requiredAsset: 5
@@ -33,8 +38,17 @@ MonoBehaviour:
   season: 2
   signal: 1
   severity: 2
+  affectsHousehold: 0
+  adultsLost: 0
+  childrenLost: 0
+  affectsExpenses: 0
+  expenseCategory: 0
+  expenseFlatChange: 0
+  expenseEffectMonths: 0
   lossType: 0
   fixedLossAmount: 0
+  affectsLoan: 0
+  borrowingPowerChange: 0
   startsChain: 1
   followUpEvents:
   - {fileID: 11400000, guid: bd1dc3989f2e3c14eabb554089a1f618, type: 2}

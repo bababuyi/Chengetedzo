@@ -1,0 +1,79 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
+  m_Name: Child Needs Phone for School
+  m_EditorClassIdentifier: 
+  hasChoices: 1
+  senderName: Your Child
+  senderRelation: Family
+  choices:
+  - label: Buy a proper smartphone ($150)
+    resultDescription: Here you go. Use it for school, not games.
+    moneyChange: -150
+    momentumChange: 2
+    incomePercentChange: 0
+    incomeEffectMonths: 0
+    affectsLoan: 0
+    borrowingPowerChange: 0
+  - label: Buy a basic phone ($60)
+    resultDescription: It's not the latest model but it'll do the job.
+    moneyChange: -60
+    momentumChange: 1
+    incomePercentChange: 0
+    incomeEffectMonths: 0
+    affectsLoan: 0
+    borrowingPowerChange: 0
+  - label: "Not right now \u2014 we'll find another way"
+    resultDescription: We'll figure something out. Maybe the school library can help.
+    moneyChange: 0
+    momentumChange: -2
+    incomePercentChange: 0
+    incomeEffectMonths: 0
+    affectsLoan: 0
+    borrowingPowerChange: 0
+  eventName: Child Needs Phone for School
+  description: "Your child comes home upset \u2014 their teacher says all assignments
+    are now submitted digitally."
+  financialLesson: 
+  category: 3
+  pool: 2
+  requiredAsset: 0
+  icon: {fileID: 0}
+  probability: 8
+  weight: 8
+  minLossPercent: 0
+  maxLossPercent: 0
+  affectsIncome: 0
+  incomePercentChange: 0
+  incomeEffectMonths: 0
+  insuranceType: 0
+  outcomeType: 0
+  cashReward: 0
+  momentumReward: 0
+  season: 0
+  signal: 0
+  severity: 0
+  affectsHousehold: 0
+  adultsLost: 0
+  childrenLost: 0
+  affectsExpenses: 0
+  expenseCategory: 0
+  expenseFlatChange: 0
+  expenseEffectMonths: 0
+  lossType: 0
+  fixedLossAmount: 0
+  affectsLoan: 0
+  borrowingPowerChange: 0
+  startsChain: 0
+  followUpEvents: []
+  followUpChance: 0.5
+  followUpDelay: 1

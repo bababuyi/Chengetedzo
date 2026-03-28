@@ -1,0 +1,79 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
+  m_Name: Black Friday Sale
+  m_EditorClassIdentifier: 
+  hasChoices: 1
+  senderName: Chisamba Electronics
+  senderRelation: Social
+  choices:
+  - label: Buy the TV ($300)
+    resultDescription: Treated myself. Once in a while is fine.
+    moneyChange: -300
+    momentumChange: -2
+    incomePercentChange: 0
+    incomeEffectMonths: 0
+    affectsLoan: 0
+    borrowingPowerChange: 0
+  - label: Buy something small ($80)
+    resultDescription: "Got something small \u2014 a reasonable compromise."
+    moneyChange: -80
+    momentumChange: 0
+    incomePercentChange: 0
+    incomeEffectMonths: 0
+    affectsLoan: 0
+    borrowingPowerChange: 0
+  - label: Close the app and resist
+    resultDescription: Nope. Not today. That money stays in my account.
+    moneyChange: 0
+    momentumChange: 3
+    incomePercentChange: 0
+    incomeEffectMonths: 0
+    affectsLoan: 0
+    borrowingPowerChange: 0
+  eventName: Black Friday Sale
+  description: Your phone lights up with sale notifications. A TV you've been watching
+    is now half price. The sale ends tonight.
+  financialLesson: 
+  category: 3
+  pool: 2
+  requiredAsset: 0
+  icon: {fileID: 0}
+  probability: 8
+  weight: 6
+  minLossPercent: 0
+  maxLossPercent: 0
+  affectsIncome: 0
+  incomePercentChange: 0
+  incomeEffectMonths: 0
+  insuranceType: 0
+  outcomeType: 0
+  cashReward: 0
+  momentumReward: 0
+  season: 0
+  signal: 0
+  severity: 0
+  affectsHousehold: 0
+  adultsLost: 0
+  childrenLost: 0
+  affectsExpenses: 0
+  expenseCategory: 0
+  expenseFlatChange: 0
+  expenseEffectMonths: 0
+  lossType: 0
+  fixedLossAmount: 0
+  affectsLoan: 0
+  borrowingPowerChange: 0
+  startsChain: 0
+  followUpEvents: []
+  followUpChance: 0.5
+  followUpDelay: 1

@@ -57,11 +57,19 @@ public class UIManager : MonoBehaviour
     public Button continueButton;
 
     [Header("Choice Popup")]
+    public TextMeshProUGUI choiceSenderNameText;
+    public TextMeshProUGUI choiceSenderRelationText;
+
+    public GameObject choiceResultBubble;
+    public TextMeshProUGUI choiceResultText;
+    public Button choiceContinueButton;
+    public GameObject choiceButtonsContainer;
+
     public GameObject choiceEventPopup;
     public TextMeshProUGUI choiceTitleText;
     public TextMeshProUGUI choiceDescriptionText;
-    public Button[] choiceButtons;
-    public TextMeshProUGUI[] choiceButtonLabels;
+    public GameObject choiceButtonPrefab;
+    public Transform choiceButtonsParent;
 
     private System.Action<int> _onChoicePicked;
 
@@ -349,6 +357,8 @@ public class UIManager : MonoBehaviour
     public void ShowChoicePopup(
     string title,
     string description,
+    string senderName,
+    string senderRelation,
     List<EventData.ChoiceOption> choices,
     System.Action<int> onChoicePicked)
     {
@@ -363,25 +373,73 @@ public class UIManager : MonoBehaviour
         choiceTitleText.text = title;
         choiceDescriptionText.text = description;
 
-        for (int i = 0; i < choiceButtons.Length; i++)
-        {
-            if (i < choices.Count)
-            {
-                choiceButtons[i].gameObject.SetActive(true);
-                choiceButtonLabels[i].text = choices[i].label;
+        if (choiceSenderNameText != null)
+            choiceSenderNameText.text = senderName;
 
-                int captured = i;
-                choiceButtons[i].onClick.RemoveAllListeners();
-                choiceButtons[i].onClick.AddListener(() => OnChoiceSelected(captured));
-            }
-            else
-            {
-                choiceButtons[i].gameObject.SetActive(false);
-            }
+        if (choiceSenderRelationText != null)
+            choiceSenderRelationText.text = senderRelation;
+
+        choiceResultBubble?.SetActive(false);
+        choiceButtonsContainer?.SetActive(true);
+        choiceContinueButton?.gameObject.SetActive(false);
+
+        foreach (Transform child in choiceButtonsParent)
+            Destroy(child.gameObject);
+
+        for (int i = 0; i < choices.Count; i++)
+        {
+            GameObject btn = Instantiate(choiceButtonPrefab, choiceButtonsParent);
+
+            TMP_Text label = btn.GetComponentInChildren<TMP_Text>();
+            if (label != null)
+                label.text = choices[i].label;
+
+            int captured = i;
+            btn.GetComponent<Button>().onClick.AddListener(
+                () => ShowChoiceResult(captured, choices)
+            );
         }
 
         choiceEventPopup.SetActive(true);
         IsPopupActive = true;
+    }
+
+    private void ShowChoiceResult(int index, List<EventData.ChoiceOption> choices)
+    {
+        var choice = choices[index];
+
+        choiceButtonsContainer?.SetActive(false);
+
+        if (choiceResultBubble != null)
+        {
+            string resultMsg = choice.resultDescription;
+
+            if (choice.moneyChange != 0f)
+            {
+                string sign = choice.moneyChange > 0f ? "+" : "-";
+                resultMsg += $"\n\n<size=80%>{sign}${Mathf.Abs(choice.moneyChange):F0}";
+
+                if (choice.momentumChange != 0f)
+                {
+                    string msign = choice.momentumChange > 0f ? "+" : "";
+                    resultMsg += $"  ·  Morale: {msign}{choice.momentumChange:F0}</size>";
+                }
+                else
+                {
+                    resultMsg += "</size>";
+                }
+            }
+
+            choiceResultText.text = resultMsg;
+            choiceResultBubble.SetActive(true);
+        }
+
+        if (choiceContinueButton != null)
+        {
+            choiceContinueButton.gameObject.SetActive(true);
+            choiceContinueButton.onClick.RemoveAllListeners();
+            choiceContinueButton.onClick.AddListener(() => OnChoiceSelected(index));
+        }
     }
 
     private void OnChoiceSelected(int index)

@@ -12,11 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
   m_Name: Flash Flood
   m_EditorClassIdentifier: 
+  hasChoices: 0
+  senderName: 
+  senderRelation: 
+  choices: []
   eventName: Flash Flood
   description: Sudden flooding sweeps through the area, damaging property.
-  financialLesson: 'Flood protection is critical.
-
-'
+  financialLesson: Flash floods arrive without warning and damage everything in their
+    path. Home and property insurance is the only financial tool that can absorb
+    losses of this scale.
   category: 5
   pool: 0
   requiredAsset: 1
@@ -35,8 +39,17 @@ MonoBehaviour:
   season: 1
   signal: 2
   severity: 2
+  affectsHousehold: 0
+  adultsLost: 0
+  childrenLost: 0
+  affectsExpenses: 0
+  expenseCategory: 0
+  expenseFlatChange: 0
+  expenseEffectMonths: 0
   lossType: 0
   fixedLossAmount: 0
+  affectsLoan: 0
+  borrowingPowerChange: 0
   startsChain: 1
   followUpEvents:
   - {fileID: 11400000, guid: e56120e73eb493f48b2cb5f5523c175e, type: 2}

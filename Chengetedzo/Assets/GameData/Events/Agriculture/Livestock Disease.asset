@@ -12,11 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
   m_Name: Livestock Disease
   m_EditorClassIdentifier: 
+  hasChoices: 0
+  senderName: 
+  senderRelation: 
+  choices: []
   eventName: 'Livestock Disease '
   description: A disease outbreak spreads among livestock.
-  financialLesson: 'Insurance protects livestock.
-
-'
+  financialLesson: A single disease outbreak can wipe out months of farming income.
+    Livestock insurance covers losses that no amount of savings can easily absorb.
   category: 1
   pool: 1
   requiredAsset: 4
@@ -35,8 +38,17 @@ MonoBehaviour:
   season: 0
   signal: 4
   severity: 2
+  affectsHousehold: 0
+  adultsLost: 0
+  childrenLost: 0
+  affectsExpenses: 0
+  expenseCategory: 0
+  expenseFlatChange: 0
+  expenseEffectMonths: 0
   lossType: 1
   fixedLossAmount: 0
+  affectsLoan: 0
+  borrowingPowerChange: 0
   startsChain: 1
   followUpEvents:
   - {fileID: 11400000, guid: 3904b7e41092d0d4ea8a4b2d560e13d8, type: 2}

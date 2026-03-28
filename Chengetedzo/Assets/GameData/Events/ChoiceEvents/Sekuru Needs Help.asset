@@ -1,0 +1,82 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
+  m_Name: Sekuru Needs Help
+  m_EditorClassIdentifier: 
+  hasChoices: 1
+  senderName: "Sekuru Jos\xE9"
+  senderRelation: Family
+  choices:
+  - label: Send the full amount
+    resultDescription: I'll send the full $120 right now, Sekuru. Please get better
+      soon.
+    moneyChange: -120
+    momentumChange: 2
+    incomePercentChange: 0
+    incomeEffectMonths: 0
+    affectsLoan: 0
+    borrowingPowerChange: 0
+  - label: Send what I can ($60)
+    resultDescription: I can only spare $60 right now, Sekuru. I'm sorry I can't
+      do more.
+    moneyChange: -60
+    momentumChange: 0
+    incomePercentChange: 0
+    incomeEffectMonths: 0
+    affectsLoan: 0
+    borrowingPowerChange: 0
+  - label: I genuinely can't help right now
+    resultDescription: I'm really sorry Sekuru. Things are very tight this month.
+      I'll help when I can.
+    moneyChange: 0
+    momentumChange: -3
+    incomePercentChange: 0
+    incomeEffectMonths: 0
+    affectsLoan: 0
+    borrowingPowerChange: 0
+  eventName: Sekuru Needs Help
+  description: Your elderly uncle messages asking for help with unexpected medical
+    bills at the clinic.
+  financialLesson: 
+  category: 0
+  pool: 3
+  requiredAsset: 0
+  icon: {fileID: 0}
+  probability: 12
+  weight: 10
+  minLossPercent: 0
+  maxLossPercent: 0
+  affectsIncome: 0
+  incomePercentChange: 0
+  incomeEffectMonths: 0
+  insuranceType: 0
+  outcomeType: 0
+  cashReward: 0
+  momentumReward: 0
+  season: 0
+  signal: 0
+  severity: 1
+  affectsHousehold: 0
+  adultsLost: 0
+  childrenLost: 0
+  affectsExpenses: 0
+  expenseCategory: 0
+  expenseFlatChange: 0
+  expenseEffectMonths: 0
+  lossType: 0
+  fixedLossAmount: 0
+  affectsLoan: 0
+  borrowingPowerChange: 0
+  startsChain: 0
+  followUpEvents: []
+  followUpChance: 0.5
+  followUpDelay: 1

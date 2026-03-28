@@ -20,4 +20,6 @@ public class ResolvedEvent
 
     public bool hasChoices;
     public List<EventData.ChoiceOption> choices;
+    public string senderName;
+    public string senderRelation;
 }

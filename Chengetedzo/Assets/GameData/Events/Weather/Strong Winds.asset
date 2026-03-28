@@ -12,11 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
   m_Name: Strong Winds
   m_EditorClassIdentifier: 
+  hasChoices: 0
+  senderName: 
+  senderRelation: 
+  choices: []
   eventName: Strong Winds
   description: Powerful winds damage buildings and exposed equipment.
-  financialLesson: 'Weather preparedness reduces losses.
-
-'
+  financialLesson: Wind damage is unpredictable and often underestimated. Home insurance
+    covers structural repairs that would otherwise drain an entire household budget.
   category: 5
   pool: 0
   requiredAsset: 0
@@ -35,8 +38,17 @@ MonoBehaviour:
   season: 0
   signal: 0
   severity: 0
+  affectsHousehold: 0
+  adultsLost: 0
+  childrenLost: 0
+  affectsExpenses: 0
+  expenseCategory: 0
+  expenseFlatChange: 0
+  expenseEffectMonths: 0
   lossType: 0
   fixedLossAmount: 0
+  affectsLoan: 0
+  borrowingPowerChange: 0
   startsChain: 0
   followUpEvents: []
   followUpChance: 0

@@ -1115,6 +1115,8 @@ public class GameManager : MonoBehaviour
             UIManager.Instance.ShowChoicePopup(
                 ev.title,
                 ev.description,
+                ev.senderName,
+                ev.senderRelation,
                 ev.choices,
                 choiceIndex =>
                 {

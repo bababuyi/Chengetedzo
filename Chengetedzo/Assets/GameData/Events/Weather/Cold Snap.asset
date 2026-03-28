@@ -12,9 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
   m_Name: Cold Snap
   m_EditorClassIdentifier: 
+  hasChoices: 0
+  senderName: 
+  senderRelation: 
+  choices: []
   eventName: Cold snap
   description: A sudden freeze damages vulnerable crops.
-  financialLesson: Seasonal risk planning matters.
+  financialLesson: Cold snaps are rare but destructive to crops that aren't hardy
+    enough. Planning your planting calendar around seasonal risk reduces your exposure.
   category: 5
   pool: 0
   requiredAsset: 3

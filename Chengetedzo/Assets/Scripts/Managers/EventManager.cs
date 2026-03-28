@@ -265,10 +265,11 @@ public class EventManager : MonoBehaviour
                 {
                     title = ev.eventName,
                     description = ev.description,
-                    type = ev.insuranceType,
-                    lossPercent = 0f,
-                    moneyChange = gained,
-                    insurancePayout = 0f
+                    icon = ev.icon,
+                    hasChoices = true,
+                    choices = ev.choices,
+                    senderName = ev.senderName,
+                    senderRelation = ev.senderRelation
                 });
 
                 continue;

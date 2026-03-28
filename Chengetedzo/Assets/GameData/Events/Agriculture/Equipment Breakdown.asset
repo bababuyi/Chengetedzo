@@ -12,9 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
   m_Name: Equipment Breakdown
   m_EditorClassIdentifier: 
+  hasChoices: 0
+  senderName: 
+  senderRelation: 
+  choices: []
   eventName: Equipment Breakdown
   description: Essential farming equipment suddenly fails.
-  financialLesson: Maintenance avoids big costs.
+  financialLesson: A broken machine at the wrong time can delay an entire harvest.
+    Keeping an equipment maintenance fund prevents one breakdown from becoming a
+    catastrophe.
   category: 1
   pool: 1
   requiredAsset: 5

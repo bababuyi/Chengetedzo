@@ -9,17 +9,19 @@ public class EventData : ScriptableObject
 {
     [Header("Choice System")]
     public bool hasChoices;
+    public string senderName;
+    public string senderRelation;
     public List<ChoiceOption> choices;
 
     [System.Serializable]
     public class ChoiceOption
     {
-        public string label;               // e.g. "Help them"
-        public string resultDescription;   // shown after pick
-        public float moneyChange;          // negative = cost, positive = gain
+        public string label;
+        public string resultDescription;
+        public float moneyChange;
         public float momentumChange;
         public float incomePercentChange;
-        public int incomeEffectMonths;   // -1 = permanent
+        public int incomeEffectMonths;
         public bool affectsLoan;
         public float borrowingPowerChange;
     }

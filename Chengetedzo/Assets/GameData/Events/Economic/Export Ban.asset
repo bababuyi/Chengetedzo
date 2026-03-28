@@ -12,9 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
   m_Name: Export Ban
   m_EditorClassIdentifier: 
+  hasChoices: 0
+  senderName: 
+  senderRelation: 
+  choices: []
   eventName: Export Ban
   description: Government policy blocks access to export markets.
-  financialLesson: Policy risk affects income.
+  financialLesson: Government policy can close markets overnight with no warning.
+    Farmers and traders who depend on a single market are most vulnerable to this
+    kind of disruption.
   category: 3
   pool: 2
   requiredAsset: 3
@@ -33,8 +39,17 @@ MonoBehaviour:
   season: 0
   signal: 5
   severity: 2
+  affectsHousehold: 0
+  adultsLost: 0
+  childrenLost: 0
+  affectsExpenses: 0
+  expenseCategory: 0
+  expenseFlatChange: 0
+  expenseEffectMonths: 0
   lossType: 1
   fixedLossAmount: 0
+  affectsLoan: 0
+  borrowingPowerChange: 0
   startsChain: 1
   followUpEvents:
   - {fileID: 11400000, guid: 312126b357e525c4d9e486647998caa5, type: 2}

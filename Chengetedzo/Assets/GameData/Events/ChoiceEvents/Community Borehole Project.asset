@@ -1,0 +1,80 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
+  m_Name: Community Borehole Project
+  m_EditorClassIdentifier: 
+  hasChoices: 1
+  senderName: Cde Murambwa
+  senderRelation: Community
+  choices:
+  - label: Contribute fully ($100)
+    resultDescription: I'll contribute. This benefits everyone including us.
+    moneyChange: -100
+    momentumChange: 5
+    incomePercentChange: 0
+    incomeEffectMonths: 0
+    affectsLoan: 0
+    borrowingPowerChange: 0
+  - label: Give what I can ($40)
+    resultDescription: I can manage $40. It's all I can spare right now.
+    moneyChange: -40
+    momentumChange: 2
+    incomePercentChange: 0
+    incomeEffectMonths: 0
+    affectsLoan: 0
+    borrowingPowerChange: 0
+  - label: I can't contribute this time
+    resultDescription: "I'm sorry \u2014 I genuinely don't have anything to give
+      right now."
+    moneyChange: 0
+    momentumChange: -2
+    incomePercentChange: 0
+    incomeEffectMonths: 0
+    affectsLoan: 0
+    borrowingPowerChange: 0
+  eventName: Community Borehole Project
+  description: "The ward chairman calls a meeting \u2014 the community is raising
+    funds for a borehole. Every household is expected to contribute."
+  financialLesson: 
+  category: 3
+  pool: 2
+  requiredAsset: 0
+  icon: {fileID: 0}
+  probability: 14
+  weight: 10
+  minLossPercent: 0
+  maxLossPercent: 0
+  affectsIncome: 0
+  incomePercentChange: 0
+  incomeEffectMonths: 0
+  insuranceType: 0
+  outcomeType: 0
+  cashReward: 0
+  momentumReward: 0
+  season: 0
+  signal: 0
+  severity: 0
+  affectsHousehold: 0
+  adultsLost: 0
+  childrenLost: 0
+  affectsExpenses: 0
+  expenseCategory: 0
+  expenseFlatChange: 0
+  expenseEffectMonths: 0
+  lossType: 0
+  fixedLossAmount: 0
+  affectsLoan: 0
+  borrowingPowerChange: 0
+  startsChain: 0
+  followUpEvents: []
+  followUpChance: 0.5
+  followUpDelay: 1

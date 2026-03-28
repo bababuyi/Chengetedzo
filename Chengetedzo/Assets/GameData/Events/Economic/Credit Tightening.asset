@@ -12,9 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
   m_Name: Credit Tightening
   m_EditorClassIdentifier: 
+  hasChoices: 0
+  senderName: 
+  senderRelation: 
+  choices: []
   eventName: Credit Tightening
   description: Banks reduce lending, limiting access to credit.
-  financialLesson: Access to capital is critical.
+  financialLesson: When banks reduce lending, those without savings have nowhere
+    to turn. An emergency fund is your own personal credit line that no bank can
+    take away.
   category: 3
   pool: 2
   requiredAsset: 0
@@ -41,9 +47,9 @@ MonoBehaviour:
   expenseFlatChange: 0
   expenseEffectMonths: 0
   lossType: 2
-  fixedLossAmount: 200
-  affectsLoan: 0
-  borrowingPowerChange: 0
+  fixedLossAmount: 0
+  affectsLoan: 1
+  borrowingPowerChange: -10
   startsChain: 0
   followUpEvents: []
   followUpChance: 0
