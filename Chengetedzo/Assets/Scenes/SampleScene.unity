@@ -8346,7 +8346,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0.00018310547, y: -0.0008836634}
+  m_AnchoredPosition: {x: 0.00061035156, y: -0.0008836634}
   m_SizeDelta: {x: -18.592855, y: 0}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &710781136
@@ -19287,7 +19287,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1552810409}
   m_Direction: 0
   m_Value: 0
-  m_Size: 1
+  m_Size: 0.9999217
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -22915,8 +22915,8 @@ MonoBehaviour:
   choiceEventPopup: {fileID: 612074676}
   choiceTitleText: {fileID: 1333160951}
   choiceDescriptionText: {fileID: 977823649}
-  choiceButtonPrefab: {fileID: 0}
-  choiceButtonsParent: {fileID: 0}
+  choiceButtonPrefab: {fileID: 1465613230174969825, guid: 4d216e4bbd8001447bf0ccdb2a6071ee, type: 3}
+  choiceButtonsParent: {fileID: 1625558051}
   mentorPopup: {fileID: 1077850324}
   mentorText: {fileID: 1996006187}
   mentorContinueButton: {fileID: 1537611049}

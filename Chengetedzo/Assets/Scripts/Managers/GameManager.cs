@@ -1375,7 +1375,7 @@ public class GameManager : MonoBehaviour
                 financeManager.utilities = 15f;
 
                 financeManager.assets = new PlayerAssets();
-                break;
+            break;
 
             case ProfileType.Formal:
 
@@ -1397,7 +1397,7 @@ public class GameManager : MonoBehaviour
                 {
                     hasMotor = true
                 };
-                break;
+            break;
 
             case ProfileType.Farmer:
 
@@ -1423,7 +1423,7 @@ public class GameManager : MonoBehaviour
 
                 financeManager.cropsInsuredValue = 3000f;
                 financeManager.livestockInsuredValue = 4000f;
-                break;
+            break;
         }
 
         financeManager.InitializeFromSetup();
@@ -1467,16 +1467,16 @@ public class GameManager : MonoBehaviour
                         ProcessNextEvent();
                     else
                         EndMonthlyResolution();
-                    break;
+                break;
 
                 case GamePhase.Report:
                     EndMonthAndAdvance();
-                    break;
+                break;
 
                 default:
-                    Debug.LogError($"❌ {testName} hit unknown phase: {CurrentPhase}");
-                    IsHeadlessSimulation = false;
-                    return;
+                Debug.LogError($"❌ {testName} hit unknown phase: {CurrentPhase}");
+                IsHeadlessSimulation = false;
+                return;
             }
         }
 
@@ -1603,12 +1603,12 @@ public class GameManager : MonoBehaviour
         setupData.ownsCar = false;
         setupData.hasSchoolFees = true;
         setupData.schoolFeesAmount = 60f;
-        setupData.minIncome = 150f;
-        setupData.maxIncome = 350f;
+        setupData.minIncome = 180f;
+        setupData.maxIncome = 400f;
 
         financeManager.rentCost = 60f;
-        financeManager.groceries = 70f;
-        financeManager.transport = 20f;
+        financeManager.groceries = 90f;
+        financeManager.transport = 25f;
         financeManager.utilities = 15f;
         financeManager.assets = new PlayerAssets();
 
@@ -1634,11 +1634,11 @@ public class GameManager : MonoBehaviour
         setupData.ownsCar = true;
         setupData.hasSchoolFees = true;
         setupData.schoolFeesAmount = 450f; //Waterfalls Highschool
-        setupData.minIncome = 850f;
-        setupData.maxIncome = 1300f;
+        setupData.minIncome = 900f;
+        setupData.maxIncome = 1500f;
 
         // Waterfalls 3-room house rental in medium-density suburb
-        financeManager.rentCost = 650f;
+        financeManager.rentCost = 500f;
         financeManager.groceries = 200f;
         financeManager.transport = 80f;
         financeManager.utilities = 45f;
@@ -1669,13 +1669,13 @@ public class GameManager : MonoBehaviour
         setupData.housing = HousingType.OwnsHouse;
         setupData.ownsCar = true;
         setupData.hasSchoolFees = true;
-        setupData.schoolFeesAmount = 2000f;
-        setupData.minIncome = 1500f;
-        setupData.maxIncome = 3000f;
+        setupData.schoolFeesAmount = 3500f; //Lomagundi College
+        setupData.minIncome = 2500f;
+        setupData.maxIncome = 5000f;
         financeManager.rentCost = 0f;
-        financeManager.groceries = 500f;
-        financeManager.transport = 160f;
-        financeManager.utilities = 200f;
+        financeManager.groceries = 750f;
+        financeManager.transport = 250f;
+        financeManager.utilities = 300f;
         financeManager.assets = new PlayerAssets
         {
             hasHouse = true,
