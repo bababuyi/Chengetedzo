@@ -610,14 +610,25 @@ public class GameManager : MonoBehaviour
 
     private void ShowEvent(ResolvedEvent ev)
     {
-        Debug.Log("Headless Mode: " + IsHeadlessSimulation);
-        Debug.Log("SHOW EVENT POPUP CALLED");
         if (IsHeadlessSimulation)
         {
             OnEventPopupClosed();
             return;
         }
 
+        if (uiManager.IsPopupActive)
+        {
+            StartCoroutine(WaitAndShowEvent(ev));
+            return;
+        }
+
+        string fullText = BuildEventResultText(ev);
+        uiManager.ShowEventPopup(ev.title, fullText, ev.icon);
+    }
+
+    private IEnumerator WaitAndShowEvent(ResolvedEvent ev)
+    {
+        yield return new WaitUntil(() => !uiManager.IsPopupActive);
         string fullText = BuildEventResultText(ev);
         uiManager.ShowEventPopup(ev.title, fullText, ev.icon);
     }
@@ -638,6 +649,11 @@ public class GameManager : MonoBehaviour
         if (CurrentLedger.IsFinalized())
         {
             Debug.LogWarning("Ledger already finalized. Preventing duplicate year accumulation.");
+            if (CurrentPhase != GamePhase.Report)
+            {
+                SetPhase(GamePhase.Report);
+                uiManager.ShowReportPanel(CurrentLedger.GetMonthlyBreakdown());
+            }
             return;
         }
         CurrentLedger.FinalizeLedger();
@@ -1360,18 +1376,20 @@ public class GameManager : MonoBehaviour
         {
             case ProfileType.Informal:
 
-                setupData.adults = 1;
+                setupData.adults = 2;
                 setupData.children = 2;
                 setupData.isIncomeStable = false;
                 setupData.housing = HousingType.Renting;
                 setupData.ownsCar = false;
+                setupData.hasSchoolFees = true;
+                setupData.schoolFeesAmount = 60f;
 
-                setupData.minIncome = 150f;
-                setupData.maxIncome = 350f;
+                setupData.minIncome = 180f;
+                setupData.maxIncome = 400f;
 
                 financeManager.rentCost = 60f;
-                financeManager.groceries = 70f;
-                financeManager.transport = 20f;
+                financeManager.groceries = 90f;
+                financeManager.transport = 25f;
                 financeManager.utilities = 15f;
 
                 financeManager.assets = new PlayerAssets();
@@ -1379,24 +1397,28 @@ public class GameManager : MonoBehaviour
 
             case ProfileType.Formal:
 
-                setupData.adults = 1;
-                setupData.children = 1;
+                setupData.adults = 2;
+                setupData.children = 2;
                 setupData.isIncomeStable = true;
                 setupData.housing = HousingType.Renting;
                 setupData.ownsCar = true;
+                setupData.hasSchoolFees = true;
+                setupData.schoolFeesAmount = 450f;
 
-                setupData.minIncome = 500f;
-                setupData.maxIncome = 1200f;
+                setupData.minIncome = 900f;
+                setupData.maxIncome = 1600f;
 
-                financeManager.rentCost = 400f;
-                financeManager.groceries = 150f;
+                financeManager.rentCost = 500f;
+                financeManager.groceries = 200f;
                 financeManager.transport = 80f;
-                financeManager.utilities = 50f;
+                financeManager.utilities = 45f;
 
                 financeManager.assets = new PlayerAssets
                 {
                     hasMotor = true
                 };
+
+                financeManager.motorInsuredValue = 12000f;
             break;
 
             case ProfileType.Farmer:
@@ -1406,12 +1428,14 @@ public class GameManager : MonoBehaviour
                 setupData.isIncomeStable = false;
                 setupData.housing = HousingType.OwnsHouse;
                 setupData.ownsCar = false;
+                setupData.hasSchoolFees = true;
+                setupData.schoolFeesAmount = 150f;
 
-                setupData.minIncome = 200f;
-                setupData.maxIncome = 800f;
+                setupData.minIncome = 100f;   // very low months
+                setupData.maxIncome = 1200f;  // harvest months
 
                 financeManager.rentCost = 0f;
-                financeManager.groceries = 120f;
+                financeManager.groceries = 150f;
                 financeManager.transport = 40f;
                 financeManager.utilities = 25f;
 
@@ -1421,9 +1445,41 @@ public class GameManager : MonoBehaviour
                     hasLivestock = true
                 };
 
-                financeManager.cropsInsuredValue = 3000f;
-                financeManager.livestockInsuredValue = 4000f;
+                financeManager.cropsInsuredValue = 4000f;
+                financeManager.livestockInsuredValue = 6000f;
             break;
+
+            /*case ProfileType.HighClass:
+
+                setupData.adults = 2;
+                setupData.children = 2;
+                setupData.isIncomeStable = false;
+                setupData.housing = HousingType.OwnsHouse;
+                setupData.ownsCar = true;
+                setupData.hasSchoolFees = true;
+                setupData.schoolFeesAmount = 3500f;
+
+                setupData.minIncome = 2500f;
+                setupData.maxIncome = 5000f;
+
+                financeManager.rentCost = 0f;
+                financeManager.groceries = 750f;
+                financeManager.transport = 250f;
+                financeManager.utilities = 300f;
+
+                financeManager.assets = new PlayerAssets
+                {
+                    hasHouse = true,
+                    hasMotor = true,
+                    hasCrops = true,
+                    hasLivestock = true
+                };
+
+                setupData.houseValue = 150000f;
+                financeManager.motorInsuredValue = 50000f;
+                financeManager.cropsInsuredValue = 4000f;
+                financeManager.livestockInsuredValue = 6000f;
+            break;*/
         }
 
         financeManager.InitializeFromSetup();
@@ -1635,7 +1691,7 @@ public class GameManager : MonoBehaviour
         setupData.hasSchoolFees = true;
         setupData.schoolFeesAmount = 450f; //Waterfalls Highschool
         setupData.minIncome = 900f;
-        setupData.maxIncome = 1500f;
+        setupData.maxIncome = 1600f;
 
         // Waterfalls 3-room house rental in medium-density suburb
         financeManager.rentCost = 500f;

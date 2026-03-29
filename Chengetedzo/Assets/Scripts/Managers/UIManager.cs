@@ -86,9 +86,6 @@ public class UIManager : MonoBehaviour
 
     // Popup state property (correct, single version)
     private UIPanelState currentPanelState = UIPanelState.None;
-    // ================================
-    // POPUP CONTROLLER (SEALED)
-    // ================================
 
     private GameObject activePopup;
     private Button activeContinueButton;
@@ -196,7 +193,6 @@ public class UIManager : MonoBehaviour
         moneyText.text = $"${amount:F0}";
     }
 
-    // Hides all simulation and flow panels (does NOT hide setup, top HUD, or popups)
     private void HideAllPanels()
     {
         if (setupPanel != null) setupPanel.SetActive(false);
@@ -247,7 +243,7 @@ public class UIManager : MonoBehaviour
         if (currentPanelState == newState)
             return;
         //------------------------------------//
-        // FUTURE BARAKA. BE VERY CAREFUL WITH EVENT AND MENTOR POPUPS. YOU WILL REGRET TOUCHING ANYTHING
+        // FUTURE BARAKA. BE VERY CAREFUL WITH EVENT AND MENTOR POPUPS. YOU WILL REGRET TOUCHING ANYTHING. DOUBLE CHECK STATES IF YOU DO
         //-----------------------------------//
         if (IsPopupActive && activePopup != eventPopup)
             CloseActivePopup();
@@ -417,28 +413,17 @@ public class UIManager : MonoBehaviour
             if (choice.moneyChange != 0f)
             {
                 string sign = choice.moneyChange > 0f ? "+" : "-";
-                resultMsg += $"\n\n<size=80%>{sign}${Mathf.Abs(choice.moneyChange):F0}";
+                resultMsg += $"\n\n{sign}${Mathf.Abs(choice.moneyChange):F0}";
 
                 if (choice.momentumChange != 0f)
                 {
                     string msign = choice.momentumChange > 0f ? "+" : "";
-                    resultMsg += $"  ·  Morale: {msign}{choice.momentumChange:F0}</size>";
-                }
-                else
-                {
-                    resultMsg += "</size>";
+                    resultMsg += $"  ·  Morale: {msign}{choice.momentumChange:F0}";
                 }
             }
 
             choiceResultText.text = resultMsg;
             choiceResultBubble.SetActive(true);
-        }
-
-        if (choiceContinueButton != null)
-        {
-            choiceContinueButton.gameObject.SetActive(true);
-            choiceContinueButton.onClick.RemoveAllListeners();
-            choiceContinueButton.onClick.AddListener(() => OnChoiceSelected(index));
         }
     }
 
