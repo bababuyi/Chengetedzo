@@ -29,6 +29,7 @@ public class SetupPanelController : MonoBehaviour
     [Header("Review")]
     public TMP_Text reviewSummaryText;
     public TMP_Text reflectionLineText;
+    public BudgetPieChart budgetPieChart;
 
     [Header("Savings")]
     public GameObject savingsSection;
@@ -40,7 +41,8 @@ public class SetupPanelController : MonoBehaviour
     [Header("Navigation Buttons")]
     public GameObject nextButton;
     public GameObject backButton;
-    
+    public GameObject confirmAndStartButton;
+
     [Header("Panels")]
     public ExpensesPanelController expensesPanelController;
 
@@ -153,6 +155,8 @@ public class SetupPanelController : MonoBehaviour
 
         backButton.SetActive(step > 1);
         nextButton.SetActive(step < 4);
+        if (confirmAndStartButton != null)
+            confirmAndStartButton.SetActive(step == 4);
 
         currentStep = step;
 
@@ -306,6 +310,9 @@ public class SetupPanelController : MonoBehaviour
 
     public void ConfirmAndStart()
     {
+        if (currentStep != 4)
+            return;
+
         if (GameManager.Instance == null ||
             PlayerDataManager.Instance == null ||
             UIManager.Instance == null)
@@ -414,6 +421,17 @@ public class SetupPanelController : MonoBehaviour
 
         if (reflectionLineText != null)
             reflectionLineText.text = GetReflectionLine(stableIncome, hasSchoolFees, surplus);
+
+        float feesForChart = 0f;
+        if (hasSchoolFees)
+            float.TryParse(schoolFeesAmountInput.text, out feesForChart);
+
+        float housing = expensesPanelController?.GetHousingCost() ?? 0f;
+        float groceries = expensesPanelController?.GetGroceriesCost() ?? 0f;
+        float transport = expensesPanelController?.GetTransportCost() ?? 0f;
+        float utilities = expensesPanelController?.GetUtilitiesCost() ?? 0f;
+
+        budgetPieChart?.Render(averageIncome, housing, groceries, transport, utilities, feesForChart, savingsAmount);
     }
 
     private string GetReflectionLine(bool stableIncome, bool hasSchoolFees, float surplus)

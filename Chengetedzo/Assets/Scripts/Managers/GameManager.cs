@@ -1026,7 +1026,10 @@ public class GameManager : MonoBehaviour
     public void OnForecastBack()
     {
         SetPhase(GamePhase.Idle);
-        uiManager.ShowBudgetPanel();
+        if (IsGuidedMode)
+            uiManager.ShowBudgetPanel();
+        else
+            uiManager.ShowSetupPanel();
     }
 
     public void OnInsuranceBack()

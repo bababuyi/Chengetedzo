@@ -232,4 +232,8 @@ public class ExpensesPanelController : MonoBehaviour
         }
         return total;
     }
+    public float GetHousingCost() => houseCostInputGroup.activeSelf ? 0f : rentSlider.value;
+    public float GetGroceriesCost() => groceriesSlider.value;
+    public float GetTransportCost() => transportSlider.value;
+    public float GetUtilitiesCost() => utilitiesSlider.value;
 }
