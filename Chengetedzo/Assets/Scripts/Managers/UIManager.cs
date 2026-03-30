@@ -71,6 +71,16 @@ public class UIManager : MonoBehaviour
     public GameObject choiceButtonPrefab;
     public Transform choiceButtonsParent;
 
+    public bool IsEventPopupShowing()
+    {
+        return eventPopup != null && eventPopup.activeSelf;
+    }
+
+    public bool IsChoicePopupShowing()
+    {
+        return choiceEventPopup != null && choiceEventPopup.activeSelf;
+    }
+
     private System.Action<int> _onChoicePicked;
 
     [Header("Mentor Popup")]
@@ -93,6 +103,8 @@ public class UIManager : MonoBehaviour
 
     public bool IsPopupActive { get; private set; }
     public bool IsGuidedMode { get; private set; }
+    private enum SuspendedContext { None, EventPopup, ChoicePopup }
+    private SuspendedContext _suspendedContext = SuspendedContext.None;
 
     private void ShowPopup(
         GameObject popupObject,
@@ -245,7 +257,7 @@ public class UIManager : MonoBehaviour
         //------------------------------------//
         // FUTURE BARAKA. BE VERY CAREFUL WITH EVENT AND MENTOR POPUPS. YOU WILL REGRET TOUCHING ANYTHING. DOUBLE CHECK STATES IF YOU DO
         //-----------------------------------//
-        if (IsPopupActive && activePopup != eventPopup)
+        if (IsPopupActive && activePopup != null && activePopup != eventPopup)
             CloseActivePopup();
 
         HideAllPanels();
@@ -424,6 +436,13 @@ public class UIManager : MonoBehaviour
 
             choiceResultText.text = resultMsg;
             choiceResultBubble.SetActive(true);
+        }
+
+        if (choiceContinueButton != null)
+        {
+            choiceContinueButton.gameObject.SetActive(true);
+            choiceContinueButton.onClick.RemoveAllListeners();
+            choiceContinueButton.onClick.AddListener(() => OnChoiceSelected(index));
         }
     }
 
@@ -609,6 +628,13 @@ public class UIManager : MonoBehaviour
 
     public void ShowLoanPanel()
     {
+        if (IsPopupActive && activePopup == eventPopup)
+            _suspendedContext = SuspendedContext.EventPopup;
+        else if (IsPopupActive && activePopup == null) // choice popup manages itself
+            _suspendedContext = SuspendedContext.ChoicePopup;
+        else
+            _suspendedContext = SuspendedContext.None;
+
         SwitchPanel(UIPanelState.Loan);
         loanPanel.GetComponent<LoanPanelController>()?.RefreshUI();
     }
@@ -632,7 +658,18 @@ public class UIManager : MonoBehaviour
 
     public void CloseLoanPanel()
     {
-        SwitchPanel(UIPanelState.Simulation);
+        var context = _suspendedContext;
+        _suspendedContext = SuspendedContext.None;
+
+        if (context == SuspendedContext.EventPopup || context == SuspendedContext.ChoicePopup)
+        {
+            loanPanel.SetActive(false);
+            currentPanelState = UIPanelState.Simulation;
+        }
+        else
+        {
+            SwitchPanel(UIPanelState.Simulation);
+        }
 
         GameManager.Instance.OnLoanDecisionFinished();
     }
@@ -656,13 +693,32 @@ public class UIManager : MonoBehaviour
 
     public void CloseSavingsPanel()
     {
-        SwitchPanel(UIPanelState.Simulation);
+        var context = _suspendedContext;
+        _suspendedContext = SuspendedContext.None;
+
+        if (context == SuspendedContext.EventPopup || context == SuspendedContext.ChoicePopup)
+        {
+            budgetPanel.SetActive(false);
+            currentPanelState = UIPanelState.Simulation;
+        }
+        else
+        {
+            SwitchPanel(UIPanelState.Simulation);
+        }
+
         GameManager.Instance.OnSavingsDecisionFinished();
     }
+
     public void ShowSavingsPanel()
     {
-        SwitchPanel(UIPanelState.Budget);
+        if (IsPopupActive && activePopup == eventPopup)
+            _suspendedContext = SuspendedContext.EventPopup;
+        else if (IsPopupActive && activePopup == null)
+            _suspendedContext = SuspendedContext.ChoicePopup;
+        else
+            _suspendedContext = SuspendedContext.None;
 
+        SwitchPanel(UIPanelState.Budget);
         var controller = budgetPanel.GetComponent<BudgetPanelController>();
         controller?.ConfigureForPhase(GameManager.GamePhase.Savings);
     }

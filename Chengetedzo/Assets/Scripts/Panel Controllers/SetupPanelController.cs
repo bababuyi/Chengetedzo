@@ -30,6 +30,11 @@ public class SetupPanelController : MonoBehaviour
     public TMP_Text reviewSummaryText;
     public TMP_Text reflectionLineText;
 
+    [Header("Savings")]
+    public GameObject savingsSection;
+    public Slider savingsSlider;
+    public TMP_Text savingsValueText;
+
     public GameObject schoolFeesAmountGroup;
 
     [Header("Navigation Buttons")]
@@ -143,17 +148,16 @@ public class SetupPanelController : MonoBehaviour
     {
         incomeSection.SetActive(step == 1);
         expensesSection.SetActive(step == 2);
-        reviewSection.SetActive(step == 3);
+        savingsSection.SetActive(step == 3);
+        reviewSection.SetActive(step == 4);
 
         backButton.SetActive(step > 1);
-        nextButton.SetActive(step < 3);
+        nextButton.SetActive(step < 4);
 
         currentStep = step;
 
         if (step == 1)
-        {
             UnlockSetupUI();
-        }
 
         if (step == 2)
         {
@@ -169,9 +173,36 @@ public class SetupPanelController : MonoBehaviour
         }
 
         if (step == 3)
-        {
+            InitSavingsStep();
+
+        if (step == 4)
             BuildReviewSummary();
-        }
+    }
+
+    private void InitSavingsStep()
+    {
+        float.TryParse(maxIncomeInput.text, out float maxIncome);
+        if (maxIncome <= 0)
+            float.TryParse(minIncomeInput.text, out maxIncome);
+
+        savingsSlider.minValue = 0;
+        savingsSlider.maxValue = maxIncome;
+
+        float suggested = Mathf.Round(maxIncome * 0.1f / 10f) * 10f;
+        savingsSlider.SetValueWithoutNotify(suggested);
+
+        savingsSlider.onValueChanged.RemoveAllListeners();
+        savingsSlider.onValueChanged.AddListener(_ => UpdateSavingsDisplay());
+
+        UpdateSavingsDisplay();
+    }
+
+    private void UpdateSavingsDisplay()
+    {
+        float snapped = Mathf.Round(savingsSlider.value / 10f) * 10f;
+        savingsSlider.SetValueWithoutNotify(snapped);
+        if (savingsValueText != null)
+            savingsValueText.text = $"${snapped:F0} / month";
     }
 
     public void NextStep()
@@ -201,6 +232,9 @@ public class SetupPanelController : MonoBehaviour
 
             case 2:
                 return ValidateSchoolFees();
+
+            case 3:
+                return true;
 
             default:
                 return true;
@@ -310,7 +344,9 @@ public class SetupPanelController : MonoBehaviour
         expensesPanelController.ApplyExpensesToFinance(finance);
         finance.InitializeFromSetup();
 
-        gm.BeginBudgetSetup();
+        float savings = Mathf.Round(savingsSlider.value / 10f) * 10f;
+        finance.generalSavingsMonthly = savings;
+        gm.OnSavingsSetupConfirmed(savings);
     }
 
     private void BuildReviewSummary()
@@ -357,10 +393,15 @@ public class SetupPanelController : MonoBehaviour
 
         summary += "\n";
 
-        if (surplus >= 0)
-            summary += $"<color=#3CB371>Estimated Surplus: +${surplus:F0}</color>\n\n";
+        float savingsAmount = Mathf.Round(savingsSlider.value / 10f) * 10f;
+        float netSurplus = surplus - savingsAmount;
+
+        summary += $"Monthly Savings: -${savingsAmount:F0}\n";
+
+        if (netSurplus >= 0)
+            summary += $"<color=#3CB371>Estimated Surplus: +${netSurplus:F0}</color>\n\n";
         else
-            summary += $"<color=#E74C3C>Estimated Shortfall: -${Mathf.Abs(surplus):F0}</color>\n\n";
+            summary += $"<color=#E74C3C>Estimated Shortfall: -${Mathf.Abs(netSurplus):F0}</color>\n\n";
 
         summary += $"Household: {adults} adult{(adults != 1 ? "s" : "")}";
         if (children > 0)

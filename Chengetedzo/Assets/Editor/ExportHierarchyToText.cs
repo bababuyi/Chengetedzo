@@ -170,3 +170,25 @@ public class ExportHierarchyToText : EditorWindow
         }
     }
 }
+
+public static class DevShortcuts
+{
+    [MenuItem("Dev/Full Reset (Save + Prefs) %#r")]
+    public static void FullReset()
+    {
+        SaveSystem.DeleteSave();
+        PlayerPrefs.DeleteAll();
+        PlayerPrefs.Save();
+
+        var gm = UnityEngine.Object.FindObjectOfType<GameManager>();
+        gm?.FullRestart();
+        Debug.Log("[DEV] Hot reset triggered.");
+    }
+
+    [MenuItem("Dev/Reset Tutorials Only %#t")]
+    public static void ResetTutorials()
+    {
+        TutorialManager.Instance?.ResetAll();
+        Debug.Log("[DEV] Tutorial flags cleared. Tutorials will replay.");
+    }
+}

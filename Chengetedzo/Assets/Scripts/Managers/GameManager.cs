@@ -895,15 +895,13 @@ public class GameManager : MonoBehaviour
         }
 
         bool canShowLoan =
-            loanManager != null &&
-            loanManager.IsLoanUnlocked &&
-            !uiManager.IsPopupActive;
+        loanManager != null &&
+        loanManager.IsLoanUnlocked;
 
-        bool canShowSavings =
-            financeManager != null &&
-            (financeManager.CashOnHand > 0f ||
-             financeManager.generalSavingsBalance > 0f) &&
-            !uiManager.IsPopupActive;
+    bool canShowSavings =
+        financeManager != null &&
+        (financeManager.CashOnHand > 0f ||
+         financeManager.generalSavingsBalance > 0f);
 
         if (canShowLoan) uiManager.ShowLoanTopButton();
         else uiManager.HideLoanTopButton();
@@ -986,7 +984,7 @@ public class GameManager : MonoBehaviour
         if (isWaitingForEventConfirmation)
         {
             SetPhase(GamePhase.Simulation);
-            ShowEvent(currentEvent);
+            ShowOrChooseEvent(currentEvent);
             return;
         }
 
@@ -1119,12 +1117,14 @@ public class GameManager : MonoBehaviour
     {
         if (IsHeadlessSimulation)
         {
-            // Headless: auto-pick first choice (or just close)
             if (ev.hasChoices && ev.choices != null && ev.choices.Count > 0)
                 ApplyEventChoice(ev, 0);
             OnEventPopupClosed();
             return;
         }
+
+        if (uiManager.IsEventPopupShowing() || uiManager.IsChoicePopupShowing())
+            return;
 
         if (ev.hasChoices && ev.choices != null && ev.choices.Count > 0)
         {
