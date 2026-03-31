@@ -174,12 +174,14 @@ public class FinanceManager : MonoBehaviour
 
         totalExpenses = housingCost + effectiveGroceries + effectiveTransport + effectiveUtilities;
 
-        GameManager.Instance.ApplyMoneyChange(
-            FinancialEntry.EntryType.Expense,
-            "Fixed Expenses",
-            totalExpenses,
-            false
-        );
+        if (housingCost > 0f)
+            GameManager.Instance.ApplyMoneyChange(FinancialEntry.EntryType.Expense, "Housing", housingCost, false);
+        if (effectiveGroceries > 0f)
+            GameManager.Instance.ApplyMoneyChange(FinancialEntry.EntryType.Expense, "Groceries", effectiveGroceries, false);
+        if (effectiveTransport > 0f)
+            GameManager.Instance.ApplyMoneyChange(FinancialEntry.EntryType.Expense, "Transport", effectiveTransport, false);
+        if (effectiveUtilities > 0f)
+            GameManager.Instance.ApplyMoneyChange(FinancialEntry.EntryType.Expense, "Utilities", effectiveUtilities, false);
 
         balance = effectiveIncome - totalExpenses;
         WasOverBudgetThisMonth = balance < 0;

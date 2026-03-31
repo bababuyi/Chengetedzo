@@ -344,6 +344,10 @@ public class UIManager : MonoBehaviour
 
         SwitchPanel(UIPanelState.Report);
         monthlyReportText.text = reportText;
+
+        var visualPanel = reportPanel.GetComponent<MonthlyReportPanel>();
+        visualPanel?.Populate(GameManager.Instance?.CurrentLedger);
+
         TutorialManager.Instance?.OnReportOpened();
     }
 
