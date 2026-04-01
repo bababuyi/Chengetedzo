@@ -35,8 +35,8 @@ public class BudgetPieChart : MonoBehaviour
     [System.Serializable]
     public class LegendRow
     {
-        public Image colorSwatch;   // small square Image, set color here
-        public TMP_Text label;      // "Housing  $500"
+        public Image colorSwatch;
+        public TMP_Text label;
     }
 
     public void Render(
@@ -95,7 +95,7 @@ public class BudgetPieChart : MonoBehaviour
         {
             slice.color = color;
             slice.fillAmount = sizeFrac;
-            // rotate so this slice starts where the last one ended
+
             slice.transform.localEulerAngles = new Vector3(0f, 0f, -startFrac * 360f);
         }
 

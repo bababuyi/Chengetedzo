@@ -40,6 +40,7 @@ public class MonthlyReportPanel : MonoBehaviour
 
     public void Populate(MonthlyFinancialLedger ledger)
     {
+        Debug.Log($"[ReportPanel] Populate called. Ledger null: {ledger == null}");
         if (ledger == null) return;
 
         int displayMonth = ((ledger.MonthNumber - 1) % 12) + 1;

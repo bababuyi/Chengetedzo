@@ -343,7 +343,8 @@ public class UIManager : MonoBehaviour
             CloseActivePopup();
 
         SwitchPanel(UIPanelState.Report);
-        monthlyReportText.text = reportText;
+        if (monthlyReportText != null)
+            monthlyReportText.text = reportText;
 
         var visualPanel = reportPanel.GetComponent<MonthlyReportPanel>();
         visualPanel?.Populate(GameManager.Instance?.CurrentLedger);
