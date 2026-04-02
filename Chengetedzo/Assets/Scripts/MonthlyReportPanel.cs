@@ -8,7 +8,7 @@ public class MonthlyReportPanel : MonoBehaviour
     [Header("Navigation")]
     public Button continueButton;
 
-    [Header("Left Column — Text")]
+    [Header("Left Column - Text")]
     public TMP_Text monthHeaderText;
     public TMP_Text incomeText;
     public Transform expenseLineContainer;
@@ -20,7 +20,7 @@ public class MonthlyReportPanel : MonoBehaviour
     public Transform eventRecapContainer;
     public GameObject eventRecapPrefab;
 
-    [Header("Right Column — Chart")]
+    [Header("Right Column - Chart")]
     public MonthlyBarChart barChart;
     public TMP_Text savingsBalanceText;
 
@@ -47,7 +47,7 @@ public class MonthlyReportPanel : MonoBehaviour
         string monthName = System.Globalization.CultureInfo.CurrentCulture
             .DateTimeFormat.GetMonthName(displayMonth);
         if (monthHeaderText != null)
-            monthHeaderText.text = $"Month {ledger.MonthNumber} — {monthName}";
+            monthHeaderText.text = $"Month {ledger.MonthNumber} - {monthName}";
 
         float income = 0f;
         float housing = 0f;
@@ -169,12 +169,15 @@ public class MonthlyReportPanel : MonoBehaviour
     {
         if (eventRecapContainer == null || eventRecapPrefab == null) return;
 
+        EnsureEventRecapLayout();
+
         foreach (Transform child in eventRecapContainer)
             Destroy(child.gameObject);
 
         foreach (var ev in events)
         {
             var go = Instantiate(eventRecapPrefab, eventRecapContainer);
+            NormalizeUIChild(go.transform);
             var texts = go.GetComponentsInChildren<TMP_Text>();
             if (texts.Length >= 2)
             {
@@ -191,6 +194,41 @@ public class MonthlyReportPanel : MonoBehaviour
                 bg.color = ev.positive
                     ? new Color(0.91f, 0.95f, 0.87f, 1f)
                     : new Color(0.98f, 0.92f, 0.92f, 1f);
+        }
+    }
+
+    private void EnsureEventRecapLayout()
+    {
+        var layout = eventRecapContainer.GetComponent<VerticalLayoutGroup>();
+        if (layout == null)
+        {
+            layout = eventRecapContainer.gameObject.AddComponent<VerticalLayoutGroup>();
+            layout.childAlignment = TextAnchor.UpperCenter;
+            layout.childControlWidth = true;
+            layout.childControlHeight = false;
+            layout.childForceExpandWidth = true;
+            layout.childForceExpandHeight = false;
+            layout.spacing = 8f;
+        }
+
+        var fitter = eventRecapContainer.GetComponent<ContentSizeFitter>();
+        if (fitter == null)
+        {
+            fitter = eventRecapContainer.gameObject.AddComponent<ContentSizeFitter>();
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+        }
+    }
+
+    private static void NormalizeUIChild(Transform child)
+    {
+        child.localScale = Vector3.one;
+
+        if (child is RectTransform rect)
+        {
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = Vector2.zero;
+            rect.localRotation = Quaternion.identity;
         }
     }
 

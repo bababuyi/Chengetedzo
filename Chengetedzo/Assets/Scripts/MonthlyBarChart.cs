@@ -60,7 +60,8 @@ public class MonthlyBarChart : MonoBehaviour
     {
         float totalExpenses = housing + groceries + transport + utilities + schoolFees + insurance + eventLosses;
         float leftover = Mathf.Max(0f, income - totalExpenses);
-        float scale = income > 0f ? maxBarHeight / income : 0f;
+        float maxValue = Mathf.Max(income, totalExpenses, leftover);
+        float scale = maxValue > 0f ? maxBarHeight / maxValue : 0f;
 
         //Income
         SetBarHeight(incomeColumn.barRoot, income * scale);
@@ -89,6 +90,15 @@ public class MonthlyBarChart : MonoBehaviour
     private void SetBarHeight(RectTransform bar, float height)
     {
         if (bar == null) return;
+
+        // Hardcoded cause debuging was getting irritating :<
+        bar.pivot = new Vector2(0.5f, 0f);
+
+        bar.anchorMin = new Vector2(0.5f, 0.25f);
+        bar.anchorMax = new Vector2(0.5f, 0.25f);
+
+        bar.anchoredPosition = new Vector2(0f, 0f);
+
         var sd = bar.sizeDelta;
         sd.y = Mathf.Max(0f, height);
         bar.sizeDelta = sd;
