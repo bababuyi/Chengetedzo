@@ -39,6 +39,9 @@ public class UIManager : MonoBehaviour
     public Button endOfYearContinueButton;
     public Button restartButton;
 
+    [Header("Year End Graph")]
+    public YearEndGraph yearEndGraph;
+
     private bool isShowingYearPartTwo = false;
     private string yearPartOneText;
 
@@ -461,7 +464,7 @@ public class UIManager : MonoBehaviour
         callback?.Invoke(index);
     }
 
-    // ===== End-of-Year Screen =====
+    // End-of-Year Screen
     public void ShowEndOfYearSummary(string mentorReflection)
     {
         SwitchPanel(UIPanelState.EndOfYear);
@@ -475,7 +478,7 @@ public class UIManager : MonoBehaviour
             - gm.YearEventLosses
             + gm.YearPayouts;
 
-        // ===== PART 1 =====
+        // PART 1
         yearPartOneText =
             "<b>Year Complete</b>\n\n" +
             $"Income: ${gm.YearIncome:F0}\n" +
@@ -487,8 +490,8 @@ public class UIManager : MonoBehaviour
             $"Final Cash: ${gm.financeManager.CashOnHand:F0}\n\n" +
             $"<i>{mentorReflection}</i>";
 
-        // ===== PART 2 =====
-        // === SECTION 1 — Insurance ROI ===
+        // PART 2
+        // SECTION 1 — Insurance
         yearPartTwoText = "<b>Insurance</b>\n";
 
         if (gm.YearPremiums == 0f)
@@ -513,7 +516,7 @@ public class UIManager : MonoBehaviour
             }
         }
 
-        // === SECTION 2 — Resilience ===
+        // SECTION 2 — Resilience
         yearPartTwoText += "<b>Resilience</b>\n";
         yearPartTwoText += $"You faced {gm.TotalUnexpectedEvents} unexpected events. {gm.InsuredEventsCount} were covered by insurance.\n";
 
@@ -528,7 +531,7 @@ public class UIManager : MonoBehaviour
 
         yearPartTwoText += "\n";
 
-        // === SECTION 3 — One takeaway ===
+        // SECTION 3 — One takeaway
         yearPartTwoText += "<b>Key Takeaway</b>\n";
 
         float netBenefit = gm.TotalInsurancePayoutAmount - gm.YearPremiums;
@@ -550,7 +553,7 @@ public class UIManager : MonoBehaviour
         SetEndOfYearButtonPosition(CONTINUE_X);
 
         endOfYearContinueButton.GetComponentInChildren<TextMeshProUGUI>().text = "Key Takeaways →";
-
+        yearEndGraph?.Render(GameManager.Instance.monthHistory);
         restartButton.interactable = false;
     }
 

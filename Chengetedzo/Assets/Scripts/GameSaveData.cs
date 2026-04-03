@@ -69,4 +69,19 @@ public class GameSaveData
         public int monthsPaid;
         public int missedPayments;
     }
+
+    public List<MonthSnapshotSaveData> snapshots = new List<MonthSnapshotSaveData>();
+
+    [Serializable]
+    public class MonthSnapshotSaveData
+    {
+        public int month;
+        public float income;
+        public float expenses;
+        public float cashOnHand;
+        public float savingsBalance;
+        public float eventLoss;
+        public bool hadEvent;
+        public bool eventWasInsured;
+    }
 }

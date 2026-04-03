@@ -49,6 +49,7 @@ public static class SaveSystem
         data.previousMomentum = gm.SavedPreviousMomentum;
         data.monthsSinceMajorEvent = gm.monthsSinceMajorEvent;
         data.eventPressure = gm.eventManager.GetEventPressure();
+        
         data.insurancePlans = new List<GameSaveData.InsurancePlanSaveData>();
         foreach (var plan in gm.insuranceManager.allPlans)
         {
@@ -61,6 +62,7 @@ public static class SaveSystem
                 missedPayments = plan.missedPayments
             });
         }
+        
         data.incomeEffects = new List<GameSaveData.IncomeEffectSaveData>();
         foreach (var effect in gm.ActiveIncomeEffects)
         {
@@ -70,6 +72,7 @@ public static class SaveSystem
                 remainingMonths = effect.remainingMonths
             });
         }
+        
         data.expenseEffects = new List<GameSaveData.ExpenseEffectSaveData>();
         foreach (var effect in gm.ActiveExpenseEffects)
         {
@@ -80,6 +83,20 @@ public static class SaveSystem
                 remainingMonths = effect.remainingMonths
             });
         }
+
+        data.snapshots = new List<GameSaveData.MonthSnapshotSaveData>();
+        foreach (var s in gm.monthHistory)
+            data.snapshots.Add(new GameSaveData.MonthSnapshotSaveData
+            {
+                month = s.month,
+                income = s.income,
+                expenses = s.expenses,
+                cashOnHand = s.cashOnHand,
+                savingsBalance = s.savingsBalance,
+                eventLoss = s.eventLoss,
+                hadEvent = s.hadEvent,
+                eventWasInsured = s.eventWasInsured
+            });
 
         string json = JsonUtility.ToJson(data, true);
 

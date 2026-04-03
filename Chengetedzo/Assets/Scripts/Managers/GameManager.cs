@@ -98,6 +98,21 @@ public class GameManager : MonoBehaviour
         public int remainingMonths; //Remember -1 = permanent
     }
 
+    [System.Serializable]
+    public class MonthSnapshot
+    {
+        public int month;
+        public float income;
+        public float expenses;
+        public float cashOnHand;
+        public float savingsBalance;
+        public float eventLoss;
+        public bool hadEvent;
+        public bool eventWasInsured;
+    }
+
+    public List<MonthSnapshot> monthHistory = new List<MonthSnapshot>();
+
     private List<ExpenseEffect> activeExpenseEffects = new();
 
     private void Awake()
@@ -666,6 +681,18 @@ public class GameManager : MonoBehaviour
 
         Debug.Log(CurrentLedger.GetMonthlyBreakdown());
 
+        monthHistory.Add(new MonthSnapshot
+        {
+            month = currentMonth,
+            income = CurrentLedger.TotalIncome,
+            expenses = CurrentLedger.TotalExpenses + CurrentLedger.TotalInsurancePremiums,
+            cashOnHand = financeManager.CashOnHand,
+            savingsBalance = financeManager.generalSavingsBalance,
+            eventLoss = CurrentLedger.TotalEventLosses,
+            hadEvent = CurrentLedger.TotalEventLosses > 0f,
+            eventWasInsured = CurrentLedger.TotalInsurancePayouts > 0f
+        });
+
         SetPhase(GamePhase.Report);
 
         if (financeManager.LastMonthSavingsDelta > 0)
@@ -1210,6 +1237,20 @@ public class GameManager : MonoBehaviour
 
         currentMonth = save.currentMonth;
 
+        monthHistory.Clear();
+        foreach (var s in save.snapshots)
+            monthHistory.Add(new MonthSnapshot
+            {
+                month = s.month,
+                income = s.income,
+                expenses = s.expenses,
+                cashOnHand = s.cashOnHand,
+                savingsBalance = s.savingsBalance,
+                eventLoss = s.eventLoss,
+                hadEvent = s.hadEvent,
+                eventWasInsured = s.eventWasInsured
+            });
+
         financeManager.SetCash(save.cashOnHand);
         financeManager.generalSavingsBalance = save.generalSavingsBalance;
         financeManager.generalSavingsMonthly = save.generalSavingsMonthly;
@@ -1254,7 +1295,7 @@ public class GameManager : MonoBehaviour
         insuranceManager.ResetAll();
         PlayerDataManager.Instance?.ResetPlayerData();
         activeExpenseEffects.Clear();
-
+        monthHistory.Clear();
         setupData.minIncome = 0f;
         setupData.maxIncome = 0f;
         setupData.isIncomeStable = true;
