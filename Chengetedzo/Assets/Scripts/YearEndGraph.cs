@@ -31,6 +31,7 @@ public class YearEndGraph : MonoBehaviour
 
     public void Render(List<GameManager.MonthSnapshot> snapshots)
     {
+        Debug.Log($"[Graph] graphArea size: {graphArea.rect.width} x {graphArea.rect.height}");
         if (snapshots == null || snapshots.Count == 0) return;
 
         foreach (Transform child in graphArea)

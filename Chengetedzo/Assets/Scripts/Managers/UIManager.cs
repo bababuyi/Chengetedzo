@@ -553,8 +553,13 @@ public class UIManager : MonoBehaviour
         SetEndOfYearButtonPosition(CONTINUE_X);
 
         endOfYearContinueButton.GetComponentInChildren<TextMeshProUGUI>().text = "Key Takeaways →";
-        yearEndGraph?.Render(GameManager.Instance.monthHistory);
+        StartCoroutine(RenderGraphNextFrame());
         restartButton.interactable = false;
+    }
+    private IEnumerator RenderGraphNextFrame()
+    {
+        yield return null;
+        yearEndGraph?.Render(GameManager.Instance.monthHistory);
     }
 
     public void OnEndOfYearContinueClicked()
