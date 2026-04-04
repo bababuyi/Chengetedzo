@@ -10,47 +10,46 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
-  m_Name: Neighbour's Funeral Costs
+  m_Name: Funeral Society Invitation
   m_EditorClassIdentifier: 
   hasChoices: 1
-  senderName: Mrs Dube
+  senderName: Ambuya Chigwanda
   senderRelation: Community
   choices:
-  - label: Help generously ($80)
-    resultDescription: I'll drop it off tonight. So sorry for the family's loss.
-    moneyChange: -80
+  - label: Join and pay the first month ($25)
+    resultDescription: Peace of mind is worth $25 a month.
+    moneyChange: -25
     momentumChange: 3
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
-  - label: Give a smaller amount ($30)
-    resultDescription: It's not much but please accept it with our condolences.
-    moneyChange: -30
+  - label: Ask for more information first
+    resultDescription: I want to understand the full terms before I commit.
+    moneyChange: 0
     momentumChange: 1
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
-  - label: I can't help right now
-    resultDescription: I'm so sorry. I'm in no position to help financially this
-      month.
+  - label: "Not right now \u2014 too many expenses"
+    resultDescription: I can't take on another monthly cost this month.
     moneyChange: 0
     momentumChange: -1
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
-  eventName: Neighbour's Funeral Costs
-  description: Your neighbour passed away suddenly. The family is struggling with
-    funeral costs and is asking for community support.
+  eventName: Funeral Society Invitation
+  description: A trusted community member invites you to join a reputable burial
+    society. Monthly contributions are small but cover the whole family.
   financialLesson: 
-  category: 0
+  category: 3
   pool: 6
   requiredAsset: 0
   icon: {fileID: 0}
-  probability: 18
-  weight: 12
+  probability: 12
+  weight: 8
   minLossPercent: 0
   maxLossPercent: 0
   affectsIncome: 0

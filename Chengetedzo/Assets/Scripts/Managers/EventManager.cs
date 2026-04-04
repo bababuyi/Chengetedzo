@@ -26,7 +26,7 @@ public class EventManager : MonoBehaviour
         public int monthToTrigger;
     }
 
-    [SerializeField] private int maxEventsPerMonth = 2;
+    [SerializeField] private int maxEventsPerMonth=3;
 
     [Header("Possible Events")]
     [SerializeField] private EventDatabase eventDatabase;

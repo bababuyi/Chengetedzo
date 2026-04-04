@@ -1,72 +1,120 @@
 TYPE,F1,F2,F3,F4,F5,F6,F7,F8,F9,F10
-EVENT,Sekuru Needs Help,Your elderly uncle messages asking for help with unexpected medical bills at the clinic.,Sekuru José,Family,Health,Health,None,12,10,Moderate
+EVENT,Sekuru Needs Help,Your elderly uncle messages asking for help with unexpected medical bills at the clinic.,Sekuru José,Family,Health,Choice,None,12,10,Moderate
 CHOICE,Send the full amount,"I'll send the full $120 right now, Sekuru. Please get better soon.",-120,2,0,0,No,0
 CHOICE,Send what I can ($60),"I can only spare $60 right now, Sekuru. I'm sorry I can't do more.",-60,0,0,0,No,0
 CHOICE,I genuinely can't help right now,I'm really sorry Sekuru. Things are very tight this month. I'll help when I can.,0,-3,0,0,No,0
-EVENT,Cousin Needs Rent,Your cousin calls — their landlord is threatening to evict them. They need rent money urgently.,Cousin Tatenda,Family,Economic,Economic,None,14,10,Minor
+EVENT,Cousin Needs Rent,Your cousin calls — their landlord is threatening to evict them. They need rent money urgently.,Cousin Tatenda,Family,Economic,Choice,None,14,10,Minor
 CHOICE,Help with the full rent ($100),I've sent the money. Get it sorted — let me know when you're settled.,-100,2,0,0,No,0
 CHOICE,Send half ($50),I can send $50. It's all I have right now — use it wisely.,-50,1,0,0,No,0
 CHOICE,I'm not able to help this month,"I'm sorry, I genuinely don't have anything to spare right now.",0,-2,0,0,No,0
-EVENT,Family Wedding Contribution,A family elder calls — your aunt's wedding is next month and every household must contribute.,Mainini Grace,Family,Economic,Economic,None,10,8,Minor
+EVENT,Family Wedding Contribution,A family elder calls — your aunt's wedding is next month and every household must contribute.,Mainini Grace,Family,Economic,Choice,None,10,8,Minor
 CHOICE,Contribute the full amount ($150),I'll contribute. Family comes first.,-150,3,0,0,No,0
 CHOICE,Contribute what I can ($60),I can only manage $60 this time. I hope it helps.,-60,1,0,0,No,0
 CHOICE,I'll miss this one,"I'm sorry, I won't be able to contribute this time. Things are very tight.",0,-3,0,0,No,0
-EVENT,Sibling Business Idea,Your sibling messages with an exciting business idea. They want you to invest with them.,Brother Takura,Family,Economic,Opportunity,None,8,8,Minor
+EVENT,Sibling Business Idea,Your sibling messages with an exciting business idea. They want you to invest with them.,Brother Takura,Family,Economic,Choice,None,8,8,Minor
 CHOICE,Invest fully ($200),I'm in. Let's build something together.,-200,5,15,3,No,0
 CHOICE,Put in a small amount ($80),I can put in $80. It's not much but it's my support.,-80,2,5,2,No,0
 CHOICE,I can't invest right now,I'd love to but my finances can't take that risk right now. I'm sorry.,0,0,0,0,No,0
-EVENT,School Trip Payment,Your child's teacher sends a note — there's a school trip next week and fees are due by Friday.,Mrs Chinhamo,Education,Economic,None,None,16,12,Minor
+EVENT,School Trip Payment,Your child's teacher sends a note — there's a school trip next week and fees are due by Friday.,Mrs Chinhamo,Education,Economic,Choice,None,16,12,Minor
 CHOICE,Pay the full fee ($80),Paid. You're going on that trip — enjoy every moment.,-80,2,0,0,No,0
 CHOICE,This month I can't afford it,I'm so sorry my child. I'll make it up to you next time.,0,-3,0,0,No,0
-EVENT,Child Needs Phone for School,Your child comes home upset — their teacher says all assignments are now submitted digitally.,Your Child,Family,Economic,None,None,8,8,Minor
+EVENT,Child Needs Phone for School,Your child comes home upset — their teacher says all assignments are now submitted digitally.,Your Child,Family,Economic,Choice,None,8,8,Minor
 CHOICE,Buy a proper smartphone ($150),"Here you go. Use it for school, not games.",-150,2,0,0,No,0
 CHOICE,Buy a basic phone ($60),It's not the latest model but it'll do the job.,-60,1,0,0,No,0
 CHOICE,Not right now — we'll find another way,We'll figure something out. Maybe the school library can help.,0,-2,0,0,No,0
-EVENT,Extra Tuition Recommended,The teacher calls to say your child is struggling and recommends extra tuition classes.,Mr Sibanda,Education,Economic,None,None,10,8,Minor
+EVENT,Extra Tuition Recommended,The teacher calls to say your child is struggling and recommends extra tuition classes.,Mr Sibanda,Education,Economic,Choice,None,10,8,Minor
 CHOICE,Pay for tuition classes ($100),I'll sort out the payment tomorrow. Thank you for letting me know.,-100,-1,0,0,No,0
 CHOICE,I'll find a free tutor,Thank you — I'll arrange something within the family.,0,0,0,0,No,0
 CHOICE,We'll manage at home,I appreciate the heads up. We'll work harder at home.,0,-1,0,0,No,0
-EVENT,Overtime Offered,Your supervisor calls you aside — there's extra work this month and they're offering overtime.,Supervisor Moyo,Work,Economic,None,None,12,10,Minor
+EVENT,Overtime Offered,Your supervisor calls you aside — there's extra work this month and they're offering overtime.,Supervisor Moyo,Work,Economic,Choice,None,12,10,Minor
 CHOICE,Accept all overtime,I'll take it. Every dollar helps right now.,0,2,20,1,No,0
 CHOICE,Take some overtime,I can manage a few extra hours. Count me in.,0,1,10,1,No,0
 CHOICE,I need to pass this time,"I appreciate the offer, but I can't take it this month.",0,0,0,0,No,0
-EVENT,Better Job Offer,"A former colleague sends a message — there's an opening at a better company, but you'd need to pay for a short certification course first.",Colleague Rudo,Work,Economic,None,None,6,6,Moderate
+EVENT,Better Job Offer,"A former colleague sends a message — there's an opening at a better company, but you'd need to pay for a short certification course first.",Colleague Rudo,Work,Economic,Choice,None,6,6,Moderate
 CHOICE,Go for it — pay for the course ($200),I'm doing it. This is worth the investment.,-200,5,20,-1,No,0
 CHOICE,Apply without the course first,I'll apply and see what happens before spending money.,0,1,0,0,No,0
 CHOICE,Stick with what I have,It's a risk I can't take right now. Maybe next time.,0,0,0,0,No,0
-EVENT,Community Borehole Project,The ward chairman calls a meeting — the community is raising funds for a borehole. Every household is expected to contribute.,Cde Murambwa,Community,Economic,None,None,14,10,Minor
+EVENT,Community Borehole Project,The ward chairman calls a meeting — the community is raising funds for a borehole. Every household is expected to contribute.,Cde Murambwa,Community,Economic,Choice,None,14,10,Minor
 CHOICE,Contribute fully ($100),I'll contribute. This benefits everyone including us.,-100,5,0,0,No,0
 CHOICE,Give what I can ($40),I can manage $40. It's all I can spare right now.,-40,2,0,0,No,0
 CHOICE,I can't contribute this time,I'm sorry — I genuinely don't have anything to give right now.,0,-2,0,0,No,0
-EVENT,Neighbour's Funeral Costs,Your neighbour passed away suddenly. The family is struggling with funeral costs and is asking for community support.,Mrs Dube,Community,Health,None,None,18,12,Minor
+EVENT,Neighbour's Funeral Costs,Your neighbour passed away suddenly. The family is struggling with funeral costs and is asking for community support.,Mrs Dube,Community,Health,Choice,None,18,12,Minor
 CHOICE,Help generously ($80),I'll drop it off tonight. So sorry for the family's loss.,-80,3,0,0,No,0
 CHOICE,Give a smaller amount ($30),It's not much but please accept it with our condolences.,-30,1,0,0,No,0
 CHOICE,I can't help right now,I'm so sorry. I'm in no position to help financially this month.,0,-1,0,0,No,0
-EVENT,Black Friday Sale,Your phone lights up with sale notifications. A TV you've been watching is now half price. The sale ends tonight.,Chisamba Electronics,Social,Economic,None,None,8,6,Minor
+EVENT,Black Friday Sale,Your phone lights up with sale notifications. A TV you've been watching is now half price. The sale ends tonight.,Chisamba Electronics,Social,Economic,Choice,None,8,6,Minor
 CHOICE,Buy the TV ($300),Treated myself. Once in a while is fine.,-300,-2,0,0,No,0
 CHOICE,Buy something small ($80),Got something small — a reasonable compromise.,-80,0,0,0,No,0
 CHOICE,Close the app and resist,Nope. Not today. That money stays in my account.,0,3,0,0,No,0
-EVENT,Friends Night Out,Your friends are going out to celebrate a birthday. They're asking you to join — it won't be cheap.,Friend Blessing,Social,Economic,None,None,14,10,Minor
+EVENT,Friends Night Out,Your friends are going out to celebrate a birthday. They're asking you to join — it won't be cheap.,Friend Blessing,Social,Economic,Choice,None,14,10,Minor
 CHOICE,Join for the full night ($60),I'm in! We all need a break sometimes.,-60,3,0,0,No,0
 CHOICE,Join for just a bit ($20),I'll come for a bit — just one round.,-20,1,0,0,No,0
 CHOICE,Stay home this time,Not this time — next time for sure though.,0,-1,0,0,No,0
-EVENT,Neighbour Wants Equipment,Your neighbour comes to the gate — their tractor broke down and they need to borrow yours for the week.,Neighbour Zvorwadza,Community,Economic,CropsOrLivestock,CropsOrLivestock,10,8,Minor
+EVENT,Neighbour Wants Equipment,Your neighbour comes to the gate — their tractor broke down and they need to borrow yours for the week.,Neighbour Zvorwadza,Community,Economic,Choice,CropsOrLivestock,10,8,Minor
 CHOICE,Lend it for free,Take it. That's what neighbours are for.,0,3,0,0,No,0
 CHOICE,Rent it out ($80),Sure — $80 for the week. Fair deal.,80,0,0,0,No,0
 CHOICE,"Sorry, I need it myself",I'd love to help but I need it this week myself.,0,-1,0,0,No,0
-EVENT,Buyer Offers Early Cash,A buyer arrives at your farm offering cash for your crops right now — but below market price.,Mr Chisango,Work,Economic,CropsOrLivestock,CropsOrLivestock,10,8,Moderate
+EVENT,Buyer Offers Early Cash,A buyer arrives at your farm offering cash for your crops right now — but below market price.,Mr Chisango,Work,Economic,Choice,CropsOrLivestock,10,8,Moderate
 CHOICE,Accept the early offer ($200),Deal. I need the cash now.,200,0,-20,2,No,0
 CHOICE,Negotiate a better price,I can do $300 or I wait for the market.,300,1,-10,1,No,0
 CHOICE,Wait for proper market price,I'll wait. The market price is better.,0,1,0,0,No,0
-EVENT,Informal Loan Request,A friend messages asking if you can lend them money — they'll pay it back by month end.,Friend Chido,Social,Economic,None,None,16,10,Minor
+EVENT,Informal Loan Request,A friend messages asking if you can lend them money — they'll pay it back by month end.,Friend Chido,Social,Economic,Choice,None,16,10,Minor
 CHOICE,Lend the full amount ($150),I trust you. Here it is — please don't forget.,-150,2,0,0,No,0
 CHOICE,Lend a smaller amount ($60),I can lend $60. It's all I can risk.,-60,1,0,0,No,0
 CHOICE,I can't lend money right now,I'm sorry — my own situation is too tight right now.,0,-1,0,0,No,0
-EVENT,Side Hustle Opportunity,"Someone contacts you about a small side contract — weekend work, decent pay, but it will cost you time with family.",Madam Zuze,Work,Opportunity,None,None,8,8,Minor
+EVENT,Side Hustle Opportunity,"Someone contacts you about a small side contract — weekend work, decent pay, but it will cost you time with family.",Madam Zuze,Work,Opportunity,Choice,None,8,8,Minor
 CHOICE,Take the contract,I'm in. The money is worth it.,0,2,15,2,No,0
 CHOICE,Negotiate lighter hours,I'll do it but I need to limit the hours.,0,1,8,1,No,0
 CHOICE,Pass on it this time,Not this time — family needs me more.,0,0,0,0,No,0
-EVENT,Mother Asks for Support,Your mother calls — she needs help paying her electricity and water bills this month.,Mai,Family,Health,None,None,14,10,Minor
+EVENT,Mother Asks for Support,Your mother calls — she needs help paying her electricity and water bills this month.,Mai,Family,Health,Choice,None,14,10,Minor
 CHOICE,Pay her bills ($90),"Don't stress about it, Mai. I've sorted it.",-90,3,0,0,No,0
 CHOICE,Send half ($45),"I can manage $45 right now, Mai. I'll try to send more soon.",-45,1,0,0,No,0
 CHOICE,I can't help this month,I'm so sorry Mai. I genuinely don't have anything right now.,0,-3,0,0,No,0
+EVENT,Unexpected Relatives Visiting,Your aunt and her three children arrive unannounced and will be staying for the week. Food and hosting will cost you.,Aunt Chipo,Family,Health,Choice,None,14,10,Minor
+CHOICE,Welcome them properly and stock up ($90),Family is always welcome. I'll figure out the money.,-90,3,0,0,No,0
+CHOICE,Buy basics and manage ($40),Rice and vegetables will do. I'll make it work.,-40,1,0,0,No,0
+CHOICE,Explain that you can't host right now,I'm so sorry — this month is genuinely impossible for me.,0,-2,0,0,No,0
+EVENT,ZESA Tokens Run Out,Your prepaid electricity balance hits zero two weeks before payday. You need power for cooking and the children's schoolwork.,ZESA,Household,Economic,Choice,None,25,12,Minor
+CHOICE,Buy a full month of tokens ($50),Better to sort this properly than keep running out.,-50,1,0,0,No,0
+CHOICE,Buy just enough to get through ($20),A small top-up for now. I'll be more careful.,-20,0,0,0,No,0
+CHOICE,Manage without power for now,Candles and a brazier. It's not ideal but we'll cope.,0,-1,0,0,No,0
+EVENT,Church Building Fund,Your church is raising money for a new roof. The pastor announces every household should contribute what they can.,Pastor Ncube,Community,Economic,Choice,None,14,8,Minor
+CHOICE,Give generously ($80),The church has given us so much. I'll give back.,-80,4,0,0,No,0
+CHOICE,Give what I can ($30),I'll put in what I can afford right now.,-30,2,0,0,No,0
+CHOICE,Skip the offering this week,I'll contribute next time when things are better.,0,-1,0,0,No,0
+EVENT,Sick Child Needs Treatment,Your child has been running a fever for two days. They need to see a doctor but the private clinic is expensive and the public clinic queues are very long.,Your Child,Family,Health,Choice,None,16,12,Minor
+CHOICE,Take to private clinic ($80),I'm not gambling with my child's health.,-80,3,0,0,No,0
+CHOICE,Take to public clinic ($15),We'll queue. It takes time but it gets the job done.,-15,1,0,0,No,0
+CHOICE,Treat at home with available medicine ($10),I'll try what we have first and see how they go.,-10,0,0,0,No,0
+EVENT,Workmate Facing Crisis,A colleague's home was damaged in a storm and your workplace group chat is asking everyone to chip in for emergency repairs.,Colleague Tapiwanashe,Work,Economic,Choice,None,14,10,Minor
+CHOICE,Contribute generously ($60),They'd do the same for me.,-60,3,0,0,No,0
+CHOICE,Contribute a small amount ($20),I can't give much but I'll add something.,-20,1,0,0,No,0
+CHOICE,Skip this time,I'm stretched too thin this month.,0,-1,0,0,No,0
+EVENT,Landlord Increases Rent,Your landlord says rent is going up by $80 next month due to rising costs. You have one week to decide.,Landlord Banda,Housing,Economic,Choice,None,12,10,Moderate
+CHOICE,Accept and adjust the budget,I have no choice right now. I'll make it work.,0,-2,-8,-1,No,0
+CHOICE,Negotiate to delay the increase,Can we phase it in over three months? Give me time to adjust.,0,0,-4,3,No,0
+CHOICE,Give notice — start looking for cheaper accommodation,This is unsustainable. I'll look for something affordable.,0,1,0,0,No,0
+EVENT,Car Breaks Down,Your car develops a serious fault on the way to work. A mechanic says it needs immediate repairs or it will not be roadworthy.,Mechanic Choto,Work,Economic,Choice,Motor,10,10,Moderate
+CHOICE,Fix it properly at the garage ($300),"Better done right. I can't afford to lose my transport.",-300,2,0,0,No,0
+CHOICE,Do a temporary fix with second-hand parts ($120),This will hold for now. I'll do a proper fix when I have more money.,-120,0,0,0,No,0
+CHOICE,Keep driving and hope for the best,I'll take the risk for now.,0,-2,-10,2,No,0
+EVENT,Crops Ready — Sell Now or Wait,Your harvest is ready but the main market doesn't open for two more weeks. Each option has a trade-off.,Buyer Makore,Work,Economic,Choice,CropsOrLivestock,12,8,Moderate
+CHOICE,Hire transport to the city market now ($80 cost),The city prices will more than cover the transport.,-80,2,15,1,No,0
+CHOICE,Wait for the local market to open,Patience pays. The local price will be fair.,0,1,8,2,No,0
+CHOICE,Sell to a local middleman now ($150),Cash now is worth more than waiting.,150,-1,-15,2,No,0
+EVENT,Savings Withdrawal Pressure,A friend says they have a sure-thing investment and urges you to withdraw your savings before tonight's deadline.,Friend Shingi,Social,Economic,Choice,None,10,8,Minor
+CHOICE,Withdraw savings and invest ($200),This sounds too good to pass up.,-200,-3,-10,2,No,0
+CHOICE,Test it with a small amount ($80),I'll risk only what I can afford to lose.,-80,-1,0,0,No,0
+CHOICE,Decline and keep saving,If it sounds too good to be true — it usually is.,0,4,0,0,No,0
+EVENT,Cattle Need Urgent Dipping,The government vet warns that tick-borne disease is spreading in the area. Your cattle need to be dipped urgently.,Vet Officer Mupfure,Work,Economic,Choice,Livestock,10,8,Minor
+CHOICE,Dip all cattle immediately ($120),Prevention is always cheaper than treatment.,-120,3,0,0,No,0
+CHOICE,Dip only the most at-risk animals ($50),I'll do the older cattle first and the rest next month.,-50,1,0,0,No,0
+CHOICE,Wait and monitor for symptoms,I'll hold off and see if any actually get sick.,0,-2,-10,2,No,0
+EVENT,Funeral Society Invitation,A trusted community member invites you to join a reputable burial society. Monthly contributions are small but cover the whole family.,Ambuya Chigwanda,Community,Economic,Choice,None,12,8,Minor
+CHOICE,Join and pay the first month ($25),Peace of mind is worth $25 a month.,-25,3,0,0,No,0
+CHOICE,Ask for more information first,I want to understand the full terms before I commit.,0,1,0,0,No,0
+CHOICE,Not right now — too many expenses,I can't take on another monthly cost this month.,0,-1,0,0,No,0
+EVENT,Grocery Bulk Buy Deal,A wholesaler is offering three months of staple groceries for the price of two. It saves money long-term but costs more today.,Mahomed Stores,Social,Economic,Choice,None,10,8,Minor
+CHOICE,Buy three months of staples now ($270),This will save real money over the coming months.,-270,3,10,3,No,0
+CHOICE,Buy just one extra month ($100),I'll stock up a little without overcommitting.,-100,1,3,1,No,0
+CHOICE,Just buy this month as usual,I can't stretch to bulk buying right now.,0,0,0,0,No,0

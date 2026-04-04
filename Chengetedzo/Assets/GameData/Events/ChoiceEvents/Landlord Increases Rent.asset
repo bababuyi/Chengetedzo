@@ -10,47 +10,46 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
-  m_Name: Neighbour's Funeral Costs
+  m_Name: Landlord Increases Rent
   m_EditorClassIdentifier: 
   hasChoices: 1
-  senderName: Mrs Dube
-  senderRelation: Community
+  senderName: Landlord Banda
+  senderRelation: Housing
   choices:
-  - label: Help generously ($80)
-    resultDescription: I'll drop it off tonight. So sorry for the family's loss.
-    moneyChange: -80
-    momentumChange: 3
-    incomePercentChange: 0
-    incomeEffectMonths: 0
+  - label: Accept and adjust the budget
+    resultDescription: I have no choice right now. I'll make it work.
+    moneyChange: 0
+    momentumChange: -2
+    incomePercentChange: -8
+    incomeEffectMonths: -1
     affectsLoan: 0
     borrowingPowerChange: 0
-  - label: Give a smaller amount ($30)
-    resultDescription: It's not much but please accept it with our condolences.
-    moneyChange: -30
+  - label: Negotiate to delay the increase
+    resultDescription: Can we phase it in over three months? Give me time to adjust.
+    moneyChange: 0
+    momentumChange: 0
+    incomePercentChange: -4
+    incomeEffectMonths: 3
+    affectsLoan: 0
+    borrowingPowerChange: 0
+  - label: "Give notice \u2014 start looking for cheaper accommodation"
+    resultDescription: This is unsustainable. I'll look for something affordable.
+    moneyChange: 0
     momentumChange: 1
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
-  - label: I can't help right now
-    resultDescription: I'm so sorry. I'm in no position to help financially this
-      month.
-    moneyChange: 0
-    momentumChange: -1
-    incomePercentChange: 0
-    incomeEffectMonths: 0
-    affectsLoan: 0
-    borrowingPowerChange: 0
-  eventName: Neighbour's Funeral Costs
-  description: Your neighbour passed away suddenly. The family is struggling with
-    funeral costs and is asking for community support.
+  eventName: Landlord Increases Rent
+  description: Your landlord says rent is going up by $80 next month due to rising
+    costs. You have one week to decide.
   financialLesson: 
-  category: 0
+  category: 3
   pool: 6
   requiredAsset: 0
   icon: {fileID: 0}
-  probability: 18
-  weight: 12
+  probability: 12
+  weight: 10
   minLossPercent: 0
   maxLossPercent: 0
   affectsIncome: 0
@@ -62,7 +61,7 @@ MonoBehaviour:
   momentumReward: 0
   season: 0
   signal: 0
-  severity: 0
+  severity: 1
   affectsHousehold: 0
   adultsLost: 0
   childrenLost: 0

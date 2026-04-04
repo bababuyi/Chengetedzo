@@ -10,47 +10,46 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
-  m_Name: Neighbour's Funeral Costs
+  m_Name: "Crops Ready \u2014 Sell Now or Wait"
   m_EditorClassIdentifier: 
   hasChoices: 1
-  senderName: Mrs Dube
-  senderRelation: Community
+  senderName: Buyer Makore
+  senderRelation: Work
   choices:
-  - label: Help generously ($80)
-    resultDescription: I'll drop it off tonight. So sorry for the family's loss.
+  - label: Hire transport to the city market now ($80 cost)
+    resultDescription: The city prices will more than cover the transport.
     moneyChange: -80
-    momentumChange: 3
-    incomePercentChange: 0
-    incomeEffectMonths: 0
+    momentumChange: 2
+    incomePercentChange: 15
+    incomeEffectMonths: 1
     affectsLoan: 0
     borrowingPowerChange: 0
-  - label: Give a smaller amount ($30)
-    resultDescription: It's not much but please accept it with our condolences.
-    moneyChange: -30
-    momentumChange: 1
-    incomePercentChange: 0
-    incomeEffectMonths: 0
-    affectsLoan: 0
-    borrowingPowerChange: 0
-  - label: I can't help right now
-    resultDescription: I'm so sorry. I'm in no position to help financially this
-      month.
+  - label: Wait for the local market to open
+    resultDescription: Patience pays. The local price will be fair.
     moneyChange: 0
-    momentumChange: -1
-    incomePercentChange: 0
-    incomeEffectMonths: 0
+    momentumChange: 1
+    incomePercentChange: 8
+    incomeEffectMonths: 2
     affectsLoan: 0
     borrowingPowerChange: 0
-  eventName: Neighbour's Funeral Costs
-  description: Your neighbour passed away suddenly. The family is struggling with
-    funeral costs and is asking for community support.
+  - label: Sell to a local middleman now ($150)
+    resultDescription: Cash now is worth more than waiting.
+    moneyChange: 150
+    momentumChange: -1
+    incomePercentChange: -15
+    incomeEffectMonths: 2
+    affectsLoan: 0
+    borrowingPowerChange: 0
+  eventName: "Crops Ready \u2014 Sell Now or Wait"
+  description: Your harvest is ready but the main market doesn't open for two more
+    weeks. Each option has a trade-off.
   financialLesson: 
-  category: 0
+  category: 3
   pool: 6
-  requiredAsset: 0
+  requiredAsset: 5
   icon: {fileID: 0}
-  probability: 18
-  weight: 12
+  probability: 12
+  weight: 8
   minLossPercent: 0
   maxLossPercent: 0
   affectsIncome: 0
@@ -62,7 +61,7 @@ MonoBehaviour:
   momentumReward: 0
   season: 0
   signal: 0
-  severity: 0
+  severity: 1
   affectsHousehold: 0
   adultsLost: 0
   childrenLost: 0

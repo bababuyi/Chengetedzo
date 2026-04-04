@@ -45,7 +45,7 @@ MonoBehaviour:
     and they're offering overtime."
   financialLesson: 
   category: 3
-  pool: 2
+  pool: 6
   requiredAsset: 0
   icon: {fileID: 0}
   probability: 12

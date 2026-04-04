@@ -74,7 +74,9 @@ public static class ChoiceEventImporter
                 EventData existing = AssetDatabase.LoadAssetAtPath<EventData>(assetPath);
                 if (existing != null)
                 {
-                    Debug.Log($"[Importer] '{eventName}' already exists — skipping.");
+                    existing.pool = ParsePool(cols[6].Trim());
+                    EditorUtility.SetDirty(existing);
+                    Debug.Log($"[Importer] '{eventName}' already exists — updating pool.");
                     skipped++;
                     current = existing;
                     continue;
@@ -172,7 +174,8 @@ public static class ChoiceEventImporter
         "health"      => EventPool.Health,
         "crime"       => EventPool.Crime,
         "opportunity" => EventPool.Opportunity,
-        _             => EventPool.Economic,
+        "choice" => EventPool.Choice,
+        _ => EventPool.Economic,
     };
 
     private static GameManager.AssetRequirement ParseAssetRequirement(string s) => s.ToLower() switch

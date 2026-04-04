@@ -10,47 +10,47 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
-  m_Name: Neighbour's Funeral Costs
+  m_Name: Unexpected Relatives Visiting
   m_EditorClassIdentifier: 
   hasChoices: 1
-  senderName: Mrs Dube
-  senderRelation: Community
+  senderName: Aunt Chipo
+  senderRelation: Family
   choices:
-  - label: Help generously ($80)
-    resultDescription: I'll drop it off tonight. So sorry for the family's loss.
-    moneyChange: -80
+  - label: Welcome them properly and stock up ($90)
+    resultDescription: Family is always welcome. I'll figure out the money.
+    moneyChange: -90
     momentumChange: 3
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
-  - label: Give a smaller amount ($30)
-    resultDescription: It's not much but please accept it with our condolences.
-    moneyChange: -30
+  - label: Buy basics and manage ($40)
+    resultDescription: Rice and vegetables will do. I'll make it work.
+    moneyChange: -40
     momentumChange: 1
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
-  - label: I can't help right now
-    resultDescription: I'm so sorry. I'm in no position to help financially this
-      month.
+  - label: Explain that you can't host right now
+    resultDescription: "I'm so sorry \u2014 this month is genuinely impossible for
+      me."
     moneyChange: 0
-    momentumChange: -1
+    momentumChange: -2
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
-  eventName: Neighbour's Funeral Costs
-  description: Your neighbour passed away suddenly. The family is struggling with
-    funeral costs and is asking for community support.
+  eventName: Unexpected Relatives Visiting
+  description: Your aunt and her three children arrive unannounced and will be staying
+    for the week. Food and hosting will cost you.
   financialLesson: 
   category: 0
   pool: 6
   requiredAsset: 0
   icon: {fileID: 0}
-  probability: 18
-  weight: 12
+  probability: 14
+  weight: 10
   minLossPercent: 0
   maxLossPercent: 0
   affectsIncome: 0

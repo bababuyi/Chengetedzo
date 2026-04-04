@@ -45,7 +45,7 @@ MonoBehaviour:
     decent pay, but it will cost you time with family."
   financialLesson: 
   category: 3
-  pool: 2
+  pool: 6
   requiredAsset: 0
   icon: {fileID: 0}
   probability: 8

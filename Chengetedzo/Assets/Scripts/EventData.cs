@@ -138,6 +138,7 @@ public enum EventPool
     Economic,
     Health,
     Crime,
-    Opportunity
+    Opportunity,
+    Choice
 }
 

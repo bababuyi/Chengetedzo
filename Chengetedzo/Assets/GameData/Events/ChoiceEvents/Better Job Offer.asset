@@ -45,7 +45,7 @@ MonoBehaviour:
     better company, but you'd need to pay for a short certification course first."
   financialLesson: 
   category: 3
-  pool: 2
+  pool: 6
   requiredAsset: 0
   icon: {fileID: 0}
   probability: 6

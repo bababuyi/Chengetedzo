@@ -10,47 +10,46 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
-  m_Name: Neighbour's Funeral Costs
+  m_Name: Cattle Need Urgent Dipping
   m_EditorClassIdentifier: 
   hasChoices: 1
-  senderName: Mrs Dube
-  senderRelation: Community
+  senderName: Vet Officer Mupfure
+  senderRelation: Work
   choices:
-  - label: Help generously ($80)
-    resultDescription: I'll drop it off tonight. So sorry for the family's loss.
-    moneyChange: -80
+  - label: Dip all cattle immediately ($120)
+    resultDescription: Prevention is always cheaper than treatment.
+    moneyChange: -120
     momentumChange: 3
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
-  - label: Give a smaller amount ($30)
-    resultDescription: It's not much but please accept it with our condolences.
-    moneyChange: -30
+  - label: Dip only the most at-risk animals ($50)
+    resultDescription: I'll do the older cattle first and the rest next month.
+    moneyChange: -50
     momentumChange: 1
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
-  - label: I can't help right now
-    resultDescription: I'm so sorry. I'm in no position to help financially this
-      month.
+  - label: Wait and monitor for symptoms
+    resultDescription: I'll hold off and see if any actually get sick.
     moneyChange: 0
-    momentumChange: -1
-    incomePercentChange: 0
-    incomeEffectMonths: 0
+    momentumChange: -2
+    incomePercentChange: -10
+    incomeEffectMonths: 2
     affectsLoan: 0
     borrowingPowerChange: 0
-  eventName: Neighbour's Funeral Costs
-  description: Your neighbour passed away suddenly. The family is struggling with
-    funeral costs and is asking for community support.
+  eventName: Cattle Need Urgent Dipping
+  description: The government vet warns that tick-borne disease is spreading in the
+    area. Your cattle need to be dipped urgently.
   financialLesson: 
-  category: 0
+  category: 3
   pool: 6
-  requiredAsset: 0
+  requiredAsset: 4
   icon: {fileID: 0}
-  probability: 18
-  weight: 12
+  probability: 10
+  weight: 8
   minLossPercent: 0
   maxLossPercent: 0
   affectsIncome: 0

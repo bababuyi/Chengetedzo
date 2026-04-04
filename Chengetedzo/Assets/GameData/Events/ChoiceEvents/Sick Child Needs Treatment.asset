@@ -10,46 +10,46 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
-  m_Name: Neighbour's Funeral Costs
+  m_Name: Sick Child Needs Treatment
   m_EditorClassIdentifier: 
   hasChoices: 1
-  senderName: Mrs Dube
-  senderRelation: Community
+  senderName: Your Child
+  senderRelation: Family
   choices:
-  - label: Help generously ($80)
-    resultDescription: I'll drop it off tonight. So sorry for the family's loss.
+  - label: Take to private clinic ($80)
+    resultDescription: I'm not gambling with my child's health.
     moneyChange: -80
     momentumChange: 3
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
-  - label: Give a smaller amount ($30)
-    resultDescription: It's not much but please accept it with our condolences.
-    moneyChange: -30
+  - label: Take to public clinic ($15)
+    resultDescription: We'll queue. It takes time but it gets the job done.
+    moneyChange: -15
     momentumChange: 1
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
-  - label: I can't help right now
-    resultDescription: I'm so sorry. I'm in no position to help financially this
-      month.
-    moneyChange: 0
-    momentumChange: -1
+  - label: Treat at home with available medicine ($10)
+    resultDescription: I'll try what we have first and see how they go.
+    moneyChange: -10
+    momentumChange: 0
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
-  eventName: Neighbour's Funeral Costs
-  description: Your neighbour passed away suddenly. The family is struggling with
-    funeral costs and is asking for community support.
+  eventName: Sick Child Needs Treatment
+  description: Your child has been running a fever for two days. They need to see
+    a doctor but the private clinic is expensive and the public clinic queues are
+    very long.
   financialLesson: 
   category: 0
   pool: 6
   requiredAsset: 0
   icon: {fileID: 0}
-  probability: 18
+  probability: 16
   weight: 12
   minLossPercent: 0
   maxLossPercent: 0

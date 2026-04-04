@@ -10,46 +10,45 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
-  m_Name: Neighbour's Funeral Costs
+  m_Name: ZESA Tokens Run Out
   m_EditorClassIdentifier: 
   hasChoices: 1
-  senderName: Mrs Dube
-  senderRelation: Community
+  senderName: ZESA
+  senderRelation: Household
   choices:
-  - label: Help generously ($80)
-    resultDescription: I'll drop it off tonight. So sorry for the family's loss.
-    moneyChange: -80
-    momentumChange: 3
-    incomePercentChange: 0
-    incomeEffectMonths: 0
-    affectsLoan: 0
-    borrowingPowerChange: 0
-  - label: Give a smaller amount ($30)
-    resultDescription: It's not much but please accept it with our condolences.
-    moneyChange: -30
+  - label: Buy a full month of tokens ($50)
+    resultDescription: Better to sort this properly than keep running out.
+    moneyChange: -50
     momentumChange: 1
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
-  - label: I can't help right now
-    resultDescription: I'm so sorry. I'm in no position to help financially this
-      month.
+  - label: Buy just enough to get through ($20)
+    resultDescription: A small top-up for now. I'll be more careful.
+    moneyChange: -20
+    momentumChange: 0
+    incomePercentChange: 0
+    incomeEffectMonths: 0
+    affectsLoan: 0
+    borrowingPowerChange: 0
+  - label: Manage without power for now
+    resultDescription: Candles and a brazier. It's not ideal but we'll cope.
     moneyChange: 0
     momentumChange: -1
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
-  eventName: Neighbour's Funeral Costs
-  description: Your neighbour passed away suddenly. The family is struggling with
-    funeral costs and is asking for community support.
+  eventName: ZESA Tokens Run Out
+  description: Your prepaid electricity balance hits zero two weeks before payday.
+    You need power for cooking and the children's schoolwork.
   financialLesson: 
-  category: 0
+  category: 3
   pool: 6
   requiredAsset: 0
   icon: {fileID: 0}
-  probability: 18
+  probability: 25
   weight: 12
   minLossPercent: 0
   maxLossPercent: 0

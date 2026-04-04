@@ -48,7 +48,7 @@ MonoBehaviour:
     bills at the clinic.
   financialLesson: 
   category: 0
-  pool: 3
+  pool: 6
   requiredAsset: 0
   icon: {fileID: 0}
   probability: 12

@@ -45,7 +45,7 @@ MonoBehaviour:
     \u2014 but below market price."
   financialLesson: 
   category: 3
-  pool: 2
+  pool: 6
   requiredAsset: 5
   icon: {fileID: 0}
   probability: 10

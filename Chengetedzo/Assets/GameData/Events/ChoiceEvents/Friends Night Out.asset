@@ -45,7 +45,7 @@ MonoBehaviour:
     you to join \u2014 it won't be cheap."
   financialLesson: 
   category: 3
-  pool: 2
+  pool: 6
   requiredAsset: 0
   icon: {fileID: 0}
   probability: 14

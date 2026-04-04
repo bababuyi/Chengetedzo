@@ -10,47 +10,46 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
-  m_Name: Neighbour's Funeral Costs
+  m_Name: Grocery Bulk Buy Deal
   m_EditorClassIdentifier: 
   hasChoices: 1
-  senderName: Mrs Dube
-  senderRelation: Community
+  senderName: Mahomed Stores
+  senderRelation: Social
   choices:
-  - label: Help generously ($80)
-    resultDescription: I'll drop it off tonight. So sorry for the family's loss.
-    moneyChange: -80
+  - label: Buy three months of staples now ($270)
+    resultDescription: This will save real money over the coming months.
+    moneyChange: -270
     momentumChange: 3
-    incomePercentChange: 0
-    incomeEffectMonths: 0
+    incomePercentChange: 10
+    incomeEffectMonths: 3
     affectsLoan: 0
     borrowingPowerChange: 0
-  - label: Give a smaller amount ($30)
-    resultDescription: It's not much but please accept it with our condolences.
-    moneyChange: -30
+  - label: Buy just one extra month ($100)
+    resultDescription: I'll stock up a little without overcommitting.
+    moneyChange: -100
     momentumChange: 1
-    incomePercentChange: 0
-    incomeEffectMonths: 0
+    incomePercentChange: 3
+    incomeEffectMonths: 1
     affectsLoan: 0
     borrowingPowerChange: 0
-  - label: I can't help right now
-    resultDescription: I'm so sorry. I'm in no position to help financially this
-      month.
+  - label: Just buy this month as usual
+    resultDescription: I can't stretch to bulk buying right now.
     moneyChange: 0
-    momentumChange: -1
+    momentumChange: 0
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
-  eventName: Neighbour's Funeral Costs
-  description: Your neighbour passed away suddenly. The family is struggling with
-    funeral costs and is asking for community support.
+  eventName: Grocery Bulk Buy Deal
+  description: A wholesaler is offering three months of staple groceries for the
+    price of two. It saves money long-term but costs more today.
   financialLesson: 
-  category: 0
+  category: 3
   pool: 6
   requiredAsset: 0
   icon: {fileID: 0}
-  probability: 18
-  weight: 12
+  probability: 10
+  weight: 8
   minLossPercent: 0
   maxLossPercent: 0
   affectsIncome: 0

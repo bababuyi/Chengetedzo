@@ -10,47 +10,46 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
-  m_Name: Neighbour's Funeral Costs
+  m_Name: Workmate Facing Crisis
   m_EditorClassIdentifier: 
   hasChoices: 1
-  senderName: Mrs Dube
-  senderRelation: Community
+  senderName: Colleague Tapiwanashe
+  senderRelation: Work
   choices:
-  - label: Help generously ($80)
-    resultDescription: I'll drop it off tonight. So sorry for the family's loss.
-    moneyChange: -80
+  - label: Contribute generously ($60)
+    resultDescription: They'd do the same for me.
+    moneyChange: -60
     momentumChange: 3
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
-  - label: Give a smaller amount ($30)
-    resultDescription: It's not much but please accept it with our condolences.
-    moneyChange: -30
+  - label: Contribute a small amount ($20)
+    resultDescription: I can't give much but I'll add something.
+    moneyChange: -20
     momentumChange: 1
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
-  - label: I can't help right now
-    resultDescription: I'm so sorry. I'm in no position to help financially this
-      month.
+  - label: Skip this time
+    resultDescription: I'm stretched too thin this month.
     moneyChange: 0
     momentumChange: -1
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
-  eventName: Neighbour's Funeral Costs
-  description: Your neighbour passed away suddenly. The family is struggling with
-    funeral costs and is asking for community support.
+  eventName: Workmate Facing Crisis
+  description: A colleague's home was damaged in a storm and your workplace group
+    chat is asking everyone to chip in for emergency repairs.
   financialLesson: 
-  category: 0
+  category: 3
   pool: 6
   requiredAsset: 0
   icon: {fileID: 0}
-  probability: 18
-  weight: 12
+  probability: 14
+  weight: 10
   minLossPercent: 0
   maxLossPercent: 0
   affectsIncome: 0

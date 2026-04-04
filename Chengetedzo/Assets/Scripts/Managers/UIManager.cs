@@ -42,15 +42,12 @@ public class UIManager : MonoBehaviour
     [Header("Year End Graph")]
     public YearEndGraph yearEndGraph;
 
-    private bool isShowingYearPartTwo = false;
+    private int yearEndPage = 0;
     private string yearPartOneText;
 
     private string yearPartTwoText;
     private const float CONTINUE_X = 700f;
     private const float BACK_X = -700f;
-
-    [Header("Monthly Report")]
-    public TextMeshProUGUI monthlyReportText;
 
     [Header("Event Popup")]
     public GameObject eventPopup;
@@ -346,8 +343,6 @@ public class UIManager : MonoBehaviour
             CloseActivePopup();
 
         SwitchPanel(UIPanelState.Report);
-        if (monthlyReportText != null)
-            monthlyReportText.text = reportText;
 
         var visualPanel = reportPanel.GetComponent<MonthlyReportPanel>();
         visualPanel?.Populate(GameManager.Instance?.CurrentLedger);
@@ -547,12 +542,12 @@ public class UIManager : MonoBehaviour
         else
             yearPartTwoText += "Every year teaches something. The question is whether next year's decisions reflect what this one showed you.";
 
-        // Start on Part 1
-        isShowingYearPartTwo = false;
+        yearEndPage = 0;
         resultsText.text = yearPartOneText;
+        resultsText.gameObject.SetActive(true);
         SetEndOfYearButtonPosition(CONTINUE_X);
-
         endOfYearContinueButton.GetComponentInChildren<TextMeshProUGUI>().text = "Key Takeaways →";
+        if (yearEndGraph != null) yearEndGraph.gameObject.SetActive(false);
         StartCoroutine(RenderGraphNextFrame());
         restartButton.interactable = false;
     }
@@ -564,31 +559,35 @@ public class UIManager : MonoBehaviour
 
     public void OnEndOfYearContinueClicked()
     {
-        if (!isShowingYearPartTwo)
+        yearEndPage++;
+
+        switch (yearEndPage)
         {
-            // Switch to Part 2
-            resultsText.text = yearPartTwoText;
+            case 1: // Key Takeaways
+                resultsText.text = yearPartTwoText;
+                resultsText.gameObject.SetActive(true);
+                if (yearEndGraph != null) yearEndGraph.gameObject.SetActive(false);
+                endOfYearContinueButton.GetComponentInChildren<TextMeshProUGUI>().text = "View Graph →";
+                restartButton.interactable = true;
+                SetEndOfYearButtonPosition(CONTINUE_X);
+                break;
 
-            endOfYearContinueButton.GetComponentInChildren<TextMeshProUGUI>().text = "← Back";
+            case 2: // Graph
+                resultsText.gameObject.SetActive(false);
+                if (yearEndGraph != null) yearEndGraph.gameObject.SetActive(true);
+                endOfYearContinueButton.GetComponentInChildren<TextMeshProUGUI>().text = "← Back";
+                SetEndOfYearButtonPosition(BACK_X);
+                break;
 
-            restartButton.interactable = true;
-
-            SetEndOfYearButtonPosition(BACK_X);
-
-            isShowingYearPartTwo = true;
-        }
-        else
-        {
-            // Switch back to Part 1
-            resultsText.text = yearPartOneText;
-
-            endOfYearContinueButton.GetComponentInChildren<TextMeshProUGUI>().text = "Continue";
-
-            restartButton.interactable = false;
-
-            SetEndOfYearButtonPosition(CONTINUE_X);
-
-            isShowingYearPartTwo = false;
+            default: // Back to page 1
+                yearEndPage = 0;
+                resultsText.text = yearPartOneText;
+                resultsText.gameObject.SetActive(true);
+                if (yearEndGraph != null) yearEndGraph.gameObject.SetActive(false);
+                endOfYearContinueButton.GetComponentInChildren<TextMeshProUGUI>().text = "Key Takeaways →";
+                restartButton.interactable = false;
+                SetEndOfYearButtonPosition(CONTINUE_X);
+                break;
         }
     }
 
