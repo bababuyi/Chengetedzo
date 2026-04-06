@@ -148,31 +148,6 @@ public class GameManager : MonoBehaviour
         visualManager?.UpdateVisuals();
     }
 
-#if UNITY_EDITOR
-    private void Update()
-    {
-        // Ctrl + Shift + R in the editor = instant full reset
-        if (Input.GetKey(KeyCode.LeftControl) &&
-            Input.GetKey(KeyCode.LeftShift) &&
-            Input.GetKeyDown(KeyCode.R))
-        {
-            SaveSystem.DeleteSave();
-            PlayerPrefs.DeleteAll();
-            PlayerPrefs.Save();
-            FullRestart();
-            Debug.Log("[DEV] Hot reset triggered.");
-        }
-        // Ctrl + Shift + T = reset tutorials only (keep save)
-        if (Input.GetKey(KeyCode.LeftControl) &&
-            Input.GetKey(KeyCode.LeftShift) &&
-            Input.GetKeyDown(KeyCode.T))
-        {
-            TutorialManager.Instance?.ResetAll();
-            Debug.Log("[DEV] Tutorial flags cleared. Tutorials will replay.");
-        }
-    }
-#endif
-
     private int totalUnexpectedEvents = 0;
     private int insuredEventsCount = 0;
     private float totalRawEventDamage = 0f;

@@ -169,20 +169,17 @@ public class BudgetPanelController : MonoBehaviour
     {
         bool isSetup = phase == GameManager.GamePhase.Idle;
 
-        // Setup UI
         savingsAllocationGroup.SetActive(isSetup);
         savingsValueText.gameObject.SetActive(isSetup);
 
         if (backButton != null)
             backButton.gameObject.SetActive(isSetup);
 
-        // Confirm is always visible
         confirmButton.gameObject.SetActive(true);
 
         if (confirmButtonText != null)
             confirmButtonText.text = isSetup ? "Confirm Savings" : "Continue";
 
-        // Simulation UI
         savingsWithdrawGroup.SetActive(!isSetup);
 
         if (!isSetup)
@@ -227,11 +224,9 @@ public class BudgetPanelController : MonoBehaviour
                 GameManager.Instance.financeManager.GetProjectedMonthlyExpenses();
         }
 
-        // Calculate surplus AFTER getting expenses
         float minSurplus = minIncome - monthlyExpenses;
         float maxSurplus = maxIncome - monthlyExpenses;
 
-        // Clamp negatives
         minSurplus = Mathf.Max(0f, minSurplus);
         maxSurplus = Mathf.Max(0f, maxSurplus);
 
@@ -247,7 +242,7 @@ public class BudgetPanelController : MonoBehaviour
         }
         else if (savingsAmount <= maxSurplus)
         {
-            savingsValueText.color = new Color(1f, 0.5f, 0f); // orange
+            savingsValueText.color = new Color(1f, 0.5f, 0f);
         }
         else
         {

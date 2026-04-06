@@ -102,6 +102,15 @@ public class SetupPanelController : MonoBehaviour
         warningText.gameObject.SetActive(false);
     }
 
+    public enum SetupMode
+    {
+        NormalSetup,
+        ReviewFromProfile,
+        Savings
+    }
+
+    private SetupMode currentMode = SetupMode.NormalSetup;
+
     public void ConfirmSetup()
     {
         if (!float.TryParse(minIncomeInput.text, out float minIncome))
@@ -213,6 +222,12 @@ public class SetupPanelController : MonoBehaviour
     {
         if (!CanProceed())
             return;
+
+        if (isReviewMode && currentStep == 3)
+        {
+            UIManager.Instance.ShowForecastPanel();
+            return;
+        }
 
         currentStep++;
         ShowStep(currentStep);
@@ -515,5 +530,145 @@ public class SetupPanelController : MonoBehaviour
 
         if (GameManager.Instance.insuranceManager != null)
             GameManager.Instance.insuranceManager.RefreshEligibility();
+    }
+
+    private bool isReviewMode = false;
+
+    public void EnterReviewMode()
+    {
+        currentMode = SetupMode.ReviewFromProfile;
+
+        currentStep = 3;
+        ShowStep(currentStep);
+
+        backButton.SetActive(false);
+        nextButton.SetActive(true);
+
+        var txt = nextButton.GetComponentInChildren<TMP_Text>();
+        if (txt != null)
+            txt.text = "Continue";
+
+        DisableSavingsUI();
+    }
+
+    private void DisableSavingsUI()
+    {
+        if (savingsSlider != null)
+            savingsSlider.gameObject.SetActive(false);
+    }
+
+    /// <summary>
+    /// Called by guided profile flow. Pre-fills everything from the applied
+    /// profile and lands on step 4 (Review) with the confirm button ready.
+    /// </summary>
+    public void JumpToReviewStep()
+    {
+        var gm = GameManager.Instance;
+        var finance = gm?.financeManager;
+        var setup = gm?.setupData;
+        if (gm == null || finance == null || setup == null) return;
+
+        // Populate income fields so ConfirmAndStart can parse them
+        minIncomeInput.text = setup.minIncome.ToString("F0");
+        maxIncomeInput.text = setup.maxIncome.ToString("F0");
+        stableIncomeToggle.isOn = setup.isIncomeStable;
+        maxIncomeInput.gameObject.SetActive(!setup.isIncomeStable);
+
+        // Household
+        adultsInput.text = setup.adults.ToString();
+        childrenInput.text = setup.children.ToString();
+
+        // School fees
+        schoolFeesToggle.isOn = setup.hasSchoolFees;
+        if (setup.hasSchoolFees)
+            schoolFeesAmountInput.text = setup.schoolFeesAmount.ToString("F0");
+        OnSchoolFeesToggled(setup.hasSchoolFees);
+
+        // Assets
+        hasHouseToggle.isOn = finance.assets.hasHouse;
+        hasMotorToggle.isOn = finance.assets.hasMotor;
+        hasLivestockToggle.isOn = finance.assets.hasLivestock;
+        hasCropsToggle.isOn = finance.assets.hasCrops;
+
+        // Savings slider — default 10% of max income
+        float maxIncome = setup.maxIncome > 0 ? setup.maxIncome : setup.minIncome;
+        savingsSlider.minValue = 0;
+        savingsSlider.maxValue = maxIncome;
+        float suggested = Mathf.Round(maxIncome * 0.1f / 10f) * 10f;
+        savingsSlider.SetValueWithoutNotify(suggested);
+        UpdateSavingsDisplay();
+
+        // Lock toggles — player is not configuring, just reviewing
+        LockSetupUI();
+
+        // Show step 4 but use the finance-aware summary builder
+        incomeSection.SetActive(false);
+        expensesSection.SetActive(false);
+        savingsSection.SetActive(false);
+        reviewSection.SetActive(true);
+
+        backButton.SetActive(false);
+        nextButton.SetActive(false);
+        if (confirmAndStartButton != null)
+            confirmAndStartButton.SetActive(true);
+
+        currentStep = 4;
+
+        BuildReviewSummaryFromProfile();
+    }
+
+    private void BuildReviewSummaryFromProfile()
+    {
+        var gm = GameManager.Instance;
+        var finance = gm?.financeManager;
+        var setup = gm?.setupData;
+        if (finance == null || setup == null) return;
+
+        float minIncome = setup.minIncome;
+        float maxIncome = setup.maxIncome > 0 ? setup.maxIncome : minIncome;
+        float averageIncome = (minIncome + maxIncome) * 0.5f;
+
+        float housing = finance.rentCost;
+        float groceries = finance.groceries;
+        float transport = finance.transport;
+        float utilities = finance.utilities;
+        float fees = setup.hasSchoolFees ? setup.schoolFeesAmount : 0f;
+
+        float monthlyExpenses = housing + groceries + transport + utilities + fees;
+        float surplus = averageIncome - monthlyExpenses;
+
+        float savingsAmount = Mathf.Round(savingsSlider.value / 10f) * 10f;
+        float netSurplus = surplus - savingsAmount;
+
+        string summary = "<b>Your Starting Situation</b>\n\n";
+        summary += $"Income Range: ${minIncome:F0} – ${maxIncome:F0}\n";
+        summary += $"Estimated Monthly Income: ${averageIncome:F0}\n\n";
+        summary += $"Housing: -${housing:F0}\n";
+        summary += $"Food: -${groceries:F0}\n";
+        summary += $"Transport: -${transport:F0}\n";
+        summary += $"Utilities: -${utilities:F0}\n";
+        if (fees > 0) summary += $"School Fees: -${fees:F0}\n";
+        summary += "\n";
+        summary += $"Monthly Savings: -${savingsAmount:F0}\n";
+
+        if (netSurplus >= 0)
+            summary += $"<color=#3CB371>Estimated Surplus: +${netSurplus:F0}</color>\n\n";
+        else
+            summary += $"<color=#E74C3C>Estimated Shortfall: -${Mathf.Abs(netSurplus):F0}</color>\n\n";
+
+        int adults = setup.adults;
+        int children = setup.children;
+        summary += $"Household: {adults} adult{(adults != 1 ? "s" : "")}";
+        if (children > 0)
+            summary += $", {children} child{(children != 1 ? "ren" : "")}";
+        summary += "\n\n";
+        summary += "<i>This is your financial baseline. The year will test it.</i>";
+
+        reviewSummaryText.text = summary;
+
+        if (reflectionLineText != null)
+            reflectionLineText.text = GetReflectionLine(setup.isIncomeStable, setup.hasSchoolFees, surplus);
+
+        budgetPieChart?.Render(averageIncome, housing, groceries, transport, utilities, fees, savingsAmount);
     }
 }

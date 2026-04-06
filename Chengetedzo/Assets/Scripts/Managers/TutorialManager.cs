@@ -57,7 +57,6 @@ public class TutorialManager : MonoBehaviour
 
     private void OnDestroy() => StopPulse();
 
-    //  PUBLIC ENTRY POINTS  (called from other managers / panels)
     public void OnProfileSelected(ProfileType profile)
     {
         _isGuidedMode = true;
@@ -71,21 +70,23 @@ public class TutorialManager : MonoBehaviour
             _ => KEY_INFORMAL_SEEN
         };
 
+        UIManager.Instance.ShowSetupPanel();
+
+        var setup = UIManager.Instance.setupPanel.GetComponent<SetupPanelController>();
+        setup?.EnterReviewMode();
+
+        UIManager.Instance.ShowSetupPanelAtReview();
+
         if (Seen(key)) return;
 
         ShowProfileIntroSequence(profile, () => Mark(key));
     }
 
-    /// <summary>Call when free mode is selected from the profile screen.</summary>
     public void OnFreeModeSelected()
     {
         _isGuidedMode = false;
     }
 
-    /// <summary>
-    /// Call when the free mode setup panel first opens.
-    /// Walks the player through the setup fields.
-    /// </summary>
     public void OnFreeSetupOpened()
     {
         if (Seen(KEY_FREE_SETUP)) return;

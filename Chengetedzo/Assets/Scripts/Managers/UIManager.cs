@@ -325,6 +325,12 @@ public class UIManager : MonoBehaviour
         budgetPanel.GetComponent<BudgetPanelController>()?.LoadDefaultsFromSetup();
     }
 
+    public void ShowSetupPanelAtReview()
+    {
+        SwitchPanel(UIPanelState.Setup);
+        setupPanel.GetComponent<SetupPanelController>()?.JumpToReviewStep();
+    }
+
     public void ShowForecastPanel()
     {
         SwitchPanel(UIPanelState.Forecast);
@@ -756,21 +762,18 @@ public class UIManager : MonoBehaviour
     public void OnSelectInformalWorker()
     {
         GameManager.Instance.ApplyProfile(ProfileType.Informal);
-        ShowBudgetPanel();
         TutorialManager.Instance?.OnProfileSelected(ProfileType.Informal);
     }
 
     public void OnSelectFormalWorker()
     {
         GameManager.Instance.ApplyProfile(ProfileType.Formal);
-        ShowBudgetPanel();
         TutorialManager.Instance?.OnProfileSelected(ProfileType.Formal);
     }
 
     public void OnSelectFarmer()
     {
         GameManager.Instance.ApplyProfile(ProfileType.Farmer);
-        ShowBudgetPanel();
         TutorialManager.Instance?.OnProfileSelected(ProfileType.Farmer);
     }
 
