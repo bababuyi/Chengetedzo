@@ -360,9 +360,15 @@ public class TutorialManager : MonoBehaviour
         ShowSequenceStep(msgList, pulseList, onComplete);
     }
 
-    private void ShowSequenceStep(List<string> messages, List<RectTransform> pulses,
-                                   System.Action onComplete)
+    private void ShowSequenceStep(List<string> messages, List<RectTransform> pulses,System.Action onComplete)
     {
+        if (SettingsManager.Instance != null && !SettingsManager.Instance.MentorHints)
+        {
+            StopPulse();
+            onComplete?.Invoke();
+            return;
+        }
+
         if (messages.Count == 0)
         {
             StopPulse();

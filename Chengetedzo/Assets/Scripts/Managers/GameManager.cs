@@ -1476,7 +1476,7 @@ public class GameManager : MonoBehaviour
                 setupData.housing = HousingType.OwnsHouse;
                 setupData.ownsCar = true;
                 setupData.hasSchoolFees = true;
-                setupData.schoolFeesAmount = 3500f;
+                setupData.schoolFeesAmount = 20000f;
 
                 setupData.minIncome = 2500f;
                 setupData.maxIncome = 5000f;
@@ -1744,7 +1744,7 @@ public class GameManager : MonoBehaviour
         setupData.housing = HousingType.OwnsHouse;
         setupData.ownsCar = true;
         setupData.hasSchoolFees = true;
-        setupData.schoolFeesAmount = 3500f; //Lomagundi College
+        setupData.schoolFeesAmount = 2000f; //Lomagundi College
         setupData.minIncome = 2500f;
         setupData.maxIncome = 5000f;
         financeManager.rentCost = 0f;

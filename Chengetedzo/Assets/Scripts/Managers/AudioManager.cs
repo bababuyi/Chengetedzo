@@ -123,6 +123,12 @@ public class AudioManager : MonoBehaviour
 
         if (_musicLowPass == null)
             _musicLowPass = _musicSource.gameObject.AddComponent<AudioLowPassFilter>();
+
+        if (SettingsManager.Instance != null)
+        {
+            sfxVolume = SettingsManager.Instance.SFXVolume;
+            musicVolume = SettingsManager.Instance.MusicVolume;
+        }
     }
 
     public void PlayAmbience()

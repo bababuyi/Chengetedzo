@@ -94,7 +94,9 @@ public class UIManager : MonoBehaviour
     public GameObject profileSelectPanel;
     public UnityEngine.UI.Button freeModeButton;
 
-    // Popup state property (correct, single version)
+    [Header("Settings")]
+    public GameObject settingsPanel;
+
     private UIPanelState currentPanelState = UIPanelState.None;
 
     private GameObject activePopup;
@@ -216,6 +218,7 @@ public class UIManager : MonoBehaviour
         if (endOfYearScreen != null) endOfYearScreen.SetActive(false);
         if (mainMenuPanel != null) mainMenuPanel.SetActive(false);
         if (profileSelectPanel != null) profileSelectPanel.SetActive(false);
+        if (settingsPanel != null) settingsPanel.SetActive(false);
     }
 
     public void ShowPanel(UIPanelState state)
@@ -789,5 +792,17 @@ public class UIManager : MonoBehaviour
     public void OnBackToMenu()
     {
         SwitchPanel(UIPanelState.MainMenu);
+    }
+
+    public void ShowSettings()
+    {
+        if (settingsPanel != null)
+            settingsPanel.SetActive(true);
+    }
+
+    public void HideSettings()
+    {
+        if (settingsPanel != null)
+            settingsPanel.SetActive(false);
     }
 }
