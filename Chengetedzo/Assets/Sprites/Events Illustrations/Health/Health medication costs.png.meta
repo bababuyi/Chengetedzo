@@ -1,10 +1,19 @@
 fileFormatVersion: 2
-guid: 57d6bc2cb92f950449404734880f1f5c
+guid: 6a6a18cff0c3688489304266d156c845
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -6539865478637021446
-    second: Official insurance policy form blank_0
+      213: -3282087580427451044
+    second: Health medication costs_0
+  - first:
+      213: 1955469702448381319
+    second: Health medication costs_1
+  - first:
+      213: 2704008448386126555
+    second: Health medication costs_2
+  - first:
+      213: 19109988707482290
+    second: Health medication costs_3
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,13 +135,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Official insurance policy form blank_0
+      name: Health medication costs_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 1920
-        height: 1080
+        x: 167
+        y: 182
+        width: 1543
+        height: 641
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +150,74 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: af610033ffabd35a0800000000000000
-      internalID: -6539865478637021446
+      spriteID: c5586ee1cbea372d0800000000000000
+      internalID: -3282087580427451044
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Health medication costs_1
+      rect:
+        serializedVersion: 2
+        x: 1754
+        y: 448
+        width: 7
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 78d79777559332b10800000000000000
+      internalID: 1955469702448381319
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Health medication costs_2
+      rect:
+        serializedVersion: 2
+        x: 930
+        y: 147
+        width: 22
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bd2d5bb7b51968520800000000000000
+      internalID: 2704008448386126555
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Health medication costs_3
+      rect:
+        serializedVersion: 2
+        x: 776
+        y: 91
+        width: 45
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2ba3298fe64e34000800000000000000
+      internalID: 19109988707482290
       vertices: []
       indices: 
       edges: []
@@ -161,7 +236,10 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Official insurance policy form blank_0: -6539865478637021446
+      Health medication costs_0: -3282087580427451044
+      Health medication costs_1: 1955469702448381319
+      Health medication costs_2: 2704008448386126555
+      Health medication costs_3: 19109988707482290
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

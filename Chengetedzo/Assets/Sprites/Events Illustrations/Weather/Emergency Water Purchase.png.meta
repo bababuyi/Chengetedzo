@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: cd60f0cd588700f49884e802ab726698
+guid: 8588f12143064254aac762f5d571a572
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 1161201145128540330
-    second: Icons_0
+      213: 2255855206604824811
+    second: Emergency Water Purchase_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,13 +126,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Icons_0
+      name: Emergency Water Purchase_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 1920
-        height: 1080
+        x: 194
+        y: 230
+        width: 1535
+        height: 620
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +141,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: aa8d9280a4a6d1010800000000000000
-      internalID: 1161201145128540330
+      spriteID: be0656ebb586e4f10800000000000000
+      internalID: 2255855206604824811
       vertices: []
       indices: 
       edges: []
@@ -161,7 +161,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Icons_0: 1161201145128540330
+      Emergency Water Purchase_0: 2255855206604824811
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

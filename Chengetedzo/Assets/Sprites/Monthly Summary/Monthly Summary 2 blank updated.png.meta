@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: a9452a55b3acd924db3acbd64e3c3352
+guid: d2c00b8803bd74344be336210826bc83
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 2274457430079096720
-    second: Mobile phone chat interface 2_0
+      213: -7176339929176472216
+    second: Monthly Summary 2 blank updated_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,7 +126,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Mobile phone chat interface 2_0
+      name: Monthly Summary 2 blank updated_0
       rect:
         serializedVersion: 2
         x: 0
@@ -141,8 +141,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 097cc986bfe709f10800000000000000
-      internalID: 2274457430079096720
+      spriteID: 8650cf53bd4886c90800000000000000
+      internalID: -7176339929176472216
       vertices: []
       indices: 
       edges: []
@@ -161,7 +161,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Mobile phone chat interface 2_0: 2274457430079096720
+      Monthly Summary 2 blank updated_0: -7176339929176472216
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

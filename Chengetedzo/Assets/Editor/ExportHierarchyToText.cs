@@ -177,7 +177,7 @@ public static class DevShortcuts
     public static void FullReset()
     {
         SaveSystem.DeleteSave();
-        PlayerPrefs.DeleteAll();
+        TutorialManager.Instance?.ResetAll();
         PlayerPrefs.Save();
 
         var gm = UnityEngine.Object.FindObjectOfType<GameManager>();

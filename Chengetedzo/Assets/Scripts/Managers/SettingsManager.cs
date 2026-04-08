@@ -49,5 +49,8 @@ public class SettingsManager : MonoBehaviour
         MentorHints = value;
         PlayerPrefs.SetInt(KEY_MENTOR, value ? 1 : 0);
         PlayerPrefs.Save();
+
+        if (value)
+            TutorialManager.Instance?.ResetAll();
     }
 }

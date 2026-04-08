@@ -157,6 +157,18 @@ public class YearEndGraph : MonoBehaviour
         go.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0.15f);
     }
 
+    public void HideGraph()
+    {
+        foreach (Transform child in transform)
+            child.gameObject.SetActive(false);
+    }
+
+    public void ShowGraph()
+    {
+        foreach (Transform child in transform)
+            child.gameObject.SetActive(true);
+    }
+
     private float GetX(int i, int count, float w) =>
         count <= 1 ? w * 0.5f : (i / (float)(count - 1)) * w;
 

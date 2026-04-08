@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: dcd2f217ca4484b489ba2bc6f242842d
+guid: bb49ee7b3bf82a144955940a400d4e99
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 7629000212720535663
-    second: Mobile phone chat interface 1_0
+      213: 8090170959755426076
+    second: Summer Season_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,7 +126,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Mobile phone chat interface 1_0
+      name: Summer Season_0
       rect:
         serializedVersion: 2
         x: 0
@@ -141,8 +141,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: f684696f547afd960800000000000000
-      internalID: 7629000212720535663
+      spriteID: c193764df9f064070800000000000000
+      internalID: 8090170959755426076
       vertices: []
       indices: 
       edges: []
@@ -161,7 +161,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Mobile phone chat interface 1_0: 7629000212720535663
+      Summer Season_0: 8090170959755426076
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

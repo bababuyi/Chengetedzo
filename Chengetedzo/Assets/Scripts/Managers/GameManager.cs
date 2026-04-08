@@ -86,9 +86,9 @@ public class GameManager : MonoBehaviour
     public void DEV_FullReset()
     {
         SaveSystem.DeleteSave();
-        PlayerPrefs.DeleteAll();
-        PlayerPrefs.Save();
-        Debug.Log("[DEV] Save file deleted. All PlayerPrefs cleared. Ready for fresh start.");
+        TutorialManager.Instance?.ResetAll();
+        PlayerPrefs.DeleteKey("SaveExists");
+        Debug.Log("[DEV] Save file deleted. Tutorial flags cleared. Settings preserved.");
     }
     [System.Serializable]
     public class ExpenseEffect

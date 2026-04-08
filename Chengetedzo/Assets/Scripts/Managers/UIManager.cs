@@ -97,6 +97,8 @@ public class UIManager : MonoBehaviour
     [Header("Settings")]
     public GameObject settingsPanel;
 
+    private UIPanelState _stateBeforeSettings = UIPanelState.None;
+
     private UIPanelState currentPanelState = UIPanelState.None;
 
     private GameObject activePopup;
@@ -471,7 +473,13 @@ public class UIManager : MonoBehaviour
     // End-of-Year Screen
     public void ShowEndOfYearSummary(string mentorReflection)
     {
-        SwitchPanel(UIPanelState.EndOfYear);
+        if (IsPopupActive && activePopup != null)
+            CloseActivePopup();
+
+        HideAllPanels();
+        currentPanelState = UIPanelState.EndOfYear;
+        if (endOfYearScreen != null) endOfYearScreen.SetActive(true);
+        if (topHUD != null) topHUD.SetActive(false);
 
         var gm = GameManager.Instance;
 
@@ -556,7 +564,7 @@ public class UIManager : MonoBehaviour
         resultsText.gameObject.SetActive(true);
         SetEndOfYearButtonPosition(CONTINUE_X);
         endOfYearContinueButton.GetComponentInChildren<TextMeshProUGUI>().text = "Key Takeaways →";
-        if (yearEndGraph != null) yearEndGraph.gameObject.SetActive(false);
+        yearEndGraph?.HideGraph();
         StartCoroutine(RenderGraphNextFrame());
         restartButton.interactable = false;
     }
@@ -568,6 +576,9 @@ public class UIManager : MonoBehaviour
 
     public void OnEndOfYearContinueClicked()
     {
+        if (endOfYearScreen != null && !endOfYearScreen.activeSelf)
+            endOfYearScreen.SetActive(true);
+
         yearEndPage++;
 
         switch (yearEndPage)
@@ -575,7 +586,7 @@ public class UIManager : MonoBehaviour
             case 1: // Key Takeaways
                 resultsText.text = yearPartTwoText;
                 resultsText.gameObject.SetActive(true);
-                if (yearEndGraph != null) yearEndGraph.gameObject.SetActive(false);
+                yearEndGraph?.HideGraph();
                 endOfYearContinueButton.GetComponentInChildren<TextMeshProUGUI>().text = "View Graph →";
                 restartButton.interactable = true;
                 SetEndOfYearButtonPosition(CONTINUE_X);
@@ -583,7 +594,7 @@ public class UIManager : MonoBehaviour
 
             case 2: // Graph
                 resultsText.gameObject.SetActive(false);
-                if (yearEndGraph != null) yearEndGraph.gameObject.SetActive(true);
+                yearEndGraph?.ShowGraph();
                 endOfYearContinueButton.GetComponentInChildren<TextMeshProUGUI>().text = "← Back";
                 SetEndOfYearButtonPosition(BACK_X);
                 break;
@@ -592,7 +603,7 @@ public class UIManager : MonoBehaviour
                 yearEndPage = 0;
                 resultsText.text = yearPartOneText;
                 resultsText.gameObject.SetActive(true);
-                if (yearEndGraph != null) yearEndGraph.gameObject.SetActive(false);
+                yearEndGraph?.HideGraph();
                 endOfYearContinueButton.GetComponentInChildren<TextMeshProUGUI>().text = "Key Takeaways →";
                 restartButton.interactable = false;
                 SetEndOfYearButtonPosition(CONTINUE_X);
@@ -796,13 +807,27 @@ public class UIManager : MonoBehaviour
 
     public void ShowSettings()
     {
-        if (settingsPanel != null)
-            settingsPanel.SetActive(true);
+        if (settingsPanel == null) return;
+
+        if (IsPopupActive && activePopup != null)
+            CloseActivePopup();
+
+        _stateBeforeSettings = currentPanelState;
+        HideAllPanels();
+        settingsPanel.SetActive(true);  
     }
 
     public void HideSettings()
     {
-        if (settingsPanel != null)
-            settingsPanel.SetActive(false);
+        if (settingsPanel == null) return;
+        settingsPanel.SetActive(false);
+
+        if (_stateBeforeSettings != UIPanelState.None)
+        {
+            var restore = _stateBeforeSettings;
+            _stateBeforeSettings = UIPanelState.None;
+            currentPanelState = UIPanelState.None;
+            SwitchPanel(restore);
+        }
     }
 }

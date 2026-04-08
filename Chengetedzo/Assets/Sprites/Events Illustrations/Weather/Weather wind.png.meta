@@ -1,10 +1,25 @@
 fileFormatVersion: 2
-guid: d5ad142e53d429948869c988c1af509f
+guid: 7269362feb127a24685a3fb31c23a9a0
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 6404081291679643910
-    second: Monthly Summary 2 blank_0
+      213: 463453504300665556
+    second: Weather wind_0
+  - first:
+      213: -1877853210344924336
+    second: Weather wind_1
+  - first:
+      213: 1367624392061937625
+    second: Weather wind_2
+  - first:
+      213: -5072920985769406109
+    second: Weather wind_3
+  - first:
+      213: 5577494107776355546
+    second: Weather wind_4
+  - first:
+      213: 7071454008259784967
+    second: Weather wind_5
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,13 +141,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Monthly Summary 2 blank_0
+      name: Weather wind_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 1920
-        height: 1080
+        x: 1489
+        y: 883
+        width: 69
+        height: 27
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +156,118 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 6093a47210edfd850800000000000000
-      internalID: 6404081291679643910
+      spriteID: 4da40c5b1848e6600800000000000000
+      internalID: 463453504300665556
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Weather wind_1
+      rect:
+        serializedVersion: 2
+        x: 167
+        y: 182
+        width: 1594
+        height: 641
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 05b5019547680f5e0800000000000000
+      internalID: -1877853210344924336
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Weather wind_2
+      rect:
+        serializedVersion: 2
+        x: 930
+        y: 147
+        width: 22
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9d7e20b7327caf210800000000000000
+      internalID: 1367624392061937625
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Weather wind_3
+      rect:
+        serializedVersion: 2
+        x: 776
+        y: 91
+        width: 45
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 361179dad3d5999b0800000000000000
+      internalID: -5072920985769406109
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Weather wind_4
+      rect:
+        serializedVersion: 2
+        x: 358
+        y: 0
+        width: 19
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: adc08d6175d376d40800000000000000
+      internalID: 5577494107776355546
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Weather wind_5
+      rect:
+        serializedVersion: 2
+        x: 523
+        y: 0
+        width: 195
+        height: 72
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 70136df44f9d22260800000000000000
+      internalID: 7071454008259784967
       vertices: []
       indices: 
       edges: []
@@ -161,7 +286,12 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Monthly Summary 2 blank_0: 6404081291679643910
+      Weather wind_0: 463453504300665556
+      Weather wind_1: -1877853210344924336
+      Weather wind_2: 1367624392061937625
+      Weather wind_3: -5072920985769406109
+      Weather wind_4: 5577494107776355546
+      Weather wind_5: 7071454008259784967
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
