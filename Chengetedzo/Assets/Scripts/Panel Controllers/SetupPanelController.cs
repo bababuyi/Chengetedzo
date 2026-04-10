@@ -640,7 +640,7 @@ public class SetupPanelController : MonoBehaviour
         float savingsAmount = Mathf.Round(savingsSlider.value / 10f) * 10f;
         float netSurplus = surplus - savingsAmount;
 
-        string summary = "<b>Your Starting Situation</b>\n\n";
+        string summary = "<b>Your Financial Baseline</b>\n\n";
         summary += $"Income Range: ${minIncome:F0} – ${maxIncome:F0}\n";
         summary += $"Estimated Monthly Income: ${averageIncome:F0}\n\n";
         summary += $"Housing: -${housing:F0}\n";
@@ -652,7 +652,7 @@ public class SetupPanelController : MonoBehaviour
         summary += $"Monthly Savings: -${savingsAmount:F0}\n";
 
         if (netSurplus >= 0)
-            summary += $"<color=#3CB371>Estimated Surplus: +${netSurplus:F0}</color>\n\n";
+            summary += $"<color=#3CB371>Estimated Net Income: +${netSurplus:F0}</color>\n\n";
         else
             summary += $"<color=#E74C3C>Estimated Shortfall: -${Mathf.Abs(netSurplus):F0}</color>\n\n";
 

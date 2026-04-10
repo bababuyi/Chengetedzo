@@ -193,7 +193,6 @@ public class EventManager : MonoBehaviour
         {
             if (triggeredEventCount >= maxEventsPerMonth) break;
 
-            // ── Choice event: defer resolution to the player ──
             if (ev.hasChoices && ev.choices != null && ev.choices.Count > 0)
             {
                 results.Add(new ResolvedEvent
@@ -202,11 +201,12 @@ public class EventManager : MonoBehaviour
                     description = ev.description,
                     icon = ev.icon,
                     hasChoices = true,
-                    choices = ev.choices
+                    choices = ev.choices,
+                    pool = ev.pool,
                 });
 
                 TryScheduleFollowUp(ev, month);
-                continue;  // skip normal loss/reward resolution
+                continue;
             }
 
             int eventCost = GetEventCost(ev);
@@ -268,6 +268,7 @@ public class EventManager : MonoBehaviour
                     icon = ev.icon,
                     hasChoices = true,
                     choices = ev.choices,
+                    pool = ev.pool,
                     senderName = ev.senderName,
                     senderRelation = ev.senderRelation
                 });
@@ -317,6 +318,7 @@ public class EventManager : MonoBehaviour
             {
                 title = ev.eventName,
                 description = ev.description,
+                pool = ev.pool,
                 type = InsuranceManager.InsuranceType.None,
                 lossPercent = lossPercent,
                 moneyChange = -finalLoss,
@@ -473,6 +475,7 @@ public class EventManager : MonoBehaviour
                 title = ev.eventName,
                 description = ev.description,
                 type = ev.insuranceType,
+                pool = ev.pool,
                 lossPercent = 0f,
                 moneyChange = gained,
                 insurancePayout = 0f
@@ -515,6 +518,7 @@ float intendedLoss = GameManager.Instance.financeManager
             title = ev.eventName,
             description = ev.description,
             type = ev.insuranceType,
+            pool = ev.pool,
             lossPercent = lossPercent,
             moneyChange = -finalLoss,
             insurancePayout = payout

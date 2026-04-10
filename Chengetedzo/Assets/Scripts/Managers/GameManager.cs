@@ -146,6 +146,8 @@ public class GameManager : MonoBehaviour
         uiManager.UpdateMoneyText(0f);
         uiManager.UpdateMonthText(currentMonth, totalMonths);
         visualManager?.UpdateVisuals();
+        bool hasWeatherEvent = false;
+        FindFirstObjectByType<SeasonalBackgroundManager>()?.UpdateForMonth(currentMonth, hasWeatherEvent);
     }
 
     private int totalUnexpectedEvents = 0;
@@ -245,8 +247,10 @@ public class GameManager : MonoBehaviour
         loanManager?.UpdateLoans();
 
         monthlyEvents = eventManager.GenerateMonthlyEvents(currentMonth);
+        bool hasWeatherEvent = monthlyEvents.Exists(e => e.pool == EventPool.Weather);
+        FindFirstObjectByType<SeasonalBackgroundManager>()?.UpdateForMonth(currentMonth, hasWeatherEvent);
         Debug.Log($"[Events] Generated: {monthlyEvents.Count} events for month {currentMonth}");
-
+        Debug.Log($"[Background] Month {currentMonth} | Weather Event: {hasWeatherEvent}");
         pendingEvents.Clear();
         foreach (var ev in monthlyEvents)
             pendingEvents.Enqueue(ev);

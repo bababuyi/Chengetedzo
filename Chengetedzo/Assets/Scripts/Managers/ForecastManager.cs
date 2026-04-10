@@ -31,6 +31,17 @@ public class ForecastManager : MonoBehaviour
         CrimeWave
     }
 
+    private Color GetColorForCategory(ForecastCategory category) => category switch
+    {
+        ForecastCategory.Health => new Color(0.85f, 0.33f, 0.33f),
+        ForecastCategory.Livestock => new Color(0.70f, 0.50f, 0.20f),
+        ForecastCategory.Crops => new Color(0.40f, 0.70f, 0.30f),
+        ForecastCategory.Economic => new Color(0.20f, 0.55f, 0.80f),
+        ForecastCategory.Crime => new Color(0.40f, 0.40f, 0.40f),
+        ForecastCategory.Weather => new Color(0.30f, 0.60f, 0.90f),
+        _ => Color.white
+    };
+
     ForecastSignal GetSignal(EventData ev)
     {
         string name = ev.eventName.ToLower();
@@ -263,10 +274,22 @@ public class ForecastManager : MonoBehaviour
             }
 
             UnityEngine.UI.Image img =
-                item.GetComponentInChildren<UnityEngine.UI.Image>();
+    item.GetComponentInChildren<UnityEngine.UI.Image>();
 
             if (img != null)
-                img.sprite = GetIconForCategory(forecast.category);
+            {
+                Sprite icon = GetIconForCategory(forecast.category);
+                if (icon != null)
+                {
+                    img.sprite = icon;
+                    img.color = Color.white;
+                }
+                else
+                {
+                    img.sprite = null;
+                    img.color = GetColorForCategory(forecast.category);
+                }
+            }
         }
     }
 

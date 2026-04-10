@@ -22,4 +22,5 @@ public class ResolvedEvent
     public List<EventData.ChoiceOption> choices;
     public string senderName;
     public string senderRelation;
+    public EventPool pool;
 }

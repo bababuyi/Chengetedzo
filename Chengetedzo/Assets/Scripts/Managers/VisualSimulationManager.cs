@@ -10,7 +10,6 @@ public class VisualSimulationManager : MonoBehaviour
     [Header("Environment Layers")]
     public GameObject heatHaze;
     public GameObject fogLayer;
-    public GameObject dryGrass;
 
     [Header("Clouds")]
     public GameObject whiteClouds;
@@ -72,7 +71,6 @@ public class VisualSimulationManager : MonoBehaviour
         SafeSet(whiteClouds, true);
         SafeSet(grayClouds, false);
 
-        SafeSet(dryGrass, true);
         SafeSet(windLines, true);
 
         Debug.Log("Visuals updated SUMMER");
@@ -89,7 +87,6 @@ public class VisualSimulationManager : MonoBehaviour
         SafeSet(whiteClouds, false);
         SafeSet(grayClouds, true);
 
-        SafeSet(dryGrass, false);
         SafeSet(windLines, false);
 
         Debug.Log("Visuals updated WINTER");

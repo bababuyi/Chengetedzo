@@ -56,6 +56,14 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI eventDescriptionText;
     public Button continueButton;
 
+    [Header("Event Animation")]
+    public RectTransform eventPopupRect;
+    public float eventSlideDuration = 0.4f;
+
+    private Coroutine eventAnimRoutine;
+    private bool isEventAnimating = false;
+    private bool eventFullyShown = false;
+
     [Header("Choice Popup")]
     public TextMeshProUGUI choiceSenderNameText;
     public TextMeshProUGUI choiceSenderRelationText;
@@ -130,7 +138,13 @@ public class UIManager : MonoBehaviour
         popupObject.SetActive(true);
 
         continueBtn.onClick.RemoveAllListeners();
-        continueBtn.onClick.AddListener(CloseActivePopup);
+        continueBtn.onClick.AddListener(() =>
+        {
+            if (activeOnClose != null)
+                activeOnClose.Invoke();
+            else
+                CloseActivePopup();
+        });
     }
 
     private void CloseActivePopup()
@@ -372,8 +386,58 @@ public class UIManager : MonoBehaviour
         ShowPopup(
             eventPopup,
             continueButton,
-            () => GameManager.Instance.OnEventPopupClosed()
+            OnEventContinuePressed
         );
+
+        PlayEventSlideIn();
+    }
+
+    private void PlayEventSlideIn()
+    {
+        if (eventAnimRoutine != null)
+            StopCoroutine(eventAnimRoutine);
+
+        eventAnimRoutine = StartCoroutine(SlideEvent(true));
+    }
+
+    private IEnumerator SlideEvent(bool slideIn)
+    {
+        isEventAnimating = true;
+        eventFullyShown = false;
+
+        float time = 0f;
+
+        float startY = slideIn ? 300f : 0f;
+        float endY = slideIn ? 0f : 300f;
+
+        while (time < eventSlideDuration)
+        {
+            time += Time.deltaTime;
+            float t = time / eventSlideDuration;
+
+            float y = Mathf.Lerp(startY, endY, t);
+            eventPopupRect.anchoredPosition = new Vector2(0, y);
+
+            yield return null;
+        }
+
+        eventPopupRect.anchoredPosition = new Vector2(0, endY);
+
+        isEventAnimating = false;
+        eventFullyShown = slideIn;
+    }
+
+    private void OnEventContinuePressed()
+    {
+        Debug.Log("Event continue pressed");
+
+        StartCoroutine(SlideOutThenClose());
+    }
+
+    private IEnumerator SlideOutThenClose()
+    {
+        yield return StartCoroutine(SlideEvent(false));
+        CloseActivePopup();
     }
 
     public void ShowChoicePopup(
