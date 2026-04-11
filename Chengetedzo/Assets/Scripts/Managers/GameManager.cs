@@ -403,7 +403,7 @@ public class GameManager : MonoBehaviour
 
         if (lineToShow != null && (forceShow || Random.value < monthlyChance))
         {
-            uiManager.ShowMentorMessage(lineToShow);
+            uiManager.ShowMentorMessageTransparent(lineToShow);
             mentorSpokeThisMonth = true;
         }
 

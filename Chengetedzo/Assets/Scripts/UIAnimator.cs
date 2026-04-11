@@ -40,6 +40,12 @@ public class UIAnimator : MonoBehaviour
     [Tooltip("Muted red for loss.")]
     public Color moneyLossColor = new Color(0.80f, 0.35f, 0.35f);
 
+    [Header("Bubble Scale In")]
+    [Tooltip("Used for chat bubbles and choice results.")]
+    public float bubbleScaleDuration = 0.18f;
+    [Range(1.02f, 1.15f)]
+    public float bubbleOvershootScale = 1.08f;
+
     private void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(this); return; }
@@ -252,6 +258,46 @@ public class UIAnimator : MonoBehaviour
 
             colorTarget.color = Color.white;
         }
+    }
+
+    public void ScaleBubbleIn(RectTransform rect, System.Action onComplete = null)
+    {
+        if (rect == null) return;
+        StartCoroutine(ScaleBubbleCoroutine(rect, onComplete));
+    }
+
+    private IEnumerator ScaleBubbleCoroutine(RectTransform rect, System.Action onComplete)
+    {
+        Vector3 start = Vector3.one * 0.92f;
+        Vector3 overshoot = Vector3.one * bubbleOvershootScale;
+        Vector3 end = Vector3.one;
+
+        float t = 0f;
+        float half = bubbleScaleDuration * 0.6f;
+        float settle = bubbleScaleDuration - half;
+
+        rect.localScale = start;
+
+        while (t < half)
+        {
+            t += Time.unscaledDeltaTime;
+            float p = EaseOutCubic(t / half);
+            rect.localScale = Vector3.Lerp(start, overshoot, p);
+            yield return null;
+        }
+
+        t = 0f;
+
+        while (t < settle)
+        {
+            t += Time.unscaledDeltaTime;
+            float p = EaseOutCubic(t / settle);
+            rect.localScale = Vector3.Lerp(overshoot, end, p);
+            yield return null;
+        }
+
+        rect.localScale = end;
+        onComplete?.Invoke();
     }
 
     private static float EaseOutCubic(float t)

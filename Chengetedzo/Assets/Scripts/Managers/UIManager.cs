@@ -55,6 +55,7 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI eventTitleText;
     public TextMeshProUGUI eventDescriptionText;
     public Button continueButton;
+    public Image eventBannerImage;
 
     [Header("Event Animation")]
     public RectTransform eventPopupRect;
@@ -76,6 +77,7 @@ public class UIManager : MonoBehaviour
     public GameObject choiceEventPopup;
     public TextMeshProUGUI choiceTitleText;
     public TextMeshProUGUI choiceDescriptionText;
+    public RectTransform choiceSenderBubbleRect;
     public GameObject choiceButtonPrefab;
     public Transform choiceButtonsParent;
 
@@ -96,6 +98,10 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI mentorText;
     public Button mentorContinueButton;
     public UnityEngine.UI.Image mentorBackground;
+    public GameObject mentorFaceContainer;
+    public UnityEngine.UI.Image mentorPortraitImage;
+    public GameObject mentorChatBubble;
+    public TextMeshProUGUI mentorChatText;
 
     [Header("Main Menu Panels")]
     public GameObject mainMenuPanel;
@@ -380,24 +386,27 @@ public class UIManager : MonoBehaviour
         eventTitleText.text = title;
         eventDescriptionText.text = description;
 
-        eventIcon.sprite = icon;
-        eventIcon.enabled = icon != null;
+        if (eventBannerImage != null)
+        {
+            eventBannerImage.sprite = icon;
+            eventBannerImage.enabled = icon != null;
+        }
 
         ShowPopup(
             eventPopup,
-            continueButton,
-            OnEventContinuePressed
+            continueButton, 
+            null
         );
 
-        PlayEventSlideIn();
+        StartCoroutine(ShowAndAutoDismissEvent());
     }
 
-    private void PlayEventSlideIn()
+    private IEnumerator ShowAndAutoDismissEvent()
     {
-        if (eventAnimRoutine != null)
-            StopCoroutine(eventAnimRoutine);
-
-        eventAnimRoutine = StartCoroutine(SlideEvent(true));
+        yield return StartCoroutine(SlideEvent(true));
+        yield return new WaitForSeconds(3.5f);
+        yield return StartCoroutine(SlideEvent(false));
+        CloseActivePopup();
     }
 
     private IEnumerator SlideEvent(bool slideIn)
@@ -407,8 +416,8 @@ public class UIManager : MonoBehaviour
 
         float time = 0f;
 
-        float startY = slideIn ? 300f : 0f;
-        float endY = slideIn ? 0f : 300f;
+        float startY = slideIn ? 400f : -30f;
+        float endY = slideIn ? -30f : 400f;
 
         while (time < eventSlideDuration)
         {
@@ -425,13 +434,6 @@ public class UIManager : MonoBehaviour
 
         isEventAnimating = false;
         eventFullyShown = slideIn;
-    }
-
-    private void OnEventContinuePressed()
-    {
-        Debug.Log("Event continue pressed");
-
-        StartCoroutine(SlideOutThenClose());
     }
 
     private IEnumerator SlideOutThenClose()
@@ -488,6 +490,9 @@ public class UIManager : MonoBehaviour
 
         choiceEventPopup.SetActive(true);
         IsPopupActive = true;
+
+        if (choiceSenderBubbleRect != null)
+            UIAnimator.Instance?.ScaleBubbleIn(choiceSenderBubbleRect);
     }
 
     private void ShowChoiceResult(int index, List<EventData.ChoiceOption> choices)
@@ -514,6 +519,9 @@ public class UIManager : MonoBehaviour
 
             choiceResultText.text = resultMsg;
             choiceResultBubble.SetActive(true);
+            var rect = choiceResultBubble.GetComponent<RectTransform>();
+            if (rect != null)
+                UIAnimator.Instance?.ScaleBubbleIn(rect);
         }
 
         if (choiceContinueButton != null)
@@ -687,7 +695,12 @@ public class UIManager : MonoBehaviour
 
     public void ShowMentorMessage(string message, System.Action onClose = null)
     {
-        mentorText.text = message;
+        if (mentorBackground != null) mentorBackground.enabled = true;
+        if (mentorFaceContainer != null) mentorFaceContainer.SetActive(false);
+        if (mentorChatBubble != null) mentorChatBubble.SetActive(true);
+
+        if (mentorChatText != null) mentorChatText.text = message;
+
         ShowPopup(mentorPopup, mentorContinueButton, onClose);
         var rect = mentorPopup.GetComponent<RectTransform>();
         UIAnimator.Instance?.SlideUpChat(rect);
@@ -702,14 +715,15 @@ public class UIManager : MonoBehaviour
             return;
         }
 
-        if (mentorBackground != null)
-            mentorBackground.enabled = false;
+        if (mentorBackground != null) mentorBackground.enabled = false;
+        if (mentorFaceContainer != null) mentorFaceContainer.SetActive(true);
+        if (mentorChatBubble != null) mentorChatBubble.SetActive(false);
 
         mentorText.text = message;
+
         ShowPopup(mentorPopup, mentorContinueButton, () =>
         {
-            if (mentorBackground != null)
-                mentorBackground.enabled = true;
+            if (mentorBackground != null) mentorBackground.enabled = true;
             onClose?.Invoke();
         });
         UIAnimator.Instance?.FadeIn(mentorPopup);

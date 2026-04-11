@@ -134,39 +134,52 @@ public class ExportHierarchyToText : EditorWindow
 
     static string PropertyToString(SerializedProperty prop)
     {
-        switch (prop.propertyType)
+        try
         {
-            case SerializedPropertyType.Integer:
-                return prop.intValue.ToString();
+            switch (prop.propertyType)
+            {
+                case SerializedPropertyType.Integer:
+                    return prop.intValue.ToString();
 
-            case SerializedPropertyType.Boolean:
-                return prop.boolValue.ToString();
+                case SerializedPropertyType.Boolean:
+                    return prop.boolValue.ToString();
 
-            case SerializedPropertyType.Float:
-                return prop.floatValue.ToString();
+                case SerializedPropertyType.Float:
+                    return prop.floatValue.ToString();
 
-            case SerializedPropertyType.String:
-                return prop.stringValue;
+                case SerializedPropertyType.String:
+                    return prop.stringValue;
 
-            case SerializedPropertyType.Enum:
-                return prop.enumDisplayNames[prop.enumValueIndex];
+                case SerializedPropertyType.Enum:
+                    if (prop.enumDisplayNames != null &&
+                        prop.enumValueIndex >= 0 &&
+                        prop.enumValueIndex < prop.enumDisplayNames.Length)
+                    {
+                        return prop.enumDisplayNames[prop.enumValueIndex];
+                    }
+                    return $"(Invalid Enum Index: {prop.enumValueIndex})";
 
-            case SerializedPropertyType.ObjectReference:
-                return prop.objectReferenceValue ? prop.objectReferenceValue.name : "None";
+                case SerializedPropertyType.ObjectReference:
+                    return prop.objectReferenceValue ? prop.objectReferenceValue.name : "None";
 
-            case SerializedPropertyType.Vector2:
-                return prop.vector2Value.ToString();
+                case SerializedPropertyType.Vector2:
+                    return prop.vector2Value.ToString();
 
-            case SerializedPropertyType.Vector3:
-                return prop.vector3Value.ToString();
+                case SerializedPropertyType.Vector3:
+                    return prop.vector3Value.ToString();
 
-            case SerializedPropertyType.Generic:
-                if (prop.isArray)
-                    return $"Array Size: {prop.arraySize}";
-                return "(Struct/Class)";
+                case SerializedPropertyType.Generic:
+                    if (prop.isArray)
+                        return $"Array Size: {prop.arraySize}";
+                    return "(Struct/Class)";
 
-            default:
-                return "(Unsupported)";
+                default:
+                    return "(Unsupported)";
+            }
+        }
+        catch (Exception e)
+        {
+            return $"(Error: {e.Message})";
         }
     }
 }
@@ -180,7 +193,7 @@ public static class DevShortcuts
         TutorialManager.Instance?.ResetAll();
         PlayerPrefs.Save();
 
-        var gm = UnityEngine.Object.FindObjectOfType<GameManager>();
+        var gm = UnityEngine.Object.FindFirstObjectByType<GameManager>();
         gm?.FullRestart();
         Debug.Log("[DEV] Hot reset triggered.");
     }
