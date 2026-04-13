@@ -43,6 +43,9 @@ public class MonthlyReportPanel : MonoBehaviour
         Debug.Log($"[ReportPanel] Populate called. Ledger null: {ledger == null}");
         if (ledger == null) return;
 
+        foreach (var entry in ledger.Entries)
+            Debug.Log($"[Ledger Entry] {entry.entryType} | {entry.description} | {entry.SignedAmount()}");
+
         int displayMonth = ((ledger.MonthNumber - 1) % 12) + 1;
         string monthName = System.Globalization.CultureInfo.CurrentCulture
             .DateTimeFormat.GetMonthName(displayMonth);
@@ -109,20 +112,20 @@ public class MonthlyReportPanel : MonoBehaviour
         float leftover = Mathf.Max(0f, income - totalExpenses);
 
         if (incomeText != null)
-            incomeText.text = $"+${Mathf.RoundToInt(income)}";
+            incomeText.text = $"+{GameUtils.FormatMoney(income)}";
 
         BuildExpenseLines(housing, groceries, transport, utilities, schoolFees, insurance);
 
         if (totalExpensesText != null)
-            totalExpensesText.text = $"-${Mathf.RoundToInt(totalExpenses)}";
+            totalExpensesText.text = $"-{GameUtils.FormatMoney(totalExpenses)}";
 
         bool hasSavings = savingsContrib > 0.01f;
         if (savingsLineRoot != null) savingsLineRoot.SetActive(hasSavings);
         if (hasSavings && savingsLineText != null)
-            savingsLineText.text = $"+${Mathf.RoundToInt(savingsContrib)}";
+            savingsLineText.text = $"+{GameUtils.FormatMoney(savingsContrib)}";
 
         if (endBalanceText != null)
-            endBalanceText.text = $"${Mathf.RoundToInt(ledger.ClosingBalance)}";
+            endBalanceText.text = GameUtils.FormatMoney(ledger.ClosingBalance);
 
         BuildEventRecap(eventLines);
 
@@ -133,7 +136,7 @@ public class MonthlyReportPanel : MonoBehaviour
         if (savingsBalanceText != null)
         {
             savingsBalanceText.gameObject.SetActive(savingsBalance > 0.01f);
-            savingsBalanceText.text = $"Savings balance: ${Mathf.RoundToInt(savingsBalance)}";
+            savingsBalanceText.text = $"Savings balance: {GameUtils.FormatMoney(savingsBalance)}";
         }
     }
 
@@ -161,7 +164,7 @@ public class MonthlyReportPanel : MonoBehaviour
         if (texts.Length >= 2)
         {
             texts[0].text = label;
-            texts[1].text = $"-${Mathf.RoundToInt(amount)}";
+            texts[1].text = $"-{GameUtils.FormatMoney(amount)}";
         }
     }
 
@@ -183,8 +186,8 @@ public class MonthlyReportPanel : MonoBehaviour
             {
                 texts[0].text = ev.name;
                 texts[1].text = ev.positive
-                    ? $"+${Mathf.RoundToInt(ev.amount)}"
-                    : $"-${Mathf.RoundToInt(ev.amount)}";
+                    ? $"+{GameUtils.FormatMoney(ev.amount)}"
+                    : $"-{GameUtils.FormatMoney(ev.amount)}";
                 texts[1].color = ev.positive
                     ? new Color(0.23f, 0.55f, 0.13f)
                     : new Color(0.64f, 0.17f, 0.17f);

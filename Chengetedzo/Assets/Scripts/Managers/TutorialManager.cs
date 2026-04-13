@@ -21,6 +21,7 @@ public class TutorialManager : MonoBehaviour
     private const string KEY_FREE_FORECAST = "Tut_FreeForeSeen";
     private const string KEY_FREE_INSURANCE = "Tut_FreeInsSeen";
     private const string KEY_FREE_SETUP = "Tut_FreeSetupSeen";
+    private const string KEY_DEDUCTIBLE_SEEN = "Tut_DeductibleSeen";
 
     public static bool HasAttemptedGuided
     {
@@ -345,6 +346,20 @@ public class TutorialManager : MonoBehaviour
             "From here, I will step back. But I will still check in when something worth noting happens — when patterns form, when you recover from a difficult stretch, or when a choice deserves reflection.",
             "The decisions are yours now. Make them count.",
         }, null, new RectTransform[] { null, null, null });
+    }
+
+    public void TriggerTutorial(string key)
+    {
+        if (key == "insurance_deductible_explainer")
+        {
+            if (Seen(KEY_DEDUCTIBLE_SEEN)) return;
+            UIManager.Instance.ShowMentorMessageTransparent(
+                "A deductible is the amount you pay yourself before insurance covers the rest. " +
+                "For example, if your deductible is $500 and your claim is $2,000, " +
+                "you pay $500 and insurance covers $1,500.",
+                () => Mark(KEY_DEDUCTIBLE_SEEN)
+            );
+        }
     }
 
     private void ShowSequence(string[] messages, System.Action onComplete,

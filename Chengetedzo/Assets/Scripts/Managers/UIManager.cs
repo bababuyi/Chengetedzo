@@ -51,19 +51,20 @@ public class UIManager : MonoBehaviour
 
     [Header("Event Popup")]
     public GameObject eventPopup;
+    public RectTransform eventContent;
     public Image eventIcon;
     public TextMeshProUGUI eventTitleText;
     public TextMeshProUGUI eventDescriptionText;
     public Button continueButton;
-    public Image eventBannerImage;
+    //public Image eventBannerImage;
 
     [Header("Event Animation")]
-    public RectTransform eventPopupRect;
+    public RectTransform eventNotificationRect;
     public float eventSlideDuration = 0.4f;
 
-    private Coroutine eventAnimRoutine;
-    private bool isEventAnimating = false;
-    private bool eventFullyShown = false;
+    //private Coroutine eventAnimRoutine;
+    //private bool isEventAnimating = false;
+    //private bool eventFullyShown = false;
 
     [Header("Choice Popup")]
     public TextMeshProUGUI choiceSenderNameText;
@@ -146,11 +147,9 @@ public class UIManager : MonoBehaviour
         continueBtn.onClick.RemoveAllListeners();
         continueBtn.onClick.AddListener(() =>
         {
-            if (activeOnClose != null)
-                activeOnClose.Invoke();
-            else
-                CloseActivePopup();
+            CloseActivePopup();
         });
+
     }
 
     private void CloseActivePopup()
@@ -226,7 +225,7 @@ public class UIManager : MonoBehaviour
     public void UpdateMoneyText(float amount)
     {
         Debug.Log("Updating TOP HUD TEXT to: " + amount);
-        moneyText.text = $"${amount:F0}";
+        moneyText.text = GameUtils.FormatMoney(amount);
     }
 
     private void HideAllPanels()
@@ -280,10 +279,13 @@ public class UIManager : MonoBehaviour
         if (currentPanelState == newState)
             return;
         //------------------------------------//
-        // FUTURE BARAKA. BE VERY CAREFUL WITH EVENT AND MENTOR POPUPS. YOU WILL REGRET TOUCHING ANYTHING. DOUBLE CHECK STATES IF YOU DO
+        // FUTURE BARAKA. BE VERY CAREFUL WITH EVENT AND MENTOR POPUPS. YOU WILL REGRET TOUCHING ANYTHING. DOUBLE CHECK STATES IF YOU DO. CRASH OUT COUNT = 7
         //-----------------------------------//
-        if (IsPopupActive && activePopup != null && activePopup != eventPopup)
+        if (IsPopupActive)
+        {
+            Debug.Log("Closing existing popup before opening new one.");
             CloseActivePopup();
+        }
 
         HideAllPanels();
 
@@ -347,7 +349,6 @@ public class UIManager : MonoBehaviour
     public void ShowBudgetPanel()
     {
         SwitchPanel(UIPanelState.Budget);
-        budgetPanel.GetComponent<BudgetPanelController>()?.LoadDefaultsFromSetup();
     }
 
     public void ShowSetupPanelAtReview()
@@ -381,65 +382,79 @@ public class UIManager : MonoBehaviour
         TutorialManager.Instance?.OnReportOpened();
     }
 
-    public void ShowEventPopup(string title, string description, Sprite icon = null)
+    /*public void ShowEventPopup(string title, string description, Sprite icon = null)
     {
+        Debug.Log($"[ShowEventPopup] Called: {title}");
+
         eventTitleText.text = title;
         eventDescriptionText.text = description;
 
-        if (eventBannerImage != null)
+        ShowPopup(eventPopup, continueButton, () =>
         {
-            eventBannerImage.sprite = icon;
-            eventBannerImage.enabled = icon != null;
+            GameManager.Instance.OnEventPopupClosed();
+        });
+
+        // 🔥 FORCE VISIBLE (debug)
+        eventPopup.SetActive(true);
+        eventPopup.transform.SetAsLastSibling();
+        eventPopup.transform.localScale = Vector3.one;
+
+        var cg = eventPopup.GetComponent<CanvasGroup>();
+        if (cg != null)
+        {
+            cg.alpha = 1;
+            cg.interactable = true;
+            cg.blocksRaycasts = true;
         }
 
-        ShowPopup(
-            eventPopup,
-            continueButton, 
-            null
-        );
+        Debug.Log("Popup activeSelf: " + eventPopup.activeSelf);
+        Debug.Log("Popup activeInHierarchy: " + eventPopup.activeInHierarchy);
 
-        StartCoroutine(ShowAndAutoDismissEvent());
-    }
+        // TEMP: disable animation
+        // StartCoroutine(SlideEvent(true));
+    }*/
 
-    private IEnumerator ShowAndAutoDismissEvent()
+    public void ShowEventPopup(string title, string description, Sprite icon = null)
     {
-        yield return StartCoroutine(SlideEvent(true));
-        yield return new WaitForSeconds(3.5f);
-        yield return StartCoroutine(SlideEvent(false));
-        CloseActivePopup();
+        Debug.Log($"[ShowEventPopup] Called: {title} | IsPopupActive: {IsPopupActive} | eventPopup null: {eventPopup == null}");
+        eventTitleText.text = title;
+        eventDescriptionText.text = description;
+
+        ShowPopup(eventPopup, continueButton, () =>
+        {
+            GameManager.Instance.OnEventPopupClosed();
+        });
+
+        StartCoroutine(SlideEvent(true));
     }
 
     private IEnumerator SlideEvent(bool slideIn)
     {
-        isEventAnimating = true;
-        eventFullyShown = false;
+        if (eventNotificationRect == null) yield break;
+
+        // Get the resting Y from the rect's current anchored position
+        float restY = eventNotificationRect.anchoredPosition.y;
+        float offscreenY = restY + 600f;
+
+        float startY = slideIn ? offscreenY : restY;
+        float endY = slideIn ? restY : offscreenY;
+
+        eventNotificationRect.anchoredPosition = new Vector2(
+            eventNotificationRect.anchoredPosition.x, startY);
 
         float time = 0f;
-
-        float startY = slideIn ? 400f : -30f;
-        float endY = slideIn ? -30f : 400f;
-
         while (time < eventSlideDuration)
         {
             time += Time.deltaTime;
-            float t = time / eventSlideDuration;
-
-            float y = Mathf.Lerp(startY, endY, t);
-            eventPopupRect.anchoredPosition = new Vector2(0, y);
-
+            float t = Mathf.SmoothStep(0f, 1f, time / eventSlideDuration);
+            eventNotificationRect.anchoredPosition = new Vector2(
+                eventNotificationRect.anchoredPosition.x,
+                Mathf.Lerp(startY, endY, t));
             yield return null;
         }
 
-        eventPopupRect.anchoredPosition = new Vector2(0, endY);
-
-        isEventAnimating = false;
-        eventFullyShown = slideIn;
-    }
-
-    private IEnumerator SlideOutThenClose()
-    {
-        yield return StartCoroutine(SlideEvent(false));
-        CloseActivePopup();
+        eventNotificationRect.anchoredPosition = new Vector2(
+            eventNotificationRect.anchoredPosition.x, endY);
     }
 
     public void ShowChoicePopup(
@@ -488,8 +503,7 @@ public class UIManager : MonoBehaviour
             );
         }
 
-        choiceEventPopup.SetActive(true);
-        IsPopupActive = true;
+        ShowPopup(choiceEventPopup, choiceContinueButton, null);
 
         if (choiceSenderBubbleRect != null)
             UIAnimator.Instance?.ScaleBubbleIn(choiceSenderBubbleRect);
@@ -565,13 +579,13 @@ public class UIManager : MonoBehaviour
         // PART 1
         yearPartOneText =
             "<b>Year Complete</b>\n\n" +
-            $"Income: ${gm.YearIncome:F0}\n" +
-            $"Expenses: ${gm.YearExpenses:F0}\n" +
-            $"Insurance Premiums: ${gm.YearPremiums:F0}\n" +
-            $"Insurance Payouts: ${gm.YearPayouts:F0}\n" +
-            $"Event Losses: ${gm.YearEventLosses:F0}\n\n" +
-            $"Net Result: ${net:F0}\n" +
-            $"Final Cash: ${gm.financeManager.CashOnHand:F0}\n\n" +
+            $"Income: {GameUtils.FormatMoney(gm.YearIncome)}\n" +
+            $"Expenses: {GameUtils.FormatMoney(gm.YearExpenses)}\n" +
+            $"Insurance Premiums: {GameUtils.FormatMoney(gm.YearPremiums)}\n" +
+            $"Insurance Payouts: {GameUtils.FormatMoney(gm.YearPayouts)}\n" +
+            $"Event Losses: {GameUtils.FormatMoney(gm.YearEventLosses)}\n\n" +
+            $"Net Result: {GameUtils.FormatMoney(net)}\n" +
+            $"Final Cash: {GameUtils.FormatMoney(gm.financeManager.CashOnHand)}\n\n" +
             $"<i>{mentorReflection}</i>";
 
         // PART 2
@@ -580,7 +594,7 @@ public class UIManager : MonoBehaviour
 
         if (gm.YearPremiums == 0f)
         {
-            yearPartTwoText += $"You carried no insurance this year. Your ${gm.YearEventLosses:F0} in event losses came entirely out of pocket.\n\n";
+            yearPartTwoText += $"You carried no insurance this year. Your {GameUtils.FormatMoney(gm.YearEventLosses)} in event losses came entirely out of pocket.\n\n";
         }
         else
         {
@@ -588,15 +602,15 @@ public class UIManager : MonoBehaviour
 
             if (gm.TotalInsurancePayoutAmount == 0f)
             {
-                yearPartTwoText += $"You paid ${gm.YearPremiums:F0} in premiums and made no claims. That's not money wasted — that's the cost of protection you fortunately didn't need.\n\n";
+                yearPartTwoText += $"You paid {GameUtils.FormatMoney(gm.YearPremiums)} in premiums and made no claims. That's not money wasted — that's the cost of protection you fortunately didn't need.\n\n";
             }
             else if (netInsuranceBenefit >= 0f)
             {
-                yearPartTwoText += $"Your insurance paid out ${gm.TotalInsurancePayoutAmount:F0} against ${gm.YearPremiums:F0} in premiums — a net benefit of ${netInsuranceBenefit:F0}.\n\n";
+                yearPartTwoText += $"Your insurance paid out {GameUtils.FormatMoney(gm.TotalInsurancePayoutAmount)} against ${gm.YearPremiums:F0} in premiums — a net benefit of ${netInsuranceBenefit:F0}.\n\n";
             }
             else
             {
-                yearPartTwoText += $"You paid ${gm.YearPremiums:F0} in premiums and received ${gm.TotalInsurancePayoutAmount:F0} back. You came out ${Mathf.Abs(netInsuranceBenefit):F0} behind — but that coverage was there if something serious had hit.\n\n";
+                yearPartTwoText += $"You paid {GameUtils.FormatMoney(gm.YearPremiums)} in premiums and received {GameUtils.FormatMoney(gm.TotalInsurancePayoutAmount)} back. You came out {GameUtils.FormatMoney(Mathf.Abs(netInsuranceBenefit))} behind — but that coverage was there if something serious had hit.\n\n";
             }
         }
 
@@ -695,16 +709,27 @@ public class UIManager : MonoBehaviour
 
     public void ShowMentorMessage(string message, System.Action onClose = null)
     {
+        if (IsPopupActive)
+        {
+            StartCoroutine(WaitThenShowMentor(message, onClose));
+            return;
+        }
+
         if (mentorBackground != null) mentorBackground.enabled = true;
         if (mentorFaceContainer != null) mentorFaceContainer.SetActive(false);
         if (mentorChatBubble != null) mentorChatBubble.SetActive(true);
-
         if (mentorChatText != null) mentorChatText.text = message;
 
         ShowPopup(mentorPopup, mentorContinueButton, onClose);
         var rect = mentorPopup.GetComponent<RectTransform>();
         UIAnimator.Instance?.SlideUpChat(rect);
         AudioManager.Instance?.OnMentorMessage();
+    }
+
+    private IEnumerator WaitThenShowMentor(string message, System.Action onClose)
+    {
+        yield return new WaitUntil(() => !IsPopupActive);
+        ShowMentorMessage(message, onClose);
     }
 
     public void ShowMentorMessageTransparent(string message, System.Action onClose = null)
@@ -829,8 +854,6 @@ public class UIManager : MonoBehaviour
             _suspendedContext = SuspendedContext.None;
 
         SwitchPanel(UIPanelState.Budget);
-        var controller = budgetPanel.GetComponent<BudgetPanelController>();
-        controller?.ConfigureForPhase(GameManager.GamePhase.Savings);
     }
 
     public void ClearReportPanel()

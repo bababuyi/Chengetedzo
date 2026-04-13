@@ -92,7 +92,7 @@ public class LoanManager : MonoBehaviour
         borrowingPower -= amount;
         BorrowedThisMonth = true;
 
-        Debug.Log($"Borrowed ${amount}. Remaining power: ${borrowingPower}");
+        Debug.Log($"Borrowed GameUtils.FormatMoney(amount). Remaining power: ${borrowingPower}");
         return true;
     }
 
@@ -195,6 +195,11 @@ public class LoanManager : MonoBehaviour
         );
 
         Debug.Log($"[Loan] FORCED loan issued: ${amount:F0}");
+
+        UIManager.Instance.ShowMentorMessage(
+            "Taking on debt is sometimes necessary, but always have a repayment plan. " +
+            "Missing payments can damage your financial momentum."
+        );
     }
 
     private void MissedPayment()

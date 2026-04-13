@@ -558,11 +558,11 @@ public class GameManager : MonoBehaviour
         if (isWaitingForEventConfirmation)
         {
             ShowEvent(currentEvent);
-            if (!mentorSpokeThisMonth && Random.value < 0.25f)
+            /*if (!mentorSpokeThisMonth && Random.value < 0.25f)
             {
                 uiManager.ShowMentorMessage(PickEventMentorLine());
                 mentorSpokeThisMonth = true;
-            }
+            }*/
             return;
         }
 
@@ -617,14 +617,15 @@ public class GameManager : MonoBehaviour
         }
 
         string fullText = BuildEventResultText(ev);
-        uiManager.ShowEventPopup(ev.title, fullText, ev.icon);
+        Debug.Log($"[ShowEvent] Calling ShowEventPopup for: {ev.title} | IsPopupActive: {uiManager.IsPopupActive}");
+        UIManager.Instance.ShowEventPopup(ev.title, fullText, ev.icon);
     }
 
     private IEnumerator WaitAndShowEvent(ResolvedEvent ev)
     {
         yield return new WaitUntil(() => !uiManager.IsPopupActive);
         string fullText = BuildEventResultText(ev);
-        uiManager.ShowEventPopup(ev.title, fullText, ev.icon);
+        UIManager.Instance.ShowEventPopup(ev.title, fullText, ev.icon);
     }
 
     private void EndMonthlyResolution()

@@ -59,7 +59,7 @@ public class BudgetPieChart : MonoBehaviour
         float totalOutgoings = housing + groceries + transport + utilities + schoolFees + savings;
         float surplus = Mathf.Max(0f, income - totalOutgoings);
         float shortfall = Mathf.Max(0f, totalOutgoings - income);
-        float total = income + shortfall; // expands pie if over budget so fractions still sum to 1
+        float total = income + shortfall;
 
         float cursor = 0f;
         cursor = SetSlice(housingSlice, cursor, housing / total, housingColor);
@@ -115,7 +115,6 @@ public class BudgetPieChart : MonoBehaviour
         if (row.label != null)
         {
             row.label.text = $"{categoryName}   <b>${amount:F0}</b>";
-            row.label.color = Color.white;
         }
     }
 }

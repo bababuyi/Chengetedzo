@@ -84,16 +84,20 @@ public class InsurancePanel : MonoBehaviour
 
             if (!success)
             {
-                RefreshUI(); // revert toggle state
+                RefreshUI();
                 planInfoText.text = "Not enough funds to purchase this plan.";
                 return;
             }
 
+            TutorialManager.Instance?.TriggerTutorial("insurance_deductible_explainer");
+
             planInfoText.text =
-                $"<b>{plan.planName}</b>\n\n" +
-                $"{plan.coverageDescription}\n\n" +
-                $"Coverage: ${plan.coverageLimit:F0}\n" +
-                $"Deductible: {plan.deductiblePercent}%";
+             $"<b>{plan.planName}</b>\n\n" +
+            $"{plan.coverageDescription}\n\n" +
+            $"Coverage: {GameUtils.FormatMoney(plan.coverageLimit)}\n";
+
+            if (plan.deductiblePercent > 0f)
+                planInfoText.text += $"Deductible: {plan.deductiblePercent}%";
         }
         else
         {
@@ -109,7 +113,7 @@ public class InsurancePanel : MonoBehaviour
         float totalPremium = insuranceManager.GetTotalMonthlyPremium();
 
         summaryText.text = totalPremium > 0f
-            ? $"Total Monthly Premium: ${totalPremium:F2}"
+            ? $"Total Monthly Premium: {GameUtils.FormatMoney(totalPremium)}"
             : "No insurance selected. You proceed at your own risk.";
     }
 

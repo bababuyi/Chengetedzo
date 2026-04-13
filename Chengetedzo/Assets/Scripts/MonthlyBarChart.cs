@@ -48,6 +48,15 @@ public class MonthlyBarChart : MonoBehaviour
     [Header("Settings")]
     public float maxBarHeight = 140f;
 
+    // Matching BudgetPieChart's palette exactly
+    private static readonly Color HousingColor = new Color(0.85f, 0.33f, 0.24f);
+    private static readonly Color GroceriesColor = new Color(0.93f, 0.58f, 0.20f);
+    private static readonly Color TransportColor = new Color(0.95f, 0.80f, 0.10f);
+    private static readonly Color UtilitiesColor = new Color(0.60f, 0.40f, 0.80f);
+    private static readonly Color SchoolFeesColor = new Color(0.20f, 0.60f, 0.86f);
+    private static readonly Color InsuranceColor = new Color(0.24f, 0.70f, 0.44f);
+    private static readonly Color EventColor = new Color(0.64f, 0.17f, 0.17f);
+
     public void Render(
         float income,
         float housing,
@@ -63,40 +72,38 @@ public class MonthlyBarChart : MonoBehaviour
         float maxValue = Mathf.Max(income, totalExpenses, leftover);
         float scale = maxValue > 0f ? maxBarHeight / maxValue : 0f;
 
-        //Income
+        // Income bar
         SetBarHeight(incomeColumn.barRoot, income * scale);
-        if (incomeColumn.valueText != null) incomeColumn.valueText.text = $"${Mathf.RoundToInt(income)}";
+        if (incomeColumn.valueText != null)
+            incomeColumn.valueText.text = $"${Mathf.RoundToInt(income)}";
 
-        //Expense bar
-        SetStackedBar(totalExpenses * scale,
-            housing, groceries, transport, utilities, schoolFees, insurance, eventLosses,
-            totalExpenses, scale);
-        if (expensesColumn.valueText != null) expensesColumn.valueText.text = $"${Mathf.RoundToInt(totalExpenses)}";
+        // Expense bar (stacked + coloured)
+        SetStackedBar(housing, groceries, transport, utilities, schoolFees, insurance, eventLosses, totalExpenses, scale);
+        if (expensesColumn.valueText != null)
+            expensesColumn.valueText.text = $"${Mathf.RoundToInt(totalExpenses)}";
 
-        //Leftover bar
+        // Leftover bar
         SetBarHeight(leftoverColumn.barRoot, leftover * scale);
-        if (leftoverColumn.valueText != null) leftoverColumn.valueText.text = $"${Mathf.RoundToInt(leftover)}";
+        if (leftoverColumn.valueText != null)
+            leftoverColumn.valueText.text = $"${Mathf.RoundToInt(leftover)}";
 
-        // Legend
-        SetLegendRow(housingLegend, housingLegendValue, housing, "Housing");
-        SetLegendRow(groceriesLegend, groceriesLegendValue, groceries, "Groceries");
-        SetLegendRow(transportLegend, transportLegendValue, transport, "Transport");
-        SetLegendRow(utilitiesLegend, utilitiesLegendValue, utilities, "Utilities");
-        SetLegendRow(schoolFeesLegend, schoolFeesLegendValue, schoolFees, "School fees");
-        SetLegendRow(insuranceLegend, insuranceLegendValue, insurance, "Insurance");
-        SetLegendRow(eventLegend, eventLegendValue, eventLosses, "Events");
+        // Legend rows — name + amount together
+        SetLegendRow(housingLegend, housingLegendValue, HousingColor, "Housing", housing);
+        SetLegendRow(groceriesLegend, groceriesLegendValue, GroceriesColor, "Groceries", groceries);
+        SetLegendRow(transportLegend, transportLegendValue, TransportColor, "Transport", transport);
+        SetLegendRow(utilitiesLegend, utilitiesLegendValue, UtilitiesColor, "Utilities", utilities);
+        SetLegendRow(schoolFeesLegend, schoolFeesLegendValue, SchoolFeesColor, "School fees", schoolFees);
+        SetLegendRow(insuranceLegend, insuranceLegendValue, InsuranceColor, "Insurance", insurance);
+        SetLegendRow(eventLegend, eventLegendValue, EventColor, "Events", eventLosses);
     }
 
     private void SetBarHeight(RectTransform bar, float height)
     {
         if (bar == null) return;
 
-        // Hardcoded cause debuging was getting irritating :<
         bar.pivot = new Vector2(0.5f, 0f);
-
         bar.anchorMin = new Vector2(0.5f, 0.25f);
         bar.anchorMax = new Vector2(0.5f, 0.25f);
-
         bar.anchoredPosition = new Vector2(0f, 0f);
 
         var sd = bar.sizeDelta;
@@ -105,36 +112,48 @@ public class MonthlyBarChart : MonoBehaviour
     }
 
     private void SetStackedBar(
-        float totalBarHeight,
         float housing, float groceries, float transport, float utilities,
         float schoolFees, float insurance, float eventLosses,
         float totalExpenses, float scale)
     {
-        SetSegment(housingSegment, housing, totalExpenses, scale);
-        SetSegment(groceriesSegment, groceries, totalExpenses, scale);
-        SetSegment(transportSegment, transport, totalExpenses, scale);
-        SetSegment(utilitiesSegment, utilities, totalExpenses, scale);
-        SetSegment(schoolFeesSegment, schoolFees, totalExpenses, scale);
-        SetSegment(insuranceSegment, insurance, totalExpenses, scale);
-        SetSegment(eventSegment, eventLosses, totalExpenses, scale);
+        SetSegment(housingSegment, housing, HousingColor, totalExpenses, scale);
+        SetSegment(groceriesSegment, groceries, GroceriesColor, totalExpenses, scale);
+        SetSegment(transportSegment, transport, TransportColor, totalExpenses, scale);
+        SetSegment(utilitiesSegment, utilities, UtilitiesColor, totalExpenses, scale);
+        SetSegment(schoolFeesSegment, schoolFees, SchoolFeesColor, totalExpenses, scale);
+        SetSegment(insuranceSegment, insurance, InsuranceColor, totalExpenses, scale);
+        SetSegment(eventSegment, eventLosses, EventColor, totalExpenses, scale);
     }
 
-    private void SetSegment(Image seg, float value, float total, float scale)
+    private void SetSegment(Image seg, float value, Color color, float total, float scale)
     {
         if (seg == null) return;
+
         bool visible = value > 0.01f;
         seg.gameObject.SetActive(visible);
         if (!visible) return;
+
+        seg.color = color;
+
         var sd = seg.rectTransform.sizeDelta;
         sd.y = value * scale;
         seg.rectTransform.sizeDelta = sd;
     }
 
-    private void SetLegendRow(GameObject row, TMP_Text valueText, float amount, string label)
+    private void SetLegendRow(GameObject row, TMP_Text valueText, Color color, string label, float amount)
     {
         if (row == null) return;
-        row.SetActive(amount > 0.01f);
-        if (valueText != null && amount > 0.01f)
-            valueText.text = $"${Mathf.RoundToInt(amount)}";
+
+        bool visible = amount > 0.01f;
+        row.SetActive(visible);
+        if (!visible) return;
+
+        // Tint the row's swatch image if one exists
+        var swatch = row.GetComponentInChildren<Image>();
+        if (swatch != null)
+            swatch.color = color;
+
+        if (valueText != null)
+            valueText.text = $"{label}   <b>-${Mathf.RoundToInt(amount)}</b>";
     }
 }
