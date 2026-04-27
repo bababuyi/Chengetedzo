@@ -65,7 +65,11 @@ public class InsuranceToggleItem : MonoBehaviour
         }
 
         float planCost = insuranceManager.CalculateMonthlyPremiumForUI(plan);
-        premiumText.text = $"${planCost:F2} / month";
+
+        if (plan.billingCycleMonths > 1)
+            premiumText.text = $"${planCost:F2} / {plan.billingCycleMonths} months";
+        else
+            premiumText.text = $"${planCost:F2} / month";
     }
 
     private void UpdateStatus()

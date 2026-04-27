@@ -12,6 +12,11 @@ public class SetupPanelController : MonoBehaviour
     public TMP_InputField minIncomeInput;
     public TMP_InputField maxIncomeInput;
 
+    [Header("Income UI")]
+    public TMP_Text minIncomeLabel;
+    public GameObject maxIncomeLabel;
+    public GameObject incomeRangeDash;
+
     [Header("School Fees")]
     public Toggle schoolFeesToggle;
     public TMP_InputField schoolFeesAmountInput;
@@ -473,7 +478,22 @@ public class SetupPanelController : MonoBehaviour
 
     public void OnStableIncomeToggled(bool isStable)
     {
-        maxIncomeInput.gameObject.SetActive(!isStable);
+        bool showRange = !isStable;
+
+        maxIncomeInput.gameObject.SetActive(showRange);
+
+        if (maxIncomeLabel != null)
+            maxIncomeLabel.SetActive(showRange);
+
+        if (incomeRangeDash != null)
+            incomeRangeDash.SetActive(showRange);
+
+        if (minIncomeLabel != null)
+        {
+            minIncomeLabel.text = isStable
+                ? "Income:"
+                : "Minimum Monthly Income:";
+        }
 
         if (isStable)
         {

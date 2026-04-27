@@ -42,12 +42,15 @@ public class InsuranceManager : MonoBehaviour
 
         // Waiting period (months) before claims allowed
         public int waitingPeriodMonths = 0;
+        public int billingCycleMonths = 1; // 1 = monthly, 4 = quarterly
+        public int monthsInCycle = 0;      // runtime tracking
 
         // ===== Runtime tracking =====
         public bool isSubscribed = false;   // player has this policy active/subscribed
         public bool isLapsed = false;       // policy lapsed due to missed payments
         public int monthsPaid = 0;          // how many premiums successfully paid
         public int missedPayments = 0;      // consecutive missed payments
+
         public bool inGrace => missedPayments == 1; // first missed payment => grace
 
         public float premiumRate = 0f; // % of asset value per month
@@ -159,8 +162,8 @@ public class InsuranceManager : MonoBehaviour
         {
             planName = "Personal Accident Cover",
             type = InsuranceType.PersonalAccident,
-            premium = 2f,
-            coverageLimit = 8000f,
+            premium = 1f,
+            coverageLimit = 10000f,
             deductiblePercent = 0f,
             waitingPeriodMonths = 3,
             coverageDescription = "Pays a lump sum in the event of accidental death of the breadwinner."
@@ -168,11 +171,11 @@ public class InsuranceManager : MonoBehaviour
 
         allPlans.Add(new InsurancePlan
         {
-            planName = "Motor Insurance",
+            planName = "Motor Insurance (3rd Party)",
             type = InsuranceType.Motor,
-            premiumIsAssetBased = true,
-            premiumRate = 0.05f / 12f,  // 5% annual → 0.417% monthly
-            premium = 0f,  //5% of a vehicle worth using a 5%x6000 for an old second hand car if low income imported Honda Vezel for reference making it 12,000x5% for middle income and then 55,000x5% for high income
+            premiumIsAssetBased = false,
+            premium = 104f,             // charged every 4 months
+            billingCycleMonths = 4,
             coverageLimit = 3000f,
             waitingPeriodMonths = 0,
             requiredAsset = GameManager.AssetRequirement.Motor,
@@ -240,6 +243,15 @@ public class InsuranceManager : MonoBehaviour
     {
         if (plan == null) return 0f;
 
+        // Education is a flat per-policy premium (covers the policyholder only)
+        if (plan.type == InsuranceType.Education)
+            return plan.premium;
+
+        // Plans with billing cycles longer than 1 month are flat-rate, not per-person
+        // (e.g. Motor at $104 every 4 months)
+        if (plan.billingCycleMonths > 1)
+            return plan.premium;
+
         // Asset-based premium (Home / Crop)
         if (plan.premiumIsAssetBased)
         {
@@ -260,8 +272,8 @@ public class InsuranceManager : MonoBehaviour
         int otherAdults = totalAdults - 1;
         float otherAdultCost = otherAdults * plan.premium;
 
-        // Children pay 50%
-        float childCost = totalChildren * plan.premium * 0.5f;
+        // Children count at full rate not half off
+        float childCost = totalChildren * plan.premium;
 
         return mainAdultCost + otherAdultCost + childCost;
     }
@@ -376,17 +388,46 @@ public class InsuranceManager : MonoBehaviour
         foreach (var plan in allPlans)
         {
             if (!plan.isSubscribed || plan.isLapsed)
+            {
+                // Fine check for lapsed/unsubscribed motor insurance
+                if (plan.type == InsuranceType.Motor &&
+                    Finance != null &&
+                    GameManager.Instance.financeManager.assets.hasMotor &&
+                    UnityEngine.Random.value < 0.15f) // 15% chance each month of fine
+                {
+                    float fine = UnityEngine.Random.Range(50f, 150f);
+                    GameManager.Instance.ApplyMoneyChange(
+                        FinancialEntry.EntryType.EventLoss,
+                        "Traffic Fine — No Motor Insurance",
+                        fine,
+                        false
+                    );
+                    Debug.Log($"[Insurance] Motor fine issued: ${fine:F0}");
+                }
                 continue;
+            }
+
+            // Quarterly billing cycle check
+            plan.monthsInCycle++;
+            bool isDueThisMonth = plan.monthsInCycle >= plan.billingCycleMonths;
+
+            if (!isDueThisMonth)
+            {
+                // Policy remains active between billing months — no charge
+                continue;
+            }
+
+            plan.monthsInCycle = 0; // reset cycle
 
             float premium = CalculateMonthlyPremiumForPlan(plan);
 
             if (Finance.CashOnHand >= premium)
             {
                 GameManager.Instance.ApplyMoneyChange(
-                FinancialEntry.EntryType.InsurancePremium,
-                $"Insurance Premium - {plan.planName}",
-                premium,
-                false
+                    FinancialEntry.EntryType.InsurancePremium,
+                    $"Insurance Premium - {plan.planName}",
+                    premium,
+                    false
                 );
                 totalCharged += premium;
 
@@ -395,20 +436,16 @@ public class InsuranceManager : MonoBehaviour
 
                 AnyPremiumPaidThisMonth = true;
             }
-
             else
             {
-                // failed to pay
                 plan.missedPayments++;
 
                 if (plan.missedPayments == 1)
                 {
-                    // enters grace
                     Debug.Log($"[Insurance] {plan.planName} missed payment — grace month.");
                 }
                 else if (plan.missedPayments >= 2)
                 {
-                    // lapse
                     plan.isLapsed = true;
                     plan.isSubscribed = false;
                     Debug.Log($"[Insurance] {plan.planName} has lapsed due to consecutive missed premiums.");

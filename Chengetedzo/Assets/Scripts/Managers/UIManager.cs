@@ -30,6 +30,10 @@ public class UIManager : MonoBehaviour
 
     [Header("Simulation HUD")]
     public GameObject topHUD; // month + money bar
+    public GameObject financialHUD; // month + money + action buttons
+
+    [Header("Persistent Navigation")]
+    public GameObject exitButtonHUD; // exit/back/settings button only
 
     [Header("Other Screens")]
     public GameObject endOfYearScreen;
@@ -225,7 +229,7 @@ public class UIManager : MonoBehaviour
     public void UpdateMoneyText(float amount)
     {
         Debug.Log("Updating TOP HUD TEXT to: " + amount);
-        moneyText.text = GameUtils.FormatMoney(amount);
+        moneyText.text = $"Balance: {GameUtils.FormatMoney(amount)}";
     }
 
     private void HideAllPanels()
@@ -295,53 +299,68 @@ public class UIManager : MonoBehaviour
         {
             case UIPanelState.Setup:
                 setupPanel.SetActive(true);
-                topHUD.SetActive(false);
+                topHUD?.SetActive(false);
+                financialHUD?.SetActive(false);
                 break;
 
             case UIPanelState.Budget:
                 budgetPanel.SetActive(true);
-                topHUD.SetActive(true);
+                topHUD?.SetActive(true);
+                financialHUD?.SetActive(false);
                 break;
 
             case UIPanelState.Forecast:
                 forecastPanel.SetActive(true);
-                topHUD.SetActive(true);
+                topHUD?.SetActive(true);
+                financialHUD?.SetActive(false);
                 break;
 
             case UIPanelState.Insurance:
                 insurancePanel.SetActive(true);
-                topHUD.SetActive(true);
+                topHUD?.SetActive(true);
+                financialHUD?.SetActive(false);
                 break;
 
             case UIPanelState.Loan:
                 loanPanel.SetActive(true);
-                topHUD.SetActive(true);
+                topHUD?.SetActive(true);
+                financialHUD?.SetActive(false);
                 break;
 
             case UIPanelState.Report:
                 reportPanel.SetActive(true);
-                topHUD.SetActive(true);
+                topHUD?.SetActive(true);
+                financialHUD?.SetActive(false);
                 break;
 
             case UIPanelState.EndOfYear:
                 endOfYearScreen.SetActive(true);
-                topHUD.SetActive(false);
+                topHUD?.SetActive(false);
+                financialHUD?.SetActive(false);
                 break;
 
             case UIPanelState.Simulation:
-                topHUD.SetActive(true);
+                topHUD?.SetActive(true);
+                financialHUD?.SetActive(true);
                 break;
+
             case UIPanelState.MainMenu:
                 mainMenuPanel.SetActive(true);
-                topHUD.SetActive(false);
+                topHUD?.SetActive(false);
+                financialHUD?.SetActive(false);
                 break;
 
             case UIPanelState.ProfileSelect:
                 profileSelectPanel.SetActive(true);
-                topHUD.SetActive(false);
-                
+                topHUD?.SetActive(false);
+                financialHUD?.SetActive(false);
                 if (freeModeButton != null)
                     freeModeButton.interactable = TutorialManager.HasAttemptedGuided;
+                break;
+
+            case UIPanelState.None:
+                topHUD?.SetActive(false);
+                financialHUD?.SetActive(false);
                 break;
         }
     }
@@ -673,9 +692,27 @@ public class UIManager : MonoBehaviour
                 resultsText.text = yearPartTwoText;
                 resultsText.gameObject.SetActive(true);
                 yearEndGraph?.HideGraph();
-                endOfYearContinueButton.GetComponentInChildren<TextMeshProUGUI>().text = "View Graph →";
-                restartButton.interactable = true;
-                SetEndOfYearButtonPosition(CONTINUE_X);
+
+                // If this is a yearly review (not final), wire continue to proceed
+                if (_yearlyReviewOnContinue != null)
+                {
+                    endOfYearContinueButton.GetComponentInChildren<TextMeshProUGUI>().text = "Start Year 2 →";
+                    restartButton.gameObject.SetActive(false);
+                    endOfYearContinueButton.onClick.RemoveAllListeners();
+                    endOfYearContinueButton.onClick.AddListener(() =>
+                    {
+                        var cb = _yearlyReviewOnContinue;
+                        _yearlyReviewOnContinue = null;
+                        restartButton.gameObject.SetActive(true);
+                        cb?.Invoke();
+                    });
+                }
+                else
+                {
+                    endOfYearContinueButton.GetComponentInChildren<TextMeshProUGUI>().text = "View Graph →";
+                    restartButton.interactable = true;
+                    SetEndOfYearButtonPosition(CONTINUE_X);
+                }
                 break;
 
             case 2: // Graph
@@ -899,6 +936,90 @@ public class UIManager : MonoBehaviour
         SwitchPanel(UIPanelState.Setup);
 
         TutorialManager.Instance?.OnFreeSetupOpened();
+    }
+
+    public void QuitGame()
+    {
+        #if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+        #else
+            Application.Quit();
+        #endif
+    }
+
+    public void ShowYearlyReview(string mentorReflection, System.Action onContinue)
+    {
+        if (IsPopupActive && activePopup != null)
+            CloseActivePopup();
+
+        HideAllPanels();
+        currentPanelState = UIPanelState.EndOfYear;
+        if (endOfYearScreen != null) endOfYearScreen.SetActive(true);
+        if (topHUD != null) topHUD.SetActive(false);
+
+        var gm = GameManager.Instance;
+
+        float net =
+            gm.YearIncome - gm.YearExpenses - gm.YearPremiums
+            - gm.YearEventLosses + gm.YearPayouts;
+
+        yearPartOneText =
+            "<b>Year 1 Complete</b>\n\n" +
+            $"Income: ${gm.YearIncome:F0}\n" +
+            $"Expenses: ${gm.YearExpenses:F0}\n" +
+            $"Insurance Premiums: ${gm.YearPremiums:F0}\n" +
+            $"Insurance Payouts: ${gm.YearPayouts:F0}\n" +
+            $"Event Losses: ${gm.YearEventLosses:F0}\n\n" +
+            $"Net Result: ${net:F0}\n" +
+            $"Current Balance: ${gm.financeManager.CashOnHand:F0}\n\n" +
+            $"<i>{mentorReflection}</i>";
+
+        yearPartTwoText = BuildInsuranceSummary(gm);
+
+        yearEndPage = 0;
+        resultsText.text = yearPartOneText;
+        resultsText.gameObject.SetActive(true);
+        SetEndOfYearButtonPosition(CONTINUE_X);
+
+        if (endOfYearContinueButton != null)
+            endOfYearContinueButton.GetComponentInChildren<TextMeshProUGUI>().text = "Key Takeaways →";
+
+        if (restartButton != null)
+            restartButton.gameObject.SetActive(false);
+
+        yearEndGraph?.HideGraph();
+        StartCoroutine(RenderGraphNextFrame());
+
+        // Wire the final "continue" action for after both pages are shown
+        _yearlyReviewOnContinue = onContinue;
+    }
+
+    private System.Action _yearlyReviewOnContinue;
+
+    private string BuildInsuranceSummary(GameManager gm)
+    {
+        string text = "<b>Insurance</b>\n";
+        if (gm.YearPremiums == 0f)
+            text += $"You carried no insurance this year. ${gm.YearEventLosses:F0} in losses came out of pocket.\n\n";
+        else
+        {
+            float net = gm.TotalInsurancePayoutAmount - gm.YearPremiums;
+            if (gm.TotalInsurancePayoutAmount == 0f)
+                text += $"You paid ${gm.YearPremiums:F0} in premiums with no claims. Protection you didn't need to use.\n\n";
+            else if (net >= 0f)
+                text += $"Insurance paid ${gm.TotalInsurancePayoutAmount:F0} against ${gm.YearPremiums:F0} in premiums — net benefit of ${net:F0}.\n\n";
+            else
+                text += $"Premiums: ${gm.YearPremiums:F0}. Payouts: ${gm.TotalInsurancePayoutAmount:F0}. Cover was there if something serious had hit.\n\n";
+        }
+
+        text += "<b>Year 2 Begins Now</b>\n";
+        text += "Your cash balance carries over. Your decisions this year set the foundation — now build on it.";
+        return text;
+    }
+
+    public void ReturnToMainMenu()
+    {
+        GameManager.Instance.FullRestart();
     }
 
     public void OnBackToMenu()

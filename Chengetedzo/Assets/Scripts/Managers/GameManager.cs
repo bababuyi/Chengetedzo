@@ -498,9 +498,30 @@ public class GameManager : MonoBehaviour
         int third = totalMonths / 3;
         int twoThirds = (totalMonths * 2) / 3;
 
-        bool isMidYearCheckpoint = totalMonths == 24
-            ? (finishedMonth == 6 || finishedMonth == 12 || finishedMonth == 18)
-            : (finishedMonth == third || finishedMonth == half || finishedMonth == twoThirds);
+        bool isYear1End = totalMonths == 24 && finishedMonth == 12;
+        bool isMidYearCheckpoint = isYear1End
+            ? false
+            : (totalMonths == 24
+                ? (finishedMonth == 6 || finishedMonth == 18)
+                : (finishedMonth == third || finishedMonth == twoThirds));
+
+        if (isYear1End)
+        {
+            if (IsHeadlessSimulation)
+            {
+                ResetYearTotals();
+                StartNewMonth();
+            }
+            else
+            {
+                uiManager.ShowYearlyReview(GetYearEndMentorReflection(), () =>
+                {
+                    ResetYearTotals();
+                    StartNewMonth();
+                });
+            }
+            return;
+        }
 
         if (isMidYearCheckpoint)
         {
@@ -1406,7 +1427,7 @@ public class GameManager : MonoBehaviour
                 setupData.housing = HousingType.Renting;
                 setupData.ownsCar = false;
                 setupData.hasSchoolFees = true;
-                setupData.schoolFeesAmount = 60f;
+                setupData.schoolFeesAmount = 80f;
 
                 setupData.minIncome = 180f;
                 setupData.maxIncome = 400f;
@@ -1423,27 +1444,27 @@ public class GameManager : MonoBehaviour
 
                 setupData.adults = 2;
                 setupData.children = 2;
-                setupData.isIncomeStable = true;
+                setupData.isIncomeStable = false;
                 setupData.housing = HousingType.Renting;
                 setupData.ownsCar = true;
                 setupData.hasSchoolFees = true;
-                setupData.schoolFeesAmount = 450f;
+                setupData.schoolFeesAmount = 80f;
 
-                setupData.minIncome = 900f;
-                setupData.maxIncome = 1600f;
+                setupData.minIncome = 300f;
+                setupData.maxIncome = 800f;
 
-                financeManager.rentCost = 500f;
-                financeManager.groceries = 200f;
-                financeManager.transport = 80f;
-                financeManager.utilities = 45f;
+                financeManager.rentCost = 150f;
+                financeManager.groceries = 160f;
+                financeManager.transport = 50f;
+                financeManager.utilities = 40f;
 
                 financeManager.assets = new PlayerAssets
                 {
                     hasMotor = true
                 };
 
-                financeManager.motorInsuredValue = 12000f;
-            break;
+                financeManager.motorInsuredValue = 6000f;
+                break;
 
             case ProfileType.Farmer:
 
@@ -1481,7 +1502,7 @@ public class GameManager : MonoBehaviour
                 setupData.housing = HousingType.OwnsHouse;
                 setupData.ownsCar = true;
                 setupData.hasSchoolFees = true;
-                setupData.schoolFeesAmount = 20000f;
+                setupData.schoolFeesAmount = 5000f;
 
                 setupData.minIncome = 2500f;
                 setupData.maxIncome = 5000f;
@@ -1508,6 +1529,22 @@ public class GameManager : MonoBehaviour
 
         financeManager.InitializeFromSetup();
         uiManager.UpdateMoneyText(financeManager.CashOnHand);
+    }
+
+    private void ResetYearTotals()
+    {
+        yearIncome = 0f;
+        yearExpenses = 0f;
+        yearPremiums = 0f;
+        yearPayouts = 0f;
+        yearEventLosses = 0f;
+        totalUnexpectedEvents = 0;
+        insuredEventsCount = 0;
+        totalRawEventDamage = 0f;
+        totalInsurancePayoutAmount = 0f;
+        forcedLoanCount = 0;
+        monthsUnderFinancialPressure = 0;
+        Debug.Log("[Year] Year 1 totals reset for Year 2.");
     }
 
 #if UNITY_EDITOR
@@ -1632,6 +1669,50 @@ public class GameManager : MonoBehaviour
         SetPhase(GamePhase.Idle);
         IsHeadlessSimulation = true;
         return true;
+    }
+
+    private void RunStressTestUsingProfile(ProfileType profile, string testName)
+    {
+        if (!StressTestPreCheck(testName))
+            return;
+
+        Debug.Log($"===== STARTING {testName} =====");
+        Debug.Log($"Using live ApplyProfile data: {profile}");
+
+        ApplyProfile(profile);
+
+        RunHeadlessLoop(testName);
+    }
+
+    // ============================================================
+    // TEST Game profiles (Informal, Formal, Farmer)
+    // ============================================================
+
+    [ContextMenu("DEBUG_StressTest_Profile_Informal")]
+    public void DEBUG_StressTest_Profile_Informal()
+    {
+        RunStressTestUsingProfile(
+            ProfileType.Informal,
+            "StressTest [PROFILE INFORMAL]"
+        );
+    }
+
+    [ContextMenu("DEBUG_StressTest_Profile_Formal")]
+    public void DEBUG_StressTest_Profile_Formal()
+    {
+        RunStressTestUsingProfile(
+            ProfileType.Formal,
+            "StressTest [PROFILE FORMAL]"
+        );
+    }
+
+    [ContextMenu("DEBUG_StressTest_Profile_Farmer")]
+    public void DEBUG_StressTest_Profile_Farmer()
+    {
+        RunStressTestUsingProfile(
+            ProfileType.Farmer,
+            "StressTest [PROFILE FARMER]"
+        );
     }
 
     // ============================================================

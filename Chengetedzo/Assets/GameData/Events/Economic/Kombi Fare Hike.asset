@@ -12,6 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
   m_Name: Kombi Fare Hike
   m_EditorClassIdentifier: 
+  hasChoices: 0
+  senderName: 
+  senderRelation: 
+  choices: []
   eventName: Kombi Fare Hike
   description: Kombi and ZUPCO fares have jumped overnight. Getting to work costs
     more.
@@ -39,7 +43,7 @@ MonoBehaviour:
   childrenLost: 0
   affectsExpenses: 1
   expenseCategory: 0
-  expenseFlatChange: 25
+  expenseFlatChange: -25
   expenseEffectMonths: 1
   lossType: 1
   fixedLossAmount: 0

@@ -22,11 +22,11 @@ public class ExpensesPanelController : MonoBehaviour
     public TMP_InputField houseCostInput;
     public TMP_Text houseCostValueText;
 
-    [Header("Value Texts")]
-    public TMP_Text rentValueText;
-    public TMP_Text groceriesValueText;
-    public TMP_Text transportValueText;
-    public TMP_Text utilitiesValueText;
+    [Header("Value Inputs")]
+    public TMP_InputField rentValueInput;
+    public TMP_InputField groceriesValueInput;
+    public TMP_InputField transportValueInput;
+    public TMP_InputField utilitiesValueInput;
 
     [Header("Tier Labels")]
     public TMP_Text rentTierText;
@@ -77,6 +77,15 @@ public class ExpensesPanelController : MonoBehaviour
         // Input field
         houseCostInput.onValueChanged.AddListener(_ => UpdateHouseCost());
 
+        if (rentValueInput != null)
+            rentValueInput.onEndEdit.AddListener(v => { if (float.TryParse(v, out float f)) { rentSlider.value = Mathf.Clamp(f, rentSlider.minValue, rentSlider.maxValue); UpdateRent(); } });
+        if (groceriesValueInput != null)
+            groceriesValueInput.onEndEdit.AddListener(v => { if (float.TryParse(v, out float f)) { groceriesSlider.value = Mathf.Clamp(f, groceriesSlider.minValue, groceriesSlider.maxValue); UpdateGroceries(); } });
+        if (transportValueInput != null)
+            transportValueInput.onEndEdit.AddListener(v => { if (float.TryParse(v, out float f)) { transportSlider.value = Mathf.Clamp(f, transportSlider.minValue, transportSlider.maxValue); UpdateTransport(); } });
+        if (utilitiesValueInput != null)
+            utilitiesValueInput.onEndEdit.AddListener(v => { if (float.TryParse(v, out float f)) { utilitiesSlider.value = Mathf.Clamp(f, utilitiesSlider.minValue, utilitiesSlider.maxValue); UpdateUtilities(); } });
+
         if (string.IsNullOrEmpty(houseCostInput.text))
             houseCostInput.text = MIN_HOUSE_COST.ToString("F0");
 
@@ -106,29 +115,33 @@ public class ExpensesPanelController : MonoBehaviour
     private void UpdateRent()
     {
         float value = rentSlider.value;
-        rentValueText.text = $"${value:F0}";
-        rentTierText.text = GetTierLabel(value, rentTier);
+        if (rentValueInput != null && !rentValueInput.isFocused)
+            rentValueInput.SetTextWithoutNotify($"{value:F0}");
+        if (rentTierText != null) rentTierText.text = GetTierLabel(value, rentTier);
     }
 
     private void UpdateGroceries()
     {
         float value = groceriesSlider.value;
-        groceriesValueText.text = $"${value:F0}";
-        groceriesTierText.text = GetTierLabel(value, groceriesTier);
+        if (groceriesValueInput != null && !groceriesValueInput.isFocused)
+            groceriesValueInput.SetTextWithoutNotify($"{value:F0}");
+        if (groceriesTierText != null) groceriesTierText.text = GetTierLabel(value, groceriesTier);
     }
 
     private void UpdateTransport()
     {
         float value = transportSlider.value;
-        transportValueText.text = $"${value:F0}";
-        transportTierText.text = GetTierLabel(value, transportTier);
+        if (transportValueInput != null && !transportValueInput.isFocused)
+            transportValueInput.SetTextWithoutNotify($"{value:F0}");
+        if (transportTierText != null) transportTierText.text = GetTierLabel(value, transportTier);
     }
 
     private void UpdateUtilities()
     {
         float value = utilitiesSlider.value;
-        utilitiesValueText.text = $"${value:F0}";
-        utilitiesTierText.text = GetTierLabel(value, utilitiesTier);
+        if (utilitiesValueInput != null && !utilitiesValueInput.isFocused)
+            utilitiesValueInput.SetTextWithoutNotify($"{value:F0}");
+        if (utilitiesTierText != null) utilitiesTierText.text = GetTierLabel(value, utilitiesTier);
     }
 
     private void UpdateHouseCost()

@@ -114,7 +114,7 @@ public class BudgetPieChart : MonoBehaviour
         if (row.colorSwatch != null) row.colorSwatch.color = color;
         if (row.label != null)
         {
-            row.label.text = $"{categoryName}   <b>${amount:F0}</b>";
+            row.label.text = $"{categoryName}   ${amount:F0}";
         }
     }
 }

@@ -167,7 +167,19 @@ public class ForecastManager : MonoBehaviour
             categoryRisk[ev.category] += eventRisk;
         }
 
-        List<ForecastCategory> riskyCategories = new List<ForecastCategory>(categoryRisk.Keys);
+        var playerAssets = GameManager.Instance.financeManager.assets;
+        bool hasFarmAssets = playerAssets.hasCrops || playerAssets.hasLivestock;
+        bool hasHouse = playerAssets.hasHouse;
+        bool hasMotor = playerAssets.hasMotor;
+
+        // Asset based forecasting
+        List<ForecastCategory> riskyCategories = new List<ForecastCategory>();
+        foreach (var key in categoryRisk.Keys)
+        {
+            if (key == ForecastCategory.Crops && !hasFarmAssets) continue;
+            if (key == ForecastCategory.Livestock && !playerAssets.hasLivestock) continue;
+            riskyCategories.Add(key);
+        }
 
         while (selectedForecasts.Count < articlesPerForecast && riskyCategories.Count > 0)
         {
@@ -199,15 +211,20 @@ public class ForecastManager : MonoBehaviour
             CurrentForecast.categoryRiskMultiplier[entry.Key] = multiplier;
         }
 
-        while (selectedForecasts.Count < articlesPerForecast)
+        int safetyCounter = 0;
+        while (selectedForecasts.Count < articlesPerForecast && safetyCounter < 30)
         {
+            safetyCounter++;
             ForecastCategory randomCategory =
                 (ForecastCategory)Random.Range(0,
                     System.Enum.GetValues(typeof(ForecastCategory)).Length);
 
-            // Prevent duplicate categories
             if (selectedForecasts.Exists(a => a.category == randomCategory))
                 continue;
+
+            // Skip asset-specific categories if player doesn't have those assets
+            if (randomCategory == ForecastCategory.Crops && !hasFarmAssets) continue;
+            if (randomCategory == ForecastCategory.Livestock && !playerAssets.hasLivestock) continue;
 
             AddArticlesForCategory(randomCategory, 1, upcomingSeason);
         }

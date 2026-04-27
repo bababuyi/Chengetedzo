@@ -154,6 +154,6 @@ public class MonthlyBarChart : MonoBehaviour
             swatch.color = color;
 
         if (valueText != null)
-            valueText.text = $"{label}   <b>-${Mathf.RoundToInt(amount)}</b>";
+            valueText.text = $"{label}   -${Mathf.RoundToInt(amount)}";
     }
 }
