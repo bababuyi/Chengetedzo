@@ -146,9 +146,6 @@ public class FinanceManager : MonoBehaviour
         currentIncome = Random.Range(minIncome, maxIncome);
     }
 
-    /// <summary>
-    /// Calculates and applies monthly expenses, updates balance and cash.
-    /// </summary>
     public void ProcessMonthlyBudget()
     {
         // income already rolled once per month
@@ -183,6 +180,8 @@ public class FinanceManager : MonoBehaviour
         if (effectiveUtilities > 0f)
             GameManager.Instance.ApplyMoneyChange(FinancialEntry.EntryType.Expense, "Utilities", effectiveUtilities, false);
 
+        float schoolFeesPaid = ProcessSchoolFees(GameManager.Instance.currentMonth);
+        totalExpenses += schoolFeesPaid;
         balance = effectiveIncome - totalExpenses;
         WasOverBudgetThisMonth = balance < 0;
 
@@ -279,26 +278,17 @@ public class FinanceManager : MonoBehaviour
         Debug.Log($"[Finance] Income adjusted by {percentageChange:+0;-0}% ? New income: {currentIncome}");
     }
 
-    public bool ProcessSchoolFees(int month)
+    public float ProcessSchoolFees(int month)
     {
-        if (schoolFeesPerTerm <= 0f)
-            return false;
+        if (schoolFeesPerTerm <= 0f) return 0f;
 
         int normalizedMonth = ((month - 1) % 12) + 1;
         bool isTermStart = (normalizedMonth == 1 || normalizedMonth == 5 || normalizedMonth == 9);
-
-        if (isTermStart)
-            schoolFeesOutstanding = true;
-
-        if (!schoolFeesOutstanding)
-            return false;
+        if (isTermStart) schoolFeesOutstanding = true;
+        if (!schoolFeesOutstanding) return 0f;
 
         int childCount = Mathf.Max(0, PlayerDataManager.Instance?.Children ?? 0);
-        if (childCount == 0)
-        {
-            schoolFeesOutstanding = false;
-            return false;
-        }
+        if (childCount == 0) { schoolFeesOutstanding = false; return 0f; }
 
         float effectiveFees = (schoolFeesPerTerm * childCount)
             + GameManager.Instance.GetExpenseModifier(ExpenseCategory.SchoolFees);
@@ -306,19 +296,15 @@ public class FinanceManager : MonoBehaviour
         if (cashOnHand >= effectiveFees)
         {
             GameManager.Instance.ApplyMoneyChange(
-                FinancialEntry.EntryType.Expense,
-                "School Fees",
-                effectiveFees,
-                false
-            );
+                FinancialEntry.EntryType.Expense, "School Fees", effectiveFees, false);
             totalSpent += effectiveFees;
             schoolFeesOutstanding = false;
             Debug.Log($"[School Fees] Paid ${effectiveFees} for {childCount} child(ren)");
-            return false;
+            return effectiveFees;
         }
 
         Debug.LogWarning("[School Fees] Unpaid — outstanding!");
-        return true;
+        return 0f;
     }
 
     public void RollMonthlyIncome()
@@ -466,7 +452,8 @@ public class FinanceManager : MonoBehaviour
                 return ev.fixedLossAmount;
 
             case LossCalculationType.CashOnHand:
-                return CashOnHand * (percentLoss / 100f);
+                //avoids double negatives
+                return Mathf.Max(0f, CashOnHand) * (percentLoss / 100f);
 
             case LossCalculationType.AssetValue:
                 float assetValue = GetAssetValue(ev.insuranceType);

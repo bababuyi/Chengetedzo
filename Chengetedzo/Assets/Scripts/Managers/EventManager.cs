@@ -337,9 +337,25 @@ public class EventManager : MonoBehaviour
                       $"IncomeChange: {ev.incomePercentChange}% | Duration: {ev.incomeEffectMonths} months");
         }
 
-        if (triggeredEventCount == 0 && Random.value < 0.35f + (eventPressure / maxPressure) * 0.4f)
+        /*if (triggeredEventCount == 0 && Random.value < 0.35f + (eventPressure / maxPressure) * 0.4f)
         {
             var fallback = GetWeightedEvent(eligibleEvents.FindAll(e => !eventsTriggeredThisYear.Contains(e)));
+
+            if (fallback != null && Random.value < 0.5f)
+            {
+                ResolveEvent(fallback, month, results, ref disasterCount);
+                eventPressure = 0f;
+            }
+        }*/
+
+        if (triggeredEventCount == 0 &&Random.value < 0.35f + (eventPressure / maxPressure) * 0.4f)
+        {
+            var fallbackCandidates = eligibleEvents.FindAll(e =>
+                !eventsTriggeredThisYear.Contains(e) &&
+                PlayerOwnsRequiredAsset(e)
+            );
+
+            var fallback = GetWeightedEvent(fallbackCandidates);
 
             if (fallback != null && Random.value < 0.5f)
             {
@@ -439,6 +455,14 @@ public class EventManager : MonoBehaviour
 
     private void ResolveEvent(EventData ev, int month, List<ResolvedEvent> results, ref int disasterCount)
     {
+        if (!PlayerOwnsRequiredAsset(ev))
+        {
+            Debug.LogWarning(
+                $"[EVENT BLOCKED] {ev.eventName} requires {ev.requiredAsset} but player does not own it."
+            );
+            return;
+        }
+
         // ---------------- POSITIVE EVENT ----------------
         if (ev.outcomeType == EventOutcomeType.Positive)
         {
@@ -486,9 +510,7 @@ public class EventManager : MonoBehaviour
 
         float lossPercent = Random.Range(ev.minLossPercent, ev.maxLossPercent + 1);
 
-float intendedLoss = GameManager.Instance.financeManager
-    .CalculateEventLoss(ev, lossPercent);
-
+        float intendedLoss = GameManager.Instance.financeManager.CalculateEventLoss(ev, lossPercent);
 
         float income = GameManager.Instance.financeManager.CashOnHand;
 
@@ -496,6 +518,8 @@ float intendedLoss = GameManager.Instance.financeManager
             intendedLoss *= 0.6f;
         else if (income < 4000)
             intendedLoss *= 0.8f;
+
+        intendedLoss = Mathf.Max(0f, intendedLoss);
 
         var result = GameManager.Instance.insuranceManager
         .HandleEvent(ev.insuranceType, intendedLoss);

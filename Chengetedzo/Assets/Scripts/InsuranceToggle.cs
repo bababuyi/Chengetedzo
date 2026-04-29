@@ -27,7 +27,16 @@ public class InsuranceToggleItem : MonoBehaviour
         nameText.text = plan.planName;
 
         bool allowed = panel.PlayerMeetsRequirement(plan);
-        toggle.interactable = allowed;
+        bool interactable = allowed;
+
+        if (plan.type == InsuranceType.Motor &&
+            plan.isSubscribed &&
+            !plan.canCancelThisMonth)
+        {
+            interactable = false;
+        }
+
+        toggle.interactable = interactable;
 
         requirementText.gameObject.SetActive(!allowed);
         requirementText.text = allowed

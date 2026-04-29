@@ -913,20 +913,38 @@ public class UIManager : MonoBehaviour
 
     public void OnSelectInformalWorker()
     {
-        GameManager.Instance.ApplyProfile(ProfileType.Informal);
-        TutorialManager.Instance?.OnProfileSelected(ProfileType.Informal);
+        if (GameManager.Instance == null) return;
+
+        GameManager.Instance.ApplyProfile(GameManager.ProfileType.Informal);
+
+        if (TutorialManager.Instance != null)
+            TutorialManager.Instance.OnProfileSelected(GameManager.ProfileType.Informal);
+        else
+            ShowSetupPanelAtReview();
     }
 
     public void OnSelectFormalWorker()
     {
-        GameManager.Instance.ApplyProfile(ProfileType.Formal);
-        TutorialManager.Instance?.OnProfileSelected(ProfileType.Formal);
+        if (GameManager.Instance == null) return;
+
+        GameManager.Instance.ApplyProfile(GameManager.ProfileType.Formal);
+
+        if (TutorialManager.Instance != null)
+            TutorialManager.Instance.OnProfileSelected(GameManager.ProfileType.Formal);
+        else
+            ShowSetupPanelAtReview();
     }
 
     public void OnSelectFarmer()
     {
-        GameManager.Instance.ApplyProfile(ProfileType.Farmer);
-        TutorialManager.Instance?.OnProfileSelected(ProfileType.Farmer);
+        if (GameManager.Instance == null) return;
+
+        GameManager.Instance.ApplyProfile(GameManager.ProfileType.Farmer);
+
+        if (TutorialManager.Instance != null)
+            TutorialManager.Instance.OnProfileSelected(GameManager.ProfileType.Farmer);
+        else
+            ShowSetupPanelAtReview();
     }
 
     public void OnFreeModeClicked()

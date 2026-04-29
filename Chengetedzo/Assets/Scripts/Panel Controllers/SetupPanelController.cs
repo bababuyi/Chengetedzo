@@ -368,8 +368,12 @@ public class SetupPanelController : MonoBehaviour
         LockSetupUI();
 
         FinanceManager finance = gm.financeManager;
-        expensesPanelController.ApplyExpensesToFinance(finance);
+        if (!GameManager.Instance.IsGuidedMode)
+            expensesPanelController.ApplyExpensesToFinance(finance);
+
+        float savedSavings = finance.generalSavingsMonthly;
         finance.InitializeFromSetup();
+        finance.generalSavingsMonthly = savedSavings;
 
         float savings = Mathf.Round(savingsSlider.value / 10f) * 10f;
         finance.generalSavingsMonthly = savings;
@@ -610,12 +614,18 @@ public class SetupPanelController : MonoBehaviour
         hasLivestockToggle.isOn = finance.assets.hasLivestock;
         hasCropsToggle.isOn = finance.assets.hasCrops;
 
-        // Savings slider — default 10% of max income
+        //Savings - allow them to adjust but start with their profile value for profiled games
         float maxIncome = setup.maxIncome > 0 ? setup.maxIncome : setup.minIncome;
         savingsSlider.minValue = 0;
         savingsSlider.maxValue = maxIncome;
-        float suggested = Mathf.Round(maxIncome * 0.1f / 10f) * 10f;
-        savingsSlider.SetValueWithoutNotify(suggested);
+
+        float profileSavings = Mathf.Clamp(
+            finance.generalSavingsMonthly,
+            savingsSlider.minValue,
+            savingsSlider.maxValue
+        );
+
+        savingsSlider.SetValueWithoutNotify(profileSavings);
         UpdateSavingsDisplay();
 
         // Lock toggles — player is not configuring, just reviewing

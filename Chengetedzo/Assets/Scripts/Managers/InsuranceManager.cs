@@ -28,41 +28,34 @@ public class InsuranceManager : MonoBehaviour
         public string planName;
         public InsuranceType type;
 
-        // Base monthly premium PER PERSON (we will multiply by dependents)
         public float premium = 1f;
 
-        // Max payout for a claim
         public float coverageLimit = 100f;
 
-        // percent deductible applied to estimated loss
         public float deductiblePercent = 0f;
 
-        // description for UI
         public string coverageDescription;
 
-        // Waiting period (months) before claims allowed
         public int waitingPeriodMonths = 0;
-        public int billingCycleMonths = 1; // 1 = monthly, 4 = quarterly
-        public int monthsInCycle = 0;      // runtime tracking
+        public int billingCycleMonths = 1;
+        public int monthsInCycle = 0;
 
-        // ===== Runtime tracking =====
-        public bool isSubscribed = false;   // player has this policy active/subscribed
-        public bool isLapsed = false;       // policy lapsed due to missed payments
-        public int monthsPaid = 0;          // how many premiums successfully paid
-        public int missedPayments = 0;      // consecutive missed payments
+        // Trackers
+        public bool isSubscribed = false;
+        public bool isLapsed = false;
+        public int monthsPaid = 0;
+        public int missedPayments = 0;
 
-        public bool inGrace => missedPayments == 1; // first missed payment => grace
+        public bool inGrace => missedPayments == 1;
 
-        public float premiumRate = 0f; // % of asset value per month
+        public float premiumRate = 0f;
         public bool premiumIsAssetBased = false;
 
-        // Helper: whether policy currently allows claims
         public bool CanClaim()
         {
             return isSubscribed && !isLapsed && monthsPaid >= waitingPeriodMonths;
         }
 
-        // String for UI state
         public string GetStatusString()
         {
             if (isLapsed) return "Lapsed";
@@ -71,16 +64,17 @@ public class InsuranceManager : MonoBehaviour
             return "Active";
         }
 
+        public int coverageMonthsRemaining = 0;
+        public bool canCancelThisMonth = false;
+
         public GameManager.AssetRequirement requiredAsset;
     }
 
     [Header("Available Insurance Plans")]
     public List<InsurancePlan> allPlans = new List<InsurancePlan>();
 
-    // Bookkeeping for analytics
     private float totalLoss;
     private float totalPayout;
-
 
     private FinanceManager Finance
     {
@@ -210,10 +204,7 @@ public class InsuranceManager : MonoBehaviour
         });
     }
 
-    // ------------------------------
     // Helper accessors
-    // ------------------------------
-
     public InsurancePlan GetPlan(InsuranceType t)
     {
         return allPlans.Find(p => p.type == t);
@@ -294,6 +285,40 @@ public class InsuranceManager : MonoBehaviour
         Debug.Log($"[Insurance] Cash: {Finance.CashOnHand}");
 
         var plan = GetPlan(type);
+
+        if (type == InsuranceType.Motor)
+        {
+            if (plan.coverageMonthsRemaining > 0)
+            {
+                Debug.Log("[Insurance] Motor insurance already active.");
+                return false;
+            }
+
+            float cost = plan.premium;
+
+            if (Finance.CashOnHand < cost)
+            {
+                Debug.LogWarning("[Insurance] Not enough money for motor insurance.");
+                return false;
+            }
+
+            GameManager.Instance.ApplyMoneyChange(
+                FinancialEntry.EntryType.InsurancePremium,
+                $"Insurance Premium - {plan.planName}",
+                cost,
+                false
+            );
+
+            plan.isSubscribed = true;
+            plan.isLapsed = false;
+            plan.coverageMonthsRemaining = 4;
+            plan.canCancelThisMonth = true;
+            plan.monthsPaid = 1;
+
+            Debug.Log("[Insurance] Motor insurance purchased for 4 months.");
+            return true;
+        }
+
         if (plan == null)
         {
             Debug.LogWarning($"[Insurance] No plan found for {type}");
@@ -334,6 +359,7 @@ public class InsuranceManager : MonoBehaviour
             plan.monthsPaid = 1;
             plan.missedPayments = 0;
             plan.isLapsed = false;
+            plan.monthsInCycle = 0;
 
             Debug.Log($"[Insurance] Subscribed to {plan.planName}. Charged ${firstPremium:F2}");
             return true;
@@ -345,40 +371,36 @@ public class InsuranceManager : MonoBehaviour
         return false;
     }
 
-    /// Cancel a subscribed policy. Refunds only if canceled within the first paid month.
+    // Cancel a subscribed policy. Refunds only if canceled within the first paid month.
     public void CancelInsurance(InsuranceType type)
     {
         var plan = GetPlan(type);
         if (plan == null) return;
         if (!plan.isSubscribed) return;
 
-        float refund = (plan.monthsPaid <= 1)
-        ? CalculateMonthlyPremiumForPlan(plan)
-        : 0f;
+        if (type == InsuranceType.Motor && !plan.canCancelThisMonth)
+        {
+            Debug.Log("[Insurance] Motor insurance cannot be canceled after month 1.");
+            return;
+        }
+
+        float refund = CalculateMonthlyPremiumForPlan(plan);
 
         GameManager.Instance.ApplyMoneyChange(
-        FinancialEntry.EntryType.InsuranceRefund,
-        $"Insurance Refund - {plan.planName}",
-        refund,
-        true
+            FinancialEntry.EntryType.InsuranceRefund,
+            $"Insurance Refund - {plan.planName}",
+            refund,
+            true
         );
 
-        // Reset tracking
         plan.isSubscribed = false;
         plan.isLapsed = false;
         plan.monthsPaid = 0;
-        plan.missedPayments = 0;
-
-        Debug.Log($"[Insurance] Canceled {plan.planName}. Refunded ${refund:F2}");
+        plan.coverageMonthsRemaining = 0;
     }
 
-    // ------------------------------
-    // Monthly processing (call from GameManager)
-    // ------------------------------
+    // Monthly processing
 
-    /// <summary>
-    /// Called once per month by GameManager to deduct premiums and update waiting / grace / lapse state.
-    /// </summary>
     public void ProcessMonthlyPremiums()
     {
         AnyPremiumPaidThisMonth = false;
@@ -387,6 +409,41 @@ public class InsuranceManager : MonoBehaviour
 
         foreach (var plan in allPlans)
         {
+            if (plan.type == InsuranceType.Motor)
+            {
+                if (plan.coverageMonthsRemaining > 0)
+                {
+                    plan.coverageMonthsRemaining--;
+
+                    // After first month passes, no cancellation allowed
+                    if (plan.coverageMonthsRemaining < 4)
+                        plan.canCancelThisMonth = false;
+
+                    if (plan.coverageMonthsRemaining <= 0)
+                    {
+                        plan.isSubscribed = false;
+                        plan.isLapsed = false;
+
+                        Debug.Log("[Insurance] Motor insurance expired.");
+                    }
+                }
+                else if (Finance != null &&
+                         GameManager.Instance.financeManager.assets.hasMotor &&
+                         Random.value < 0.15f)
+                {
+                    GameManager.Instance.ApplyMoneyChange(
+                        FinancialEntry.EntryType.EventLoss,
+                        "Traffic Fine — No Motor Insurance",
+                        10f,
+                        false
+                    );
+
+                    Debug.Log("[Insurance] $10 fine for no motor insurance.");
+                }
+
+                continue;
+            }
+
             if (!plan.isSubscribed || plan.isLapsed)
             {
                 // Fine check for lapsed/unsubscribed motor insurance
@@ -457,15 +514,7 @@ public class InsuranceManager : MonoBehaviour
             Debug.Log($"[Insurance] Monthly premiums charged: ${totalCharged:F2}");
     }
 
-    // ------------------------------
     // Handle events / claims
-    // ------------------------------
-
-    /// <summary>
-    /// Called when an in-game event causes a loss of a given InsuranceType.
-    /// Returns the payout amount (0 if no payout).
-    /// This checks waiting period and lapse rules.
-    /// </summary>
     
     public InsuranceResult HandleEvent(
     InsuranceType type,
@@ -476,7 +525,6 @@ public class InsuranceManager : MonoBehaviour
 
         var plan = GetPlan(type);
 
-        // 1?? Calculate raw loss
         /*switch (lossType)
         {
             case LossCalculationType.AssetValue:
@@ -499,7 +547,7 @@ public class InsuranceManager : MonoBehaviour
         bool waitingBlocked = false;
         bool lapsedBlocked = false;
 
-        // 2?? Insurance evaluation
+        // 2 Insurance evaluation
         if (plan != null)
         {
             if (plan.isLapsed)
@@ -554,10 +602,7 @@ public class InsuranceManager : MonoBehaviour
         return result;
     }
 
-    // ------------------------------
     // Misc / reporting
-    // ------------------------------
-
     public void ProcessClaims()
     {
         // Placeholder for any monthly claim processing you want to run
@@ -629,6 +674,7 @@ public class InsuranceManager : MonoBehaviour
             plan.isLapsed = false;
             plan.monthsPaid = 0;
             plan.missedPayments = 0;
+            plan.monthsInCycle = 0;
         }
 
         AnyPremiumPaidThisMonth = false;
