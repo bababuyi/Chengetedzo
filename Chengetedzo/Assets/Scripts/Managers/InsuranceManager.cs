@@ -515,10 +515,8 @@ public class InsuranceManager : MonoBehaviour
     }
 
     // Handle events / claims
-    
-    public InsuranceResult HandleEvent(
-    InsuranceType type,
-    float rawLoss)
+
+    public InsuranceResult HandleEvent(InsuranceType type, float rawLoss, string eventName = "Unknown Event")
 
     {
         InsuranceResult result = new InsuranceResult();
@@ -578,14 +576,8 @@ public class InsuranceManager : MonoBehaviour
 
         if (cappedLoss > 0f)
         {
-            GameManager.Instance.ApplyMoneyChange(
-                FinancialEntry.EntryType.EventLoss,
-                $"Event Loss - {type}",
-                cappedLoss,
-                false
-            );
+            GameManager.Instance.ApplyMoneyChange(FinancialEntry.EntryType.EventLoss,eventName,cappedLoss,false);
         }
-
         totalLoss += cappedLoss;
 
         // 4?? Fill result struct

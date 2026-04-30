@@ -1052,7 +1052,7 @@ public class GameManager : MonoBehaviour
     {
         SetPhase(GamePhase.Idle);
         if (IsGuidedMode)
-            uiManager.ShowBudgetPanel();
+            uiManager.ShowSetupPanelAtReview();
         else
             uiManager.ShowSetupPanel();
     }
@@ -1457,13 +1457,13 @@ public class GameManager : MonoBehaviour
                 setupData.hasSchoolFees = true;
                 setupData.schoolFeesAmount = 80f;
 
-                setupData.minIncome = 350f;
+                setupData.minIncome = 300f;
                 setupData.maxIncome = 800f;
 
                 financeManager.rentCost = 150f;
                 financeManager.groceries = 140f;
                 financeManager.transport = 50f;
-                financeManager.utilities = 35f;
+                financeManager.utilities = 40f;
                 financeManager.generalSavingsMonthly = 0f;
 
                 financeManager.assets = new PlayerAssets

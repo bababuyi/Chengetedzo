@@ -294,7 +294,7 @@ public class EventManager : MonoBehaviour
             if (ev.insuranceType != InsuranceType.None)
             {
                 InsuranceManager.InsuranceResult result =
-                    GameManager.Instance.insuranceManager.HandleEvent(ev.insuranceType, intendedLoss);
+                    GameManager.Instance.insuranceManager.HandleEvent(ev.insuranceType, intendedLoss, ev.eventName);
 
                 payout += result.payout;
                 finalLoss = result.finalLoss;
@@ -521,8 +521,7 @@ public class EventManager : MonoBehaviour
 
         intendedLoss = Mathf.Max(0f, intendedLoss);
 
-        var result = GameManager.Instance.insuranceManager
-        .HandleEvent(ev.insuranceType, intendedLoss);
+        var result = GameManager.Instance.insuranceManager.HandleEvent(ev.insuranceType, intendedLoss, ev.eventName);
 
         float payout = result.payout;
         float finalLoss = result.finalLoss;
