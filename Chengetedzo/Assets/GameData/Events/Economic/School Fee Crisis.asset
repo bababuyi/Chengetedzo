@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
+  m_Name: School Fee Crisis
+  m_EditorClassIdentifier: 
+  hasChoices: 0
+  senderName: 
+  senderRelation: 
+  choices: []
+  eventName: School Fee Crisis
+  description: School fees increase unexpectedly and must be paid immediately.
+  financialLesson: Education expenses require planning and savings.
+  category: 3
+  pool: 2
+  requiredAsset: 0
+  icon: {fileID: 0}
+  probability: 7
+  weight: 10
+  minLossPercent: 0
+  maxLossPercent: 0
+  affectsIncome: 0
+  incomePercentChange: 0
+  incomeEffectMonths: 0
+  insuranceType: 0
+  outcomeType: 0
+  cashReward: 0
+  momentumReward: 0
+  season: 0
+  signal: 5
+  severity: 1
+  affectsHousehold: 0
+  adultsLost: 0
+  childrenLost: 0
+  affectsExpenses: 1
+  expenseCategory: 4
+  expenseFlatChange: 150
+  expenseEffectMonths: 1
+  lossType: 2
+  fixedLossAmount: 450
+  affectsLoan: 0
+  borrowingPowerChange: 0
+  startsChain: 0
+  followUpEvents: []
+  followUpChance: 0
+  followUpDelay: 0

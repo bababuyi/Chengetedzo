@@ -16,7 +16,7 @@ MonoBehaviour:
   senderName: 
   senderRelation: 
   choices: []
-  eventName: 'Livestock Disease '
+  eventName: Livestock Disease
   description: A disease outbreak spreads among livestock.
   financialLesson: A single disease outbreak can wipe out months of farming income.
     Livestock insurance covers losses that no amount of savings can easily absorb.

@@ -12,6 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
   m_Name: Emergency Surgery
   m_EditorClassIdentifier: 
+  hasChoices: 0
+  senderName: 
+  senderRelation: 
+  choices: []
   eventName: Emergency Surgery
   description: An unexpected medical condition requires immediate surgery.
   financialLesson: Serious health emergencies can be very expensive.
@@ -33,8 +37,17 @@ MonoBehaviour:
   season: 0
   signal: 4
   severity: 2
+  affectsHousehold: 0
+  adultsLost: 0
+  childrenLost: 0
+  affectsExpenses: 0
+  expenseCategory: 0
+  expenseFlatChange: 0
+  expenseEffectMonths: 0
   lossType: 1
   fixedLossAmount: 0
+  affectsLoan: 0
+  borrowingPowerChange: 0
   startsChain: 0
   followUpEvents:
   - {fileID: 11400000, guid: 41ea4196f6bc16e4fbfdaadfd1465afe, type: 2}

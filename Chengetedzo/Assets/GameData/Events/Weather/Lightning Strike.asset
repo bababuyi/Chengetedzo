@@ -18,8 +18,8 @@ MonoBehaviour:
   choices: []
   eventName: Lightning Strike
   description: A lightning strike damages equipment or structures.
-  financialLesson: "Low-probability events still happen. Insurance isn't about expecting
-    the worst \u2014 it's about being protected when the unexpected occurs."
+  financialLesson: Low-probability events still happen. Insurance isn't about expecting
+    the worst \u2014 it's about being protected when the unexpected occurs.
   category: 5
   pool: 0
   requiredAsset: 0

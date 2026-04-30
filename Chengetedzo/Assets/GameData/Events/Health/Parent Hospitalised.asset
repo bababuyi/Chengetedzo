@@ -12,11 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
   m_Name: Parent Hospitalised
   m_EditorClassIdentifier: 
+  hasChoices: 0
+  senderName: 
+  senderRelation: 
+  choices: []
   eventName: Parent Hospitalised
   description: A parent's hospital stay means school fees cannot be paid on time
     this term.
-  financialLesson: "Education insurance only pays out on the death of a parent \u2014
-    hospitalisation is not covered. This is why savings matter too."
+  financialLesson: Education insurance only pays out on the death of a parent \u2014
+    hospitalisation is not covered. This is why savings matter too.
   category: 0
   pool: 3
   requiredAsset: 0
@@ -35,8 +39,17 @@ MonoBehaviour:
   season: 0
   signal: 4
   severity: 1
+  affectsHousehold: 0
+  adultsLost: 0
+  childrenLost: 0
+  affectsExpenses: 0
+  expenseCategory: 0
+  expenseFlatChange: 0
+  expenseEffectMonths: 0
   lossType: 2
   fixedLossAmount: 450
+  affectsLoan: 0
+  borrowingPowerChange: 0
   startsChain: 0
   followUpEvents: []
   followUpChance: 0

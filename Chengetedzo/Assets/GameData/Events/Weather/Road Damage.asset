@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
+  m_Name: Road Damage
+  m_EditorClassIdentifier: 
+  hasChoices: 0
+  senderName: 
+  senderRelation: 
+  choices: []
+  eventName: Road Damage
+  description: Flooded roads slow travel and disrupt market transport.
+  financialLesson: Infrastructure damage can raise transport costs
+  category: 5
+  pool: 0
+  requiredAsset: 5
+  icon: {fileID: 0}
+  probability: 25
+  weight: 2
+  minLossPercent: 5
+  maxLossPercent: 10
+  affectsIncome: 0
+  incomePercentChange: 0
+  incomeEffectMonths: 0
+  insuranceType: 0
+  outcomeType: 0
+  cashReward: 0
+  momentumReward: -1
+  season: 0
+  signal: 2
+  severity: 0
+  affectsHousehold: 0
+  adultsLost: 0
+  childrenLost: 0
+  affectsExpenses: 0
+  expenseCategory: 0
+  expenseFlatChange: 0
+  expenseEffectMonths: 0
+  lossType: 2
+  fixedLossAmount: 100
+  affectsLoan: 0
+  borrowingPowerChange: 0
+  startsChain: 0
+  followUpEvents: []
+  followUpChance: 0
+  followUpDelay: 0

@@ -18,9 +18,9 @@ MonoBehaviour:
   choices: []
   eventName: Fuel Price Surge
   description: Rising fuel prices increase transport costs.
-  financialLesson: "Rising fuel prices ripple through every part of the economy.
-    Transport costs, food prices, and utility bills all rise together \u2014 squeezing
-    household budgets from every direction."
+  financialLesson: Rising fuel prices ripple through every part of the economy. Transport
+    costs, food prices, and utility bills all rise together \u2014 squeezing household
+    budgets from every direction.
   category: 3
   pool: 2
   requiredAsset: 0

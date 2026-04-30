@@ -16,7 +16,7 @@ MonoBehaviour:
   senderName: 
   senderRelation: 
   choices: []
-  eventName: 'Crop Storage Mold '
+  eventName: Crop Storage Mold
   description: Poor storage conditions cause mold in stored crops.
   financialLesson: Improper storage destroys value that took months to grow. Investing
     in safe, dry storage facilities is part of the cost of farming.

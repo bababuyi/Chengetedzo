@@ -12,6 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
   m_Name: Fraud Scam
   m_EditorClassIdentifier: 
+  hasChoices: 0
+  senderName: 
+  senderRelation: 
+  choices: []
   eventName: Fraud Scam
   description: A scam results in unexpected financial loss.
   financialLesson: Financial literacy prevents fraud.
@@ -33,8 +37,17 @@ MonoBehaviour:
   season: 0
   signal: 6
   severity: 1
+  affectsHousehold: 0
+  adultsLost: 0
+  childrenLost: 0
+  affectsExpenses: 0
+  expenseCategory: 0
+  expenseFlatChange: 0
+  expenseEffectMonths: 0
   lossType: 2
   fixedLossAmount: 500
+  affectsLoan: 0
+  borrowingPowerChange: 0
   startsChain: 1
   followUpEvents:
   - {fileID: 11400000, guid: 1aa31a6b6b23c5e49be2172a13e957fc, type: 2}

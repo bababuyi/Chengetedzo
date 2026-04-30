@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
+  m_Name: Breadwinner Death
+  m_EditorClassIdentifier: 
+  hasChoices: 0
+  senderName: 
+  senderRelation: 
+  choices: []
+  eventName: Breadwinner Death
+  description: The household breadwinner passes away, severely impacting income.
+  financialLesson: Insurance can protect families from complete income loss and those
+    left behind can still pursue an education.
+  category: 0
+  pool: 3
+  requiredAsset: 0
+  icon: {fileID: 0}
+  probability: 2
+  weight: 6
+  minLossPercent: 0
+  maxLossPercent: 0
+  affectsIncome: 1
+  incomePercentChange: -40
+  incomeEffectMonths: -1
+  insuranceType: 3
+  outcomeType: 0
+  cashReward: 0
+  momentumReward: -3
+  season: 0
+  signal: 4
+  severity: 2
+  affectsHousehold: 1
+  adultsLost: 1
+  childrenLost: 0
+  affectsExpenses: 0
+  expenseCategory: 0
+  expenseFlatChange: 0
+  expenseEffectMonths: 0
+  lossType: 2
+  fixedLossAmount: 800
+  affectsLoan: 0
+  borrowingPowerChange: 0
+  startsChain: 0
+  followUpEvents: []
+  followUpChance: 0.25
+  followUpDelay: 1

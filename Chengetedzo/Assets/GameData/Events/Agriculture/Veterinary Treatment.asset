@@ -16,10 +16,8 @@ MonoBehaviour:
   senderName: 
   senderRelation: 
   choices: []
-  eventName: 'Veterinary Treatment '
-  description: 'Sick animals require veterinary care
-
-'
+  eventName: Veterinary Treatment
+  description: Sick animals require veterinary care
   financialLesson: Delaying animal care to save money often leads to larger losses.
     Treating illness early is almost always cheaper than treating it late.
   category: 1

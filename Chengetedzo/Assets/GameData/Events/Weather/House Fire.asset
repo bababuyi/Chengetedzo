@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
+  m_Name: House Fire
+  m_EditorClassIdentifier: 
+  hasChoices: 0
+  senderName: 
+  senderRelation: 
+  choices: []
+  eventName: House Fire
+  description: A cooking accident causes a fire that damages part of the home.
+  financialLesson: Home insurance protects against property damage.
+  category: 5
+  pool: 0
+  requiredAsset: 1
+  icon: {fileID: 0}
+  probability: 4
+  weight: 7
+  minLossPercent: 30
+  maxLossPercent: 60
+  affectsIncome: 0
+  incomePercentChange: 0
+  incomeEffectMonths: 0
+  insuranceType: 7
+  outcomeType: 0
+  cashReward: 0
+  momentumReward: 0
+  season: 0
+  signal: 3
+  severity: 2
+  affectsHousehold: 0
+  adultsLost: 0
+  childrenLost: 0
+  affectsExpenses: 0
+  expenseCategory: 0
+  expenseFlatChange: 0
+  expenseEffectMonths: 0
+  lossType: 0
+  fixedLossAmount: 0
+  affectsLoan: 0
+  borrowingPowerChange: 0
+  startsChain: 0
+  followUpEvents: []
+  followUpChance: 0
+  followUpDelay: 0

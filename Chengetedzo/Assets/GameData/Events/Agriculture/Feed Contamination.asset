@@ -16,10 +16,8 @@ MonoBehaviour:
   senderName: 
   senderRelation: 
   choices: []
-  eventName: 'Feed Contamination '
-  description: 'Contaminated feed causes illness among animals.
-
-'
+  eventName: Feed Contamination
+  description: Contaminated feed causes illness among animals.
   financialLesson: Contaminated feed enters the food chain invisibly. Sourcing from
     trusted suppliers and keeping records protects both animals and finances.
   category: 1

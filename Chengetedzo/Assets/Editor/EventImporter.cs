@@ -18,8 +18,8 @@ using UnityEngine;
 
 public static class EventImporter
 {
-    private const string CSV_PATH = "Assets/GameData/Events/RegularEvents.csv";
-    private const string OUTPUT_FOLDER = "Assets/GameData/Events/Imported";
+    private const string CSV_PATH = "Assets/GameData/Events/Events.csv";
+    private const string BASE_OUTPUT_FOLDER = "Assets/GameData/Events";
 
     // ── Column indices (0-based) matching the template ─────────────────────
     // Identity
@@ -75,20 +75,22 @@ public static class EventImporter
         {
             EditorUtility.DisplayDialog("Import Failed",
                 $"CSV not found at:\n{CSV_PATH}\n\n" +
-                "Export RegularEvents_Template.xlsx as CSV and place it there.", "OK");
+                "Place Events.csv in Assets/GameData/Events/ and try again.", "OK");
             return;
         }
 
+        /*
         if (!AssetDatabase.IsValidFolder(OUTPUT_FOLDER))
         {
             string parent = Path.GetDirectoryName(OUTPUT_FOLDER).Replace("\\", "/");
             string folder = Path.GetFileName(OUTPUT_FOLDER);
             AssetDatabase.CreateFolder(parent, folder);
         }
+        */
 
         string[] lines = File.ReadAllLines(fullPath);
 
-        int created = 0, updated = 0, skipped = 0, errors = 0;
+        int created = 0, updated = 0, errors = 0;
 
         // Skip header rows: row 0 = section headers, row 1 = col headers, row 2 = notes
         // Data starts at row index 3
@@ -116,8 +118,15 @@ public static class EventImporter
                 continue;
             }
 
+            string pool = cols.Length > C_POOL ? cols[C_POOL].Trim() : string.Empty;
+            string subfolder = GetSubfolderForPool(pool);
+            string outputFolder = $"{BASE_OUTPUT_FOLDER}/{subfolder}";
+
+            if (!AssetDatabase.IsValidFolder(outputFolder))
+                AssetDatabase.CreateFolder(BASE_OUTPUT_FOLDER, subfolder);
+
             string safeName = SanitizeFileName(eventName);
-            string assetPath = $"{OUTPUT_FOLDER}/{safeName}.asset";
+            string assetPath = $"{outputFolder}/{safeName}.asset";
 
             EventData ev = AssetDatabase.LoadAssetAtPath<EventData>(assetPath);
             bool isNew = ev == null;
@@ -153,7 +162,7 @@ public static class EventImporter
             $"Created : {created}\n" +
             $"Updated : {updated}\n" +
             $"Errors  : {errors}\n\n" +
-            $"Assets saved to {OUTPUT_FOLDER}\n\n" +
+            $"Assets saved to {BASE_OUTPUT_FOLDER}/<subfolder>\n\n" +
             "Remember to wire followUpEvents manually in the Inspector!", "OK");
     }
 
@@ -367,5 +376,17 @@ public static class EventImporter
         result.Add(current.ToString());
         return result.ToArray();
     }
+
+    private static string GetSubfolderForPool(string pool) => pool.ToLower() switch
+    {
+        "weather" => "Weather",
+        "agriculture" => "Agriculture",
+        "economic" => "Economic",
+        "health" => "Health",
+        "crime" => "Crime",
+        "opportunity" => "Opportunity",
+        "choice" => "ChoiceEvents",
+        _ => "Misc",
+    };
 }
 #endif

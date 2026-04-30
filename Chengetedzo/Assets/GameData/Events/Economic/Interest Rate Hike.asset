@@ -12,6 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
   m_Name: Interest Rate Hike
   m_EditorClassIdentifier: 
+  hasChoices: 0
+  senderName: 
+  senderRelation: 
+  choices: []
   eventName: Interest Rate Hike
   description: Loan costs rise.
   financialLesson: Debt risk must be managed.
@@ -31,9 +35,19 @@ MonoBehaviour:
   cashReward: 0
   momentumReward: 0
   season: 0
+  signal: 0
   severity: 1
+  affectsHousehold: 0
+  adultsLost: 0
+  childrenLost: 0
+  affectsExpenses: 0
+  expenseCategory: 0
+  expenseFlatChange: 0
+  expenseEffectMonths: 0
   lossType: 1
   fixedLossAmount: 0
+  affectsLoan: 0
+  borrowingPowerChange: 0
   startsChain: 0
   followUpEvents: []
   followUpChance: 0.5

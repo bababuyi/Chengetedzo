@@ -12,7 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
   m_Name: Extended Hospital Stay
   m_EditorClassIdentifier: 
-  eventName: 'Extended Hospital Stay '
+  hasChoices: 0
+  senderName: 
+  senderRelation: 
+  choices: []
+  eventName: Extended Hospital Stay
   description: A family member requires several days of hospital care.
   financialLesson: Medical emergencies can lead to unexpected costs.
   category: 0
@@ -33,8 +37,17 @@ MonoBehaviour:
   season: 0
   signal: 4
   severity: 1
+  affectsHousehold: 0
+  adultsLost: 0
+  childrenLost: 0
+  affectsExpenses: 0
+  expenseCategory: 0
+  expenseFlatChange: 0
+  expenseEffectMonths: 0
   lossType: 1
   fixedLossAmount: 0
+  affectsLoan: 0
+  borrowingPowerChange: 0
   startsChain: 0
   followUpEvents: []
   followUpChance: 0

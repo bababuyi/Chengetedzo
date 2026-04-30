@@ -12,6 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
   m_Name: Workplace Accident
   m_EditorClassIdentifier: 
+  hasChoices: 0
+  senderName: 
+  senderRelation: 
+  choices: []
   eventName: Workplace Accident
   description: A workplace accident leaves the breadwinner unable to work temporarily.
   financialLesson: Personal accident insurance can protect income.

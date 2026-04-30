@@ -12,6 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
   m_Name: Bumper Harvest
   m_EditorClassIdentifier: 
+  hasChoices: 0
+  senderName: 
+  senderRelation: 
+  choices: []
   eventName: Bumper Harvest
   description: Favorable rains result in an unusually high crop yield.
   financialLesson: Weather conditions can sometimes bring opportunity.
@@ -33,8 +37,17 @@ MonoBehaviour:
   season: 1
   signal: 2
   severity: 1
+  affectsHousehold: 0
+  adultsLost: 0
+  childrenLost: 0
+  affectsExpenses: 0
+  expenseCategory: 0
+  expenseFlatChange: 0
+  expenseEffectMonths: 0
   lossType: 2
   fixedLossAmount: 0
+  affectsLoan: 0
+  borrowingPowerChange: 0
   startsChain: 0
   followUpEvents:
   - {fileID: 11400000, guid: f2869cbce467e8e4e98c4e89ed7d72ba, type: 2}

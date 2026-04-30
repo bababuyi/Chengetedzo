@@ -12,11 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
   m_Name: Spoilage Loss
   m_EditorClassIdentifier: 
-  eventName: 'Spoilage Loss '
+  hasChoices: 0
+  senderName: 
+  senderRelation: 
+  choices: []
+  eventName: Spoilage Loss
   description: Unsold goods spoil before they can be sold.
-  financialLesson: 'Overproduction can lead to waste
-
-'
+  financialLesson: Overproduction can lead to waste
   category: 3
   pool: 1
   requiredAsset: 5
@@ -35,8 +37,17 @@ MonoBehaviour:
   season: 0
   signal: 5
   severity: 2
+  affectsHousehold: 0
+  adultsLost: 0
+  childrenLost: 0
+  affectsExpenses: 0
+  expenseCategory: 0
+  expenseFlatChange: 0
+  expenseEffectMonths: 0
   lossType: 1
   fixedLossAmount: 250
+  affectsLoan: 0
+  borrowingPowerChange: 0
   startsChain: 0
   followUpEvents: []
   followUpChance: 0

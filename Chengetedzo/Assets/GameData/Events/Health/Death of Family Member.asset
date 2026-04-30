@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
+  m_Name: Death of Family Member
+  m_EditorClassIdentifier: 
+  hasChoices: 0
+  senderName: 
+  senderRelation: 
+  choices: []
+  eventName: Death of Family Member
+  description: A close relative passes away and the family contributes to funeral
+    costs.
+  financialLesson: Unexpected family responsibilities can strain finances.
+  category: 0
+  pool: 3
+  requiredAsset: 0
+  icon: {fileID: 0}
+  probability: 6
+  weight: 10
+  minLossPercent: 0
+  maxLossPercent: 0
+  affectsIncome: 0
+  incomePercentChange: -30
+  incomeEffectMonths: -1
+  insuranceType: 1
+  outcomeType: 0
+  cashReward: 0
+  momentumReward: 0
+  season: 0
+  signal: 4
+  severity: 1
+  affectsHousehold: 1
+  adultsLost: 1
+  childrenLost: 0
+  affectsExpenses: 0
+  expenseCategory: 0
+  expenseFlatChange: 0
+  expenseEffectMonths: 0
+  lossType: 2
+  fixedLossAmount: 500
+  affectsLoan: 0
+  borrowingPowerChange: 0
+  startsChain: 0
+  followUpEvents: []
+  followUpChance: 0.25
+  followUpDelay: 3

@@ -12,7 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
   m_Name: Storage Pressure
   m_EditorClassIdentifier: 
-  eventName: 'Storage Pressure '
+  hasChoices: 0
+  senderName: 
+  senderRelation: 
+  choices: []
+  eventName: Storage Pressure
   description: Excess production creates costly storage demands.
   financialLesson: Supply shocks can create logistical costs
   category: 3
@@ -33,8 +37,17 @@ MonoBehaviour:
   season: 0
   signal: 5
   severity: 0
+  affectsHousehold: 0
+  adultsLost: 0
+  childrenLost: 0
+  affectsExpenses: 0
+  expenseCategory: 0
+  expenseFlatChange: 0
+  expenseEffectMonths: 0
   lossType: 1
   fixedLossAmount: 120
+  affectsLoan: 0
+  borrowingPowerChange: 0
   startsChain: 0
   followUpEvents: []
   followUpChance: 0

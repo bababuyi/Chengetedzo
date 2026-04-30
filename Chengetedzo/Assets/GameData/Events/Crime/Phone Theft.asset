@@ -12,11 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
   m_Name: Phone Theft
   m_EditorClassIdentifier: 
+  hasChoices: 0
+  senderName: 
+  senderRelation: 
+  choices: []
   eventName: Phone Theft
   description: Your basic mobile phone was stolen. It was your only means of mobile
     money and communication.
-  financialLesson: "A stolen phone disrupts more than communication \u2014 it cuts
-    off financial access."
+  financialLesson: A stolen phone disrupts more than communication \u2014 it cuts
+    off financial access.
   category: 4
   pool: 4
   requiredAsset: 0
