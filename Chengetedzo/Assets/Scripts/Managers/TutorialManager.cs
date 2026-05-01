@@ -62,6 +62,7 @@ public class TutorialManager : MonoBehaviour
     {
         _isGuidedMode = true;
         HasAttemptedGuided = true;
+        GameManager.Instance?.SetMentorSpokeThisMonth(true);
 
         string key = profile switch
         {
@@ -71,16 +72,30 @@ public class TutorialManager : MonoBehaviour
             _ => KEY_INFORMAL_SEEN
         };
 
-        UIManager.Instance.ShowSetupPanel();
+        // Always hide profile select immediately
+        UIManager.Instance.SwitchPanel(UIManager.UIPanelState.None);
 
-        var setup = UIManager.Instance.setupPanel.GetComponent<SetupPanelController>();
-        setup?.EnterReviewMode();
+        System.Action showSetup = () =>
+        {
+            UIManager.Instance.ForceCloseAllPopups();
+            UIManager.Instance.ShowSetupPanel();
+            var setup = UIManager.Instance.setupPanel
+                .GetComponent<SetupPanelController>();
+            setup?.EnterReviewMode();
+            UIManager.Instance.ShowSetupPanelAtReview();
+        };
 
-        UIManager.Instance.ShowSetupPanelAtReview();
+        if (Seen(key))
+        {
+            showSetup();
+            return;
+        }
 
-        if (Seen(key)) return;
-
-        ShowProfileIntroSequence(profile, () => Mark(key));
+        ShowProfileIntroSequence(profile, () =>
+        {
+            Mark(key);
+            showSetup();
+        });
     }
 
     public void OnFreeModeSelected()
@@ -177,11 +192,11 @@ public class TutorialManager : MonoBehaviour
     public void ResetAll()
     {
         string[] keys =
-        {
+{
             KEY_GUIDED_ATTEMPTED, KEY_INFORMAL_SEEN, KEY_FORMAL_SEEN, KEY_FARMER_SEEN,
             KEY_FORECAST_SEEN, KEY_INSURANCE_SEEN, KEY_SIM_START_SEEN, KEY_LOAN_SEEN,
             KEY_EVENT_SEEN, KEY_REPORT_SEEN, KEY_COMPLETE_SEEN,
-            KEY_FREE_FORECAST, KEY_FREE_INSURANCE, KEY_FREE_SETUP
+            KEY_FREE_FORECAST, KEY_FREE_INSURANCE, KEY_FREE_SETUP, KEY_DEDUCTIBLE_SEEN
         };
         foreach (var k in keys) PlayerPrefs.DeleteKey(k);
         PlayerPrefs.Save();
@@ -198,6 +213,19 @@ public class TutorialManager : MonoBehaviour
             ? GameManager.Instance.financeManager.CashOnHand
             : 0f;
 
+        var fm = GameManager.Instance?.financeManager;
+        var sd = GameManager.Instance?.setupData;
+
+        float rent = fm?.rentCost ?? 0f;
+        float groceries = fm?.groceries ?? 0f;
+        float transport = fm?.transport ?? 0f;
+        float utilities = fm?.utilities ?? 0f;
+        float schoolFees = sd?.schoolFeesAmount ?? 0f;
+        float minIncome = sd?.minIncome ?? 0f;
+        float maxIncome = sd?.maxIncome ?? 0f;
+        int adults = sd?.adults ?? 1;
+        int children = sd?.children ?? 0;
+
         string[] msgs;
         RectTransform[] pulses;
 
@@ -207,7 +235,7 @@ public class TutorialManager : MonoBehaviour
                 msgs = new[]
                 {
                     "You are Tendai — an informal trader working the markets in Mbare, Harare. Your income varies from week to week. Some months the stall does well. Others, the margins barely cover what you owe.",
-                    $"You have two children and rent a room in a shared house in Dzivarasekwa. You are starting this month with ${startCash:F0}. Expenses are tight, and saving even a small amount will require real discipline.",
+                    $"You have {children} children and rent a room in a shared house. Your income ranges from ${minIncome:F0} to ${maxIncome:F0} a month. Rent is ${rent:F0}, groceries ${groceries:F0}, transport ${transport:F0}. You are starting with ${startCash:F0}.",
                     "You have no vehicle and no property. What you do have is resourcefulness. The next 24 months will test how well you can protect the small margin between you and an empty pocket.",
                     "Each month you will see your income arrive, your expenses leave, and sometimes an unexpected event will take something you weren't prepared to lose. Insurance, savings, and loans are your tools. Learn when to use them.",
                 };
@@ -218,7 +246,7 @@ public class TutorialManager : MonoBehaviour
                 msgs = new[]
                 {
                     "You are Chido — an accounts clerk at a logistics company in Harare. You earn a fixed monthly salary, which puts you ahead of many. But steady income also means steady obligations.",
-                    $"You have one child in primary school, rent a house in Waterfalls, and own a 2010 Honda Fit. You are starting this month with ${startCash:F0}. Your breathing room is real, but so are your costs.",
+                    $"You have {children} {(children == 1 ? "child" : "children")} in school, and rent a house. Your salary runs ${minIncome:F0}–${maxIncome:F0} a month. Rent is ${rent:F0}, school fees ${schoolFees:F0}, groceries ${groceries:F0}. You are starting with ${startCash:F0}.",
                     "As a vehicle owner, third-party motor insurance is required by law in Zimbabwe. It is not optional — you will see it listed on the insurance screen. Not carrying it is not a choice you have.",
                     "Your income stability is your greatest advantage. The risk is complacency. Formal workers often underinsure because things feel manageable — until they aren't.",
                 };
@@ -230,7 +258,7 @@ public class TutorialManager : MonoBehaviour
                 msgs = new[]
                 {
                     "You are Sekuru Moyo — a smallholder farmer in Mashonaland. You grow maize and keep cattle. You own your land and your home, which many do not. That security has a cost: when the land suffers, you suffer with it.",
-                    $"Your income depends on the rains, the market price, and the health of your herd. A good season can transform your position. A bad one can undo years of work. You are starting with ${startCash:F0}.",
+                    $"Your income swings with the seasons — anywhere from ${minIncome:F0} to ${maxIncome:F0}. Monthly costs include groceries (${groceries:F0}), transport (${transport:F0}), and school fees (${schoolFees:F0}). You are starting with ${startCash:F0}.",
                     "Agriculture carries risks that most insurance products only partially cover. Pay close attention to the Monthly News forecast each month. A drought warning or disease alert is not just a headline — it is a signal.",
                     "Your home is an asset, your livestock is an asset, your crops are an asset. Each one is exposed to a different kind of risk. You will not be able to insure everything. Choose carefully.",
                 };
@@ -350,8 +378,10 @@ public class TutorialManager : MonoBehaviour
 
     public void TriggerTutorial(string key)
     {
+        Debug.Log($"[TUTORIAL-TRIGGER] TriggerTutorial called with key='{key}'");
         if (key == "insurance_deductible_explainer")
         {
+            Debug.Log($"[TUTORIAL-TRIGGER] KEY_DEDUCTIBLE_SEEN already seen: {Seen(KEY_DEDUCTIBLE_SEEN)}");
             if (Seen(KEY_DEDUCTIBLE_SEEN)) return;
             UIManager.Instance.ShowMentorMessageTransparent(
                 "A deductible is the amount you pay yourself before insurance covers the rest. " +
@@ -375,8 +405,13 @@ public class TutorialManager : MonoBehaviour
         ShowSequenceStep(msgList, pulseList, onComplete);
     }
 
-    private void ShowSequenceStep(List<string> messages, List<RectTransform> pulses,System.Action onComplete)
+    private void ShowSequenceStep(List<string> messages, List<RectTransform> pulses, System.Action onComplete)
     {
+        Debug.Log($"[TUTORIAL] ShowSequenceStep — remaining={messages.Count}");
+
+        if (GameManager.Instance != null)
+            GameManager.Instance.SetMentorSpokeThisMonth(true);
+
         if (SettingsManager.Instance != null && !SettingsManager.Instance.MentorHints)
         {
             StopPulse();

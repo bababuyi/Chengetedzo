@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -23,6 +24,9 @@ public class MonthlyReportPanel : MonoBehaviour
     [Header("Right Column - Chart")]
     public MonthlyBarChart barChart;
     public TMP_Text savingsBalanceText;
+
+    [Header("Layout")]
+    [SerializeField] private RectTransform leftColumnRect;
 
     private void OnEnable()
     {
@@ -138,6 +142,12 @@ public class MonthlyReportPanel : MonoBehaviour
             savingsBalanceText.gameObject.SetActive(savingsBalance > 0.01f);
             savingsBalanceText.text = $"Savings balance: {GameUtils.FormatMoney(savingsBalance)}";
         }
+        StartCoroutine(ForceLayoutRebuild());
+    }
+    private IEnumerator ForceLayoutRebuild()
+    {
+        yield return null;
+        LayoutRebuilder.ForceRebuildLayoutImmediate(leftColumnRect);
     }
 
     private void BuildExpenseLines(float housing, float groceries, float transport,

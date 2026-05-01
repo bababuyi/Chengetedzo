@@ -210,6 +210,8 @@ public class GameManager : MonoBehaviour
     public void StartNewMonth()
     {
         monthResolutionStarted = false;
+        monthResolutionFinished = false;
+        monthResolutionStarted = false;
         mentorSpokeThisMonth = false;
         forcedLoanThisMonth = false;
         forecastBackLocked = false;
@@ -221,6 +223,12 @@ public class GameManager : MonoBehaviour
         loanManager?.ResetMonthlyFlags();
         UpdateIncomeEffects();
         UpdateExpenseEffects();
+    }
+
+    // Double check if happened or not
+    public void SetMentorSpokeThisMonth(bool value)
+    {
+        mentorSpokeThisMonth = value;
     }
 
     public void ConfirmMonthAndResolve()
@@ -361,48 +369,63 @@ public class GameManager : MonoBehaviour
     private void EvaluateMentor()
     {
         if (currentMonth <= 1 || mentorSpokeThisMonth)
+        {
+            Debug.Log($"[MENTOR] EvaluateMentor SKIPPED — month={currentMonth}, alreadySpoke={mentorSpokeThisMonth}");
             return;
+        }
 
         float momentum = PlayerDataManager.Instance.FinancialMomentum;
+        Debug.Log($"[MENTOR] EvaluateMentor running — momentum={momentum:F1}");
 
         string lineToShow = null;
+        string reason = "none";
 
         if (IsRecovery(momentum))
         {
-            lineToShow = MentorLines.RecoveryLines[
-                Random.Range(0, MentorLines.RecoveryLines.Length)];
+            lineToShow = MentorLines.RecoveryLines[Random.Range(0, MentorLines.RecoveryLines.Length)];
+            reason = "Recovery";
         }
-
         else if (CountForcedLoans() >= 2)
         {
-            lineToShow = MentorLines.ForcedLoanPattern[
-                Random.Range(0, MentorLines.ForcedLoanPattern.Length)];
+            lineToShow = MentorLines.ForcedLoanPattern[Random.Range(0, MentorLines.ForcedLoanPattern.Length)];
+            reason = "ForcedLoanPattern";
         }
-
         else if (HasZoneChanged(momentum))
         {
             lineToShow = GetZoneLine(momentum);
+            reason = $"ZoneChanged (newZone={lastMomentumZone})";
         }
-
         else if (!patternWarningIssued && IsNegativePatternForming())
         {
-            lineToShow = MentorLines.PatternWarning[
-                Random.Range(0, MentorLines.PatternWarning.Length)];
-
+            lineToShow = MentorLines.PatternWarning[Random.Range(0, MentorLines.PatternWarning.Length)];
+            reason = "PatternWarning";
+            patternWarningIssued = true;
+        }
+        else if (!patternWarningIssued && IsNegativePatternForming())
+        {
+            lineToShow = MentorLines.PatternWarning[Random.Range(0, MentorLines.PatternWarning.Length)];
+            reason = "PatternWarning";
             patternWarningIssued = true;
         }
 
+        Debug.Log($"[MENTOR] Selected reason={reason} | line={(lineToShow ?? "null")}");
+
         if (IsHeadlessSimulation)
+        {
+            Debug.Log("[MENTOR] Headless — skipping display");
             return;
+        }
 
         float monthlyChance = 0.35f;
-
-        if (momentum >= 15f || momentum <= -15f)
-            monthlyChance = 0.60f;
+        if (momentum >= 15f || momentum <= -15f) monthlyChance = 0.60f;
         bool forceShow = momentum <= -15f || momentum >= 20f;
 
-        if (lineToShow != null && (forceShow || Random.value < monthlyChance))
+        float roll = Random.value;
+        Debug.Log($"[MENTOR] forceShow={forceShow} | chance={monthlyChance:F2} | roll={roll:F2} | willShow={lineToShow != null && (forceShow || roll < monthlyChance)}");
+
+        if (lineToShow != null && (forceShow || roll < monthlyChance))
         {
+            Debug.Log($"[MENTOR-SHOW] Showing mentor message (reason={reason}): \"{lineToShow}\"");
             uiManager.ShowMentorMessageTransparent(lineToShow);
             mentorSpokeThisMonth = true;
         }
@@ -646,8 +669,15 @@ public class GameManager : MonoBehaviour
         UIManager.Instance.ShowEventPopup(ev.title, fullText, ev.icon);
     }
 
+    private bool monthResolutionFinished = false;
     private void EndMonthlyResolution()
     {
+        if (monthResolutionFinished)
+        {
+            Debug.LogWarning("[Month] EndMonthlyResolution called twice — ignoring.");
+            return;
+        }
+        monthResolutionFinished = true;
         Debug.Log("[Month] All events resolved");
         
         EvaluateMomentumSignals();
@@ -810,10 +840,13 @@ public class GameManager : MonoBehaviour
         {
             loanManager.ForceBorrow(shortfall);
         }
-        
+
         forcedLoanCount++;
         PlayerDataManager.Instance.ModifyMomentum(-3f);
-
+        Debug.Log($"[MENTOR-TRIGGER] HandleForcedLoan → showing ForcedLoan mentor line");
+        string forcedLoanLine = MentorLines.ForcedLoan[Random.Range(0, MentorLines.ForcedLoan.Length)];
+        Debug.Log($"[MENTOR-LINE] \"{forcedLoanLine}\"");
+        uiManager.ShowMentorMessage(forcedLoanLine);
 
         forcedLoanHistory.Enqueue(true);
         TrimForcedLoanHistory();

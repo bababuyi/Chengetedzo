@@ -75,17 +75,17 @@ public class MonthlyBarChart : MonoBehaviour
         // Income bar
         SetBarHeight(incomeColumn.barRoot, income * scale);
         if (incomeColumn.valueText != null)
-            incomeColumn.valueText.text = $"${Mathf.RoundToInt(income)}";
+            incomeColumn.valueText.text = GameUtils.FormatMoney(income);
 
         // Expense bar (stacked + coloured)
         SetStackedBar(housing, groceries, transport, utilities, schoolFees, insurance, eventLosses, totalExpenses, scale);
         if (expensesColumn.valueText != null)
-            expensesColumn.valueText.text = $"${Mathf.RoundToInt(totalExpenses)}";
+            expensesColumn.valueText.text = GameUtils.FormatMoney(totalExpenses);
 
         // Leftover bar
         SetBarHeight(leftoverColumn.barRoot, leftover * scale);
         if (leftoverColumn.valueText != null)
-            leftoverColumn.valueText.text = $"${Mathf.RoundToInt(leftover)}";
+            leftoverColumn.valueText.text = GameUtils.FormatMoney(leftover);
 
         // Legend rows — name + amount together
         SetLegendRow(housingLegend, housingLegendValue, HousingColor, "Housing", housing);
@@ -154,6 +154,6 @@ public class MonthlyBarChart : MonoBehaviour
             swatch.color = color;
 
         if (valueText != null)
-            valueText.text = $"{label}   -${Mathf.RoundToInt(amount)}";
+            valueText.text = $"{label}   -{GameUtils.FormatMoney(amount)}";
     }
 }

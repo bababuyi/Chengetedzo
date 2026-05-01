@@ -401,6 +401,22 @@ public class UIManager : MonoBehaviour
         TutorialManager.Instance?.OnReportOpened();
     }
 
+    public void ForceCloseAllPopups()
+    {
+        if (activePopup != null)
+            activePopup.SetActive(false);
+
+        if (mentorPopup != null)
+            mentorPopup.SetActive(false);
+
+        activePopup = null;
+        activeContinueButton = null;
+        activeOnClose = null;
+        IsPopupActive = false;
+
+        Debug.Log("[UI] ForceCloseAllPopups called");
+    }
+
     /*public void ShowEventPopup(string title, string description, Sprite icon = null)
     {
         Debug.Log($"[ShowEventPopup] Called: {title}");
@@ -746,6 +762,8 @@ public class UIManager : MonoBehaviour
 
     public void ShowMentorMessage(string message, System.Action onClose = null)
     {
+        Debug.Log($"[UI-MENTOR] ShowMentorMessage called | IsPopupActive={IsPopupActive} | msg=\"{message}\"");
+        Debug.Log($"[UI-MENTOR] ShowMentorMessage stack: {System.Environment.StackTrace}");
         if (IsPopupActive)
         {
             StartCoroutine(WaitThenShowMentor(message, onClose));
@@ -765,12 +783,15 @@ public class UIManager : MonoBehaviour
 
     private IEnumerator WaitThenShowMentor(string message, System.Action onClose)
     {
+        Debug.Log($"[UI-MENTOR] WaitThenShowMentor queued: \"{message}\"");
         yield return new WaitUntil(() => !IsPopupActive);
+        Debug.Log($"[UI-MENTOR] WaitThenShowMentor now showing: \"{message}\"");
         ShowMentorMessage(message, onClose);
     }
 
     public void ShowMentorMessageTransparent(string message, System.Action onClose = null)
     {
+        Debug.Log($"[UI-MENTOR] ShowMentorMessageTransparent called | IsPopupActive={IsPopupActive} | msg=\"{message}\"");
         if (IsPopupActive)
         {
             StartCoroutine(WaitThenShowTransparent(message, onClose));
@@ -791,10 +812,11 @@ public class UIManager : MonoBehaviour
         UIAnimator.Instance?.FadeIn(mentorPopup);
     }
 
-    private System.Collections.IEnumerator WaitThenShowTransparent(
-        string message, System.Action onClose)
+    private System.Collections.IEnumerator WaitThenShowTransparent(string message, System.Action onClose)
     {
+        Debug.Log($"[UI-MENTOR] WaitThenShowTransparent queued: \"{message}\"");
         yield return new UnityEngine.WaitUntil(() => !IsPopupActive);
+        Debug.Log($"[UI-MENTOR] WaitThenShowTransparent now showing: \"{message}\"");
         ShowMentorMessageTransparent(message, onClose);
     }
 
