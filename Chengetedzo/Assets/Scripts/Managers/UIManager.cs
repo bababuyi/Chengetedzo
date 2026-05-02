@@ -116,6 +116,8 @@ public class UIManager : MonoBehaviour
     [Header("Settings")]
     public GameObject settingsPanel;
 
+    [Header("Input Blocker")]
+    public GameObject inputBlockerPanel;
     private UIPanelState _stateBeforeSettings = UIPanelState.None;
 
     private UIPanelState currentPanelState = UIPanelState.None;
@@ -146,6 +148,7 @@ public class UIManager : MonoBehaviour
         activeContinueButton = continueBtn;
         activeOnClose = onClose;
 
+        if (inputBlockerPanel != null) inputBlockerPanel.SetActive(true);
         popupObject.SetActive(true);
 
         continueBtn.onClick.RemoveAllListeners();
@@ -169,6 +172,8 @@ public class UIManager : MonoBehaviour
         activeContinueButton = null;
         activeOnClose = null;
         IsPopupActive = false;
+
+        if (inputBlockerPanel != null) inputBlockerPanel.SetActive(false);
 
         Debug.Log("Popup closed safely.");
 
@@ -352,10 +357,7 @@ public class UIManager : MonoBehaviour
 
             case UIPanelState.ProfileSelect:
                 profileSelectPanel.SetActive(true);
-                topHUD?.SetActive(false);
-                financialHUD?.SetActive(false);
-                if (freeModeButton != null)
-                    freeModeButton.interactable = TutorialManager.HasAttemptedGuided;
+                topHUD.SetActive(false);
                 break;
 
             case UIPanelState.None:
@@ -414,40 +416,9 @@ public class UIManager : MonoBehaviour
         activeOnClose = null;
         IsPopupActive = false;
 
+        if (inputBlockerPanel != null) inputBlockerPanel.SetActive(false);
         Debug.Log("[UI] ForceCloseAllPopups called");
     }
-
-    /*public void ShowEventPopup(string title, string description, Sprite icon = null)
-    {
-        Debug.Log($"[ShowEventPopup] Called: {title}");
-
-        eventTitleText.text = title;
-        eventDescriptionText.text = description;
-
-        ShowPopup(eventPopup, continueButton, () =>
-        {
-            GameManager.Instance.OnEventPopupClosed();
-        });
-
-        // 🔥 FORCE VISIBLE (debug)
-        eventPopup.SetActive(true);
-        eventPopup.transform.SetAsLastSibling();
-        eventPopup.transform.localScale = Vector3.one;
-
-        var cg = eventPopup.GetComponent<CanvasGroup>();
-        if (cg != null)
-        {
-            cg.alpha = 1;
-            cg.interactable = true;
-            cg.blocksRaycasts = true;
-        }
-
-        Debug.Log("Popup activeSelf: " + eventPopup.activeSelf);
-        Debug.Log("Popup activeInHierarchy: " + eventPopup.activeInHierarchy);
-
-        // TEMP: disable animation
-        // StartCoroutine(SlideEvent(true));
-    }*/
 
     public void ShowEventPopup(string title, string description, Sprite icon = null)
     {
@@ -815,7 +786,17 @@ public class UIManager : MonoBehaviour
     private System.Collections.IEnumerator WaitThenShowTransparent(string message, System.Action onClose)
     {
         Debug.Log($"[UI-MENTOR] WaitThenShowTransparent queued: \"{message}\"");
-        yield return new UnityEngine.WaitUntil(() => !IsPopupActive);
+        float waited = 0f;
+        while (IsPopupActive && waited < 8f)
+        {
+            waited += UnityEngine.Time.deltaTime;
+            yield return null;
+        }
+        if (waited >= 8f)
+        {
+            Debug.LogWarning("[UI-MENTOR] Timeout waiting for popup — force-clearing IsPopupActive.");
+            ForceCloseAllPopups();
+        }
         Debug.Log($"[UI-MENTOR] WaitThenShowTransparent now showing: \"{message}\"");
         ShowMentorMessageTransparent(message, onClose);
     }

@@ -119,11 +119,16 @@ public class InsurancePanel : MonoBehaviour
 
     public void ConfirmInsurance()
     {
-        if (GameManager.Instance == null)
-            return;
+        if (GameManager.Instance == null) return;
+
+        if (UIManager.Instance.IsPopupActive)
+            UIManager.Instance.ForceCloseAllPopups();
 
         if (GameManager.Instance.CurrentPhase != GameManager.GamePhase.Insurance)
+        {
+            Debug.LogWarning($"[InsurancePanel] ConfirmInsurance called in wrong phase: {GameManager.Instance.CurrentPhase}");
             return;
+        }
 
         GameManager.Instance.OnInsuranceConfirmed();
     }

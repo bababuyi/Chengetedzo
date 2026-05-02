@@ -128,11 +128,12 @@ public class LoanManager : MonoBehaviour
             if (missedPayments > 0)
                 missedPayments--;
 
-            if (onTimePayments == 2)
+            if (onTimePayments == 2 && !GameManager.Instance.HasMentorSpokenThisMonth())
             {
                 UIManager.Instance.ShowMentorMessage(
                     MentorLines.LoanRecovery[Random.Range(0, MentorLines.LoanRecovery.Length)]
                 );
+                GameManager.Instance.SetMentorSpokeThisMonth(true);
             }
 
             Debug.Log($"[Loan] Repayment: ${repayment:F0}");
@@ -196,10 +197,14 @@ public class LoanManager : MonoBehaviour
 
         Debug.Log($"[Loan] FORCED loan issued: ${amount:F0}");
 
-        UIManager.Instance.ShowMentorMessage(
-            "Taking on debt is sometimes necessary, but always have a repayment plan. " +
-            "Missing payments can damage your financial momentum."
-        );
+        if (!GameManager.Instance.HasMentorSpokenThisMonth())
+        {
+            UIManager.Instance.ShowMentorMessage(
+                "Taking on debt is sometimes necessary, but always have a repayment plan. " +
+                "Missing payments can damage your financial momentum."
+            );
+            GameManager.Instance.SetMentorSpokeThisMonth(true);
+        }
     }
 
     private void MissedPayment()
@@ -215,11 +220,13 @@ public class LoanManager : MonoBehaviour
         if (missedPayments == 3)
         {
             PlayerDataManager.Instance.ModifyMomentum(-6f);
-
-            UIManager.Instance.ShowMentorMessage(
-                MentorLines.MissedLoan[
-                    Random.Range(0, MentorLines.MissedLoan.Length)
-                ]);
+            if (!GameManager.Instance.HasMentorSpokenThisMonth())
+            {
+                UIManager.Instance.ShowMentorMessage(
+                    MentorLines.MissedLoan[Random.Range(0, MentorLines.MissedLoan.Length)]
+                );
+                GameManager.Instance.SetMentorSpokeThisMonth(true);
+            }
         }
     }
 

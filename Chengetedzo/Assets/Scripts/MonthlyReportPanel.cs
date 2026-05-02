@@ -17,6 +17,7 @@ public class MonthlyReportPanel : MonoBehaviour
     public TMP_Text totalExpensesText;
     public TMP_Text savingsLineText;
     public GameObject savingsLineRoot;
+    public TMP_Text previousBalanceText;
     public TMP_Text endBalanceText;
     public Transform eventRecapContainer;
     public GameObject eventRecapPrefab;
@@ -56,6 +57,9 @@ public class MonthlyReportPanel : MonoBehaviour
         if (monthHeaderText != null)
             monthHeaderText.text = $"Month {ledger.MonthNumber} - {monthName}";
 
+        if (previousBalanceText != null)
+            previousBalanceText.text = GameUtils.FormatMoney(ledger.OpeningBalance);
+
         float income = 0f;
         float housing = 0f;
         float groceries = 0f;
@@ -74,11 +78,14 @@ public class MonthlyReportPanel : MonoBehaviour
             switch (entry.entryType)
             {
                 case FinancialEntry.EntryType.Income:
+                    income += entry.SignedAmount();
+                break;
+
                 case FinancialEntry.EntryType.EventReward:
                     income += entry.SignedAmount();
-                    if (entry.entryType == FinancialEntry.EntryType.EventReward)
+                    if (abs > 0.01f)
                         eventLines.Add((entry.description, abs, true));
-                    break;
+                break;
 
                 case FinancialEntry.EntryType.Expense:
                     switch (entry.description)
@@ -102,7 +109,11 @@ public class MonthlyReportPanel : MonoBehaviour
 
                 case FinancialEntry.EntryType.EventLoss:
                     eventLosses += abs;
-                    eventLines.Add((entry.description, abs, false));
+                    if (abs > 0.01f)
+                    {
+                        string displayName = ShortenEventLabel(entry.description);
+                        eventLines.Add((displayName, abs, false));
+                    }
                     break;
 
                 case FinancialEntry.EntryType.SavingsContribution:
@@ -147,6 +158,7 @@ public class MonthlyReportPanel : MonoBehaviour
     private IEnumerator ForceLayoutRebuild()
     {
         yield return null;
+        yield return null;
         LayoutRebuilder.ForceRebuildLayoutImmediate(leftColumnRect);
     }
 
@@ -182,7 +194,7 @@ public class MonthlyReportPanel : MonoBehaviour
     {
         if (eventRecapContainer == null || eventRecapPrefab == null) return;
 
-        EnsureEventRecapLayout();
+        //EnsureEventRecapLayout();
 
         foreach (Transform child in eventRecapContainer)
             Destroy(child.gameObject);
@@ -210,6 +222,7 @@ public class MonthlyReportPanel : MonoBehaviour
         }
     }
 
+    /*
     private void EnsureEventRecapLayout()
     {
         var layout = eventRecapContainer.GetComponent<VerticalLayoutGroup>();
@@ -231,6 +244,7 @@ public class MonthlyReportPanel : MonoBehaviour
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
         }
     }
+    */
 
     private static void NormalizeUIChild(Transform child)
     {
@@ -250,5 +264,25 @@ public class MonthlyReportPanel : MonoBehaviour
         if (GameManager.Instance?.CurrentPhase != GameManager.GamePhase.Report) return;
         if (continueButton != null) continueButton.interactable = false;
         GameManager.Instance.EndMonthAndAdvance();
+    }
+
+    private string ShortenEventLabel(string description)
+    {
+        if (string.IsNullOrEmpty(description))
+            return description;
+
+        int dashIndex = description.IndexOf(" \u2014 ");
+        if (dashIndex > 0)
+            return description.Substring(0, dashIndex);
+
+        dashIndex = description.IndexOf(" — ");
+        if (dashIndex > 0)
+            return description.Substring(0, dashIndex);
+
+        const int maxLen = 40;
+        if (description.Length > maxLen)
+            return description.Substring(0, maxLen) + "…";
+
+        return description;
     }
 }

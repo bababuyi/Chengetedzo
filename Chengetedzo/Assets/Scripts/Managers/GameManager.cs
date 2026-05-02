@@ -73,6 +73,7 @@ public class GameManager : MonoBehaviour
     private bool isWaitingForEventConfirmation = false;
     private bool forecastBackLocked = false;
     public bool IsForecastBackLocked => forecastBackLocked;
+    public bool HasMentorSpokenThisMonth() => mentorSpokeThisMonth;
     public int SavedSavingsStreak => savingsStreak;
     public int SavedOverBudgetStreak => overBudgetStreak;
     public bool SavedPatternWarningIssued => patternWarningIssued;
@@ -846,7 +847,11 @@ public class GameManager : MonoBehaviour
         Debug.Log($"[MENTOR-TRIGGER] HandleForcedLoan → showing ForcedLoan mentor line");
         string forcedLoanLine = MentorLines.ForcedLoan[Random.Range(0, MentorLines.ForcedLoan.Length)];
         Debug.Log($"[MENTOR-LINE] \"{forcedLoanLine}\"");
-        uiManager.ShowMentorMessage(forcedLoanLine);
+        if (!mentorSpokeThisMonth)
+        {
+            uiManager.ShowMentorMessage(forcedLoanLine);
+            mentorSpokeThisMonth = true;
+        }
 
         forcedLoanHistory.Enqueue(true);
         TrimForcedLoanHistory();
@@ -1143,6 +1148,7 @@ public class GameManager : MonoBehaviour
         float signed = entry.SignedAmount();
 
         financeManager.ApplyCashDelta(signed);
+        uiManager?.UpdateMoneyText(financeManager.CashOnHand);
     }
 
     private string BuildEventResultText(ResolvedEvent ev)
