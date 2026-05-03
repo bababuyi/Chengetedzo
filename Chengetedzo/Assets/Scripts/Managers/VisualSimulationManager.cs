@@ -3,9 +3,9 @@ using static GameManager;
 
 public class VisualSimulationManager : MonoBehaviour
 {
-    [Header("Season Icons")]
-    public GameObject sunIcon;
-    public GameObject winterIcon;
+    //[Header("Season Icons")]
+    //public GameObject sunIcon;
+    //public GameObject winterIcon;
 
     [Header("Environment Layers")]
     public GameObject heatHaze;
@@ -34,20 +34,18 @@ public class VisualSimulationManager : MonoBehaviour
 
     public void UpdateVisuals()
     {
-        if (GameManager.Instance == null) return;
+        if (GameManager.Instance == null)
+            return;
 
         Season currentSeason = GameManager.Instance.GetCurrentSeason();
-
         switch (currentSeason)
         {
             case Season.Summer:
                 ApplySummer();
                 break;
-
             case Season.Winter:
                 ApplyWinter();
                 break;
-
             default:
                 ApplySummer();
                 break;
@@ -62,8 +60,8 @@ public class VisualSimulationManager : MonoBehaviour
 
     private void ApplySummer()
     {
-        SafeSet(sunIcon, true);
-        SafeSet(winterIcon, false);
+        //SafeSet(sunIcon, true);
+        //SafeSet(winterIcon, false);
 
         SafeSet(heatHaze, true);
         SafeSet(fogLayer, false);
@@ -78,8 +76,8 @@ public class VisualSimulationManager : MonoBehaviour
 
     private void ApplyWinter()
     {
-        SafeSet(sunIcon, false);
-        SafeSet(winterIcon, true);
+        //SafeSet(sunIcon, false);
+        //SafeSet(winterIcon, true);
 
         SafeSet(heatHaze, false);
         SafeSet(fogLayer, true);

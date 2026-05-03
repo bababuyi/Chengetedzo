@@ -11,7 +11,6 @@ public class SeasonVisualManager : MonoBehaviour
     {
         if (GameManager.Instance != null)
             GameManager.Instance.OnSeasonChanged += UpdateSeasonVisual;
-
         UpdateSeasonVisual();
     }
 
@@ -27,17 +26,14 @@ public class SeasonVisualManager : MonoBehaviour
             return;
 
         Season season = GameManager.Instance.GetCurrentSeason();
-
         switch (season)
         {
             case Season.Summer:
                 seasonImage.sprite = summerBackground;
                 break;
-
             case Season.Winter:
                 seasonImage.sprite = winterBackground;
                 break;
-
             default:
                 seasonImage.sprite = summerBackground;
                 break;

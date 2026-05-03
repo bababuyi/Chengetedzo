@@ -392,17 +392,18 @@ public class TutorialManager : MonoBehaviour
         }
     }
 
+    private bool _isSequenceRunning = false;
+
     private void ShowSequence(string[] messages, System.Action onComplete,
                               RectTransform[] pulseTargets = null)
     {
         if (messages == null || messages.Length == 0) { onComplete?.Invoke(); return; }
+        if (_isSequenceRunning) return; // ← add this
 
+        _isSequenceRunning = true;
         var msgList = new List<string>(messages);
-        var pulseList = pulseTargets != null
-            ? new List<RectTransform>(pulseTargets)
-            : new List<RectTransform>();
-
-        ShowSequenceStep(msgList, pulseList, onComplete);
+        var pulseList = pulseTargets != null ? new List<RectTransform>(pulseTargets) : new List<RectTransform>();
+        ShowSequenceStep(msgList, pulseList, () => { _isSequenceRunning = false; onComplete?.Invoke(); });
     }
 
     private void ShowSequenceStep(List<string> messages, List<RectTransform> pulses, System.Action onComplete)

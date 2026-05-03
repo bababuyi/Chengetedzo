@@ -155,10 +155,13 @@ public class MonthlyReportPanel : MonoBehaviour
         }
         StartCoroutine(ForceLayoutRebuild());
     }
+
     private IEnumerator ForceLayoutRebuild()
     {
         yield return null;
         yield return null;
+        if (eventRecapContainer is RectTransform recapRect)
+            LayoutRebuilder.ForceRebuildLayoutImmediate(recapRect);
         LayoutRebuilder.ForceRebuildLayoutImmediate(leftColumnRect);
     }
 
@@ -194,7 +197,7 @@ public class MonthlyReportPanel : MonoBehaviour
     {
         if (eventRecapContainer == null || eventRecapPrefab == null) return;
 
-        //EnsureEventRecapLayout();
+        EnsureEventRecapLayout();
 
         foreach (Transform child in eventRecapContainer)
             Destroy(child.gameObject);
@@ -222,7 +225,6 @@ public class MonthlyReportPanel : MonoBehaviour
         }
     }
 
-    /*
     private void EnsureEventRecapLayout()
     {
         var layout = eventRecapContainer.GetComponent<VerticalLayoutGroup>();
@@ -244,7 +246,6 @@ public class MonthlyReportPanel : MonoBehaviour
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
         }
     }
-    */
 
     private static void NormalizeUIChild(Transform child)
     {

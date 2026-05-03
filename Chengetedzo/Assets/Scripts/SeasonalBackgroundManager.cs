@@ -49,6 +49,8 @@ public class SeasonalBackgroundManager : MonoBehaviour
     {
         Sprite target = GetSeasonSprite(calendarMonth, hasWeatherEvent);
 
+        Debug.Log($"[BG] UpdateForMonth called | month={calendarMonth} | hasWeather={hasWeatherEvent} | target={(target != null ? target.name : "NULL")} | currentBG={(currentBackground != null ? currentBackground.name : "NULL")} | bgImage={(backgroundImage != null ? backgroundImage.gameObject.activeSelf.ToString() : "NULL")} | fadeOverlay={(fadeOverlayImage != null ? fadeOverlayImage.gameObject.activeSelf.ToString() : "NULL")}");
+
         if (target == null)
         {
             Debug.LogError($"[BG ERROR] Target sprite is NULL for month {calendarMonth}. Check Inspector assignments.");
@@ -56,11 +58,13 @@ public class SeasonalBackgroundManager : MonoBehaviour
         }
 
         if (target == currentBackground)
+        {
+            Debug.Log($"[BG] Same sprite as current — skipping transition.");
             return;
+        }
 
         if (isTransitioning)
         {
-            // Store it; the running coroutine will pick it up when it finishes.
             pendingBackground = target;
             Debug.Log($"[BG] Transition in progress — queued: {target.name}");
             return;
@@ -88,7 +92,9 @@ public class SeasonalBackgroundManager : MonoBehaviour
         isTransitioning = true;
         pendingBackground = null;
 
-        // Ensure the background image always has something visible as a base.
+        Debug.Log($"[BG-FADE] CrossfadeTo START | newSprite={newSprite.name} | bgImage.sprite={(backgroundImage.sprite != null ? backgroundImage.sprite.name : "NULL")} | bgImage.active={backgroundImage.gameObject.activeSelf} | bgImage.enabled={backgroundImage.enabled}");
+
+        // Ensure the background image always has something visible as a base...NOT WORKING AHHHHHHHHH
         if (backgroundImage.sprite == null)
             backgroundImage.sprite = currentBackground;
 
@@ -96,6 +102,9 @@ public class SeasonalBackgroundManager : MonoBehaviour
         {
             backgroundImage.sprite = newSprite;
             currentBackground = newSprite;
+
+            Debug.Log($"[BG-FADE] CrossfadeTo END | backgroundImage.sprite={backgroundImage.sprite.name} | active={backgroundImage.gameObject.activeSelf} | enabled={backgroundImage.enabled}");
+
             isTransitioning = false;
             yield break;
         }

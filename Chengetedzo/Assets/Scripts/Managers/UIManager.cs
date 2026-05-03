@@ -66,10 +66,6 @@ public class UIManager : MonoBehaviour
     public RectTransform eventNotificationRect;
     public float eventSlideDuration = 0.4f;
 
-    //private Coroutine eventAnimRoutine;
-    //private bool isEventAnimating = false;
-    //private bool eventFullyShown = false;
-
     [Header("Choice Popup")]
     public TextMeshProUGUI choiceSenderNameText;
     public TextMeshProUGUI choiceSenderRelationText;
