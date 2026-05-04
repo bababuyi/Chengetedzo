@@ -1481,14 +1481,14 @@ public class GameManager : MonoBehaviour
                 setupData.hasSchoolFees = true;
                 setupData.schoolFeesAmount = 80f;
 
-                setupData.minIncome = 180f;
+                setupData.minIncome = 220f;
                 setupData.maxIncome = 400f;
 
-                financeManager.rentCost = 60f;
+                financeManager.rentCost = 80f;
                 financeManager.groceries = 90f;
                 financeManager.transport = 25f;
                 financeManager.utilities = 15f;
-                financeManager.generalSavingsMonthly = 20f;
+                financeManager.generalSavingsMonthly = 0f;
 
                 financeManager.assets = new PlayerAssets();
                 
@@ -1540,7 +1540,7 @@ public class GameManager : MonoBehaviour
                 setupData.maxIncome = 1200f;  // harvest months
 
                 financeManager.rentCost = 0f;
-                financeManager.groceries = 150f;
+                financeManager.groceries = 100f;
                 financeManager.transport = 40f;
                 financeManager.utilities = 25f;
                 financeManager.generalSavingsMonthly = 50f;
