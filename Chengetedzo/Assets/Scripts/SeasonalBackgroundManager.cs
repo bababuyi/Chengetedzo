@@ -15,7 +15,8 @@ public class SeasonalBackgroundManager : MonoBehaviour
     [SerializeField] private Image fadeOverlayImage;
 
     private Sprite currentBackground;
-    private Sprite pendingBackground;   // queued while a transition is running
+    private Sprite pendingBackground;
+    private Sprite _targetBackground;
     private bool isTransitioning = false;
 
     private void Awake()
@@ -26,8 +27,6 @@ public class SeasonalBackgroundManager : MonoBehaviour
 
     private void Start()
     {
-        // Initialise to the correct sprite for the current month immediately,
-        // with no crossfade, so the screen is never blank at game start.
         int month = GameManager.Instance != null ? GameManager.Instance.currentMonth : 1;
         Sprite initial = GetSeasonSprite(month, false);
 
@@ -49,28 +48,22 @@ public class SeasonalBackgroundManager : MonoBehaviour
     {
         Sprite target = GetSeasonSprite(calendarMonth, hasWeatherEvent);
 
-        Debug.Log($"[BG] UpdateForMonth called | month={calendarMonth} | hasWeather={hasWeatherEvent} | target={(target != null ? target.name : "NULL")} | currentBG={(currentBackground != null ? currentBackground.name : "NULL")} | bgImage={(backgroundImage != null ? backgroundImage.gameObject.activeSelf.ToString() : "NULL")} | fadeOverlay={(fadeOverlayImage != null ? fadeOverlayImage.gameObject.activeSelf.ToString() : "NULL")}");
-
         if (target == null)
         {
-            Debug.LogError($"[BG ERROR] Target sprite is NULL for month {calendarMonth}. Check Inspector assignments.");
+            Debug.LogError($"[BG ERROR] Target sprite is NULL for month {calendarMonth}.");
             return;
         }
 
-        if (target == currentBackground)
-        {
-            Debug.Log($"[BG] Same sprite as current — skipping transition.");
+        Sprite effectiveCurrent = pendingBackground ?? (isTransitioning ? _targetBackground : currentBackground);
+        if (target == effectiveCurrent)
             return;
-        }
 
         if (isTransitioning)
         {
             pendingBackground = target;
-            Debug.Log($"[BG] Transition in progress — queued: {target.name}");
             return;
         }
 
-        Debug.Log($"[BG] Switching to: {target.name}");
         StartCoroutine(CrossfadeTo(target));
     }
 
@@ -90,11 +83,9 @@ public class SeasonalBackgroundManager : MonoBehaviour
     private IEnumerator CrossfadeTo(Sprite newSprite)
     {
         isTransitioning = true;
+        _targetBackground = newSprite;
         pendingBackground = null;
 
-        Debug.Log($"[BG-FADE] CrossfadeTo START | newSprite={newSprite.name} | bgImage.sprite={(backgroundImage.sprite != null ? backgroundImage.sprite.name : "NULL")} | bgImage.active={backgroundImage.gameObject.activeSelf} | bgImage.enabled={backgroundImage.enabled}");
-
-        // Ensure the background image always has something visible as a base...NOT WORKING AHHHHHHHHH
         if (backgroundImage.sprite == null)
             backgroundImage.sprite = currentBackground;
 
@@ -102,10 +93,16 @@ public class SeasonalBackgroundManager : MonoBehaviour
         {
             backgroundImage.sprite = newSprite;
             currentBackground = newSprite;
-
-            Debug.Log($"[BG-FADE] CrossfadeTo END | backgroundImage.sprite={backgroundImage.sprite.name} | active={backgroundImage.gameObject.activeSelf} | enabled={backgroundImage.enabled}");
-
+            _targetBackground = null;
             isTransitioning = false;
+
+            if (pendingBackground != null && pendingBackground != currentBackground)
+            {
+                Sprite queued = pendingBackground;
+                pendingBackground = null;
+                StartCoroutine(CrossfadeTo(queued));
+            }
+
             yield break;
         }
 
@@ -127,14 +124,13 @@ public class SeasonalBackgroundManager : MonoBehaviour
         fadeOverlayImage.color = new Color(1f, 1f, 1f, 0f);
         fadeOverlayImage.sprite = null;
 
+        _targetBackground = null;
         isTransitioning = false;
 
-        // If a new target arrived while we were transitioning, run it now.
         if (pendingBackground != null && pendingBackground != currentBackground)
         {
             Sprite queued = pendingBackground;
             pendingBackground = null;
-            Debug.Log($"[BG] Running queued transition to: {queued.name}");
             StartCoroutine(CrossfadeTo(queued));
         }
     }

@@ -83,6 +83,8 @@ public class GameManager : MonoBehaviour
     public List<IncomeEffect> ActiveIncomeEffects => activeIncomeEffects;
     public List<ExpenseEffect> ActiveExpenseEffects => activeExpenseEffects;
 
+    private int _sessionId = 0;
+
     [ContextMenu("DEV — Full Reset (Save + Prefs)")]
     public void DEV_FullReset()
     {
@@ -238,8 +240,9 @@ public class GameManager : MonoBehaviour
             return;
 
         monthResolutionStarted = true;
+        monthResolutionFinished = false;
 
-        CurrentLedger = new MonthlyFinancialLedger(currentMonth,financeManager.CashOnHand);
+    CurrentLedger = new MonthlyFinancialLedger(currentMonth,financeManager.CashOnHand);
 
         Debug.Log($"[Month] Confirmed → Resolving Month {currentMonth}");
 
@@ -301,8 +304,13 @@ public class GameManager : MonoBehaviour
 
     public void OnEventPopupClosed()
     {
-        UpdateTopButtons();
+        if (!monthResolutionStarted)
+        {
+            Debug.LogWarning("[GameManager] OnEventPopupClosed ignored — stale callback.");
+            return;
+        }
 
+        UpdateTopButtons();
         isWaitingForEventConfirmation = false;
 
         if (CurrentPhase == GamePhase.Simulation)
@@ -770,7 +778,7 @@ public class GameManager : MonoBehaviour
         uiManager.SwitchPanel(UIManager.UIPanelState.None);
         SetPhase(GamePhase.Simulation);
 
-        // First-ever simulation start: show tutorial before processing begins
+        // First-ever simulation start: show tutorial before continueing begins
         if (TutorialManager.Instance != null)
         {
             TutorialManager.Instance.OnSimulationFirstStart(ConfirmMonthAndResolve);
@@ -806,7 +814,7 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        if (CurrentPhase != GamePhase.Report)
+        if (CurrentPhase != GamePhase.Report && !monthResolutionFinished)
         {
             EndMonthlyResolution();
         }
@@ -1058,7 +1066,7 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        if (CurrentPhase != GamePhase.Report)
+        if (CurrentPhase != GamePhase.Report && !monthResolutionFinished)
         {
             EndMonthlyResolution();
         }
@@ -1329,6 +1337,7 @@ public class GameManager : MonoBehaviour
 
     public void FullRestart()
     {
+        _sessionId++;
         Debug.Log("=== FULL GAME RESET ===");
         uiManager.SwitchPanel(UIManager.UIPanelState.None);
         financeManager?.ResetFinance();
@@ -1381,6 +1390,7 @@ public class GameManager : MonoBehaviour
         mentorSpokeThisMonth = false;
         loanIntroShown = false;
         monthResolutionStarted = false;
+        monthResolutionFinished = false;
         recoveryAcknowledged = false;
         patternWarningIssued = false;
         IsLoanDecisionActive = false;
