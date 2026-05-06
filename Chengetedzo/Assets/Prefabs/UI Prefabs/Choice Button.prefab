@@ -65,7 +65,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Button
+  m_text: Fix it properly at the garage ($300)
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -92,8 +92,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 53.7
-  m_fontSizeBase: 24
+  m_fontSize: 55
+  m_fontSizeBase: 48
   m_fontWeight: 400
   m_enableAutoSizing: 1
   m_fontSizeMin: 18
@@ -148,6 +148,7 @@ GameObject:
   - component: {fileID: 827780369448207685}
   - component: {fileID: 2746362588119400946}
   - component: {fileID: 8374493241897104468}
+  - component: {fileID: 3510055470570678998}
   m_Layer: 5
   m_Name: Choice Button
   m_TagString: Untagged
@@ -172,8 +173,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -189.58, y: -364}
-  m_SizeDelta: {x: 320, y: 60}
+  m_AnchoredPosition: {x: -189.58, y: -268.79376}
+  m_SizeDelta: {x: 320, y: 251.2582}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &827780369448207685
 CanvasRenderer:
@@ -257,3 +258,17 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &3510055470570678998
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1465613230174969825}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_HorizontalFit: 0
+  m_VerticalFit: 0

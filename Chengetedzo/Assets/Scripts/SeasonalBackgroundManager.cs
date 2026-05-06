@@ -41,22 +41,38 @@ public class SeasonalBackgroundManager : MonoBehaviour
         }
 
         if (fadeOverlayImage != null)
+        {
             fadeOverlayImage.color = new Color(1f, 1f, 1f, 0f);
+            fadeOverlayImage.enabled = false;
+        }
     }
 
     public void UpdateForMonth(int calendarMonth, bool hasWeatherEvent)
     {
         Sprite target = GetSeasonSprite(calendarMonth, hasWeatherEvent);
-
         if (target == null)
         {
             Debug.LogError($"[BG ERROR] Target sprite is NULL for month {calendarMonth}.");
             return;
         }
 
-        Sprite effectiveCurrent = pendingBackground ?? (isTransitioning ? _targetBackground : currentBackground);
-        if (target == effectiveCurrent)
-            return;
+        if (isTransitioning && fadeOverlayImage != null &&
+            fadeOverlayImage.color.a > 0f)
+        {
+            StopAllCoroutines();
+            isTransitioning = false;
+            backgroundImage.sprite = _targetBackground ?? currentBackground;
+            currentBackground = backgroundImage.sprite;
+            fadeOverlayImage.color = new Color(1f, 1f, 1f, 0f);
+            fadeOverlayImage.sprite = null;
+            pendingBackground = null;
+            _targetBackground = null;
+        }
+
+        Sprite effectiveCurrent = pendingBackground ??
+            (isTransitioning ? _targetBackground : currentBackground);
+
+        if (target == effectiveCurrent) return;
 
         if (isTransitioning)
         {
@@ -86,9 +102,6 @@ public class SeasonalBackgroundManager : MonoBehaviour
         _targetBackground = newSprite;
         pendingBackground = null;
 
-        if (backgroundImage.sprite == null)
-            backgroundImage.sprite = currentBackground;
-
         if (fadeOverlayImage == null)
         {
             backgroundImage.sprite = newSprite;
@@ -106,6 +119,8 @@ public class SeasonalBackgroundManager : MonoBehaviour
             yield break;
         }
 
+        // Enable overlay for fade
+        fadeOverlayImage.enabled = true;
         fadeOverlayImage.sprite = newSprite;
         fadeOverlayImage.color = new Color(1f, 1f, 1f, 0f);
 
@@ -119,10 +134,12 @@ public class SeasonalBackgroundManager : MonoBehaviour
         }
 
         backgroundImage.sprite = newSprite;
+        backgroundImage.enabled = true;
         currentBackground = newSprite;
 
         fadeOverlayImage.color = new Color(1f, 1f, 1f, 0f);
         fadeOverlayImage.sprite = null;
+        fadeOverlayImage.enabled = false;
 
         _targetBackground = null;
         isTransitioning = false;
