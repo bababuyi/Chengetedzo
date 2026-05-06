@@ -12,8 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
   m_Name: Medical Costs
   m_EditorClassIdentifier: 
+  hasChoices: 0
+  senderName: 
+  senderRelation: 
+  choices: []
   eventName: Medication Costs
-  description: Ongoing treatment increases healthcare FixedAmounts.
+  description: Ongoing treatment increases healthcare.
   financialLesson: Chronic illness increases expenses.
   category: 0
   pool: 3

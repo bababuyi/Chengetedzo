@@ -1163,7 +1163,7 @@ public class GameManager : MonoBehaviour
     {
         string text = ev.description;
 
-        if (ev.moneyChange != 0f)
+        if (Mathf.Abs(ev.moneyChange) >= 1f)
         {
             string sign = ev.moneyChange > 0 ? "+" : "-";
             text += $"\n\nMoney: {sign}${Mathf.Abs(ev.moneyChange):F0}";
@@ -1183,6 +1183,17 @@ public class GameManager : MonoBehaviour
                 text += $" for {ev.incomeDurationMonths} months";
             else if (ev.incomeDurationMonths < 0)
                 text += " (Permanent)";
+        }
+
+        if (ev.affectsExpenses && ev.expenseFlatChange != 0f)
+        {
+            string sign = ev.expenseFlatChange > 0 ? "+" : "-";
+            string duration = ev.expenseEffectMonths == -1
+                ? "permanent"
+                : ev.expenseEffectMonths == 1
+                    ? "this month"
+                    : $"{ev.expenseEffectMonths} months";
+            text += $"\n{ev.expenseCategoryName} cost: {sign}${Mathf.Abs(ev.expenseFlatChange):F0} ({duration})";
         }
 
         return text;

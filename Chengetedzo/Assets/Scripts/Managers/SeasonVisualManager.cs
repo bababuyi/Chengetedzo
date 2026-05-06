@@ -18,6 +18,8 @@ public class SeasonVisualManager : MonoBehaviour
     {
         if (GameManager.Instance != null)
             GameManager.Instance.OnSeasonChanged -= UpdateSeasonVisual;
+
+        Debug.LogWarning($"[SeasonVisual] DISABLED by: {System.Environment.StackTrace}");
     }
 
     public void UpdateSeasonVisual()
@@ -25,6 +27,7 @@ public class SeasonVisualManager : MonoBehaviour
         if (GameManager.Instance == null || seasonImage == null)
             return;
 
+        seasonImage.gameObject.SetActive(true);
         Season season = GameManager.Instance.GetCurrentSeason();
         switch (season)
         {

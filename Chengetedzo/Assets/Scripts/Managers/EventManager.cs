@@ -203,6 +203,8 @@ public class EventManager : MonoBehaviour
                     hasChoices = true,
                     choices = ev.choices,
                     pool = ev.pool,
+                    senderName = ev.senderName,
+                    senderRelation = ev.senderRelation
                 });
 
                 TryScheduleFollowUp(ev, month);
@@ -305,6 +307,20 @@ public class EventManager : MonoBehaviour
                 if (result.waitingPeriodBlocked) Debug.Log("Claim blocked: waiting period.");
                 if (result.lapsedBlocked) Debug.Log("Claim blocked: policy lapsed.");
             }
+            else if (finalLoss > 0f)
+            {
+                float cappedLoss = GameManager.Instance.ApplyMonthlyDamage(finalLoss);
+                if (cappedLoss > 0f)
+                {
+                    GameManager.Instance.ApplyMoneyChange(
+                        FinancialEntry.EntryType.EventLoss,
+                        ev.eventName,
+                        cappedLoss,
+                        false
+                    );
+                    finalLoss = cappedLoss;
+                }
+            }
 
             if (payout > 0f)
                 GameManager.Instance.ApplyMoneyChange(
@@ -322,7 +338,11 @@ public class EventManager : MonoBehaviour
                 type = InsuranceManager.InsuranceType.None,
                 lossPercent = lossPercent,
                 moneyChange = -finalLoss,
-                insurancePayout = payout
+                insurancePayout = payout,
+                affectsExpenses = ev.affectsExpenses,
+                expenseCategoryName = ev.affectsExpenses ? ev.expenseCategory.ToString() : "",
+                expenseFlatChange = ev.expenseFlatChange,
+                expenseEffectMonths = ev.expenseEffectMonths
             });
 
             Debug.Log($"[FINANCIAL RESULT] Event: {ev.eventName} | PlayerLoss: {finalLoss:F0} | " +
@@ -544,7 +564,11 @@ public class EventManager : MonoBehaviour
             pool = ev.pool,
             lossPercent = lossPercent,
             moneyChange = -finalLoss,
-            insurancePayout = payout
+            insurancePayout = payout,
+            affectsExpenses = ev.affectsExpenses,
+            expenseCategoryName = ev.affectsExpenses ? ev.expenseCategory.ToString() : "",
+            expenseFlatChange = ev.expenseFlatChange,
+            expenseEffectMonths = ev.expenseEffectMonths
         });
 
         TryScheduleFollowUp(ev, month);

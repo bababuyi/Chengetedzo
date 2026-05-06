@@ -18,6 +18,11 @@ public class ResolvedEvent
     public float lossPercent;
     public float insurancePayout;
 
+    public bool affectsExpenses;
+    public string expenseCategoryName;
+    public float expenseFlatChange;
+    public int expenseEffectMonths;
+
     public bool hasChoices;
     public List<EventData.ChoiceOption> choices;
     public string senderName;
