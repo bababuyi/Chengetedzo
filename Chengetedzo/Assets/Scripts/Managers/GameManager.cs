@@ -1166,7 +1166,8 @@ public class GameManager : MonoBehaviour
         if (Mathf.Abs(ev.moneyChange) >= 1f)
         {
             string sign = ev.moneyChange > 0 ? "+" : "-";
-            text += $"\n\nMoney: {sign}${Mathf.Abs(ev.moneyChange):F0}";
+            float actual = Mathf.Abs(ev.moneyChange);
+            text += $"\n\nMoney: {sign}${actual:F0}";
         }
 
         if (ev.insurancePayout > 0f)

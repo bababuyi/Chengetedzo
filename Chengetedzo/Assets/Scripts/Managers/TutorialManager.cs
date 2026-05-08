@@ -18,8 +18,8 @@ public class TutorialManager : MonoBehaviour
     private const string KEY_EVENT_SEEN = "Tut_EventSeen";
     private const string KEY_REPORT_SEEN = "Tut_ReportSeen";
     private const string KEY_COMPLETE_SEEN = "Tut_CompleteSeen";
-    private const string KEY_FREE_FORECAST = "Tut_FreeForeSeen";
-    private const string KEY_FREE_INSURANCE = "Tut_FreeInsSeen";
+    private const string KEY_FREE_FORECAST = "Tut_ForecastSeen";
+    private const string KEY_FREE_INSURANCE = "Tut_InsuranceSeen";
     private const string KEY_FREE_SETUP = "Tut_FreeSetupSeen";
     private const string KEY_DEDUCTIBLE_SEEN = "Tut_DeductibleSeen";
 
@@ -192,11 +192,12 @@ public class TutorialManager : MonoBehaviour
     public void ResetAll()
     {
         string[] keys =
-{
+        {
             KEY_GUIDED_ATTEMPTED, KEY_INFORMAL_SEEN, KEY_FORMAL_SEEN, KEY_FARMER_SEEN,
             KEY_FORECAST_SEEN, KEY_INSURANCE_SEEN, KEY_SIM_START_SEEN, KEY_LOAN_SEEN,
             KEY_EVENT_SEEN, KEY_REPORT_SEEN, KEY_COMPLETE_SEEN,
-            KEY_FREE_FORECAST, KEY_FREE_INSURANCE, KEY_FREE_SETUP, KEY_DEDUCTIBLE_SEEN
+            KEY_FREE_FORECAST, KEY_FREE_INSURANCE, KEY_FREE_SETUP, KEY_DEDUCTIBLE_SEEN,
+            "Tut_FreeForeSeen", "Tut_FreeInsSeen" // legacy keys — clear old saves
         };
         foreach (var k in keys) PlayerPrefs.DeleteKey(k);
         PlayerPrefs.Save();

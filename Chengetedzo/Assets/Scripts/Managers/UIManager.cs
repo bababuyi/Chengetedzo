@@ -509,6 +509,40 @@ public class UIManager : MonoBehaviour
 
         if (choiceSenderBubbleRect != null)
             UIAnimator.Instance?.ScaleBubbleIn(choiceSenderBubbleRect);
+
+        StartCoroutine(EqualizeButtonHeights());
+    }
+
+    private IEnumerator EqualizeButtonHeights()
+    {
+        yield return null;
+        yield return null;
+
+        if (choiceButtonsParent == null) yield break;
+
+        LayoutRebuilder.ForceRebuildLayoutImmediate(choiceButtonsParent as RectTransform);
+
+        float maxHeight = 0f;
+        var rects = new List<RectTransform>();
+
+        foreach (Transform child in choiceButtonsParent)
+        {
+            var rect = child.GetComponent<RectTransform>();
+            if (rect == null) continue;
+
+            LayoutRebuilder.ForceRebuildLayoutImmediate(rect);
+            rects.Add(rect);
+            maxHeight = Mathf.Max(maxHeight, rect.rect.height);
+        }
+
+        foreach (var rect in rects)
+        {
+            var csf = rect.GetComponent<UnityEngine.UI.ContentSizeFitter>();
+            if (csf != null) csf.enabled = false;
+
+            rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, maxHeight);
+        }
+        LayoutRebuilder.ForceRebuildLayoutImmediate(choiceButtonsParent as RectTransform);
     }
 
     private void ShowChoiceResult(int index, List<EventData.ChoiceOption> choices)

@@ -279,7 +279,7 @@ public class EventManager : MonoBehaviour
             }
 
             // ---------------- NEGATIVE EVENT ----------------
-            float lossPercent = Random.Range(ev.minLossPercent, ev.maxLossPercent + 1);
+            float lossPercent = (ev.minLossPercent == 0f && ev.maxLossPercent == 0f)? 0f:Random.Range(ev.minLossPercent, ev.maxLossPercent + 1);
 
             float cash = GameManager.Instance.financeManager.CashOnHand;
             float intendedLoss = GameManager.Instance.financeManager.CalculateEventLoss(ev, lossPercent);
@@ -339,6 +339,7 @@ public class EventManager : MonoBehaviour
                 lossPercent = lossPercent,
                 moneyChange = -finalLoss,
                 insurancePayout = payout,
+                intendedLoss = intendedLoss - payout,
                 affectsExpenses = ev.affectsExpenses,
                 expenseCategoryName = ev.affectsExpenses ? ev.expenseCategory.ToString() : "",
                 expenseFlatChange = ev.expenseFlatChange,
@@ -356,17 +357,6 @@ public class EventManager : MonoBehaviour
             Debug.Log($"[INCOME EFFECT] Event: {ev.eventName} | " +
                       $"IncomeChange: {ev.incomePercentChange}% | Duration: {ev.incomeEffectMonths} months");
         }
-
-        /*if (triggeredEventCount == 0 && Random.value < 0.35f + (eventPressure / maxPressure) * 0.4f)
-        {
-            var fallback = GetWeightedEvent(eligibleEvents.FindAll(e => !eventsTriggeredThisYear.Contains(e)));
-
-            if (fallback != null && Random.value < 0.5f)
-            {
-                ResolveEvent(fallback, month, results, ref disasterCount);
-                eventPressure = 0f;
-            }
-        }*/
 
         if (triggeredEventCount == 0 &&Random.value < 0.35f + (eventPressure / maxPressure) * 0.4f)
         {
@@ -483,6 +473,23 @@ public class EventManager : MonoBehaviour
             return;
         }
 
+        if (ev.hasChoices && ev.choices != null && ev.choices.Count > 0)
+        {
+            results.Add(new ResolvedEvent
+            {
+                title = ev.eventName,
+                description = ev.description,
+                icon = ev.icon,
+                hasChoices = true,
+                choices = ev.choices,
+                pool = ev.pool,
+                senderName = ev.senderName,
+                senderRelation = ev.senderRelation
+            });
+            TryScheduleFollowUp(ev, month);
+            return;
+        }
+
         // ---------------- POSITIVE EVENT ----------------
         if (ev.outcomeType == EventOutcomeType.Positive)
         {
@@ -528,7 +535,7 @@ public class EventManager : MonoBehaviour
             return;
         }
 
-        float lossPercent = Random.Range(ev.minLossPercent, ev.maxLossPercent + 1);
+        float lossPercent = (ev.minLossPercent == 0f && ev.maxLossPercent == 0f)?0f:Random.Range(ev.minLossPercent, ev.maxLossPercent + 1);
 
         float intendedLoss = GameManager.Instance.financeManager.CalculateEventLoss(ev, lossPercent);
 

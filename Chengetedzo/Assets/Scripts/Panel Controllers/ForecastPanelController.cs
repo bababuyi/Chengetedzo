@@ -32,8 +32,9 @@ public class ForecastPanelController : MonoBehaviour
             return;
         }
 
+        bool isFirstMonth = GameManager.Instance.currentMonth == 1;
         backButton.gameObject.SetActive(
-            !GameManager.Instance.IsForecastBackLocked
+            isFirstMonth && !GameManager.Instance.IsForecastBackLocked
         );
     }
 
@@ -54,6 +55,9 @@ public class ForecastPanelController : MonoBehaviour
     private void BackToBudget()
     {
         if (GameManager.Instance.IsForecastBackLocked)
+            return;
+
+        if (GameManager.Instance.currentMonth != 1)
             return;
 
         GameManager.Instance.OnForecastBack();
