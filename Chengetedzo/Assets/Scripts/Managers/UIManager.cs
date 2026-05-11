@@ -39,6 +39,9 @@ public class UIManager : MonoBehaviour
     public GameObject endOfYearScreen;
     public TextMeshProUGUI resultsText;
 
+    [Header("Glossary")]
+    public GameObject glossaryPanel;
+
     [Header("End Of Year Controls")]
     public Button endOfYearContinueButton;
     public Button restartButton;
@@ -213,6 +216,18 @@ public class UIManager : MonoBehaviour
     {
         SwitchPanel(UIPanelState.Setup);
         setupPanel.GetComponent<SetupPanelController>()?.OnPanelOpened();
+    }
+
+    public void ShowGlossary()
+    {
+        if (glossaryPanel != null)
+            glossaryPanel.SetActive(true);
+    }
+
+    public void HideGlossary()
+    {
+        if (glossaryPanel != null)
+            glossaryPanel.SetActive(false);
     }
 
     public void UpdateMonthText(int currentMonth, int totalMonths)
