@@ -212,6 +212,20 @@ public class UIManager : MonoBehaviour
         SwitchPanel(UIPanelState.MainMenu);
     }
 
+    // Test if this works for blackbars
+    void ApplySafeArea(RectTransform panel)
+    {
+        Rect safeArea = Screen.safeArea;
+        Vector2 anchorMin = safeArea.position;
+        Vector2 anchorMax = safeArea.position + safeArea.size;
+        anchorMin.x /= Screen.width;
+        anchorMin.y /= Screen.height;
+        anchorMax.x /= Screen.width;
+        anchorMax.y /= Screen.height;
+        panel.anchorMin = anchorMin;
+        panel.anchorMax = anchorMax;
+    }
+
     public void ShowSetupPanel()
     {
         SwitchPanel(UIPanelState.Setup);
@@ -222,12 +236,18 @@ public class UIManager : MonoBehaviour
     {
         if (glossaryPanel != null)
             glossaryPanel.SetActive(true);
+
+        if (mainMenuPanel != null)
+            mainMenuPanel.SetActive(false);
     }
 
     public void HideGlossary()
     {
         if (glossaryPanel != null)
             glossaryPanel.SetActive(false);
+
+        if (mainMenuPanel != null)
+            mainMenuPanel.SetActive(true);
     }
 
     public void UpdateMonthText(int currentMonth, int totalMonths)
@@ -290,7 +310,7 @@ public class UIManager : MonoBehaviour
 
             case UIPanelState.EndOfYear:
                 endOfYearScreen.SetActive(true);
-                break;
+            break;
         }
     }
 
@@ -299,7 +319,7 @@ public class UIManager : MonoBehaviour
         if (currentPanelState == newState)
             return;
         //------------------------------------//
-        // FUTURE BARAKA. BE VERY CAREFUL WITH EVENT AND MENTOR POPUPS. YOU WILL REGRET TOUCHING ANYTHING. DOUBLE CHECK STATES IF YOU DO. CRASH OUT COUNT = 7
+        // FUTURE BARAKA. BE VERY CAREFUL WITH EVENT AND MENTOR POPUPS. YOU WILL REGRET TOUCHING ANYTHING. DOUBLE CHECK STATES IF YOU DO. CRASH OUT COUNT = 9
         //-----------------------------------//
         if (IsPopupActive)
         {
@@ -315,7 +335,7 @@ public class UIManager : MonoBehaviour
         {
             case UIPanelState.Setup:
                 setupPanel.SetActive(true);
-                topHUD?.SetActive(false);
+                topHUD?.SetActive(true);
                 financialHUD?.SetActive(false);
                 break;
 
@@ -345,7 +365,7 @@ public class UIManager : MonoBehaviour
 
             case UIPanelState.Report:
                 reportPanel.SetActive(true);
-                topHUD?.SetActive(true);
+                topHUD?.SetActive(false);
                 financialHUD?.SetActive(false);
                 break;
 

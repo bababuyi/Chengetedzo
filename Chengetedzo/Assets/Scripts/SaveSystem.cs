@@ -1,11 +1,9 @@
 using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
 
 public static class SaveSystem
 {
-    private static string SavePath =>
-        Application.persistentDataPath + "/save.json";
+    private const string SAVE_KEY = "GameSaveData";
 
     public static void SaveGame(GameManager gm)
     {
@@ -98,13 +96,27 @@ public static class SaveSystem
                 eventWasInsured = s.eventWasInsured
             });
 
-        string json = JsonUtility.ToJson(data, true);
-
-        File.WriteAllText(SavePath, json);
-
-        Debug.Log("Game Saved " + SavePath);
+        string json = JsonUtility.ToJson(data, false);
+        PlayerPrefs.SetString(SAVE_KEY, json);
+        PlayerPrefs.Save();
+        Debug.Log("Game Saved");
     }
 
+    public static GameSaveData LoadGame()
+    {
+        string json = PlayerPrefs.GetString(SAVE_KEY, "");
+        if (string.IsNullOrEmpty(json)) return null;
+        Debug.Log("Game Loaded");
+        return JsonUtility.FromJson<GameSaveData>(json);
+    }
+
+    public static void DeleteSave()
+    {
+        PlayerPrefs.DeleteKey(SAVE_KEY);
+        PlayerPrefs.Save();
+    }
+
+    /*
     public static GameSaveData LoadGame()
     {
         if (!File.Exists(SavePath))
@@ -118,10 +130,11 @@ public static class SaveSystem
 
         return data;
     }
-
+    
     public static void DeleteSave()
     {
         if (File.Exists(SavePath))
             File.Delete(SavePath);
     }
+    */
 }
