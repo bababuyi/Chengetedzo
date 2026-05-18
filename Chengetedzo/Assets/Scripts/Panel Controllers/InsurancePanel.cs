@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -19,10 +19,12 @@ public class InsurancePanel : MonoBehaviour
     public Button backButton;
 
     private InsuranceManager insuranceManager;
+    private bool onAssetPage = false;
 
     private void OnEnable()
     {
-        RefreshUI();
+        onAssetPage = false;
+        ShowPage();
     }
 
     private void Awake()
@@ -50,16 +52,70 @@ public class InsurancePanel : MonoBehaviour
             planInfoText.text = "Select one or more insurance plans to see their details.";
 
         if (confirmButton != null)
-        {
-            confirmButton.onClick.AddListener(ConfirmInsurance);
             confirmButton.gameObject.SetActive(true);
-        }
     }
 
     private void OnDestroy()
     {
         if (confirmButton != null)
-            confirmButton.onClick.RemoveListener(ConfirmInsurance);
+            confirmButton.onClick.RemoveAllListeners();
+    }
+
+    private void ShowPage()
+    {
+        if (toggleContainer == null || togglePrefab == null || insuranceManager == null)
+            return;
+
+        foreach (Transform child in toggleContainer)
+            Destroy(child.gameObject);
+
+        var plansForPage = insuranceManager.allPlans.FindAll(p =>
+            onAssetPage
+                ? p.requiredAsset != GameManager.AssetRequirement.None
+                : p.requiredAsset == GameManager.AssetRequirement.None
+        );
+
+        if (onAssetPage && plansForPage.TrueForAll(p => !PlayerMeetsRequirement(p)))
+        {
+            ConfirmInsurance();
+            return;
+        }
+
+        foreach (var plan in plansForPage)
+        {
+            var item = Instantiate(togglePrefab, toggleContainer);
+            item.Init(plan, this, insuranceManager);
+            item.SetInteractable(PlayerMeetsRequirement(plan));
+        }
+
+        if (planInfoText != null)
+            planInfoText.text = onAssetPage
+                ? "These plans cover your assets — vehicle, home, and farm."
+                : "Select one or more insurance plans to see their details.";
+
+        if (confirmButton != null)
+        {
+            confirmButton.onClick.RemoveAllListeners();
+
+            if (!onAssetPage)
+            {
+                confirmButton.GetComponentInChildren<TMP_Text>().text = "Next →";
+                confirmButton.onClick.AddListener(AdvanceToAssetPage);
+            }
+            else
+            {
+                confirmButton.GetComponentInChildren<TMP_Text>().text = "Confirm";
+                confirmButton.onClick.AddListener(ConfirmInsurance);
+            }
+        }
+
+        UpdateSummary();
+    }
+
+    private void AdvanceToAssetPage()
+    {
+        onAssetPage = true;
+        ShowPage();
     }
 
     public bool PlayerMeetsRequirement(InsuranceManager.InsurancePlan plan)
@@ -84,7 +140,7 @@ public class InsurancePanel : MonoBehaviour
 
             if (!success)
             {
-                RefreshUI();
+                ShowPage();
                 planInfoText.text = "Not enough funds to purchase this plan.";
                 return;
             }
@@ -92,9 +148,9 @@ public class InsurancePanel : MonoBehaviour
             TutorialManager.Instance?.TriggerTutorial("insurance_deductible_explainer");
 
             planInfoText.text =
-             $"<b>{plan.planName}</b>\n\n" +
-            $"{plan.coverageDescription}\n\n" +
-            $"Coverage: {GameUtils.FormatMoney(plan.coverageLimit)}\n";
+                $"<b>{plan.planName}</b>\n\n" +
+                $"{plan.coverageDescription}\n\n" +
+                $"Coverage: {GameUtils.FormatMoney(plan.coverageLimit)}\n";
 
             if (plan.deductiblePercent > 0f)
                 planInfoText.text += $"Deductible: {plan.deductiblePercent}%";
@@ -135,31 +191,21 @@ public class InsurancePanel : MonoBehaviour
 
     public void RefreshUI()
     {
-        if (toggleContainer == null || togglePrefab == null || insuranceManager == null)
-            return;
-
-        foreach (Transform child in toggleContainer)
-            Destroy(child.gameObject);
-
-        foreach (var plan in insuranceManager.allPlans)
-        {
-            var item = Instantiate(togglePrefab, toggleContainer);
-
-            bool meetsRequirement = PlayerMeetsRequirement(plan);
-
-            item.Init(plan, this, insuranceManager);
-            item.SetInteractable(meetsRequirement);
-        }
-
-        UpdateSummary();
+        ShowPage();
     }
 
     private void BackToForecast()
     {
+        if (onAssetPage)
+        {
+            onAssetPage = false;
+            ShowPage();
+            return;
+        }
+
         if (GameManager.Instance.CurrentPhase != GameManager.GamePhase.Insurance)
             return;
 
         GameManager.Instance.OnInsuranceBack();
     }
-
 }
