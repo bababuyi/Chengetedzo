@@ -295,6 +295,40 @@ public class EventManager : MonoBehaviour
 
             if (ev.insuranceType != InsuranceType.None)
             {
+                if (GameManager.Instance.insuranceManager.CanClaimForEvent(ev.insuranceType))
+                {
+                    var (claimPayout, claimDeductible) = GameManager.Instance.insuranceManager.CalculateClaim(ev.insuranceType, intendedLoss);
+
+                    // affectsExpenses/Household/Loan already applied above in this loop
+                    if (ev.affectsIncome)
+                        GameManager.Instance.ApplyIncomeEffect(ev.incomePercentChange, ev.incomeEffectMonths);
+
+                    results.Add(new ResolvedEvent
+                    {
+                        title = ev.eventName,
+                        description = ev.description,
+                        pool = ev.pool,
+                        type = ev.insuranceType,
+                        icon = ev.icon,
+                        lossPercent = lossPercent,
+                        moneyChange = -intendedLoss,
+                        insurancePayout = claimPayout,
+                        intendedLoss = intendedLoss,
+                        pendingClaimDecision = true,
+                        claimPayout = claimPayout,
+                        claimDeductible = claimDeductible,
+                        affectsExpenses = ev.affectsExpenses,
+                        expenseCategoryName = ev.affectsExpenses ? ev.expenseCategory.ToString() : "",
+                        expenseFlatChange = ev.expenseFlatChange,
+                        expenseEffectMonths = ev.expenseEffectMonths,
+                        incomePercentChange = ev.incomePercentChange,
+                        incomeDurationMonths = ev.incomeEffectMonths,
+                    });
+
+                    TryScheduleFollowUp(ev, month);
+                    continue;
+                }
+
                 InsuranceManager.InsuranceResult result =
                     GameManager.Instance.insuranceManager.HandleEvent(ev.insuranceType, intendedLoss, ev.eventName);
 
@@ -307,6 +341,7 @@ public class EventManager : MonoBehaviour
                 if (result.waitingPeriodBlocked) Debug.Log("Claim blocked: waiting period.");
                 if (result.lapsedBlocked) Debug.Log("Claim blocked: policy lapsed.");
             }
+
             else if (finalLoss > 0f)
             {
                 float cappedLoss = GameManager.Instance.ApplyMonthlyDamage(finalLoss);
@@ -548,8 +583,49 @@ public class EventManager : MonoBehaviour
 
         intendedLoss = Mathf.Max(0f, intendedLoss);
 
-        var result = GameManager.Instance.insuranceManager.HandleEvent(ev.insuranceType, intendedLoss, ev.eventName);
+        if (GameManager.Instance.insuranceManager.CanClaimForEvent(ev.insuranceType))
+        {
+            var (claimPayout, claimDeductible) = GameManager.Instance.insuranceManager.CalculateClaim(ev.insuranceType, intendedLoss);
 
+            if (ev.affectsIncome)
+                GameManager.Instance.ApplyIncomeEffect(ev.incomePercentChange, ev.incomeEffectMonths);
+            if (ev.affectsHousehold)
+            {
+                for (int i = 0; i < ev.adultsLost; i++) PlayerDataManager.Instance.RemoveAdult();
+                for (int i = 0; i < ev.childrenLost; i++) PlayerDataManager.Instance.RemoveChild();
+            }
+            if (ev.affectsExpenses)
+                GameManager.Instance.ApplyExpenseEffect(ev.expenseCategory, ev.expenseFlatChange, ev.expenseEffectMonths);
+            if (ev.affectsLoan)
+                GameManager.Instance.loanManager?.ModifyBorrowingPower(ev.borrowingPowerChange);
+
+            results.Add(new ResolvedEvent
+            {
+                title = ev.eventName,
+                description = ev.description,
+                type = ev.insuranceType,
+                pool = ev.pool,
+                icon = ev.icon,
+                lossPercent = lossPercent,
+                moneyChange = -intendedLoss,
+                insurancePayout = claimPayout,
+                intendedLoss = intendedLoss,
+                pendingClaimDecision = true,
+                claimPayout = claimPayout,
+                claimDeductible = claimDeductible,
+                affectsExpenses = ev.affectsExpenses,
+                expenseCategoryName = ev.affectsExpenses ? ev.expenseCategory.ToString() : "",
+                expenseFlatChange = ev.expenseFlatChange,
+                expenseEffectMonths = ev.expenseEffectMonths,
+                incomePercentChange = ev.incomePercentChange,
+                incomeDurationMonths = ev.incomeEffectMonths,
+            });
+
+            TryScheduleFollowUp(ev, month);
+            return;
+        }
+
+        var result = GameManager.Instance.insuranceManager.HandleEvent(ev.insuranceType, intendedLoss, ev.eventName);
         float payout = result.payout;
         float finalLoss = result.finalLoss;
 

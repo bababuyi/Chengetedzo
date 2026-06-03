@@ -514,7 +514,28 @@ public class InsuranceManager : MonoBehaviour
             Debug.Log($"[Insurance] Monthly premiums charged: ${totalCharged:F2}");
     }
 
-    // Handle events / claims
+    public bool CanClaimForEvent(InsuranceType type)
+    {
+        var plan = GetPlan(type);
+        return plan != null && plan.isSubscribed && !plan.isLapsed &&
+               plan.monthsPaid >= plan.waitingPeriodMonths && plan.CanClaim();
+    }
+
+    public (float payout, float deductible) CalculateClaim(InsuranceType type, float rawLoss)
+    {
+        var plan = GetPlan(type);
+        if (plan == null) return (0f, 0f);
+        float deductible = rawLoss * (plan.deductiblePercent / 100f);
+        float insurableLoss = Mathf.Max(0f, rawLoss - deductible);
+        float coverageCap = plan.premiumIsAssetBased ? Finance.GetAssetValue(type) : plan.coverageLimit;
+        float payout = Mathf.Min(insurableLoss, coverageCap);
+        return (payout, deductible);
+    }
+
+    public void RecordClaimBookkeeping(InsuranceType type, float payout)
+    {
+        totalPayout += payout;
+    }
 
     public InsuranceResult HandleEvent(InsuranceType type, float rawLoss, string eventName = "Unknown Event")
 

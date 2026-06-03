@@ -20,7 +20,9 @@ public class GameManager : MonoBehaviour
     private bool recoveryAcknowledged = false;
     private int lastMomentumZone = int.MinValue;
     private bool patternWarningIssued = false;
-    
+    private bool mentorMemory_hasEverClaimed = false;
+    private int mentorMemory_consecutiveLowSavingsMonths = 0;
+
     [Header("Manager References")]
     public FinanceManager financeManager;
     public LoanManager loanManager;
@@ -627,12 +629,13 @@ public class GameManager : MonoBehaviour
         }
 
         totalUnexpectedEvents++;
-        totalRawEventDamage += Mathf.Abs(currentEvent.moneyChange);
-        totalInsurancePayoutAmount += currentEvent.insurancePayout;
 
-        if (currentEvent.insurancePayout > 0f)
+        if (!currentEvent.pendingClaimDecision)
         {
-            insuredEventsCount++;
+            totalRawEventDamage += Mathf.Abs(currentEvent.moneyChange);
+            totalInsurancePayoutAmount += currentEvent.insurancePayout;
+            if (currentEvent.insurancePayout > 0f)
+                insuredEventsCount++;
         }
 
         isWaitingForEventConfirmation = true;
@@ -679,6 +682,27 @@ public class GameManager : MonoBehaviour
     }
 
     private bool monthResolutionFinished = false;
+
+    private void EndMonthlyResolution()
+    {
+        if (monthResolutionFinished)
+        {
+            Debug.LogWarning("[Month] EndMonthlyResolution called twice — ignoring.");
+            return;
+        }
+        monthResolutionFinished = true;
+        Debug.Log("[Month] All events resolved");
+
+        EvaluateMomentumSignals();
+        if (financeManager.CashOnHand < 0f)
+            monthsUnderFinancialPressure++;
+
+        EvaluateMentor();
+        CheckMentorMemory();
+        HandleForcedLoanDecision();
+    }
+
+    /*
     private void EndMonthlyResolution()
     {
         if (monthResolutionFinished)
@@ -739,6 +763,7 @@ public class GameManager : MonoBehaviour
         CurrentLedger.GetMonthlyBreakdown()
         );
     }
+    */
 
     private string PickEventMentorLine()
     {
@@ -820,51 +845,199 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void HandleForcedLoan()
+    private void HandleForcedLoanDecision()
     {
-        float cash = financeManager.CashOnHand;
-
         if (forcedLoanThisMonth)
+        {
+            FinalizeLedgerAndShowReport();
             return;
-
+        }
         forcedLoanThisMonth = true;
 
+        float cash = financeManager.CashOnHand;
         if (cash >= 0f)
         {
             forcedLoanHistory.Enqueue(false);
             TrimForcedLoanHistory();
+            FinalizeLedgerAndShowReport();
             return;
         }
-
-        if (loanManager == null)
-            return;
 
         float shortfall = Mathf.Abs(cash);
-
-        if (!loanManager.CanForceLoan)
-        {
-            loanManager.ForceBorrow(shortfall * 0.75f);
-        }
-        else
-        {
-            loanManager.ForceBorrow(shortfall);
-        }
-
-        forcedLoanCount++;
-        PlayerDataManager.Instance.ModifyMomentum(-3f);
-        Debug.Log($"[MENTOR-TRIGGER] HandleForcedLoan → showing ForcedLoan mentor line");
-        string forcedLoanLine = MentorLines.ForcedLoan[Random.Range(0, MentorLines.ForcedLoan.Length)];
-        Debug.Log($"[MENTOR-LINE] \"{forcedLoanLine}\"");
-        if (!mentorSpokeThisMonth)
-        {
-            uiManager.ShowMentorMessage(forcedLoanLine);
-            mentorSpokeThisMonth = true;
-        }
-
         forcedLoanHistory.Enqueue(true);
         TrimForcedLoanHistory();
 
-        Debug.Log($"[Loan] Forced loan covered shortfall: ${shortfall:F0}");
+        if (CheckConsecutiveForcedLoans())
+            return; // TriggerDebtSpiralEnding handles continuation
+
+        if (IsHeadlessSimulation)
+        {
+            ApplyEmergencyLoan(shortfall);
+            FinalizeLedgerAndShowReport();
+            return;
+        }
+
+        ShowEmergencyLoanChoicePanel(shortfall);
+    }
+
+    private bool CheckConsecutiveForcedLoans()
+    {
+        if (forcedLoanHistory.Count < 3) return false;
+        var arr = forcedLoanHistory.ToArray();
+        int last = arr.Length;
+        if (arr[last - 1] && arr[last - 2] && arr[last - 3])
+        {
+            TriggerDebtSpiralEnding();
+            return true;
+        }
+        return false;
+    }
+
+    private void TriggerDebtSpiralEnding()
+    {
+        string message = "Three months running, your expenses have outrun your income. " +
+                         "This is the debt spiral — borrowing to survive creates the debt that makes survival harder. " +
+                         "The simulation ends here, but the lesson is the same in real life: the time to act is before the spiral starts.";
+        uiManager.ShowMentorMessage(message, () =>
+        {
+            ApplyEmergencyLoan(Mathf.Abs(financeManager.CashOnHand));
+            FinalizeLedgerAndShowReport();
+        });
+        mentorSpokeThisMonth = true;
+    }
+
+    private void ApplyEmergencyLoan(float amount)
+    {
+        if (loanManager == null) return;
+        loanManager.ForceBorrow(loanManager.CanForceLoan ? amount : amount * 0.75f);
+        forcedLoanCount++;
+        PlayerDataManager.Instance.ModifyMomentum(-3f);
+        Debug.Log($"[Loan] Emergency loan applied: ${amount:F0}");
+    }
+
+    private void ShowEmergencyLoanChoicePanel(float shortfall)
+    {
+        uiManager.ForceCloseAllPopups();
+        float opt1 = Mathf.Round(shortfall);
+        float opt2 = Mathf.Round(shortfall * 1.5f);
+        float opt3 = Mathf.Round(shortfall * 2f);
+
+        var choices = new List<EventData.ChoiceOption>
+    {
+        new EventData.ChoiceOption
+        {
+            label = $"Borrow ${opt1:F0} — just enough",
+            resultDescription = $"Borrowed ${opt1:F0}. Covers the gap exactly. Pay it back as fast as you can.",
+            moneyChange = 0f, momentumChange = 0f
+        },
+        new EventData.ChoiceOption
+        {
+            label = $"Borrow ${opt2:F0} — small buffer",
+            resultDescription = $"Borrowed ${opt2:F0}. A bit of breathing room, but more to repay next month.",
+            moneyChange = 0f, momentumChange = 0f
+        },
+        new EventData.ChoiceOption
+        {
+            label = $"Borrow ${opt3:F0} — more cushion",
+            resultDescription = $"Borrowed ${opt3:F0}. More cash now — but this will take longer to clear.",
+            moneyChange = 0f, momentumChange = 0f
+        }
+    };
+
+        float[] amounts = { opt1, opt2, opt3 };
+
+        uiManager.ShowChoicePopup(
+            "You're short this month.",
+            $"Your expenses came to more than you had. A money lender can cover you — but every dollar borrowed comes back with interest.",
+            "Farai",
+            "Money Lender",
+            choices,
+            index =>
+            {
+                ApplyEmergencyLoan(amounts[index]);
+                if (!mentorSpokeThisMonth)
+                {
+                    string line = MentorLines.ForcedLoan[Random.Range(0, MentorLines.ForcedLoan.Length)];
+                    uiManager.ShowMentorMessage(line, FinalizeLedgerAndShowReport);
+                    mentorSpokeThisMonth = true;
+                }
+                else
+                {
+                    FinalizeLedgerAndShowReport();
+                }
+            }
+        );
+    }
+
+    private void CheckMentorMemory()
+    {
+        if (financeManager.generalSavingsBalance < 100f)
+            mentorMemory_consecutiveLowSavingsMonths++;
+        else
+            mentorMemory_consecutiveLowSavingsMonths = 0;
+
+        if (mentorSpokeThisMonth) return;
+
+        if (mentorMemory_consecutiveLowSavingsMonths >= 3)
+        {
+            uiManager.ShowMentorMessage(
+                "Three months without a meaningful buffer. That's not bad luck — that's a gap in the plan. Even $20 set aside consistently changes what you can survive.");
+            mentorSpokeThisMonth = true;
+            mentorMemory_consecutiveLowSavingsMonths = 0;
+            return;
+        }
+
+        if (currentMonth == 18 && !mentorMemory_hasEverClaimed)
+        {
+            bool hasInsurance = insuranceManager.allPlans.Exists(p => p.isSubscribed && !p.isLapsed);
+            string line = hasInsurance
+                ? "Eighteen months of premiums, no claims. That's not money wasted — that's the cost of protection you were fortunate not to need. Stay consistent."
+                : "Eighteen months in without insurance. Think about what a single serious event would cost you right now with nothing in place.";
+            uiManager.ShowMentorMessage(line);
+            mentorSpokeThisMonth = true;
+        }
+    }
+
+    private void FinalizeLedgerAndShowReport()
+    {
+        if (CurrentLedger.IsFinalized())
+        {
+            Debug.LogWarning("Ledger already finalized. Preventing duplicate year accumulation.");
+            if (CurrentPhase != GamePhase.Report)
+            {
+                SetPhase(GamePhase.Report);
+                uiManager.ShowReportPanel(CurrentLedger.GetMonthlyBreakdown());
+            }
+            return;
+        }
+        CurrentLedger.FinalizeLedger();
+
+        yearIncome += CurrentLedger.TotalIncome;
+        yearExpenses += CurrentLedger.TotalExpenses;
+        yearPremiums += CurrentLedger.TotalInsurancePremiums;
+        yearPayouts += CurrentLedger.TotalInsurancePayouts;
+        yearEventLosses += CurrentLedger.TotalEventLosses;
+
+        Debug.Log(CurrentLedger.GetMonthlyBreakdown());
+
+        monthHistory.Add(new MonthSnapshot
+        {
+            month = currentMonth,
+            income = CurrentLedger.TotalIncome,
+            expenses = CurrentLedger.TotalExpenses + CurrentLedger.TotalInsurancePremiums,
+            cashOnHand = financeManager.CashOnHand,
+            savingsBalance = financeManager.generalSavingsBalance,
+            eventLoss = CurrentLedger.TotalEventLosses,
+            hadEvent = CurrentLedger.TotalEventLosses > 0f,
+            eventWasInsured = CurrentLedger.TotalInsurancePayouts > 0f
+        });
+
+        SetPhase(GamePhase.Report);
+
+        if (financeManager.LastMonthSavingsDelta > 0)
+            patternWarningIssued = false;
+
+        uiManager.ShowReportPanel(CurrentLedger.GetMonthlyBreakdown());
     }
 
     private void TrimForcedLoanHistory()
@@ -1204,9 +1377,16 @@ public class GameManager : MonoBehaviour
     {
         if (IsHeadlessSimulation)
         {
+            if (ev.pendingClaimDecision)
+            {
+                ApplyClaimChoice(ev, true);
+                OnEventPopupClosed();
+                return;
+            }
             int choiceIndex;
             float roll = Random.value;
             int count = ev.choices.Count;
+
             if (count == 2)
                 choiceIndex = roll < 0.5f ? 0 : 1;
             else
@@ -1218,6 +1398,12 @@ public class GameManager : MonoBehaviour
 
         if (uiManager.IsEventPopupShowing() || uiManager.IsChoicePopupShowing())
             return;
+
+        if (ev.pendingClaimDecision)
+        {
+            ShowInsuranceClaimChoice(ev);
+            return;
+        }
 
         if (ev.hasChoices && ev.choices != null && ev.choices.Count > 0)
         {
@@ -1270,6 +1456,80 @@ public class GameManager : MonoBehaviour
 
         if (choice.affectsLoan && loanManager != null)
             loanManager.ModifyBorrowingPower(choice.borrowingPowerChange);
+    }
+
+    private void ShowInsuranceClaimChoice(ResolvedEvent ev)
+    {
+        string planName = insuranceManager.GetPlan(ev.type)?.planName ?? ev.type.ToString();
+        float rawLoss = ev.intendedLoss;
+        float payout = ev.claimPayout;
+        float deductible = ev.claimDeductible;
+
+        var choices = new List<EventData.ChoiceOption>
+    {
+        new EventData.ChoiceOption
+        {
+            label = deductible > 0.5f
+                ? $"Claim — pay ${deductible:F0} excess, recover ${payout:F0}"
+                : $"Claim — recover ${payout:F0}",
+            resultDescription = $"Claim approved. {planName} covers ${payout:F0} of this loss.",
+            moneyChange = 0f, momentumChange = 0f
+        },
+        new EventData.ChoiceOption
+        {
+            label = $"Cover it myself — ${rawLoss:F0} total",
+            resultDescription = "No claim made. The full loss comes out of your pocket.",
+            moneyChange = 0f, momentumChange = 0f
+        }
+    };
+
+        uiManager.ShowChoicePopup(
+            "Insurance Claim Available",
+            $"Your <b>{planName}</b> covers this event.\n\nWith claim: pay ${deductible:F0} excess, recover ${payout:F0}.\nWithout: pay ${rawLoss:F0} in full.",
+            planName,
+            "Insurance",
+            choices,
+            index =>
+            {
+                ApplyClaimChoice(ev, index == 0);
+                ShowEvent(ev);
+            }
+        );
+    }
+
+    private void ApplyClaimChoice(ResolvedEvent ev, bool claimed)
+    {
+        ev.pendingClaimDecision = false;
+
+        if (claimed)
+        {
+            float netLoss = Mathf.Max(0f, ev.intendedLoss - ev.claimPayout);
+            float cappedLoss = ApplyMonthlyDamage(netLoss);
+            if (cappedLoss > 0f)
+                ApplyMoneyChange(FinancialEntry.EntryType.EventLoss, ev.title, cappedLoss, false);
+            if (ev.claimPayout > 0f)
+            {
+                ApplyMoneyChange(FinancialEntry.EntryType.InsurancePayout, "Insurance Payout", ev.claimPayout, true);
+                insuranceManager.RecordClaimBookkeeping(ev.type, ev.claimPayout);
+                totalInsurancePayoutAmount += ev.claimPayout;
+                insuredEventsCount++;
+            }
+            totalRawEventDamage += cappedLoss;
+            ev.moneyChange = -cappedLoss;
+            ev.insurancePayout = ev.claimPayout;
+            mentorMemory_hasEverClaimed = true;
+            Debug.Log($"[Claim] Player claimed — payout: ${ev.claimPayout:F0}, net loss: ${cappedLoss:F0}");
+        }
+        else
+        {
+            float cappedLoss = ApplyMonthlyDamage(ev.intendedLoss);
+            if (cappedLoss > 0f)
+                ApplyMoneyChange(FinancialEntry.EntryType.EventLoss, ev.title, cappedLoss, false);
+            totalRawEventDamage += cappedLoss;
+            ev.moneyChange = -cappedLoss;
+            ev.insurancePayout = 0f;
+            Debug.Log($"[Claim] Player declined — full loss: ${cappedLoss:F0}");
+        }
     }
 
     public void LoadFromSave(GameSaveData save)
@@ -1405,6 +1665,8 @@ public class GameManager : MonoBehaviour
         monthResolutionFinished = false;
         recoveryAcknowledged = false;
         patternWarningIssued = false;
+        mentorMemory_hasEverClaimed = false;
+        mentorMemory_consecutiveLowSavingsMonths = 0;
         IsLoanDecisionActive = false;
         IsSavingsDecisionActive = false;
         forcedLoanThisMonth = false;
@@ -1722,6 +1984,8 @@ public class GameManager : MonoBehaviour
         previousMomentum = 0f;
         recoveryAcknowledged = false;
         patternWarningIssued = false;
+        mentorMemory_hasEverClaimed = false;
+        mentorMemory_consecutiveLowSavingsMonths = 0;
         lastMomentumZone = int.MinValue;
         totalUnexpectedEvents = 0;
         insuredEventsCount = 0;

@@ -18,6 +18,9 @@ public class ResolvedEvent
     public float lossPercent;
     public float insurancePayout;
     public float intendedLoss;
+    public bool pendingClaimDecision;
+    public float claimPayout;
+    public float claimDeductible;
 
     public bool affectsExpenses;
     public string expenseCategoryName;

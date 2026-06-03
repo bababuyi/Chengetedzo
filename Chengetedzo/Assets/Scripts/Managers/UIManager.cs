@@ -594,12 +594,6 @@ public class UIManager : MonoBehaviour
             {
                 string sign = choice.moneyChange > 0f ? "+" : "-";
                 resultMsg += $"\n\n{sign}${Mathf.Abs(choice.moneyChange):F0}";
-
-                if (choice.momentumChange != 0f)
-                {
-                    string msign = choice.momentumChange > 0f ? "+" : "";
-                    resultMsg += $"  ·  Morale: {msign}{choice.momentumChange:F0}";
-                }
             }
 
             choiceResultText.text = resultMsg;
@@ -806,7 +800,7 @@ public class UIManager : MonoBehaviour
             return;
         }
 
-        if (mentorBackground != null) mentorBackground.enabled = true;
+        if (mentorBackground != null) mentorBackground.gameObject.SetActive(true);
         if (mentorFaceContainer != null) mentorFaceContainer.SetActive(false);
         if (mentorChatBubble != null) mentorChatBubble.SetActive(true);
         if (mentorChatText != null) mentorChatText.text = message;
@@ -834,7 +828,7 @@ public class UIManager : MonoBehaviour
             return;
         }
 
-        if (mentorBackground != null) mentorBackground.enabled = false;
+        if (mentorBackground != null) mentorBackground.gameObject.SetActive(false);
         if (mentorFaceContainer != null) mentorFaceContainer.SetActive(true);
         if (mentorChatBubble != null) mentorChatBubble.SetActive(false);
 
@@ -842,7 +836,8 @@ public class UIManager : MonoBehaviour
 
         ShowPopup(mentorPopup, mentorContinueButton, () =>
         {
-            if (mentorBackground != null) mentorBackground.enabled = true;
+            if (mentorBackground != null) mentorBackground.gameObject.SetActive(true);
+            if (mentorFaceContainer != null) mentorFaceContainer.SetActive(false);
             onClose?.Invoke();
         });
         UIAnimator.Instance?.FadeIn(mentorPopup);
