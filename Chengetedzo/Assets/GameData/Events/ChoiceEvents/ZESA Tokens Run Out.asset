@@ -19,7 +19,9 @@ MonoBehaviour:
   - label: Buy a full month of tokens ($50)
     resultDescription: Better to sort this properly than keep running out.
     moneyChange: -50
-    momentumChange: 1
+    momentumChange: -1
+    moraleChange: 2
+    moraleType: Family
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
@@ -28,6 +30,8 @@ MonoBehaviour:
     resultDescription: A small top-up for now. I'll be more careful.
     moneyChange: -20
     momentumChange: 0
+    moraleChange: 1
+    moraleType: Family
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
@@ -35,7 +39,9 @@ MonoBehaviour:
   - label: Manage without power for now
     resultDescription: Candles and a brazier. It's not ideal but we'll cope.
     moneyChange: 0
-    momentumChange: -1
+    momentumChange: 1
+    moraleChange: -2
+    moraleType: Family
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0

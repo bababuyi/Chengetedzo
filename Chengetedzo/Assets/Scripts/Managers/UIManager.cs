@@ -63,7 +63,15 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI eventTitleText;
     public TextMeshProUGUI eventDescriptionText;
     public Button continueButton;
-    //public Image eventBannerImage;
+
+    [Header("Event Pool Headers")]
+    public Sprite headerWeather;
+    public Sprite headerAgriculture;
+    public Sprite headerEconomic;
+    public Sprite headerHealth;
+    public Sprite headerCrime;
+    public Sprite headerOpportunity;
+    public Sprite headerDefault;
 
     [Header("Event Animation")]
     public RectTransform eventNotificationRect;
@@ -451,11 +459,24 @@ public class UIManager : MonoBehaviour
         Debug.Log("[UI] ForceCloseAllPopups called");
     }
 
-    public void ShowEventPopup(string title, string description, Sprite icon = null)
+    public void ShowEventPopup(string title, string description, EventPool pool = EventPool.Economic, Sprite icon = null)
     {
-        Debug.Log($"[ShowEventPopup] Called: {title} | IsPopupActive: {IsPopupActive} | eventPopup null: {eventPopup == null}");
         eventTitleText.text = title;
         eventDescriptionText.text = description;
+
+        Sprite header = pool switch
+        {
+            EventPool.Weather => headerWeather,
+            EventPool.Agriculture => headerAgriculture,
+            EventPool.Economic => headerEconomic,
+            EventPool.Health => headerHealth,
+            EventPool.Crime => headerCrime,
+            EventPool.Opportunity => headerOpportunity,
+            _ => headerDefault,
+        };
+
+        eventIcon.sprite = header != null ? header : icon;
+        eventIcon.enabled = true;
 
         ShowPopup(eventPopup, continueButton, () =>
         {

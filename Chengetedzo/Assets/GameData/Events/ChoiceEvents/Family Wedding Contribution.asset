@@ -19,7 +19,9 @@ MonoBehaviour:
   - label: Contribute the full amount ($150)
     resultDescription: I'll contribute. Family comes first.
     moneyChange: -150
-    momentumChange: 3
+    momentumChange: -2
+    moraleChange: 4
+    moraleType: Family
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
@@ -27,7 +29,9 @@ MonoBehaviour:
   - label: Contribute what I can ($60)
     resultDescription: I can only manage $60 this time. I hope it helps.
     moneyChange: -60
-    momentumChange: 1
+    momentumChange: -1
+    moraleChange: 2
+    moraleType: Family
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
@@ -36,7 +40,9 @@ MonoBehaviour:
     resultDescription: I'm sorry, I won't be able to contribute this time. Things
       are very tight.
     moneyChange: 0
-    momentumChange: -3
+    momentumChange: 1
+    moraleChange: -3
+    moraleType: Family
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0

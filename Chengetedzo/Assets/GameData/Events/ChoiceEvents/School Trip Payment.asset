@@ -19,7 +19,9 @@ MonoBehaviour:
   - label: Pay the full fee ($80)
     resultDescription: "Paid. You're going on that trip \u2014 enjoy every moment."
     moneyChange: -80
-    momentumChange: 2
+    momentumChange: -1
+    moraleChange: 3
+    moraleType: Family
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
@@ -27,7 +29,9 @@ MonoBehaviour:
   - label: This month I can't afford it
     resultDescription: I'm so sorry my child. I'll make it up to you next time.
     moneyChange: 0
-    momentumChange: -3
+    momentumChange: 1
+    moraleChange: -3
+    moraleType: Family
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0

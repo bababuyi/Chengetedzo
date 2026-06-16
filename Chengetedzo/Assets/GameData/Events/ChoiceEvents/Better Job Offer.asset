@@ -19,7 +19,9 @@ MonoBehaviour:
   - label: "Go for it \u2014 pay for the course ($200)"
     resultDescription: I'm doing it. This is worth the investment.
     moneyChange: -200
-    momentumChange: 5
+    momentumChange: 3
+    moraleChange: 2
+    moraleType: Self
     incomePercentChange: 20
     incomeEffectMonths: -1
     affectsLoan: 0
@@ -28,6 +30,8 @@ MonoBehaviour:
     resultDescription: I'll apply and see what happens before spending money.
     moneyChange: 0
     momentumChange: 1
+    moraleChange: 1
+    moraleType: Self
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
@@ -35,7 +39,9 @@ MonoBehaviour:
   - label: Stick with what I have
     resultDescription: It's a risk I can't take right now. Maybe next time.
     moneyChange: 0
-    momentumChange: 0
+    momentumChange: -1
+    moraleChange: 0
+    moraleType: None
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0

@@ -20,6 +20,8 @@ MonoBehaviour:
     resultDescription: The city prices will more than cover the transport.
     moneyChange: -80
     momentumChange: 2
+    moraleChange: 0
+    moraleType: None
     incomePercentChange: 15
     incomeEffectMonths: 1
     affectsLoan: 0
@@ -27,7 +29,9 @@ MonoBehaviour:
   - label: Wait for the local market to open
     resultDescription: Patience pays. The local price will be fair.
     moneyChange: 0
-    momentumChange: 1
+    momentumChange: 2
+    moraleChange: 0
+    moraleType: None
     incomePercentChange: 8
     incomeEffectMonths: 2
     affectsLoan: 0
@@ -36,6 +40,8 @@ MonoBehaviour:
     resultDescription: Cash now is worth more than waiting.
     moneyChange: 150
     momentumChange: -1
+    moraleChange: 0
+    moraleType: None
     incomePercentChange: -15
     incomeEffectMonths: 2
     affectsLoan: 0

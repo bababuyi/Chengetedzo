@@ -20,6 +20,8 @@ MonoBehaviour:
     resultDescription: I have no choice right now. I'll make it work.
     moneyChange: 0
     momentumChange: -2
+    moraleChange: -1
+    moraleType: Family
     incomePercentChange: -8
     incomeEffectMonths: -1
     affectsLoan: 0
@@ -27,7 +29,9 @@ MonoBehaviour:
   - label: Negotiate to delay the increase
     resultDescription: Can we phase it in over three months? Give me time to adjust.
     moneyChange: 0
-    momentumChange: 0
+    momentumChange: 2
+    moraleChange: 1
+    moraleType: Family
     incomePercentChange: -4
     incomeEffectMonths: 3
     affectsLoan: 0
@@ -35,7 +39,9 @@ MonoBehaviour:
   - label: "Give notice \u2014 start looking for cheaper accommodation"
     resultDescription: This is unsustainable. I'll look for something affordable.
     moneyChange: 0
-    momentumChange: 1
+    momentumChange: 2
+    moraleChange: -1
+    moraleType: Family
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0

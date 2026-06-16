@@ -19,7 +19,9 @@ MonoBehaviour:
   - label: Pay her bills ($90)
     resultDescription: Don't stress about it, Mai. I've sorted it.
     moneyChange: -90
-    momentumChange: 3
+    momentumChange: -2
+    moraleChange: 4
+    moraleType: Family
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
@@ -27,7 +29,9 @@ MonoBehaviour:
   - label: Send half ($45)
     resultDescription: I can manage $45 right now, Mai. I'll try to send more soon.
     moneyChange: -45
-    momentumChange: 1
+    momentumChange: -1
+    moraleChange: 2
+    moraleType: Family
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
@@ -35,7 +39,9 @@ MonoBehaviour:
   - label: I can't help this month
     resultDescription: I'm so sorry Mai. I genuinely don't have anything right now.
     moneyChange: 0
-    momentumChange: -3
+    momentumChange: 1
+    moraleChange: -3
+    moraleType: Family
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0

@@ -19,7 +19,9 @@ MonoBehaviour:
   - label: Contribute fully ($100)
     resultDescription: I'll contribute. This benefits everyone including us.
     moneyChange: -100
-    momentumChange: 5
+    momentumChange: -1
+    moraleChange: 4
+    moraleType: Social
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
@@ -27,7 +29,9 @@ MonoBehaviour:
   - label: Give what I can ($40)
     resultDescription: I can manage $40. It's all I can spare right now.
     moneyChange: -40
-    momentumChange: 2
+    momentumChange: 0
+    moraleChange: 2
+    moraleType: Social
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
@@ -36,7 +40,9 @@ MonoBehaviour:
     resultDescription: "I'm sorry \u2014 I genuinely don't have anything to give
       right now."
     moneyChange: 0
-    momentumChange: -2
+    momentumChange: 1
+    moraleChange: -2
+    moraleType: Social
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0

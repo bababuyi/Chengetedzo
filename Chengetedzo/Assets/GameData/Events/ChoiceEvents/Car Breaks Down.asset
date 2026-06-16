@@ -19,7 +19,9 @@ MonoBehaviour:
   - label: Fix it properly at the garage ($300)
     resultDescription: Better done right. I can't afford to lose my transport.
     moneyChange: -300
-    momentumChange: 2
+    momentumChange: -1
+    moraleChange: 1
+    moraleType: Family
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
@@ -29,6 +31,8 @@ MonoBehaviour:
       money.
     moneyChange: -120
     momentumChange: 0
+    moraleChange: 0
+    moraleType: None
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
@@ -36,7 +40,9 @@ MonoBehaviour:
   - label: Keep driving and hope for the best
     resultDescription: I'll take the risk for now.
     moneyChange: 0
-    momentumChange: -2
+    momentumChange: -3
+    moraleChange: -2
+    moraleType: Family
     incomePercentChange: -10
     incomeEffectMonths: 2
     affectsLoan: 0

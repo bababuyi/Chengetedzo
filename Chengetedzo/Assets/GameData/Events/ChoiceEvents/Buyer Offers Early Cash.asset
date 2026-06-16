@@ -19,7 +19,9 @@ MonoBehaviour:
   - label: Accept the early offer ($200)
     resultDescription: Deal. I need the cash now.
     moneyChange: 200
-    momentumChange: 0
+    momentumChange: -1
+    moraleChange: 0
+    moraleType: None
     incomePercentChange: -20
     incomeEffectMonths: 2
     affectsLoan: 0
@@ -27,7 +29,9 @@ MonoBehaviour:
   - label: Negotiate a better price
     resultDescription: I can do $300 or I wait for the market.
     moneyChange: 300
-    momentumChange: 1
+    momentumChange: 2
+    moraleChange: 0
+    moraleType: None
     incomePercentChange: -10
     incomeEffectMonths: 1
     affectsLoan: 0
@@ -35,7 +39,9 @@ MonoBehaviour:
   - label: Wait for proper market price
     resultDescription: I'll wait. The market price is better.
     moneyChange: 0
-    momentumChange: 1
+    momentumChange: 2
+    moraleChange: 0
+    moraleType: None
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0

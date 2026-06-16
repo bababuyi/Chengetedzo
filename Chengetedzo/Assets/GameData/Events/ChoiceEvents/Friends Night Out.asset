@@ -19,7 +19,9 @@ MonoBehaviour:
   - label: Join for the full night ($60)
     resultDescription: I'm in! We all need a break sometimes.
     moneyChange: -60
-    momentumChange: 3
+    momentumChange: -1
+    moraleChange: 3
+    moraleType: Social
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
@@ -27,7 +29,19 @@ MonoBehaviour:
   - label: Join for just a bit ($20)
     resultDescription: "I'll come for a bit \u2014 just one round."
     moneyChange: -20
-    momentumChange: 1
+    momentumChange: 0
+    moraleChange: 2
+    moraleType: Social
+    incomePercentChange: 0
+    incomeEffectMonths: 0
+    affectsLoan: 0
+    borrowingPowerChange: 0
+  - label: "A friend offers to cover you \u2014 go anyway"
+    resultDescription: Are you sure? I'll get you back next time. Thank you.
+    moneyChange: 0
+    momentumChange: 0
+    moraleChange: 2
+    moraleType: Social
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
@@ -35,7 +49,9 @@ MonoBehaviour:
   - label: Stay home this time
     resultDescription: "Not this time \u2014 next time for sure though."
     moneyChange: 0
-    momentumChange: -1
+    momentumChange: 1
+    moraleChange: -2
+    moraleType: Social
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0

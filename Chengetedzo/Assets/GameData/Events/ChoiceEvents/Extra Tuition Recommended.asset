@@ -21,6 +21,8 @@ MonoBehaviour:
       me know.
     moneyChange: -100
     momentumChange: -1
+    moraleChange: 3
+    moraleType: Family
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
@@ -28,7 +30,9 @@ MonoBehaviour:
   - label: I'll find a free tutor
     resultDescription: "Thank you \u2014 I'll arrange something within the family."
     moneyChange: 0
-    momentumChange: 0
+    momentumChange: 1
+    moraleChange: 1
+    moraleType: Family
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
@@ -36,7 +40,9 @@ MonoBehaviour:
   - label: We'll manage at home
     resultDescription: I appreciate the heads up. We'll work harder at home.
     moneyChange: 0
-    momentumChange: -1
+    momentumChange: 1
+    moraleChange: -1
+    moraleType: Family
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0

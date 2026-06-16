@@ -19,7 +19,9 @@ MonoBehaviour:
   - label: Contribute generously ($60)
     resultDescription: They'd do the same for me.
     moneyChange: -60
-    momentumChange: 3
+    momentumChange: -1
+    moraleChange: 3
+    moraleType: Social
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
@@ -27,7 +29,9 @@ MonoBehaviour:
   - label: Contribute a small amount ($20)
     resultDescription: I can't give much but I'll add something.
     moneyChange: -20
-    momentumChange: 1
+    momentumChange: 0
+    moraleChange: 1
+    moraleType: Social
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
@@ -35,7 +39,9 @@ MonoBehaviour:
   - label: Skip this time
     resultDescription: I'm stretched too thin this month.
     moneyChange: 0
-    momentumChange: -1
+    momentumChange: 1
+    moraleChange: -1
+    moraleType: Social
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0

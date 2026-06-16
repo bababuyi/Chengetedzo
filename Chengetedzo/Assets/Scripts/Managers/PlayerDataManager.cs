@@ -8,7 +8,14 @@ public class PlayerDataManager : MonoBehaviour
     [SerializeField] private int children = 0;
 
     [SerializeField] private float financialMomentum;
+    [SerializeField] private float familyMorale;
+    [SerializeField] private float socialMorale;
+
     public float FinancialMomentum => financialMomentum;
+    public float FamilyMorale => familyMorale;
+    public float SocialMorale => socialMorale;
+    public float CompositeMorale => (familyMorale * 0.6f) + (socialMorale * 0.4f);
+    public float FinalScore => (financialMomentum + CompositeMorale) / 2f;
 
     public int Adults
     {
@@ -42,20 +49,49 @@ public class PlayerDataManager : MonoBehaviour
         float oldValue = financialMomentum;
         financialMomentum += amount;
         financialMomentum = Mathf.Clamp(financialMomentum, -100f, 100f);
-
-        Debug.Log($"Momentum changed from {oldValue} → {financialMomentum}");
+        Debug.Log($"[Momentum] {oldValue:F1} → {financialMomentum:F1}");
     }
 
     public void SetMomentum(float value)
     {
         financialMomentum = Mathf.Clamp(value, -100f, 100f);
     }
+
+    public void ModifyFamilyMorale(float amount)
+    {
+        float oldValue = familyMorale;
+        familyMorale += amount;
+        familyMorale = Mathf.Clamp(familyMorale, -100f, 100f);
+        Debug.Log($"[FamilyMorale] {oldValue:F1} → {familyMorale:F1}");
+    }
+
+    public void ModifySocialMorale(float amount)
+    {
+        float oldValue = socialMorale;
+        socialMorale += amount;
+        socialMorale = Mathf.Clamp(socialMorale, -100f, 100f);
+        Debug.Log($"[SocialMorale] {oldValue:F1} → {socialMorale:F1}");
+    }
+
+    public void SetFamilyMorale(float value)
+    {
+        familyMorale = Mathf.Clamp(value, -100f, 100f);
+    }
+
+    public void SetSocialMorale(float value)
+    {
+        socialMorale = Mathf.Clamp(value, -100f, 100f);
+    }
+
     public void ResetPlayerData()
     {
         financialMomentum = 0f;
+        familyMorale = 0f;
+        socialMorale = 0f;
         adults = 1;
         children = 0;
     }
+
     public void RemoveAdult()
     {
         if (adults > 1)

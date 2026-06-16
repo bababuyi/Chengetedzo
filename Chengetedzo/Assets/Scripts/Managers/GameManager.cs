@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using static GameManager;
 using static UIManager;
 
@@ -95,6 +96,30 @@ public class GameManager : MonoBehaviour
         PlayerPrefs.DeleteKey("SaveExists");
         Debug.Log("[DEV] Save file deleted. Tutorial flags cleared. Settings preserved.");
     }
+
+#if UNITY_EDITOR
+    private void Update()
+    {
+        var kb = Keyboard.current;
+        if (kb == null) return;
+
+        bool ctrlShift = kb.leftCtrlKey.isPressed && kb.leftShiftKey.isPressed;
+
+        if (ctrlShift && kb.rKey.wasPressedThisFrame)
+        {
+            DEV_FullReset();
+            FullRestart();
+            Debug.Log("[DEV] Hot reset triggered.");
+        }
+
+        if (ctrlShift && kb.tKey.wasPressedThisFrame)
+        {
+            TutorialManager.Instance?.ResetAll();
+            Debug.Log("[DEV] Tutorial flags cleared. Tutorials will replay.");
+        }
+    }
+#endif
+
     [System.Serializable]
     public class ExpenseEffect
     {
@@ -671,14 +696,14 @@ public class GameManager : MonoBehaviour
 
         string fullText = BuildEventResultText(ev);
         Debug.Log($"[ShowEvent] Calling ShowEventPopup for: {ev.title} | IsPopupActive: {uiManager.IsPopupActive}");
-        UIManager.Instance.ShowEventPopup(ev.title, fullText, ev.icon);
+        UIManager.Instance.ShowEventPopup(ev.title, fullText, ev.pool);
     }
 
     private IEnumerator WaitAndShowEvent(ResolvedEvent ev)
     {
         yield return new WaitUntil(() => !uiManager.IsPopupActive);
         string fullText = BuildEventResultText(ev);
-        UIManager.Instance.ShowEventPopup(ev.title, fullText, ev.icon);
+        UIManager.Instance.ShowEventPopup(ev.title, fullText, ev.pool);
     }
 
     private bool monthResolutionFinished = false;
@@ -803,8 +828,8 @@ public class GameManager : MonoBehaviour
         uiManager.SwitchPanel(UIManager.UIPanelState.None);
         SetPhase(GamePhase.Simulation);
 
-        // First-ever simulation start: show tutorial before continueing begins
-        if (TutorialManager.Instance != null)
+        // First-ever simulation start: show tutorial before continuing begins
+        if (!IsHeadlessSimulation && TutorialManager.Instance != null)
         {
             TutorialManager.Instance.OnSimulationFirstStart(ConfirmMonthAndResolve);
         }
@@ -898,12 +923,20 @@ public class GameManager : MonoBehaviour
         string message = "Three months running, your expenses have outrun your income. " +
                          "This is the debt spiral — borrowing to survive creates the debt that makes survival harder. " +
                          "The simulation ends here, but the lesson is the same in real life: the time to act is before the spiral starts.";
+        mentorSpokeThisMonth = true;
+
+        if (IsHeadlessSimulation)
+        {
+            ApplyEmergencyLoan(Mathf.Abs(financeManager.CashOnHand));
+            FinalizeLedgerAndShowReport();
+            return;
+        }
+
         uiManager.ShowMentorMessage(message, () =>
         {
             ApplyEmergencyLoan(Mathf.Abs(financeManager.CashOnHand));
             FinalizeLedgerAndShowReport();
         });
-        mentorSpokeThisMonth = true;
     }
 
     private void ApplyEmergencyLoan(float amount)
@@ -1383,6 +1416,13 @@ public class GameManager : MonoBehaviour
                 OnEventPopupClosed();
                 return;
             }
+
+            if (!ev.hasChoices || ev.choices == null || ev.choices.Count == 0)
+            {
+                OnEventPopupClosed();
+                return;
+            }
+
             int choiceIndex;
             float roll = Random.value;
             int count = ev.choices.Count;
@@ -1396,7 +1436,8 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        if (uiManager.IsEventPopupShowing() || uiManager.IsChoicePopupShowing())
+        if (IsHeadlessSimulation) { /* skip UI checks in headless */ }
+        else if(uiManager.IsPopupActive)
             return;
 
         if (ev.pendingClaimDecision)
@@ -1450,6 +1491,21 @@ public class GameManager : MonoBehaviour
 
         if (choice.momentumChange != 0f)
             PlayerDataManager.Instance.ModifyMomentum(choice.momentumChange);
+
+        if (choice.moraleChange != 0f)
+        {
+            switch (choice.moraleType)
+            {
+                case "Family":
+                case "Self":
+                    PlayerDataManager.Instance.ModifyFamilyMorale(choice.moraleChange);
+                    break;
+                case "Social":
+                case "Community":
+                    PlayerDataManager.Instance.ModifySocialMorale(choice.moraleChange);
+                    break;
+            }
+        }
 
         if (choice.incomePercentChange != 0f)
             ApplyIncomeEffect(choice.incomePercentChange, choice.incomeEffectMonths);
@@ -1591,6 +1647,8 @@ public class GameManager : MonoBehaviour
         forcedLoanCount = save.forcedLoanCount;
         monthsUnderFinancialPressure = save.monthsUnderFinancialPressure;
         PlayerDataManager.Instance.SetMomentum(save.financialMomentum);
+        PlayerDataManager.Instance.SetFamilyMorale(save.familyMorale);
+        PlayerDataManager.Instance.SetSocialMorale(save.socialMorale);
 
         savingsStreak = save.savingsStreak;
         overBudgetStreak = save.overBudgetStreak;
@@ -1892,12 +1950,10 @@ public class GameManager : MonoBehaviour
         //financeManager.generalSavingsMonthly = 0f;
         //financeManager.InitializeFromSetup();
 
-        insuranceManager?.EnableBasicPlan();
-
-
         if (CurrentPhase == GamePhase.Idle)
             StartNewMonth();
 
+        bool basicPlanEnabled = false;
         int safetyCounter = 0;
         const int maxSteps = 10000;
 
@@ -1913,7 +1969,14 @@ public class GameManager : MonoBehaviour
             switch (CurrentPhase)
             {
                 case GamePhase.Forecast: OnForecastConfirmed(); break;
-                case GamePhase.Insurance: OnInsuranceConfirmed(); break;
+                case GamePhase.Insurance:
+                    if (!basicPlanEnabled)
+                    {
+                        basicPlanEnabled = true;
+                        insuranceManager?.EnableBasicPlan();
+                    }
+                    OnInsuranceConfirmed();
+                    break;
                 case GamePhase.Loan: OnLoanDecisionFinished(); break;
                 case GamePhase.Savings: OnSavingsDecisionFinished(); break;
 

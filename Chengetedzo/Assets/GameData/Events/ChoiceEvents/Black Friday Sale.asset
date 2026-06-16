@@ -19,7 +19,9 @@ MonoBehaviour:
   - label: Buy the TV ($300)
     resultDescription: Treated myself. Once in a while is fine.
     moneyChange: -300
-    momentumChange: -2
+    momentumChange: -3
+    moraleChange: 0
+    moraleType: None
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
@@ -27,7 +29,9 @@ MonoBehaviour:
   - label: Buy something small ($80)
     resultDescription: "Got something small \u2014 a reasonable compromise."
     moneyChange: -80
-    momentumChange: 0
+    momentumChange: -1
+    moraleChange: 0
+    moraleType: None
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
@@ -36,6 +40,8 @@ MonoBehaviour:
     resultDescription: Nope. Not today. That money stays in my account.
     moneyChange: 0
     momentumChange: 3
+    moraleChange: 0
+    moraleType: None
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0

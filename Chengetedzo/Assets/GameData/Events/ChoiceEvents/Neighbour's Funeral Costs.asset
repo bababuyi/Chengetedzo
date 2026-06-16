@@ -19,7 +19,9 @@ MonoBehaviour:
   - label: Help generously ($80)
     resultDescription: I'll drop it off tonight. So sorry for the family's loss.
     moneyChange: -80
-    momentumChange: 3
+    momentumChange: -1
+    moraleChange: 3
+    moraleType: Social
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
@@ -27,7 +29,9 @@ MonoBehaviour:
   - label: Give a smaller amount ($30)
     resultDescription: It's not much but please accept it with our condolences.
     moneyChange: -30
-    momentumChange: 1
+    momentumChange: 0
+    moraleChange: 1
+    moraleType: Social
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
@@ -36,7 +40,9 @@ MonoBehaviour:
     resultDescription: I'm so sorry. I'm in no position to help financially this
       month.
     moneyChange: 0
-    momentumChange: -1
+    momentumChange: 1
+    moraleChange: -1
+    moraleType: Social
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0

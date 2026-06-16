@@ -19,7 +19,9 @@ MonoBehaviour:
   - label: Give generously ($80)
     resultDescription: The church has given us so much. I'll give back.
     moneyChange: -80
-    momentumChange: 4
+    momentumChange: -1
+    moraleChange: 3
+    moraleType: Social
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
@@ -27,7 +29,9 @@ MonoBehaviour:
   - label: Give what I can ($30)
     resultDescription: I'll put in what I can afford right now.
     moneyChange: -30
-    momentumChange: 2
+    momentumChange: 0
+    moraleChange: 2
+    moraleType: Social
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
@@ -35,7 +39,9 @@ MonoBehaviour:
   - label: Skip the offering this week
     resultDescription: I'll contribute next time when things are better.
     moneyChange: 0
-    momentumChange: -1
+    momentumChange: 1
+    moraleChange: -1
+    moraleType: Social
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0

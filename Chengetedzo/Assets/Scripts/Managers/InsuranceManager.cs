@@ -17,7 +17,8 @@ public class InsuranceManager : MonoBehaviour
         PersonalAccident,
         Motor,
         Home,
-        Crop
+        Crop,
+        BurialSociety
     }
 
     public bool AnyPremiumPaidThisMonth { get; private set; }
@@ -119,6 +120,16 @@ public class InsuranceManager : MonoBehaviour
             coverageLimit = 1000f,
             waitingPeriodMonths = 3,
             coverageDescription = "Provides funeral expense cover for the family in the event of death."
+        });
+
+        allPlans.Add(new InsurancePlan
+        {
+            planName = "Burial Society (Informal)",
+            type = InsuranceType.BurialSociety,
+            premium = 10f,
+            coverageLimit = 450f,
+            waitingPeriodMonths = 3,
+            coverageDescription = "A community-run burial society. Monthly contributions are pooled to cover funeral costs for any member's family. Informal but trusted — and available to anyone."
         });
 
 
@@ -251,6 +262,10 @@ public class InsuranceManager : MonoBehaviour
 
             return assetValue * plan.premiumRate;
         }
+
+        // BurialSociety is a flat household contribution, not per-person
+        if (plan.type == InsuranceType.BurialSociety)
+            return plan.premium;
 
         // Per-person premium
         int totalAdults = Mathf.Max(1, PlayerDataManager.Instance?.Adults ?? 1);
@@ -591,7 +606,22 @@ public class InsuranceManager : MonoBehaviour
             }
         }
 
-        // 3?? Apply remaining loss
+        // BurialSociety secondary payout
+        if (type == InsuranceType.Funeral)
+        {
+            var burialPlan = GetPlan(InsuranceType.BurialSociety);
+            if (burialPlan != null && burialPlan.CanClaim())
+            {
+                float burialDeductible = rawLoss * (burialPlan.deductiblePercent / 100f);
+                float burialInsurable = Mathf.Max(0f, rawLoss - burialDeductible);
+                float burialPayout = Mathf.Min(burialInsurable, burialPlan.coverageLimit);
+                payout += burialPayout;
+                totalPayout += burialPayout;
+                Debug.Log($"[Insurance] BurialSociety secondary payout: ${burialPayout:F2}");
+            }
+        }
+
+        // 3 Apply remaining loss
         float netLoss = Mathf.Max(0f, rawLoss - payout);
         float cappedLoss = GameManager.Instance.ApplyMonthlyDamage(netLoss);
 
@@ -601,7 +631,7 @@ public class InsuranceManager : MonoBehaviour
         }
         totalLoss += cappedLoss;
 
-        // 4?? Fill result struct
+        // 4 Fill result struct
         result.rawLoss = rawLoss;
         result.payout = payout;
         result.deductibleAmount = deductibleAmount;

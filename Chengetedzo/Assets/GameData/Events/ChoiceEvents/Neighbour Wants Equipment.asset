@@ -19,7 +19,9 @@ MonoBehaviour:
   - label: Lend it for free
     resultDescription: Take it. That's what neighbours are for.
     moneyChange: 0
-    momentumChange: 3
+    momentumChange: 0
+    moraleChange: 3
+    moraleType: Social
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
@@ -27,7 +29,9 @@ MonoBehaviour:
   - label: Rent it out ($80)
     resultDescription: "Sure \u2014 $80 for the week. Fair deal."
     moneyChange: 80
-    momentumChange: 0
+    momentumChange: 2
+    moraleChange: 0
+    moraleType: None
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
@@ -35,7 +39,9 @@ MonoBehaviour:
   - label: Sorry, I need it myself
     resultDescription: I'd love to help but I need it this week myself.
     moneyChange: 0
-    momentumChange: -1
+    momentumChange: 1
+    moraleChange: -1
+    moraleType: Social
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0

@@ -19,7 +19,9 @@ MonoBehaviour:
   - label: Take to private clinic ($80)
     resultDescription: I'm not gambling with my child's health.
     moneyChange: -80
-    momentumChange: 3
+    momentumChange: -2
+    moraleChange: 4
+    moraleType: Family
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
@@ -27,7 +29,9 @@ MonoBehaviour:
   - label: Take to public clinic ($15)
     resultDescription: We'll queue. It takes time but it gets the job done.
     moneyChange: -15
-    momentumChange: 1
+    momentumChange: 0
+    moraleChange: 2
+    moraleType: Family
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
@@ -35,7 +39,9 @@ MonoBehaviour:
   - label: Treat at home with available medicine ($10)
     resultDescription: I'll try what we have first and see how they go.
     moneyChange: -10
-    momentumChange: 0
+    momentumChange: 1
+    moraleChange: -1
+    moraleType: Family
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0

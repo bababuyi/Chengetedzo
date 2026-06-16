@@ -19,7 +19,9 @@ MonoBehaviour:
   - label: Invest fully ($200)
     resultDescription: I'm in. Let's build something together.
     moneyChange: -200
-    momentumChange: 5
+    momentumChange: 2
+    moraleChange: 3
+    moraleType: Family
     incomePercentChange: 15
     incomeEffectMonths: 3
     affectsLoan: 0
@@ -27,7 +29,9 @@ MonoBehaviour:
   - label: Put in a small amount ($80)
     resultDescription: I can put in $80. It's not much but it's my support.
     moneyChange: -80
-    momentumChange: 2
+    momentumChange: 1
+    moraleChange: 2
+    moraleType: Family
     incomePercentChange: 5
     incomeEffectMonths: 2
     affectsLoan: 0
@@ -36,7 +40,9 @@ MonoBehaviour:
     resultDescription: I'd love to but my finances can't take that risk right now.
       I'm sorry.
     moneyChange: 0
-    momentumChange: 0
+    momentumChange: 1
+    moraleChange: -1
+    moraleType: Family
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0

@@ -19,7 +19,9 @@ MonoBehaviour:
   - label: Accept all overtime
     resultDescription: I'll take it. Every dollar helps right now.
     moneyChange: 0
-    momentumChange: 2
+    momentumChange: 3
+    moraleChange: -1
+    moraleType: Family
     incomePercentChange: 20
     incomeEffectMonths: 1
     affectsLoan: 0
@@ -27,7 +29,9 @@ MonoBehaviour:
   - label: Take some overtime
     resultDescription: I can manage a few extra hours. Count me in.
     moneyChange: 0
-    momentumChange: 1
+    momentumChange: 2
+    moraleChange: 0
+    moraleType: None
     incomePercentChange: 10
     incomeEffectMonths: 1
     affectsLoan: 0
@@ -36,6 +40,8 @@ MonoBehaviour:
     resultDescription: I appreciate the offer, but I can't take it this month.
     moneyChange: 0
     momentumChange: 0
+    moraleChange: 2
+    moraleType: Family
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0

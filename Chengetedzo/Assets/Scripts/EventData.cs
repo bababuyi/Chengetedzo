@@ -20,6 +20,8 @@ public class EventData : ScriptableObject
         public string resultDescription;
         public float moneyChange;
         public float momentumChange;
+        public float moraleChange;
+        public string moraleType;
         public float incomePercentChange;
         public int incomeEffectMonths;
         public bool affectsLoan;

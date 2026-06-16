@@ -38,6 +38,8 @@ public static class SaveSystem
         data.forcedLoanCount = gm.ForcedLoanCount;
         data.monthsUnderFinancialPressure = gm.MonthsUnderFinancialPressure;
         data.financialMomentum = PlayerDataManager.Instance.FinancialMomentum;
+        data.familyMorale = PlayerDataManager.Instance.FamilyMorale;
+        data.socialMorale = PlayerDataManager.Instance.SocialMorale;
 
         data.savingsStreak = gm.SavedSavingsStreak;
         data.overBudgetStreak = gm.SavedOverBudgetStreak;

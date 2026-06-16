@@ -16,39 +16,48 @@ MonoBehaviour:
   senderName: Ambuya Chigwanda
   senderRelation: Community
   choices:
-  - label: Join and pay the first month ($25)
-    resultDescription: Peace of mind is worth $25 a month.
-    moneyChange: -25
-    momentumChange: 3
-    incomePercentChange: 0
-    incomeEffectMonths: 0
-    affectsLoan: 0
-    borrowingPowerChange: 0
-  - label: Ask for more information first
-    resultDescription: I want to understand the full terms before I commit.
+  - label: "Tell me more \u2014 I'll check the insurance options"
+    resultDescription: I'll have a look this month. Thank you for thinking of me.
     moneyChange: 0
     momentumChange: 1
+    moraleChange: 2
+    moraleType: Social
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
-  - label: "Not right now \u2014 too many expenses"
-    resultDescription: I can't take on another monthly cost this month.
+  - label: I already have funeral cover
+    resultDescription: "I'm sorted on that front \u2014 but thank you Ambuya. Good
+      to know it's there."
     moneyChange: 0
-    momentumChange: -1
+    momentumChange: 1
+    moraleChange: 0
+    moraleType: None
+    incomePercentChange: 0
+    incomeEffectMonths: 0
+    affectsLoan: 0
+    borrowingPowerChange: 0
+  - label: Not for me right now
+    resultDescription: "I appreciate it \u2014 maybe another time."
+    moneyChange: 0
+    momentumChange: 0
+    moraleChange: -1
+    moraleType: Social
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
   eventName: Funeral Society Invitation
-  description: A trusted community member invites you to join a reputable burial
-    society. Monthly contributions are small but cover the whole family.
+  description: "Ambuya Chigwanda stops you after church. She runs a burial society
+    that has been going for twelve years \u2014 small monthly contributions pooled
+    to cover any member's family funeral costs. She says there is still space if
+    you are interested."
   financialLesson: 
   category: 3
   pool: 6
   requiredAsset: 0
   icon: {fileID: 0}
-  probability: 12
+  probability: 6
   weight: 8
   minLossPercent: 0
   maxLossPercent: 0

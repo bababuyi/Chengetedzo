@@ -19,7 +19,9 @@ MonoBehaviour:
   - label: Buy a proper smartphone ($150)
     resultDescription: Here you go. Use it for school, not games.
     moneyChange: -150
-    momentumChange: 2
+    momentumChange: -1
+    moraleChange: 3
+    moraleType: Family
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
@@ -27,7 +29,9 @@ MonoBehaviour:
   - label: Buy a basic phone ($60)
     resultDescription: It's not the latest model but it'll do the job.
     moneyChange: -60
-    momentumChange: 1
+    momentumChange: 0
+    moraleChange: 2
+    moraleType: Family
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
@@ -35,7 +39,9 @@ MonoBehaviour:
   - label: "Not right now \u2014 we'll find another way"
     resultDescription: We'll figure something out. Maybe the school library can help.
     moneyChange: 0
-    momentumChange: -2
+    momentumChange: 1
+    moraleChange: -2
+    moraleType: Family
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0

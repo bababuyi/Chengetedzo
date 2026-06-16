@@ -19,7 +19,9 @@ MonoBehaviour:
   - label: Take the contract
     resultDescription: I'm in. The money is worth it.
     moneyChange: 0
-    momentumChange: 2
+    momentumChange: 3
+    moraleChange: -2
+    moraleType: Family
     incomePercentChange: 15
     incomeEffectMonths: 2
     affectsLoan: 0
@@ -27,7 +29,9 @@ MonoBehaviour:
   - label: Negotiate lighter hours
     resultDescription: I'll do it but I need to limit the hours.
     moneyChange: 0
-    momentumChange: 1
+    momentumChange: 2
+    moraleChange: -1
+    moraleType: Family
     incomePercentChange: 8
     incomeEffectMonths: 1
     affectsLoan: 0
@@ -36,6 +40,8 @@ MonoBehaviour:
     resultDescription: "Not this time \u2014 family needs me more."
     moneyChange: 0
     momentumChange: 0
+    moraleChange: 2
+    moraleType: Family
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0

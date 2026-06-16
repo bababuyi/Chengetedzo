@@ -16,6 +16,8 @@ public class GameSaveData
     public float yearPayouts;
     public float yearEventLosses;
     public float financialMomentum;
+    public float familyMorale;
+    public float socialMorale;
 
     public int totalUnexpectedEvents;
     public int insuredEventsCount;

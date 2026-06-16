@@ -74,39 +74,37 @@ public static class ChoiceEventImporter
                 EventData existing = AssetDatabase.LoadAssetAtPath<EventData>(assetPath);
                 if (existing != null)
                 {
-                    existing.pool = ParsePool(cols[6].Trim());
-                    EditorUtility.SetDirty(existing);
-                    Debug.Log($"[Importer] '{eventName}' already exists — updating pool.");
-                    skipped++;
                     current = existing;
-                    continue;
+                    Debug.Log($"[Importer] '{eventName}' already exists — overwriting.");
+                    skipped++;
+                }
+                else
+                {
+                    current = ScriptableObject.CreateInstance<EventData>();
+                    AssetDatabase.CreateAsset(current, assetPath);
+                    created++;
+                    Debug.Log($"[Importer] Created '{eventName}'");
                 }
 
-                current = ScriptableObject.CreateInstance<EventData>();
-
-                current.eventName        = eventName;
-                current.description      = cols[2].Trim();
-                current.senderName       = cols[3].Trim();
-                current.senderRelation   = cols[4].Trim();
-                current.category         = ParseCategory(cols[5].Trim());
-                current.pool             = ParsePool(cols[6].Trim());
-                current.requiredAsset    = ParseAssetRequirement(cols[7].Trim());
-                current.probability      = ParseFloat(cols[8]);
-                current.weight           = ParseInt(cols[9]);
-                current.severity         = ParseSeverity(cols[10].Trim());
+                current.eventName = eventName;
+                current.description = cols[2].Trim();
+                current.senderName = cols[3].Trim();
+                current.senderRelation = cols[4].Trim();
+                current.category = ParseCategory(cols[5].Trim());
+                current.pool = ParsePool(cols[6].Trim());
+                current.requiredAsset = ParseAssetRequirement(cols[7].Trim());
+                current.probability = ParseFloat(cols[8]);
+                current.weight = ParseInt(cols[9]);
+                current.severity = ParseSeverity(cols[10].Trim());
 
                 // Fixed values for all choice events
-                current.hasChoices       = true;
-                current.outcomeType      = EventOutcomeType.Negative;
-                current.insuranceType    = InsuranceManager.InsuranceType.None;
-                current.affectsIncome    = false;
-                current.startsChain      = false;
-                current.season           = GameManager.Season.Any;
-                current.signal           = ForecastManager.ForecastSignal.Neutral;
-
-                AssetDatabase.CreateAsset(current, assetPath);
-                created++;
-                Debug.Log($"[Importer] Created '{eventName}'");
+                current.hasChoices = true;
+                current.outcomeType = EventOutcomeType.Negative;
+                current.insuranceType = InsuranceManager.InsuranceType.None;
+                current.affectsIncome = false;
+                current.startsChain = false;
+                current.season = GameManager.Season.Any;
+                current.signal = ForecastManager.ForecastSignal.Neutral;
             }
 
             // ── CHOICE row ─────────────────────────────────────────
@@ -118,7 +116,7 @@ public static class ChoiceEventImporter
                     continue;
                 }
 
-                if (cols.Length < 9)
+                if (cols.Length < 11)
                 {
                     Debug.LogWarning($"[Importer] Line {i + 1}: CHOICE row too short — skipped.");
                     continue;
@@ -126,14 +124,16 @@ public static class ChoiceEventImporter
 
                 currentChoices.Add(new EventData.ChoiceOption
                 {
-                    label                = cols[1].Trim(),
-                    resultDescription    = cols[2].Trim(),
-                    moneyChange          = ParseFloat(cols[3]),
-                    momentumChange       = ParseFloat(cols[4]),
-                    incomePercentChange  = ParseFloat(cols[5]),
-                    incomeEffectMonths   = ParseInt(cols[6]),
-                    affectsLoan          = cols[7].Trim().Equals("Yes", StringComparison.OrdinalIgnoreCase),
-                    borrowingPowerChange = ParseFloat(cols[8]),
+                    label = cols[1].Trim(),
+                    resultDescription = cols[2].Trim(),
+                    moneyChange = ParseFloat(cols[3]),
+                    momentumChange = ParseFloat(cols[4]),
+                    moraleChange = ParseFloat(cols[5]),
+                    moraleType = cols[6].Trim(),
+                    incomePercentChange = ParseFloat(cols[7]),
+                    incomeEffectMonths = ParseInt(cols[8]),
+                    affectsLoan = cols[9].Trim().Equals("Yes", StringComparison.OrdinalIgnoreCase),
+                    borrowingPowerChange = ParseFloat(cols[10]),
                 });
             }
         }

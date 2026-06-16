@@ -19,7 +19,9 @@ MonoBehaviour:
   - label: Welcome them properly and stock up ($90)
     resultDescription: Family is always welcome. I'll figure out the money.
     moneyChange: -90
-    momentumChange: 3
+    momentumChange: -2
+    moraleChange: 4
+    moraleType: Family
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
@@ -27,7 +29,9 @@ MonoBehaviour:
   - label: Buy basics and manage ($40)
     resultDescription: Rice and vegetables will do. I'll make it work.
     moneyChange: -40
-    momentumChange: 1
+    momentumChange: 0
+    moraleChange: 2
+    moraleType: Family
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
@@ -36,7 +40,9 @@ MonoBehaviour:
     resultDescription: "I'm so sorry \u2014 this month is genuinely impossible for
       me."
     moneyChange: 0
-    momentumChange: -2
+    momentumChange: 1
+    moraleChange: -2
+    moraleType: Family
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0

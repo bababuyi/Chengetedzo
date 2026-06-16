@@ -20,7 +20,9 @@ MonoBehaviour:
     resultDescription: I'll send the full $120 right now, Sekuru. Please get better
       soon.
     moneyChange: -120
-    momentumChange: 2
+    momentumChange: -2
+    moraleChange: 4
+    moraleType: Family
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
@@ -29,7 +31,9 @@ MonoBehaviour:
     resultDescription: I can only spare $60 right now, Sekuru. I'm sorry I can't
       do more.
     moneyChange: -60
-    momentumChange: 0
+    momentumChange: -1
+    moraleChange: 2
+    moraleType: Family
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
@@ -38,7 +42,9 @@ MonoBehaviour:
     resultDescription: I'm really sorry Sekuru. Things are very tight this month.
       I'll help when I can.
     moneyChange: 0
-    momentumChange: -3
+    momentumChange: 1
+    moraleChange: -3
+    moraleType: Family
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0

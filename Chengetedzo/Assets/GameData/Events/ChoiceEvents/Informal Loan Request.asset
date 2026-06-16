@@ -19,7 +19,9 @@ MonoBehaviour:
   - label: Lend the full amount ($150)
     resultDescription: "I trust you. Here it is \u2014 please don't forget."
     moneyChange: -150
-    momentumChange: 2
+    momentumChange: -2
+    moraleChange: 3
+    moraleType: Social
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
@@ -27,7 +29,9 @@ MonoBehaviour:
   - label: Lend a smaller amount ($60)
     resultDescription: I can lend $60. It's all I can risk.
     moneyChange: -60
-    momentumChange: 1
+    momentumChange: -1
+    moraleChange: 2
+    moraleType: Social
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
@@ -35,7 +39,9 @@ MonoBehaviour:
   - label: I can't lend money right now
     resultDescription: "I'm sorry \u2014 my own situation is too tight right now."
     moneyChange: 0
-    momentumChange: -1
+    momentumChange: 1
+    moraleChange: -1
+    moraleType: Social
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0

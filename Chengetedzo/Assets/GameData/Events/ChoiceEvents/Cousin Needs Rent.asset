@@ -20,7 +20,9 @@ MonoBehaviour:
     resultDescription: "I've sent the money. Get it sorted \u2014 let me know when
       you're settled."
     moneyChange: -100
-    momentumChange: 2
+    momentumChange: -2
+    moraleChange: 3
+    moraleType: Family
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
@@ -28,7 +30,9 @@ MonoBehaviour:
   - label: Send half ($50)
     resultDescription: "I can send $50. It's all I have right now \u2014 use it wisely."
     moneyChange: -50
-    momentumChange: 1
+    momentumChange: -1
+    moraleChange: 1
+    moraleType: Family
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
@@ -37,7 +41,9 @@ MonoBehaviour:
     resultDescription: I'm sorry, I genuinely don't have anything to spare right
       now.
     moneyChange: 0
-    momentumChange: -2
+    momentumChange: 1
+    moraleChange: -2
+    moraleType: Family
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
