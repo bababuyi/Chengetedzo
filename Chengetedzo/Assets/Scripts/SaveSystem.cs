@@ -51,6 +51,8 @@ public static class SaveSystem
         data.eventPressure = gm.eventManager.GetEventPressure();
         data.burialSocietyUnlocked = gm.BurialSocietyUnlocked;
 
+        data.originalAdults = PlayerDataManager.Instance.OriginalAdults;
+
         data.insurancePlans = new List<GameSaveData.InsurancePlanSaveData>();
         foreach (var plan in gm.insuranceManager.allPlans)
         {

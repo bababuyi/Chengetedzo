@@ -29,8 +29,8 @@ MonoBehaviour:
   minLossPercent: 0
   maxLossPercent: 0
   affectsIncome: 0
-  incomePercentChange: -30
-  incomeEffectMonths: -1
+  incomePercentChange: 0
+  incomeEffectMonths: 0
   insuranceType: 1
   outcomeType: 0
   cashReward: 0
@@ -38,9 +38,10 @@ MonoBehaviour:
   season: 0
   signal: 4
   severity: 1
-  affectsHousehold: 1
-  adultsLost: 1
+  affectsHousehold: 0
+  adultsLost: 0
   childrenLost: 0
+  familyMemberType: 0
   affectsExpenses: 0
   expenseCategory: 0
   expenseFlatChange: 0

@@ -603,9 +603,11 @@ public class EventManager : MonoBehaviour
         {
             var (claimPayout, claimDeductible) = GameManager.Instance.insuranceManager.CalculateClaim(ev.insuranceType, intendedLoss);
 
-            if (ev.affectsIncome)
+            bool deathHandled = GameManager.Instance.TryHandleAsAdultEarnerDeath(ev, month);
+
+            if (!deathHandled && ev.affectsIncome)
                 GameManager.Instance.ApplyIncomeEffect(ev.incomePercentChange, ev.incomeEffectMonths);
-            if (ev.affectsHousehold)
+            if (!deathHandled && ev.affectsHousehold)
             {
                 for (int i = 0; i < ev.adultsLost; i++) PlayerDataManager.Instance.RemoveAdult();
                 for (int i = 0; i < ev.childrenLost; i++) PlayerDataManager.Instance.RemoveChild();
@@ -637,7 +639,7 @@ public class EventManager : MonoBehaviour
                 incomeDurationMonths = ev.incomeEffectMonths,
             });
 
-            TryScheduleFollowUp(ev, month);
+            if (!deathHandled) TryScheduleFollowUp(ev, month);
             return;
         }
 
@@ -670,9 +672,11 @@ public class EventManager : MonoBehaviour
             expenseEffectMonths = ev.expenseEffectMonths
         });
 
-        TryScheduleFollowUp(ev, month);
+        bool deathHandled2 = GameManager.Instance.TryHandleAsAdultEarnerDeath(ev, month);
 
-        if (ev.affectsHousehold)
+        if (!deathHandled2) TryScheduleFollowUp(ev, month);
+
+        if (!deathHandled2 && ev.affectsHousehold)
         {
             for (int i = 0; i < ev.adultsLost; i++)
                 PlayerDataManager.Instance.RemoveAdult();

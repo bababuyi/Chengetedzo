@@ -73,6 +73,7 @@ MonoBehaviour:
   affectsHousehold: 0
   adultsLost: 0
   childrenLost: 0
+  familyMemberType: 0
   affectsExpenses: 0
   expenseCategory: 0
   expenseFlatChange: 0

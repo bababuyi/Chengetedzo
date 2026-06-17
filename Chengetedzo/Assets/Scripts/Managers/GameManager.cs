@@ -1721,6 +1721,7 @@ public class GameManager : MonoBehaviour
         PlayerDataManager.Instance.SetMomentum(save.financialMomentum);
         PlayerDataManager.Instance.SetFamilyMorale(save.familyMorale);
         PlayerDataManager.Instance.SetSocialMorale(save.socialMorale);
+        PlayerDataManager.Instance.SetOriginalAdults(save.originalAdults);
 
         savingsStreak = save.savingsStreak;
         overBudgetStreak = save.overBudgetStreak;
@@ -1897,9 +1898,8 @@ public class GameManager : MonoBehaviour
                 financeManager.generalSavingsMonthly = 0f;
 
                 financeManager.assets = new PlayerAssets();
-                
-                PlayerDataManager.Instance.Adults = setupData.adults;
-                PlayerDataManager.Instance.Children = setupData.children;
+
+                PlayerDataManager.Instance.SetInitialHousehold(setupData.adults, setupData.children);
                 break;
 
             case ProfileType.Formal:
@@ -1928,8 +1928,7 @@ public class GameManager : MonoBehaviour
 
                 financeManager.motorInsuredValue = 6000f;
 
-                PlayerDataManager.Instance.Adults = setupData.adults;
-                PlayerDataManager.Instance.Children = setupData.children;
+                PlayerDataManager.Instance.SetInitialHousehold(setupData.adults, setupData.children);
                 break;
 
             case ProfileType.Farmer:
@@ -1960,8 +1959,7 @@ public class GameManager : MonoBehaviour
                 financeManager.cropsInsuredValue = 4000f;
                 financeManager.livestockInsuredValue = 6000f;
 
-                PlayerDataManager.Instance.Adults = setupData.adults;
-                PlayerDataManager.Instance.Children = setupData.children;
+                PlayerDataManager.Instance.SetInitialHousehold(setupData.adults, setupData.children);
                 break;
 
                 /*case ProfileType.HighClass:

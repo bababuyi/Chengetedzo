@@ -357,8 +357,7 @@ public class SetupPanelController : MonoBehaviour
         if (!int.TryParse(childrenInput.text, out totalChildren) || totalChildren < 0)
             totalChildren = 0;
 
-        PlayerDataManager.Instance.Adults = totalAdults;
-        PlayerDataManager.Instance.Children = totalChildren;
+        PlayerDataManager.Instance.SetInitialHousehold(totalAdults, totalChildren);
 
         gm.setupData.hasSchoolFees = schoolFeesToggle.isOn;
         if (schoolFeesToggle.isOn)

@@ -44,6 +44,8 @@ public class GameSaveData
     public int monthsSinceMajorEvent;
     public float eventPressure;
 
+    public int originalAdults;
+
     public List<InsurancePlanSaveData> insurancePlans = new List<InsurancePlanSaveData>();
     public List<IncomeEffectSaveData> incomeEffects = new List<IncomeEffectSaveData>();
     public List<ExpenseEffectSaveData> expenseEffects = new List<ExpenseEffectSaveData>();
