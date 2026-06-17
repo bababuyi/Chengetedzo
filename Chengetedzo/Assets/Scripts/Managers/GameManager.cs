@@ -365,7 +365,7 @@ public class GameManager : MonoBehaviour
             savingsStreak = 0;
         }
 
-        if (financeManager.WasOverBudgetThisMonth)
+        if (financeManager.WasOverBudgetThisMonth && financeManager.IncomeCoveredExpensesThisMonth)
             overBudgetStreak++;
         else
             overBudgetStreak = 0;
@@ -1813,8 +1813,8 @@ public class GameManager : MonoBehaviour
                 setupData.hasSchoolFees = true;
                 setupData.schoolFeesAmount = 80f;
 
-                setupData.minIncome = 220f;
-                setupData.maxIncome = 400f;
+                setupData.minIncome = 280f;
+                setupData.maxIncome = 450f;
 
                 financeManager.rentCost = 80f;
                 financeManager.groceries = 90f;
@@ -1838,8 +1838,8 @@ public class GameManager : MonoBehaviour
                 setupData.hasSchoolFees = true;
                 setupData.schoolFeesAmount = 80f;
 
-                setupData.minIncome = 300f;
-                setupData.maxIncome = 800f;
+                setupData.minIncome = 420f;
+                setupData.maxIncome = 850f;
 
                 financeManager.rentCost = 150f;
                 financeManager.groceries = 140f;
@@ -1869,7 +1869,7 @@ public class GameManager : MonoBehaviour
                 setupData.schoolFeesAmount = 150f;
 
                 setupData.minIncome = 100f;   // very low months
-                setupData.maxIncome = 1200f;  // harvest months
+                setupData.maxIncome = 650f;  // harvest months
 
                 financeManager.rentCost = 0f;
                 financeManager.groceries = 100f;

@@ -10,48 +10,47 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
-  m_Name: Breadwinner Death
+  m_Name: New Income Source
   m_EditorClassIdentifier: 
   hasChoices: 0
   senderName: 
   senderRelation: 
   choices: []
-  eventName: Breadwinner Death
-  description: The household breadwinner passes away, severely impacting income.
-  financialLesson: Insurance can protect families from complete income loss and those
-    left behind can still pursue an education.
-  category: 0
-  pool: 3
+  eventName: New Income Source
+  description: After months of hardship, the family finds a new source of income.
+    It does not fully replace what was lost, but it steadies things.
+  financialLesson: Households adapt after a loss but recovery is partial and slow.
+    Insurance bridges the gap while you rebuild.
+  category: 3
+  pool: 5
   requiredAsset: 0
   icon: {fileID: 0}
-  probability: 2
-  weight: 6
+  probability: 100
+  weight: 1
   minLossPercent: 0
   maxLossPercent: 0
   affectsIncome: 1
-  incomePercentChange: -35
+  incomePercentChange: 20
   incomeEffectMonths: -1
-  insuranceType: 3
-  outcomeType: 0
+  insuranceType: 0
+  outcomeType: 1
   cashReward: 0
-  momentumReward: -3
+  momentumReward: 0
   season: 0
-  signal: 4
-  severity: 2
-  affectsHousehold: 1
-  adultsLost: 1
+  signal: 0
+  severity: 0
+  affectsHousehold: 0
+  adultsLost: 0
   childrenLost: 0
   affectsExpenses: 0
   expenseCategory: 0
   expenseFlatChange: 0
   expenseEffectMonths: 0
   lossType: 2
-  fixedLossAmount: 800
+  fixedLossAmount: 0
   affectsLoan: 0
   borrowingPowerChange: 0
-  startsChain: 1
-  followUpEvents:
-  - {fileID: 11400000, guid: 6d1286b357621fa499ed5b66213435d9, type: 2}
-  - {fileID: 11400000, guid: 4e95f3b78ae8a8a47b018044fc04244f, type: 2}
-  followUpChance: 0.25
-  followUpDelay: 1
+  startsChain: 0
+  followUpEvents: []
+  followUpChance: 0
+  followUpDelay: 0

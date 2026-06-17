@@ -29,7 +29,7 @@ MonoBehaviour:
   minLossPercent: 0
   maxLossPercent: 0
   affectsIncome: 1
-  incomePercentChange: -40
+  incomePercentChange: -35
   incomeEffectMonths: -1
   insuranceType: 3
   outcomeType: 0
@@ -49,7 +49,9 @@ MonoBehaviour:
   fixedLossAmount: 800
   affectsLoan: 0
   borrowingPowerChange: 0
-  startsChain: 0
-  followUpEvents: []
-  followUpChance: 0.25
-  followUpDelay: 1
+  startsChain: 1
+  followUpEvents:
+  - {fileID: 11400000, guid: 6d1286b357621fa499ed5b66213435d9, type: 2}
+  - {fileID: 11400000, guid: 4e95f3b78ae8a8a47b018044fc04244f, type: 2}
+  followUpChance: 1
+  followUpDelay: 2

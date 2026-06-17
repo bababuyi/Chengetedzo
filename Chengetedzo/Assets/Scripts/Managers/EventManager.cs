@@ -458,19 +458,21 @@ public class EventManager : MonoBehaviour
         if (Random.value > adjustedChance)
             return;
 
-        EventData next = ev.followUpEvents[Random.Range(0, ev.followUpEvents.Count)];
-
-        PendingEvent pending = new PendingEvent
+        foreach (var next in ev.followUpEvents)
         {
-            eventData = next,
-            monthToTrigger = currentMonth + ev.followUpDelay
-        };
+            if (next == null) continue;
 
-        pendingEvents.Add(pending);
-        Debug.Log(
-            $"[CHAIN EVENT] {ev.eventName} triggered follow-up: {next.eventName} " +
-            $"in {ev.followUpDelay} months"
-        );
+            pendingEvents.Add(new PendingEvent
+            {
+                eventData = next,
+                monthToTrigger = currentMonth + ev.followUpDelay
+            });
+
+            Debug.Log(
+                $"[CHAIN EVENT] {ev.eventName} triggered follow-up: {next.eventName} " +
+                $"in {ev.followUpDelay} months"
+            );
+        }
     }
 
     private EventData GetWeightedEvent(List<EventData> events)

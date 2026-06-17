@@ -55,6 +55,7 @@ public class FinanceManager : MonoBehaviour
     [Tooltip("Total expenses accumulated over the simulation.")]
     public float totalSpent;
     public bool WasOverBudgetThisMonth { get; private set; }
+    public bool IncomeCoveredExpensesThisMonth { get; private set; }
 
     [Header("Income Variability")]
     public float minIncome;
@@ -184,6 +185,7 @@ public class FinanceManager : MonoBehaviour
         totalExpenses += schoolFeesPaid;
         balance = effectiveIncome - totalExpenses;
         WasOverBudgetThisMonth = balance < 0;
+        IncomeCoveredExpensesThisMonth = effectiveIncome >= totalExpenses;
 
         ProcessSchoolFees(GameManager.Instance.currentMonth);
 
@@ -307,6 +309,31 @@ public class FinanceManager : MonoBehaviour
         return 0f;
     }
 
+    // Seasonal income multipliers for farming households, indexed by month-in-year (1–12).
+    // Models Zimbabwe's farming calendar: main maize harvest (months 4–5),
+    // winter crop / livestock sales (months 7–8), pre-rains livestock (month 11),
+    // Sums to ~12.5 so average annual income is roughly preserved.
+    private static readonly float[] FarmingSeasonalMultipliers =
+    {
+        0.4f, // 1  — lean (planting)
+        0.4f, // 2  — lean
+        0.6f, // 3  — building toward harvest
+        2.6f, // 4  — main harvest
+        2.2f, // 5  — main harvest tail
+        0.5f, // 6  — lean
+        1.6f, // 7  — winter crop / livestock
+        1.3f, // 8  — secondary tail
+        0.5f, // 9  — lean
+        0.5f, // 10 — lean
+        1.4f, // 11 — pre-rains livestock
+        0.5f  // 12 — lean
+    };
+
+    private bool HasFarmingIncome()
+    {
+        return assets.hasCrops || assets.hasLivestock;
+    }
+
     public void RollMonthlyIncome()
     {
         if (minIncome <= 0 || maxIncome <= 0 || maxIncome < minIncome)
@@ -324,6 +351,19 @@ public class FinanceManager : MonoBehaviour
             minIncome,
             maxIncome
         );
+
+        // Farming households earn seasonally rather than evenly
+        if (HasFarmingIncome())
+        {
+            int monthInYear = ((GameManager.Instance.currentMonth - 1) % 12);
+            float seasonalMultiplier = FarmingSeasonalMultipliers[monthInYear];
+            currentIncome *= seasonalMultiplier;
+
+            Debug.Log(
+                $"[Finance] Seasonal income — month {monthInYear + 1}, " +
+                $"multiplier {seasonalMultiplier:F2}, income {currentIncome:F0}"
+            );
+        }
     }
 
     public void SetMonthlyIncome(float income)
@@ -432,6 +472,7 @@ public class FinanceManager : MonoBehaviour
         LastMonthSavingsDelta = 0f;
 
         WasOverBudgetThisMonth = false;
+        IncomeCoveredExpensesThisMonth = true;
 
         schoolFeesOutstanding = false;
 
