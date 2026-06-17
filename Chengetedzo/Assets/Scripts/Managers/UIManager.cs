@@ -450,6 +450,14 @@ public class UIManager : MonoBehaviour
         if (mentorPopup != null)
             mentorPopup.SetActive(false);
 
+        if (choiceEventPopup != null)
+            choiceEventPopup.SetActive(false);
+
+        if (eventPopup != null)
+            eventPopup.SetActive(false);
+
+        _onChoicePicked = null;
+
         activePopup = null;
         activeContinueButton = null;
         activeOnClose = null;
@@ -637,6 +645,13 @@ public class UIManager : MonoBehaviour
         choiceEventPopup.SetActive(false);
         IsPopupActive = false;
 
+        if (activePopup == choiceEventPopup)
+        {
+            activePopup = null;
+            activeContinueButton = null;
+            activeOnClose = null;
+        }
+
         var callback = _onChoicePicked;
         _onChoicePicked = null;
         callback?.Invoke(index);
@@ -675,8 +690,11 @@ public class UIManager : MonoBehaviour
             $"<i>{mentorReflection}</i>";
 
         // PART 2
+        // SECTION 0 — Score
+        yearPartTwoText = BuildScoreSummary();
+
         // SECTION 1 — Insurance
-        yearPartTwoText = "<b>Insurance</b>\n";
+        yearPartTwoText += "<b>Insurance</b>\n";
 
         if (gm.YearPremiums == 0f)
         {
@@ -1076,7 +1094,7 @@ public class UIManager : MonoBehaviour
             $"Current Balance: ${gm.financeManager.CashOnHand:F0}\n\n" +
             $"<i>{mentorReflection}</i>";
 
-        yearPartTwoText = BuildInsuranceSummary(gm);
+        yearPartTwoText = BuildScoreSummary() + BuildInsuranceSummary(gm);
 
         yearEndPage = 0;
         resultsText.text = yearPartOneText;
@@ -1092,11 +1110,59 @@ public class UIManager : MonoBehaviour
         yearEndGraph?.HideGraph();
         StartCoroutine(RenderGraphNextFrame());
 
-        // Wire the final "continue" action for after both pages are shown
         _yearlyReviewOnContinue = onContinue;
     }
 
     private System.Action _yearlyReviewOnContinue;
+
+    private string BuildScoreSummary()
+    {
+        var p = PlayerDataManager.Instance;
+        if (p == null) return "";
+
+        float momentum = p.FinancialMomentum;
+        float morale = p.CompositeMorale;
+        float score = p.FinalScore;
+
+        string grade = GetGrade(score);
+        string overallLabel = GetScoreLabel(score);
+        string momentumWord = GetAxisWord(momentum);
+        string moraleWord = GetAxisWord(morale);
+
+        string text = "<b>Your Year</b>\n";
+        text += $"Grade: <b>{grade}</b>\n\n";
+        text += $"Financial Discipline:  {momentum:+0;-0}  ({momentumWord})\n";
+        text += $"Family & Community:  {morale:+0;-0}  ({moraleWord})\n\n";
+        text += $"<i>{overallLabel}</i>\n\n";
+        return text;
+    }
+
+    private string GetGrade(float score)
+    {
+        if (score >= 25f) return "A";
+        if (score >= 15f) return "B";
+        if (score >= 5f) return "C";
+        if (score >= -10f) return "D";
+        return "F";
+    }
+
+    private string GetScoreLabel(float score)
+    {
+        if (score >= 25f) return "An excellent year — disciplined with money and good to the people around you.";
+        if (score >= 15f) return "A strong, balanced year. You managed money well and kept your relationships steady.";
+        if (score >= 5f) return "A steady year. Room to grow, but you held things together.";
+        if (score >= -10f) return "A tough year. The choices were hard, and it showed.";
+        return "A very hard year. Both your finances and your relationships took a heavy toll.";
+    }
+
+    private string GetAxisWord(float value)
+    {
+        if (value >= 20f) return "Strong";
+        if (value >= 5f) return "Steady";
+        if (value >= -5f) return "Mixed";
+        if (value >= -20f) return "Strained";
+        return "Struggling";
+    }
 
     private string BuildInsuranceSummary(GameManager gm)
     {
