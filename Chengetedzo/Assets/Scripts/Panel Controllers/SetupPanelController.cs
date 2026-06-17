@@ -581,10 +581,6 @@ public class SetupPanelController : MonoBehaviour
             savingsSlider.gameObject.SetActive(false);
     }
 
-    /// <summary>
-    /// Called by guided profile flow. Pre-fills everything from the applied
-    /// profile and lands on step 4 (Review) with the confirm button ready.
-    /// </summary>
     public void JumpToReviewStep()
     {
         var gm = GameManager.Instance;

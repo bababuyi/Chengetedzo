@@ -49,7 +49,8 @@ public static class SaveSystem
         data.previousMomentum = gm.SavedPreviousMomentum;
         data.monthsSinceMajorEvent = gm.monthsSinceMajorEvent;
         data.eventPressure = gm.eventManager.GetEventPressure();
-        
+        data.burialSocietyUnlocked = gm.BurialSocietyUnlocked;
+
         data.insurancePlans = new List<GameSaveData.InsurancePlanSaveData>();
         foreach (var plan in gm.insuranceManager.allPlans)
         {

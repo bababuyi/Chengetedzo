@@ -86,6 +86,8 @@ public class EventData : ScriptableObject
     public bool affectsHousehold;
     public int adultsLost;
     public int childrenLost;
+    [Tooltip("Who this event involves.")]
+    public FamilyMemberType familyMemberType = FamilyMemberType.None;
 
     [Header("Expense Effects")]
     public bool affectsExpenses;
@@ -142,5 +144,13 @@ public enum EventPool
     Crime,
     Opportunity,
     Choice
+}
+
+public enum FamilyMemberType
+{
+    None,
+    AdultEarner,
+    Grandparent,
+    Child
 }
 

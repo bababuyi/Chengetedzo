@@ -23,6 +23,8 @@ public class GameManager : MonoBehaviour
     private bool patternWarningIssued = false;
     private bool mentorMemory_hasEverClaimed = false;
     private int mentorMemory_consecutiveLowSavingsMonths = 0;
+    private bool burialSocietyUnlocked = false;
+    public bool BurialSocietyUnlocked => burialSocietyUnlocked;
 
     [Header("Manager References")]
     public FinanceManager financeManager;
@@ -1079,6 +1081,36 @@ public class GameManager : MonoBehaviour
             forcedLoanHistory.Dequeue();
     }
 
+    // Handles the death of a household adult earner.
+    public void ApplyAdultEarnerDeath(EventData ev, int currentMonth)
+    {
+        var pdm = PlayerDataManager.Instance;
+        int originalAdults = pdm.OriginalAdults;
+
+        float perDeathLoss = 80f / Mathf.Max(1, originalAdults);
+        ApplyIncomeEffect(-perDeathLoss, -1);
+
+        pdm.RemoveAdult();
+        int adultsRemaining = pdm.RawAdults;
+
+        Debug.Log($"[Death] Adult earner died. Loss -{perDeathLoss:F1}% (80/{originalAdults}). " +
+                  $"Adults remaining: {adultsRemaining}");
+
+        if (adultsRemaining > 0 && ev.startsChain && ev.followUpEvents != null)
+        {
+            foreach (var next in ev.followUpEvents)
+            {
+                if (next == null) continue;
+                eventManager.ScheduleFollowUp(next, currentMonth + ev.followUpDelay);
+            }
+            Debug.Log("[Death] Recovery chain scheduled (adult remains).");
+        }
+        else if (adultsRemaining == 0)
+        {
+            Debug.Log("[Death] No adults remain — household on income floor, no recovery.");
+        }
+    }
+
     public void ApplyIncomeEffect(float percent, int months)
     {
         if (months <= 0 &&
@@ -1160,6 +1192,17 @@ public class GameManager : MonoBehaviour
             if (activeIncomeEffects[i].remainingMonths <= 0)
                 activeIncomeEffects.RemoveAt(i);
         }
+    }
+
+    public bool TryHandleAsAdultEarnerDeath(EventData ev, int month)
+    {
+        if (ev.familyMemberType != FamilyMemberType.AdultEarner)
+            return false;
+        if (!ev.affectsHousehold || ev.adultsLost <= 0)
+            return false;
+
+        ApplyAdultEarnerDeath(ev, month);
+        return true;
     }
 
     private void UpdateTopButtons()
@@ -1442,7 +1485,7 @@ public class GameManager : MonoBehaviour
 
         if (ev.pendingClaimDecision)
         {
-            ShowInsuranceClaimChoice(ev);
+            ShowEventThenClaim(ev);
             return;
         }
 
@@ -1475,6 +1518,12 @@ public class GameManager : MonoBehaviour
         var choice = ev.choices[choiceIndex];
 
         Debug.Log($"[CHOICE] {ev.title} → '{choice.label}' | Money: {choice.moneyChange:+0;-0} | Momentum: {choice.momentumChange:+0;-0}");
+
+        if (ev.title == "Funeral Society Invitation")
+        {
+            burialSocietyUnlocked = true;
+            Debug.Log("[Insurance] Burial Society unlocked via Funeral Society Invitation.");
+        }
 
         if (choice.moneyChange != 0f)
         {
@@ -1553,6 +1602,24 @@ public class GameManager : MonoBehaviour
         );
     }
 
+    private void ShowEventThenClaim(ResolvedEvent ev)
+    {
+        if (IsHeadlessSimulation)
+        {
+            ShowInsuranceClaimChoice(ev);
+            return;
+        }
+
+        string text = ev.description;
+
+        UIManager.Instance.ShowEventPopupWithCallback(
+            ev.title,
+            text,
+            ev.pool,
+            () => ShowInsuranceClaimChoice(ev)
+        );
+    }
+
     private void ApplyClaimChoice(ResolvedEvent ev, bool claimed)
     {
         ev.pendingClaimDecision = false;
@@ -1560,9 +1627,13 @@ public class GameManager : MonoBehaviour
         if (claimed)
         {
             float netLoss = Mathf.Max(0f, ev.intendedLoss - ev.claimPayout);
-            float cappedLoss = ApplyMonthlyDamage(netLoss);
-            if (cappedLoss > 0f)
-                ApplyMoneyChange(FinancialEntry.EntryType.EventLoss, ev.title, cappedLoss, false);
+            float cappedNetLoss = ApplyMonthlyDamage(netLoss);
+
+            float grossLossToRecord = cappedNetLoss + ev.claimPayout;
+
+            if (grossLossToRecord > 0f)
+                ApplyMoneyChange(FinancialEntry.EntryType.EventLoss, ev.title, grossLossToRecord, false);
+
             if (ev.claimPayout > 0f)
             {
                 ApplyMoneyChange(FinancialEntry.EntryType.InsurancePayout, "Insurance Payout", ev.claimPayout, true);
@@ -1570,11 +1641,12 @@ public class GameManager : MonoBehaviour
                 totalInsurancePayoutAmount += ev.claimPayout;
                 insuredEventsCount++;
             }
-            totalRawEventDamage += cappedLoss;
-            ev.moneyChange = -cappedLoss;
+
+            totalRawEventDamage += cappedNetLoss;
+            ev.moneyChange = -cappedNetLoss;
             ev.insurancePayout = ev.claimPayout;
             mentorMemory_hasEverClaimed = true;
-            Debug.Log($"[Claim] Player claimed — payout: ${ev.claimPayout:F0}, net loss: ${cappedLoss:F0}");
+            Debug.Log($"[Claim] Player claimed — gross loss recorded: ${grossLossToRecord:F0}, payout: ${ev.claimPayout:F0}, net cash: ${-cappedNetLoss:F0}");
         }
         else
         {
@@ -1658,6 +1730,7 @@ public class GameManager : MonoBehaviour
         previousMomentum = save.previousMomentum;
         monthsSinceMajorEvent = save.monthsSinceMajorEvent;
         eventManager.SetEventPressure(save.eventPressure);
+        burialSocietyUnlocked = save.burialSocietyUnlocked;
 
         uiManager.UpdateMonthText(currentMonth, totalMonths);
         uiManager.UpdateMoneyText(financeManager.CashOnHand);
@@ -1725,6 +1798,7 @@ public class GameManager : MonoBehaviour
         patternWarningIssued = false;
         mentorMemory_hasEverClaimed = false;
         mentorMemory_consecutiveLowSavingsMonths = 0;
+        burialSocietyUnlocked = false;
         IsLoanDecisionActive = false;
         IsSavingsDecisionActive = false;
         forcedLoanThisMonth = false;
@@ -2049,6 +2123,7 @@ public class GameManager : MonoBehaviour
         patternWarningIssued = false;
         mentorMemory_hasEverClaimed = false;
         mentorMemory_consecutiveLowSavingsMonths = 0;
+        burialSocietyUnlocked = false;
         lastMomentumZone = int.MinValue;
         totalUnexpectedEvents = 0;
         insuredEventsCount = 0;

@@ -1,7 +1,7 @@
 TYPE,F1,F2,F3,F4,F5,F6,F7,F8,F9,F10
-"# EVENT columns: name, description, sender, senderRelation, category, pool, type, requiredAsset, probability, weight, severity"
-"# CHOICE columns: label, response, moneyChange, momentumChange, moraleChange, moraleType, incomePercentChange, incomeEffectMonths, startsChain, followUpDelay"
-# moraleType: Family (weight 0.6) | Social (weight 0.4) | Self (feeds Family) | None
+"# EVENT columns: name, description, sender, senderRelation, category, pool, type, requiredAsset, probability, weight, severity",,,,,,,,,,
+"# CHOICE columns: label, response, moneyChange, momentumChange, moraleChange, moraleType, incomePercentChange, incomeEffectMonths, startsChain, followUpDelay",,,,,,,,,,
+# moraleType: Family (weight 0.6) | Social (weight 0.4) | Self (feeds Family) | None,,,,,,,,,,
 EVENT,Sekuru Needs Help,Your elderly uncle messages asking for help with unexpected medical bills at the clinic.,Sekuru José,Family,Health,Choice,None,12,10,Moderate
 CHOICE,Send the full amount,"I'll send the full $120 right now, Sekuru. Please get better soon.",-120,-2,4,Family,0,0,No,0
 CHOICE,Send what I can ($60),"I can only spare $60 right now, Sekuru. I'm sorry I can't do more.",-60,-1,2,Family,0,0,No,0
@@ -114,7 +114,7 @@ EVENT,Cattle Need Urgent Dipping,The government vet warns that tick-borne diseas
 CHOICE,Dip all cattle immediately ($120),Prevention is always cheaper than treatment.,-120,2,1,Family,0,0,No,0
 CHOICE,Dip only the most at-risk animals ($50),I'll do the older cattle first and the rest next month.,-50,1,0,None,0,0,No,0
 CHOICE,Wait and monitor for symptoms,I'll hold off and see if any actually get sick.,0,-3,-2,Family,-10,2,No,0
-EVENT,Funeral Society Invitation,Ambuya Chigwanda stops you after church. She runs a burial society that has been going for twelve years — small monthly contributions pooled to cover any member's family funeral costs. She says there is still space if you are interested.,Ambuya Chigwanda,Community,Economic,Choice,None,6,8,Minor
+EVENT,Funeral Society Invitation,Ambuya Chigwanda stops you after church. She runs a burial society that has been going for twelve years — small monthly contributions pooled to cover any member's family funeral costs. She says there is still space if you are interested.,Ambuya Chigwanda,Community,Economic,Choice,None,15,8,Minor
 CHOICE,Tell me more — I'll check the insurance options,I'll have a look this month. Thank you for thinking of me.,0,1,2,Social,0,0,No,0
 CHOICE,I already have funeral cover,I'm sorted on that front — but thank you Ambuya. Good to know it's there.,0,1,0,None,0,0,No,0
 CHOICE,Not for me right now,I appreciate it — maybe another time.,0,0,-1,Social,0,0,No,0

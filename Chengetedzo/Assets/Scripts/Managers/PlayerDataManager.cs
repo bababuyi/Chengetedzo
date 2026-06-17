@@ -6,6 +6,8 @@ public class PlayerDataManager : MonoBehaviour
 
     [SerializeField] private int adults = 1;
     [SerializeField] private int children = 0;
+    [SerializeField] private int originalAdults = 1;
+    public int OriginalAdults => Mathf.Max(1, originalAdults);
 
     [SerializeField] private float financialMomentum;
     [SerializeField] private float familyMorale;
@@ -16,7 +18,7 @@ public class PlayerDataManager : MonoBehaviour
     public float SocialMorale => socialMorale;
     public float CompositeMorale => (familyMorale * 0.6f) + (socialMorale * 0.4f);
     public float FinalScore => (financialMomentum + CompositeMorale) / 2f;
-
+    public int RawAdults => adults;
     public int Adults
     {
         get => Mathf.Max(1, adults);
@@ -27,6 +29,19 @@ public class PlayerDataManager : MonoBehaviour
     {
         get => Mathf.Max(0, children);
         set => children = Mathf.Max(0, value);
+    }
+
+    public void SetInitialHousehold(int adultCount, int childCount)
+    {
+        adults = Mathf.Max(1, adultCount);
+        children = Mathf.Max(0, childCount);
+        originalAdults = adults;
+        Debug.Log($"[Household] Initial set — adults: {adults}, children: {children}, originalAdults: {originalAdults}");
+    }
+
+    public void SetOriginalAdults(int value)
+    {
+        originalAdults = Mathf.Max(1, value);
     }
 
     private void Awake()
@@ -90,11 +105,12 @@ public class PlayerDataManager : MonoBehaviour
         socialMorale = 0f;
         adults = 1;
         children = 0;
+        originalAdults = 1;
     }
 
     public void RemoveAdult()
     {
-        if (adults > 1)
+        if (adults > 0)
         {
             adults--;
             Debug.Log($"[Household] Adult removed. Adults remaining: {adults}");

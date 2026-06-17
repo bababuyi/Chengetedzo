@@ -33,6 +33,7 @@ public class GameSaveData
     public int missedPayments;
     public int onTimePayments;
     public bool loanUnlocked;
+    public bool burialSocietyUnlocked;
 
     public int savingsStreak;
     public int overBudgetStreak;

@@ -12179,10 +12179,10 @@ RectTransform:
   - {fileID: 1651366661}
   - {fileID: 1333160953}
   - {fileID: 1336211941}
-  - {fileID: 426251006}
   - {fileID: 248520849}
   - {fileID: 74985947}
   - {fileID: 580432915}
+  - {fileID: 426251006}
   - {fileID: 1625558051}
   m_Father: {fileID: 755239198}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -37194,6 +37194,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   adults: 0
   children: 0
+  originalAdults: 1
   financialMomentum: 0
   familyMorale: 0
   socialMorale: 0

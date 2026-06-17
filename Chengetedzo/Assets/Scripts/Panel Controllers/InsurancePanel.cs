@@ -75,6 +75,10 @@ public class InsurancePanel : MonoBehaviour
                 : p.requiredAsset == GameManager.AssetRequirement.None
         );
 
+        // Burial society hiden till event triggers it to appear as an option
+        if (!GameManager.Instance.BurialSocietyUnlocked)
+            plansForPage.RemoveAll(p => p.type == InsuranceType.BurialSociety);
+
         if (onAssetPage && plansForPage.TrueForAll(p => !PlayerMeetsRequirement(p)))
         {
             ConfirmInsurance();

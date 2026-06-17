@@ -494,6 +494,29 @@ public class UIManager : MonoBehaviour
         StartCoroutine(SlideEvent(true));
     }
 
+    public void ShowEventPopupWithCallback(string title, string description, EventPool pool, System.Action onClose)
+    {
+        eventTitleText.text = title;
+        eventDescriptionText.text = description;
+
+        Sprite header = pool switch
+        {
+            EventPool.Weather => headerWeather,
+            EventPool.Agriculture => headerAgriculture,
+            EventPool.Economic => headerEconomic,
+            EventPool.Health => headerHealth,
+            EventPool.Crime => headerCrime,
+            EventPool.Opportunity => headerOpportunity,
+            _ => headerDefault,
+        };
+
+        eventIcon.sprite = header != null ? header : null;
+        eventIcon.enabled = true;
+
+        ShowPopup(eventPopup, continueButton, onClose);
+        StartCoroutine(SlideEvent(true));
+    }
+
     private IEnumerator SlideEvent(bool slideIn)
     {
         if (eventNotificationRect == null) yield break;

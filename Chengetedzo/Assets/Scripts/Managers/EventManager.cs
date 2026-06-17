@@ -220,7 +220,9 @@ public class EventManager : MonoBehaviour
             if (ev.severity != EventSeverity.Minor)
                 eventPressure = 0f;
 
-            if (ev.affectsHousehold)
+            bool deathHandled = GameManager.Instance.TryHandleAsAdultEarnerDeath(ev, month);
+
+            if (!deathHandled && ev.affectsHousehold)
             {
                 for (int i = 0; i < ev.adultsLost; i++)
                     PlayerDataManager.Instance.RemoveAdult();
@@ -300,7 +302,7 @@ public class EventManager : MonoBehaviour
                     var (claimPayout, claimDeductible) = GameManager.Instance.insuranceManager.CalculateClaim(ev.insuranceType, intendedLoss);
 
                     // affectsExpenses/Household/Loan already applied above in this loop
-                    if (ev.affectsIncome)
+                    if (!deathHandled && ev.affectsIncome)
                         GameManager.Instance.ApplyIncomeEffect(ev.incomePercentChange, ev.incomeEffectMonths);
 
                     results.Add(new ResolvedEvent
@@ -325,7 +327,7 @@ public class EventManager : MonoBehaviour
                         incomeDurationMonths = ev.incomeEffectMonths,
                     });
 
-                    TryScheduleFollowUp(ev, month);
+                    if (!deathHandled) TryScheduleFollowUp(ev, month);
                     continue;
                 }
 
@@ -384,9 +386,9 @@ public class EventManager : MonoBehaviour
             Debug.Log($"[FINANCIAL RESULT] Event: {ev.eventName} | PlayerLoss: {finalLoss:F0} | " +
                       $"InsurancePayout: {payout:F0} | NetImpact: {-finalLoss + payout:F0}");
 
-            TryScheduleFollowUp(ev, month);
+            if (!deathHandled) TryScheduleFollowUp(ev, month);
 
-            if (ev.affectsIncome)
+            if (!deathHandled && ev.affectsIncome)
                 GameManager.Instance.ApplyIncomeEffect(ev.incomePercentChange, ev.incomeEffectMonths);
 
             Debug.Log($"[INCOME EFFECT] Event: {ev.eventName} | " +
@@ -426,6 +428,18 @@ public class EventManager : MonoBehaviour
         }
 
         return result;
+    }
+
+    //For death handling
+    public void ScheduleFollowUp(EventData ev, int monthToTrigger)
+    {
+        if (ev == null) return;
+        pendingEvents.Add(new PendingEvent
+        {
+            eventData = ev,
+            monthToTrigger = monthToTrigger
+        });
+        Debug.Log($"[CHAIN EVENT] Scheduled recovery: {ev.eventName} for month {monthToTrigger}");
     }
 
     private void TryScheduleFollowUp(EventData ev, int currentMonth)
