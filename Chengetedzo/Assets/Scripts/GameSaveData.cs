@@ -49,6 +49,7 @@ public class GameSaveData
     public List<InsurancePlanSaveData> insurancePlans = new List<InsurancePlanSaveData>();
     public List<IncomeEffectSaveData> incomeEffects = new List<IncomeEffectSaveData>();
     public List<ExpenseEffectSaveData> expenseEffects = new List<ExpenseEffectSaveData>();
+    public List<GameManager.CategoryState> categoryStates = new();
 
     [Serializable]
     public class IncomeEffectSaveData

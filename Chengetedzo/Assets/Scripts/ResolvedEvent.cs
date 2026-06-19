@@ -32,4 +32,6 @@ public class ResolvedEvent
     public string senderName;
     public string senderRelation;
     public EventPool pool;
+    public bool isFamilyPrompt;
+    public ExpenseCategory familyPromptCategory;
 }

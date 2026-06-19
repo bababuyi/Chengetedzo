@@ -429,7 +429,6 @@ public class GameManager : MonoBehaviour
         UpdateIncomeEffects();
         UpdateExpenseEffects();
         AdvanceCategoryMonths();
-        RollFamilyPrompts();
     }
 
     // Double check if happened or not
@@ -467,8 +466,15 @@ public class GameManager : MonoBehaviour
         FindFirstObjectByType<SeasonalBackgroundManager>()?.UpdateForMonth(currentMonth, hasWeatherEvent);
         Debug.Log($"[Events] Generated: {monthlyEvents.Count} events for month {currentMonth}");
         Debug.Log($"[Background] Month {currentMonth} | Weather Event: {hasWeatherEvent}");
+        var combined = new List<ResolvedEvent>(monthlyEvents);
+        foreach (var prompt in BuildFamilyPrompts())
+        {
+            int insertAt = Random.Range(0, combined.Count + 1);
+            combined.Insert(insertAt, prompt);
+        }
+
         pendingEvents.Clear();
-        foreach (var ev in monthlyEvents)
+        foreach (var ev in combined)
             pendingEvents.Enqueue(ev);
 
         ProcessNextEvent();
@@ -772,6 +778,7 @@ public class GameManager : MonoBehaviour
 
         if (finishedMonth >= totalMonths)
         {
+            SettleBoostsAtGameEnd();
             if (!IsHeadlessSimulation)
                 uiManager.ShowEndOfYearSummary(GetYearEndMentorReflection());
             CurrentLedger = null;
@@ -791,7 +798,6 @@ public class GameManager : MonoBehaviour
             }
             if (finishedMonth >= totalMonths)
             {
-                SettleBoostsAtGameEnd();
                 if (!IsHeadlessSimulation)
                     uiManager.ShowEndOfYearSummary(GetYearEndMentorReflection());
                 CurrentLedger = null;
@@ -1377,8 +1383,9 @@ public class GameManager : MonoBehaviour
         return true;
     }
 
-    private void RollFamilyPrompts()
+    private List<ResolvedEvent> BuildFamilyPrompts()
     {
+        var prompts = new List<ResolvedEvent>();
         var candidates = new List<CategoryState>();
 
         foreach (var s in categoryStates.Values)
@@ -1393,48 +1400,43 @@ public class GameManager : MonoBehaviour
                 candidates.Add(s);
         }
 
-        if (candidates.Count == 0) return;
+        if (candidates.Count == 0) return prompts;
 
         candidates.Sort((a, b) => b.monthsSinceCut.CompareTo(a.monthsSinceCut));
         int raiseCount = Mathf.Min(2, candidates.Count);
 
         for (int i = 0; i < raiseCount; i++)
-        {
-            var s = candidates[i];
-            if (IsHeadlessSimulation)
-            {
-                RaiseCategory(s.category, 2);
-            }
-            else
-            {
-                ShowFamilyPrompt(s.category);
-            }
-        }
+            prompts.Add(BuildFamilyPromptEvent(candidates[i].category));
+
+        return prompts;
     }
 
-    private void ShowFamilyPrompt(ExpenseCategory cat)
+    private ResolvedEvent BuildFamilyPromptEvent(ExpenseCategory cat)
     {
         var s = GetCategoryState(cat);
         int tier = Mathf.Clamp(s.timesRaised, 0, NagFractions.Length - 1);
-
         string body = GetFamilyPromptLine(cat, tier);
         string baseName = cat.ToString();
 
         var choices = new List<EventData.ChoiceOption>
         {
-            new EventData.ChoiceOption { label = $"Restore {baseName} fully",   resultDescription = "You restore the full amount. The family is relieved.", moneyChange = 0f, momentumChange = 0f },
-            new EventData.ChoiceOption { label = $"Restore {baseName} halfway",  resultDescription = "You put some back. It helps, a little.", moneyChange = 0f, momentumChange = 0f },
-            new EventData.ChoiceOption { label = "Not now",                      resultDescription = "You keep things as they are for now.", moneyChange = 0f, momentumChange = 0f }
+            new EventData.ChoiceOption { label = $"Restore {baseName} fully",  resultDescription = "You restore the full amount. The family is relieved.", moneyChange = 0f, momentumChange = 0f },
+            new EventData.ChoiceOption { label = $"Restore {baseName} halfway", resultDescription = "You put some back. It helps, a little.", moneyChange = 0f, momentumChange = 0f },
+            new EventData.ChoiceOption { label = "Not now",                     resultDescription = "You keep things as they are for now.", moneyChange = 0f, momentumChange = 0f }
         };
 
-        uiManager.ShowChoicePopup(
-            "A word at home",
-            body,
-            "Your family",
-            "Home",
-            choices,
-            index => RaiseCategory(cat, index)
-        );
+        return new ResolvedEvent
+        {
+            title = "A word at home",
+            description = body,
+            senderName = "Your family",
+            senderRelation = "Home",
+            pool = EventPool.Choice,
+            hasChoices = true,
+            choices = choices,
+            isFamilyPrompt = true,
+            familyPromptCategory = cat
+        };
     }
 
     private string GetFamilyPromptLine(ExpenseCategory cat, int tier)
@@ -1912,7 +1914,31 @@ public class GameManager : MonoBehaviour
 
     private void ShowOrChooseEvent(ResolvedEvent ev)
     {
-        if (IsHeadlessSimulation)
+        if (ev.isFamilyPrompt)
+        {
+            if (IsHeadlessSimulation)
+            {
+                RaiseCategory(ev.familyPromptCategory, 2);
+                OnEventPopupClosed();
+                return;
+            }
+
+            UIManager.Instance.ShowChoicePopup(
+                ev.title,
+                ev.description,
+                ev.senderName,
+                ev.senderRelation,
+                ev.choices,
+                index =>
+                {
+                    RaiseCategory(ev.familyPromptCategory, index);
+                    OnEventPopupClosed();
+                }
+            );
+            return;
+        }
+
+            if (IsHeadlessSimulation)
         {
             if (ev.pendingClaimDecision)
             {
@@ -2193,6 +2219,12 @@ public class GameManager : MonoBehaviour
         monthsSinceMajorEvent = save.monthsSinceMajorEvent;
         eventManager.SetEventPressure(save.eventPressure);
         burialSocietyUnlocked = save.burialSocietyUnlocked;
+
+        categoryStates.Clear();
+        if (save.categoryStates != null)
+            foreach (var s in save.categoryStates)
+                if (s != null)
+                    categoryStates[s.category] = s;
 
         uiManager.UpdateMonthText(currentMonth, totalMonths);
         uiManager.UpdateMoneyText(financeManager.CashOnHand);
@@ -2867,6 +2899,105 @@ public class GameManager : MonoBehaviour
         Debug.Log("[T] --- Family gives up (4th raise ignored) ---");
         bool raised = RaiseCategory(ExpenseCategory.Transport, 2);
         Debug.Log($"[T] raised={raised} (expect False), morale={pdm.FamilyMorale:F1} (unchanged)");
+    }
+
+    [ContextMenu("DEBUG_TestSaveLoadBudget")]
+    public void DEBUG_TestSaveLoadBudget()
+    {
+        const string NAME = "SaveLoadBudget";
+        if (!StressTestPreCheck(NAME)) return;
+        ApplyProfile(ProfileType.Formal);
+        var pdm = PlayerDataManager.Instance;
+
+        Debug.Log("===== SAVE/LOAD BUDGET TEST =====");
+
+        SetCategoryProvision(ExpenseCategory.Groceries, 70f);
+        RestoreCategoryProvision(ExpenseCategory.Groceries, 140f);
+        RaiseCategory(ExpenseCategory.Groceries, 2);
+        SetCategoryProvision(ExpenseCategory.Transport, 25f);
+        RaiseCategory(ExpenseCategory.Transport, 2);
+        SetCategoryBoost(ExpenseCategory.Utilities, 12f);
+
+        var gBefore = GetCategoryState(ExpenseCategory.Groceries);
+        var tBefore = GetCategoryState(ExpenseCategory.Transport);
+        var uBefore = GetCategoryState(ExpenseCategory.Utilities);
+        float moraleBefore = pdm.FamilyMorale;
+
+        Debug.Log($"[SL] BEFORE — morale={moraleBefore:F2}");
+        Debug.Log($"[SL] BEFORE — Groceries scar={gBefore.scar:F2} cut={gBefore.cutAmount:F0}");
+        Debug.Log($"[SL] BEFORE — Transport cut={tBefore.cutAmount:F0} timesRaised={tBefore.timesRaised} origHit={tBefore.originalCutHit:F1}");
+        Debug.Log($"[SL] BEFORE — Utilities boost={uBefore.boostAmount:F0} cycle={uBefore.boostMonthsInCycle}");
+
+        SaveSystem.SaveGame(this);
+        categoryStates.Clear();
+        Debug.Log("[SL] --- categoryStates cleared, reloading from save ---");
+
+        GameSaveData save = SaveSystem.LoadGame();
+        if (save?.categoryStates == null) { Debug.LogError("[SL] FAIL: no categoryStates in save."); IsHeadlessSimulation = false; return; }
+        foreach (var s in save.categoryStates)
+            categoryStates[s.category] = s;
+
+        var gAfter = GetCategoryState(ExpenseCategory.Groceries);
+        var tAfter = GetCategoryState(ExpenseCategory.Transport);
+        var uAfter = GetCategoryState(ExpenseCategory.Utilities);
+
+        Debug.Log($"[SL] AFTER — Groceries scar={gAfter.scar:F2} cut={gAfter.cutAmount:F0} (expect scar {gBefore.scar:F2}, cut {gBefore.cutAmount:F0})");
+        Debug.Log($"[SL] AFTER — Transport cut={tAfter.cutAmount:F0} timesRaised={tAfter.timesRaised} origHit={tAfter.originalCutHit:F1} (expect cut {tBefore.cutAmount:F0}, raised {tBefore.timesRaised}, hit {tBefore.originalCutHit:F1})");
+        Debug.Log($"[SL] AFTER — Utilities boost={uAfter.boostAmount:F0} cycle={uAfter.boostMonthsInCycle} (expect boost {uBefore.boostAmount:F0}, cycle {uBefore.boostMonthsInCycle})");
+
+        bool pass =
+            Mathf.Approximately(gAfter.scar, gBefore.scar) &&
+            Mathf.Approximately(tAfter.cutAmount, tBefore.cutAmount) &&
+            tAfter.timesRaised == tBefore.timesRaised &&
+            Mathf.Approximately(tAfter.originalCutHit, tBefore.originalCutHit) &&
+            Mathf.Approximately(uAfter.boostAmount, uBefore.boostAmount);
+
+        Debug.Log(pass ? "[SL] ✅ PASS — all budget state round-tripped." : "[SL] ❌ FAIL — state mismatch after load.");
+
+        SaveSystem.DeleteSave();
+        IsHeadlessSimulation = false;
+    }
+
+    [ContextMenu("DEBUG_TestFamilyPromptQueue")]
+    public void DEBUG_TestFamilyPromptQueue()
+    {
+        const string NAME = "FamilyPromptQueue";
+        if (!StressTestPreCheck(NAME)) return;
+        ApplyProfile(ProfileType.Formal);
+        var pdm = PlayerDataManager.Instance;
+
+        Debug.Log("===== FAMILY PROMPT QUEUE TEST =====");
+
+        // Cut transport so it's eligible, and force the chance to fire by aging it.
+        SetCategoryProvision(ExpenseCategory.Transport, 25f);
+        var t = GetCategoryState(ExpenseCategory.Transport);
+        t.monthsSinceCut = 5;          // pushes chance to the cap
+        t.monthsSinceLastRaise = 5;    // triggers safety-net (0.90)
+
+        var prompts = BuildFamilyPrompts();
+        Debug.Log($"[FQ] prompts built = {prompts.Count} (expect >=1)");
+        if (prompts.Count == 0) { Debug.Log("[FQ] (RNG didn't fire — re-run; chance is 0.90)"); IsHeadlessSimulation = false; return; }
+
+        var p = prompts[0];
+        Debug.Log($"[FQ] isFamilyPrompt={p.isFamilyPrompt} cat={p.familyPromptCategory} choices={p.choices.Count} (expect True, Transport, 3)");
+
+        // Simulate splice into a 2-event list.
+        var combined = new List<ResolvedEvent>
+        {
+            new ResolvedEvent { title = "FakeEventA" },
+            new ResolvedEvent { title = "FakeEventB" }
+        };
+        foreach (var prompt in prompts)
+            combined.Insert(Random.Range(0, combined.Count + 1), prompt);
+        Debug.Log($"[FQ] combined queue size = {combined.Count} (expect {2 + prompts.Count})");
+
+        // Resolve the prompt with decline → nag #1 = 30% of 10 = 3.
+        float before = pdm.FamilyMorale;
+        RaiseCategory(p.familyPromptCategory, 2);
+        Debug.Log($"[FQ] declined → morale {before:F1} → {pdm.FamilyMorale:F1} (expect -3.0 change), timesRaised={t.timesRaised} (expect 1)");
+
+        Debug.Log("===== FAMILY PROMPT QUEUE TEST COMPLETE =====");
+        IsHeadlessSimulation = false;
     }
 #endif
 }

@@ -52,7 +52,7 @@ public static class SaveSystem
         data.burialSocietyUnlocked = gm.BurialSocietyUnlocked;
 
         data.originalAdults = PlayerDataManager.Instance.OriginalAdults;
-
+        data.categoryStates = new List<GameManager.CategoryState>(gm.ActiveCategoryStates);
         data.insurancePlans = new List<GameSaveData.InsurancePlanSaveData>();
         foreach (var plan in gm.insuranceManager.allPlans)
         {
