@@ -49,7 +49,91 @@ public class ExpensesPanelController : MonoBehaviour
     public Toggle schoolFeesToggle;
     public TMP_InputField schoolFeesInput;
 
+    [Header("Adjustment Readout")]
+    public TMP_Text incomeRangeText;
+    public TMP_Text expensesTotalText;
+
     private const float MIN_HOUSE_COST = 15000f;
+    private bool isAdjustmentMode = false;
+
+    public void EnterAdjustmentMode()
+    {
+        isAdjustmentMode = true;
+        var gm = GameManager.Instance;
+
+        if (rentSliderGroup != null) rentSliderGroup.SetActive(false);
+        if (houseCostInputGroup != null) houseCostInputGroup.SetActive(false);
+        if (schoolFeesToggle != null) schoolFeesToggle.gameObject.SetActive(false);
+
+        SetupAdjustSlider(groceriesSlider, ExpenseCategory.Groceries);
+        SetupAdjustSlider(transportSlider, ExpenseCategory.Transport);
+        SetupAdjustSlider(utilitiesSlider, ExpenseCategory.Utilities);
+
+        RefreshAll();
+        RefreshBudgetReadout();
+    }
+
+    private void SetupAdjustSlider(Slider slider, ExpenseCategory cat)
+    {
+        if (slider == null) return;
+        var gm = GameManager.Instance;
+        float baseline = gm.GetCategoryBaseline(cat);
+        float floor = gm.GetCategoryFloor(cat);
+        float current = gm.GetCategoryEffective(cat);
+
+        slider.minValue = floor;
+        slider.maxValue = baseline;
+        slider.SetValueWithoutNotify(Mathf.Clamp(current, floor, baseline));
+    }
+
+    private void RefreshBudgetReadout()
+    {
+        if (!isAdjustmentMode) return;
+
+        var gm = GameManager.Instance;
+        var setup = gm.setupData;
+        var finance = gm.financeManager;
+
+        if (incomeRangeText != null)
+        {
+            float lo = setup.minIncome;
+            float hi = setup.maxIncome > 0 ? setup.maxIncome : lo;
+            incomeRangeText.text = setup.isIncomeStable
+                ? $"Your income is about ${lo:F0} / month"
+                : $"Your income is usually ${lo:F0} – ${hi:F0} / month";
+        }
+
+        if (expensesTotalText != null)
+        {
+            float housing = finance.GetHousingCost();
+            float planned = housing
+                + groceriesSlider.value
+                + transportSlider.value
+                + utilitiesSlider.value;
+
+            if (setup.hasSchoolFees)
+            {
+                int childCount = Mathf.Max(0, PlayerDataManager.Instance?.Children ?? 0);
+                planned += ((setup.schoolFeesAmount * childCount) * 3f) / 12f;
+            }
+
+            expensesTotalText.text = $"Planned spending: ${planned:F0} / month";
+        }
+    }
+
+    public void ConfirmAdjustment()
+    {
+        if (!isAdjustmentMode)
+            return;
+
+        var gm = GameManager.Instance;
+        gm.ApplyProvisionChange(ExpenseCategory.Groceries, groceriesSlider.value);
+        gm.ApplyProvisionChange(ExpenseCategory.Transport, transportSlider.value);
+        gm.ApplyProvisionChange(ExpenseCategory.Utilities, utilitiesSlider.value);
+
+        isAdjustmentMode = false;
+        UIManager.Instance.OnBudgetAdjustmentConfirmed();
+    }
 
     public void Init()
     {
@@ -126,6 +210,7 @@ public class ExpensesPanelController : MonoBehaviour
         if (groceriesValueInput != null && !groceriesValueInput.isFocused)
             groceriesValueInput.SetTextWithoutNotify($"{value:F0}");
         if (groceriesTierText != null) groceriesTierText.text = GetTierLabel(value, groceriesTier);
+        if (isAdjustmentMode) RefreshBudgetReadout();
     }
 
     private void UpdateTransport()
@@ -134,6 +219,7 @@ public class ExpensesPanelController : MonoBehaviour
         if (transportValueInput != null && !transportValueInput.isFocused)
             transportValueInput.SetTextWithoutNotify($"{value:F0}");
         if (transportTierText != null) transportTierText.text = GetTierLabel(value, transportTier);
+        if (isAdjustmentMode) RefreshBudgetReadout();
     }
 
     private void UpdateUtilities()
@@ -142,6 +228,7 @@ public class ExpensesPanelController : MonoBehaviour
         if (utilitiesValueInput != null && !utilitiesValueInput.isFocused)
             utilitiesValueInput.SetTextWithoutNotify($"{value:F0}");
         if (utilitiesTierText != null) utilitiesTierText.text = GetTierLabel(value, utilitiesTier);
+        if (isAdjustmentMode) RefreshBudgetReadout();
     }
 
     private void UpdateHouseCost()

@@ -105,6 +105,23 @@ public class UIManager : MonoBehaviour
 
     private System.Action<int> _onChoicePicked;
 
+    private System.Action _budgetAdjustOnDone;
+
+    public void ShowExpenseAdjustment(System.Action onDone)
+    {
+        _budgetAdjustOnDone = onDone;
+        SwitchPanel(UIPanelState.Setup);
+        setupPanel.GetComponent<SetupPanelController>()?.EnterExpenseAdjustmentMode();
+    }
+
+    public void OnBudgetAdjustmentConfirmed()
+    {
+        var cb = _budgetAdjustOnDone;
+        _budgetAdjustOnDone = null;
+        SwitchPanel(UIPanelState.Simulation);
+        cb?.Invoke();
+    }
+
     [Header("Mentor Popup")]
     public GameObject mentorPopup;
     public TextMeshProUGUI mentorText;
@@ -1228,6 +1245,11 @@ public class UIManager : MonoBehaviour
         _stateBeforeSettings = currentPanelState;
         HideAllPanels();
         settingsPanel.SetActive(true);  
+    }
+
+    public void OnAdjustBudgetFromReportClicked()
+    {
+        GameManager.Instance.OpenExpenseAdjustmentFromReport();
     }
 
     public void HideSettings()

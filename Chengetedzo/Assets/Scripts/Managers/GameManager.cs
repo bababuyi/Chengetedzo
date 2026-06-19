@@ -88,6 +88,10 @@ public class GameManager : MonoBehaviour
     public List<IncomeEffect> ActiveIncomeEffects => activeIncomeEffects;
     public List<ExpenseEffect> ActiveExpenseEffects => activeExpenseEffects;
 
+    private const float BudgetBoostCeilingFraction = 0.80f;
+    private const int BudgetBoostCycleMonths = 3;
+    private const float BudgetBoostEarlyExitFraction = 1f / 3f;
+
     private int _sessionId = 0;
 
     [ContextMenu("DEV — Full Reset (Save + Prefs)")]
@@ -128,6 +132,175 @@ public class GameManager : MonoBehaviour
         public ExpenseCategory category;
         public float flatIncrease;
         public int remainingMonths; //Remember -1 = permanent
+    }
+
+    [System.Serializable]
+    public class CategoryState
+    {
+        public ExpenseCategory category;
+        public float baselineAmount;
+
+        public float cutAmount;
+        public float accruedMoraleDebt;
+        public float originalCutHit;
+        public float scar;
+
+        public float boostAmount;
+        public float boostCycleValue;
+        public int boostMonthsInCycle;
+
+        public int monthsSinceCut;
+        public int timesRaised;
+        public int monthsSinceLastRaise;
+    }
+
+    private float GetCategoryEventInflation(ExpenseCategory cat)
+    {
+        float total = 0f;
+        foreach (var effect in activeExpenseEffects)
+            if (effect.category == cat)
+                total += effect.flatIncrease;
+        return Mathf.Max(0f, total);
+    }
+
+    private float GetSurvivingOverProvision(CategoryState s)
+    {
+        if (s.boostAmount <= 0f) return 0f;
+        return Mathf.Max(0f, s.boostAmount - GetCategoryEventInflation(s.category));
+    }
+
+    private float BoostValue(float overProvision, float baseline)
+    {
+        if (baseline <= 0f) return 0f;
+        return (overProvision / baseline) * BudgetCutMoraleK;
+    }
+
+    private float GetAverageIncome()
+    {
+        float lo = setupData.minIncome;
+        float hi = setupData.maxIncome > 0 ? setupData.maxIncome : lo;
+        return (lo + hi) * 0.5f;
+    }
+
+    private float ProjectedExpensesWithBoost(ExpenseCategory cat, float newBoostAmount)
+    {
+        float total = financeManager.GetHousingCost();
+        foreach (var c in CuttableCategories)
+        {
+            float baseline = GetCategoryBaseline(c);
+            float boost = (c == cat) ? newBoostAmount : (categoryStates.TryGetValue(c, out var st) ? st.boostAmount : 0f);
+            float cut = categoryStates.TryGetValue(c, out var st2) ? st2.cutAmount : 0f;
+            total += baseline + GetCategoryEventInflation(c) - cut + boost;
+        }
+        if (setupData.hasSchoolFees)
+        {
+            int childCount = Mathf.Max(0, PlayerDataManager.Instance?.Children ?? 0);
+            total += ((setupData.schoolFeesAmount * childCount) * 3f) / 12f;
+        }
+        return total;
+    }
+
+    private Dictionary<ExpenseCategory, CategoryState> categoryStates = new();
+
+    private static readonly ExpenseCategory[] CuttableCategories =
+    {
+        ExpenseCategory.Groceries,
+        ExpenseCategory.Transport,
+        ExpenseCategory.Utilities
+    };
+
+    private CategoryState GetCategoryState(ExpenseCategory cat)
+    {
+        if (!categoryStates.TryGetValue(cat, out var state))
+        {
+            state = new CategoryState
+            {
+                category = cat,
+                baselineAmount = GetCategoryBaseline(cat)
+            };
+            categoryStates[cat] = state;
+        }
+        if (state.baselineAmount <= 0f)
+            state.baselineAmount = GetCategoryBaseline(cat);
+        return state;
+    }
+
+    private void ApplyBoostPayout(CategoryState s, float payout)
+    {
+        if (payout <= 0f) return;
+
+        if (s.scar > 0f)
+        {
+            float absorbed = Mathf.Min(s.scar, payout);
+            s.scar -= absorbed;
+            payout -= absorbed;
+        }
+        if (payout > 0f)
+            PlayerDataManager.Instance.ModifyFamilyMorale(payout);
+    }
+
+    public IEnumerable<CategoryState> ActiveCategoryStates => categoryStates.Values;
+
+    public void SetCategoryBoost(ExpenseCategory cat, float newBoostAmount)
+    {
+        float baseline = GetCategoryBaseline(cat);
+        if (baseline <= 0f) return;
+
+        var s = GetCategoryState(cat);
+        newBoostAmount = Mathf.Max(0f, newBoostAmount);
+
+        float ceiling = GetAverageIncome() * BudgetBoostCeilingFraction;
+        float projected = ProjectedExpensesWithBoost(cat, newBoostAmount);
+        if (projected > ceiling)
+        {
+            float overshoot = projected - ceiling;
+            newBoostAmount = Mathf.Max(0f, newBoostAmount - overshoot);
+            Debug.Log($"[BudgetBoost] {cat}: boost clamped to ${newBoostAmount:F0} (ceiling ${ceiling:F0}).");
+        }
+
+        float oldBoost = s.boostAmount;
+
+        if (newBoostAmount > oldBoost + 0.01f)
+        {
+ 
+            float added = newBoostAmount - oldBoost;
+            s.boostAmount = newBoostAmount;
+            if (oldBoost <= 0.01f) s.boostMonthsInCycle = 0;
+            float addedValue = BoostValue(Mathf.Max(0f, added - 0f), baseline);
+            ApplyBoostPayout(s, addedValue);
+            Debug.Log($"[BudgetBoost] {cat}: {(oldBoost <= 0.01f ? "set" : "raised")} to ${newBoostAmount:F0} (+${added:F0}). " +
+                      $"Immediate +{addedValue:F1} morale (scar now {s.scar:F1}).");
+        }
+        else if (newBoostAmount < oldBoost - 0.01f)
+        {
+
+            float cycleValue = BoostValue(GetSurvivingOverProvision(s), baseline);
+            float consolation = cycleValue * BudgetBoostEarlyExitFraction;
+            s.boostAmount = newBoostAmount;
+            s.boostMonthsInCycle = 0;
+            ApplyBoostPayout(s, consolation);
+            Debug.Log($"[BudgetBoost] {cat}: reduced to ${newBoostAmount:F0}. " +
+                      $"Early-exit consolation +{consolation:F1} morale.");
+        }
+    }
+
+    private void ProcessBudgetBoosts()
+    {
+        foreach (var s in categoryStates.Values)
+        {
+            if (s.boostAmount <= 0f) continue;
+
+            s.boostMonthsInCycle++;
+            if (s.boostMonthsInCycle >= BudgetBoostCycleMonths)
+            {
+                float baseline = GetCategoryBaseline(s.category);
+                float value = BoostValue(GetSurvivingOverProvision(s), baseline);
+                ApplyBoostPayout(s, value);
+                s.boostMonthsInCycle = 0;
+                Debug.Log($"[BudgetBoost] {s.category}: 3-month dividend +{value:F1} morale " +
+                          $"(surviving over-provision, scar now {s.scar:F1}).");
+            }
+        }
     }
 
     [System.Serializable]
@@ -255,6 +428,8 @@ public class GameManager : MonoBehaviour
         loanManager?.ResetMonthlyFlags();
         UpdateIncomeEffects();
         UpdateExpenseEffects();
+        AdvanceCategoryMonths();
+        RollFamilyPrompts();
     }
 
     // Double check if happened or not
@@ -550,6 +725,8 @@ public class GameManager : MonoBehaviour
 
         SaveSystem.SaveGame(this);
 
+        ProcessBudgetBoosts();
+
         int finishedMonth = currentMonth;
         currentMonth++;
         OnSeasonChanged?.Invoke();
@@ -612,9 +789,30 @@ public class GameManager : MonoBehaviour
                 ApplyMoneyChange(FinancialEntry.EntryType.Income, "Savings Interest", interest, true);
                 Debug.Log($"[Savings] Interest gained: {interest}");
             }
+            if (finishedMonth >= totalMonths)
+            {
+                SettleBoostsAtGameEnd();
+                if (!IsHeadlessSimulation)
+                    uiManager.ShowEndOfYearSummary(GetYearEndMentorReflection());
+                CurrentLedger = null;
+                return;
+            }
         }
 
         StartNewMonth();
+    }
+
+    private void SettleBoostsAtGameEnd()
+    {
+        foreach (var s in categoryStates.Values)
+        {
+            if (s.boostAmount <= 0f || s.boostMonthsInCycle == 0) continue;
+            float baseline = GetCategoryBaseline(s.category);
+            float value = BoostValue(GetSurvivingOverProvision(s), baseline);
+            ApplyBoostPayout(s, value);
+            s.boostMonthsInCycle = 0;
+            Debug.Log($"[BudgetBoost] {s.category}: end-of-game settle +{value:F1} morale.");
+        }
     }
 
     public float ApplyMonthlyDamage(float intendedLoss)
@@ -950,46 +1148,58 @@ public class GameManager : MonoBehaviour
         Debug.Log($"[Loan] Emergency loan applied: ${amount:F0}");
     }
 
+    private float RoundLoanAmount(float amount)
+    {
+        if (amount <= 0f) return 0f;
+        float step = amount > 500f ? 100f : 50f;
+        return Mathf.Ceil(amount / step) * step;
+    }
+
     private void ShowEmergencyLoanChoicePanel(float shortfall)
     {
         uiManager.ForceCloseAllPopups();
-        float opt1 = Mathf.Round(shortfall);
-        float opt2 = Mathf.Round(shortfall * 1.5f);
-        float opt3 = Mathf.Round(shortfall * 2f);
+        float coverAmount = RoundLoanAmount(shortfall);
+        float bufferAmount = RoundLoanAmount(shortfall * 2f);
 
         var choices = new List<EventData.ChoiceOption>
-    {
-        new EventData.ChoiceOption
         {
-            label = $"Borrow ${opt1:F0} — just enough",
-            resultDescription = $"Borrowed ${opt1:F0}. Covers the gap exactly. Pay it back as fast as you can.",
-            moneyChange = 0f, momentumChange = 0f
-        },
-        new EventData.ChoiceOption
-        {
-            label = $"Borrow ${opt2:F0} — small buffer",
-            resultDescription = $"Borrowed ${opt2:F0}. A bit of breathing room, but more to repay next month.",
-            moneyChange = 0f, momentumChange = 0f
-        },
-        new EventData.ChoiceOption
-        {
-            label = $"Borrow ${opt3:F0} — more cushion",
-            resultDescription = $"Borrowed ${opt3:F0}. More cash now — but this will take longer to clear.",
-            moneyChange = 0f, momentumChange = 0f
-        }
-    };
-
-        float[] amounts = { opt1, opt2, opt3 };
+            new EventData.ChoiceOption
+            {
+                label = $"Borrow ${coverAmount:F0} — just enough",
+                resultDescription = $"Borrowed ${coverAmount:F0}. Covers the gap. Pay it back as fast as you can.",
+                moneyChange = 0f, momentumChange = 0f
+            },
+            new EventData.ChoiceOption
+            {
+                label = $"Borrow ${bufferAmount:F0} — with a buffer",
+                resultDescription = $"Borrowed ${bufferAmount:F0}. More cash now, but more to repay later.",
+                moneyChange = 0f, momentumChange = 0f
+            },
+            new EventData.ChoiceOption
+            {
+                label = "Borrow the minimum and cut spending",
+                resultDescription = $"Borrowed ${coverAmount:F0} to cover this month, and you'll trim your budget going forward.",
+                moneyChange = 0f, momentumChange = 0f
+            }
+        };
 
         uiManager.ShowChoicePopup(
             "You're short this month.",
-            $"Your expenses came to more than you had. A money lender can cover you — but every dollar borrowed comes back with interest.",
+            "Your expenses came to more than you had. A money lender can cover you — but every dollar borrowed comes back with interest. You can also trim your household spending to lean on debt less.",
             "Farai",
             "Money Lender",
             choices,
             index =>
             {
-                ApplyEmergencyLoan(amounts[index]);
+                if (index == 2)
+                {
+                    ApplyEmergencyLoan(coverAmount);
+                    BeginBudgetCutFlow();
+                    return;
+                }
+
+                float chosen = index == 0 ? coverAmount : bufferAmount;
+                ApplyEmergencyLoan(chosen);
                 if (!mentorSpokeThisMonth)
                 {
                     string line = MentorLines.ForcedLoan[Random.Range(0, MentorLines.ForcedLoan.Length)];
@@ -1002,6 +1212,26 @@ public class GameManager : MonoBehaviour
                 }
             }
         );
+    }
+
+    private void BeginBudgetCutFlow()
+    {
+        if (IsHeadlessSimulation)
+        {
+            ExpenseCategory best = ExpenseCategory.Groceries;
+            float bestRoom = 0f;
+            foreach (var cat in new[] { ExpenseCategory.Groceries, ExpenseCategory.Transport, ExpenseCategory.Utilities })
+            {
+                float room = GetCategoryEffective(cat) - GetCategoryFloor(cat);
+                if (room > bestRoom) { bestRoom = room; best = cat; }
+            }
+            if (bestRoom > 0f)
+                SetCategoryProvision(best, GetCategoryFloor(best));
+            FinalizeLedgerAndShowReport();
+            return;
+        }
+
+        uiManager.ShowExpenseAdjustment(FinalizeLedgerAndShowReport);
     }
 
     private void CheckMentorMemory()
@@ -1081,6 +1311,230 @@ public class GameManager : MonoBehaviour
             forcedLoanHistory.Dequeue();
     }
 
+    private const float BudgetCutMoraleK = 20f;
+    private const float BudgetCutFloorFraction = 0.5f;
+
+    public float GetCategoryBaseline(ExpenseCategory cat)
+    {
+        switch (cat)
+        {
+            case ExpenseCategory.Groceries: return financeManager.groceries;
+            case ExpenseCategory.Transport: return financeManager.transport;
+            case ExpenseCategory.Utilities: return financeManager.utilities;
+            default: return 0f;
+        }
+    }
+
+    public float GetCategoryEffective(ExpenseCategory cat)
+    {
+        return GetCategoryBaseline(cat) + GetExpenseModifier(cat);
+    }
+
+    public float GetCategoryFloor(ExpenseCategory cat)
+    {
+        return GetCategoryBaseline(cat) * BudgetCutFloorFraction;
+    }
+
+    public void ApplyProvisionChange(ExpenseCategory cat, float newEffective)
+    {
+        float currentEffective = GetCategoryEffective(cat);
+        if (newEffective < currentEffective - 0.01f)
+            SetCategoryProvision(cat, newEffective);
+        else if (newEffective > currentEffective + 0.01f)
+            RestoreCategoryProvision(cat, newEffective);
+    }
+
+    private const float BudgetRestoreRecoveryFraction = 0.75f;
+    private static readonly float[] NagFractions = { 0.3f, 0.4f, 0.5f };
+
+    public bool RaiseCategory(ExpenseCategory cat, int response)
+    {
+        var s = GetCategoryState(cat);
+
+        if (s.cutAmount <= 0.01f) return false;
+        if (s.timesRaised >= NagFractions.Length) return false;
+
+        if (response == 2)
+        {
+            float fraction = NagFractions[s.timesRaised];
+            float strain = s.originalCutHit * fraction;
+            s.timesRaised++;
+            s.monthsSinceLastRaise = 0;
+            PlayerDataManager.Instance.ModifyFamilyMorale(-strain);
+            Debug.Log($"[FamilyPrompt] {cat}: declined (nag #{s.timesRaised}, {fraction:P0} of " +
+                      $"original {s.originalCutHit:F1}). FamilyMorale -{strain:F1}.");
+            return true;
+        }
+
+        float baseline = GetCategoryBaseline(cat);
+        float currentEffective = GetCategoryEffective(cat);
+        float target = (response == 1)
+            ? currentEffective + (baseline - currentEffective) * 0.5f : baseline;
+
+        s.monthsSinceLastRaise = 0;
+        Debug.Log($"[FamilyPrompt] {cat}: {(response == 0 ? "restored fully" : "restored halfway")} on request.");
+        RestoreCategoryProvision(cat, target);
+        return true;
+    }
+
+    private void RollFamilyPrompts()
+    {
+        var candidates = new List<CategoryState>();
+
+        foreach (var s in categoryStates.Values)
+        {
+            if (s.cutAmount <= 0.01f) continue;
+            if (s.timesRaised >= NagFractions.Length) continue;
+
+            float chance = Mathf.Lerp(0.25f, 0.65f, Mathf.Clamp01((s.monthsSinceCut - 1) / 4f));
+            if (s.monthsSinceLastRaise >= 3) chance = 0.90f;
+
+            if (Random.value < chance)
+                candidates.Add(s);
+        }
+
+        if (candidates.Count == 0) return;
+
+        candidates.Sort((a, b) => b.monthsSinceCut.CompareTo(a.monthsSinceCut));
+        int raiseCount = Mathf.Min(2, candidates.Count);
+
+        for (int i = 0; i < raiseCount; i++)
+        {
+            var s = candidates[i];
+            if (IsHeadlessSimulation)
+            {
+                RaiseCategory(s.category, 2);
+            }
+            else
+            {
+                ShowFamilyPrompt(s.category);
+            }
+        }
+    }
+
+    private void ShowFamilyPrompt(ExpenseCategory cat)
+    {
+        var s = GetCategoryState(cat);
+        int tier = Mathf.Clamp(s.timesRaised, 0, NagFractions.Length - 1);
+
+        string body = GetFamilyPromptLine(cat, tier);
+        string baseName = cat.ToString();
+
+        var choices = new List<EventData.ChoiceOption>
+        {
+            new EventData.ChoiceOption { label = $"Restore {baseName} fully",   resultDescription = "You restore the full amount. The family is relieved.", moneyChange = 0f, momentumChange = 0f },
+            new EventData.ChoiceOption { label = $"Restore {baseName} halfway",  resultDescription = "You put some back. It helps, a little.", moneyChange = 0f, momentumChange = 0f },
+            new EventData.ChoiceOption { label = "Not now",                      resultDescription = "You keep things as they are for now.", moneyChange = 0f, momentumChange = 0f }
+        };
+
+        uiManager.ShowChoicePopup(
+            "A word at home",
+            body,
+            "Your family",
+            "Home",
+            choices,
+            index => RaiseCategory(cat, index)
+        );
+    }
+
+    private string GetFamilyPromptLine(ExpenseCategory cat, int tier)
+    {
+        string thing = cat switch
+        {
+            ExpenseCategory.Groceries => "food on the table",
+            ExpenseCategory.Transport => "getting around",
+            ExpenseCategory.Utilities => "the lights and water",
+            _ => "things at home"
+        };
+
+        switch (tier)
+        {
+            case 0: return $"The family has noticed there's less for {thing} lately. They're asking, gently, if things can go back to how they were.";
+            case 1: return $"It's come up again — {thing} has been tight for a while now, and they're really hoping you can restore it.";
+            default: return $"There's tension at home. The cut to {thing} has worn on everyone, and they don't understand why it hasn't been fixed.";
+        }
+    }
+
+    public void RestoreCategoryProvision(ExpenseCategory cat, float newEffective)
+    {
+        float baseline = GetCategoryBaseline(cat);
+        if (baseline <= 0f) return;
+
+        var state = GetCategoryState(cat);
+        if (state.cutAmount <= 0.01f) return;
+
+        newEffective = Mathf.Min(baseline, newEffective);
+
+        float currentEffective = GetCategoryEffective(cat);
+        float restoreBy = newEffective - currentEffective;
+        if (restoreBy <= 0.01f) return;
+
+        restoreBy = Mathf.Min(restoreBy, state.cutAmount);
+        float fractionRestored = restoreBy / state.cutAmount;
+        float debtRestored = state.accruedMoraleDebt * fractionRestored;
+
+        float recovered = debtRestored * BudgetRestoreRecoveryFraction;
+        float scarred = debtRestored - recovered;
+
+        state.cutAmount -= restoreBy;
+        state.accruedMoraleDebt -= debtRestored;
+        state.scar += scarred;
+
+        PlayerDataManager.Instance.ModifyFamilyMorale(recovered);
+
+        Debug.Log($"[BudgetRestore] {cat}: effective ${currentEffective:F0} → ${newEffective:F0} " +
+                  $"(restored ${restoreBy:F0}, {fractionRestored:P0} of cut). " +
+                  $"Recovered +{recovered:F1} morale, scarred {scarred:F1} (total scar {state.scar:F1}). " +
+                  $"Remaining cut ${state.cutAmount:F0}.");
+    }
+
+    public void SetCategoryProvision(ExpenseCategory cat, float newEffective)
+    {
+        float baseline = GetCategoryBaseline(cat);
+        if (baseline <= 0f) return;
+
+        float floor = GetCategoryFloor(cat);
+        newEffective = Mathf.Max(floor, newEffective);
+
+        float currentEffective = GetCategoryEffective(cat);
+        float reduction = currentEffective - newEffective;
+        if (reduction <= 0.01f) return;
+
+        var state = GetCategoryState(cat);
+        state.cutAmount += reduction;
+        state.monthsSinceCut = 0;
+
+        float moraleHit = (reduction / baseline) * BudgetCutMoraleK;
+        state.accruedMoraleDebt += moraleHit;
+        if (state.originalCutHit <= 0.01f)state.originalCutHit = moraleHit;
+        PlayerDataManager.Instance.ModifyFamilyMorale(-moraleHit);
+
+        Debug.Log($"[BudgetCut] {cat}: effective ${currentEffective:F0} → ${newEffective:F0} " +
+                  $"(cut ${reduction:F0}, total ${state.cutAmount:F0} of ${baseline:F0} baseline). " +
+                  $"FamilyMorale -{moraleHit:F1}.");
+    }
+
+    private void AdvanceCategoryMonths()
+    {
+        foreach (var s in categoryStates.Values)
+        {
+            if (s.cutAmount > 0.01f)
+            {
+                s.monthsSinceCut++;
+                s.monthsSinceLastRaise++;
+            }
+        }
+    }
+
+    public void OpenExpenseAdjustmentFromReport()
+    {
+        uiManager.ShowExpenseAdjustment(() =>
+        {
+            uiManager.ShowReportPanel(
+                CurrentLedger != null ? CurrentLedger.GetMonthlyBreakdown() : "");
+        });
+    }
+
     // Handles the death of a household adult earner.
     public void ApplyAdultEarnerDeath(EventData ev, int currentMonth)
     {
@@ -1152,6 +1606,13 @@ public class GameManager : MonoBehaviour
         foreach (var effect in activeExpenseEffects)
             if (effect.category == category)
                 total += effect.flatIncrease;
+
+        if (categoryStates.TryGetValue(category, out var state))
+        {
+            total -= state.cutAmount;
+            total += state.boostAmount;
+        }
+
         return total;
     }
 
@@ -1751,6 +2212,7 @@ public class GameManager : MonoBehaviour
         insuranceManager.ResetAll();
         PlayerDataManager.Instance?.ResetPlayerData();
         activeExpenseEffects.Clear();
+        categoryStates.Clear();
         monthHistory.Clear();
         setupData.minIncome = 0f;
         setupData.maxIncome = 0f;
@@ -2112,6 +2574,7 @@ public class GameManager : MonoBehaviour
         monthlyEvents.Clear();
         activeIncomeEffects.Clear();
         activeExpenseEffects.Clear();
+        categoryStates.Clear();
         savingsStreak = 0;
         overBudgetStreak = 0;
         skipHistory.Clear();
@@ -2331,6 +2794,79 @@ public class GameManager : MonoBehaviour
         financeManager.livestockInsuredValue = 6000f;
 
         RunHeadlessLoop(NAME);
+    }
+
+    // ============================================================
+    // TEST 5 — BUDGET SYSTEMS
+    // ============================================================
+    [ContextMenu("DEBUG_TestBudgetSystems")]
+    public void DEBUG_TestBudgetSystems()
+    {
+        const string NAME = "BudgetSystems";
+        if (!StressTestPreCheck(NAME)) return;
+        ApplyProfile(ProfileType.Formal);
+        var pdm = PlayerDataManager.Instance;
+
+        Debug.Log("===== BUDGET SYSTEMS TEST =====");
+        Debug.Log($"[T] Start FamilyMorale = {pdm.FamilyMorale:F1} (expect 0)");
+
+        Debug.Log("[T] --- Cut groceries to floor (70) ---");
+        SetCategoryProvision(ExpenseCategory.Groceries, 70f);
+        Debug.Log($"[T] FamilyMorale = {pdm.FamilyMorale:F1} (expect -10.0)");
+        var g = GetCategoryState(ExpenseCategory.Groceries);
+        Debug.Log($"[T] cut=${g.cutAmount:F0} debt={g.accruedMoraleDebt:F1} scar={g.scar:F1} (expect cut 70, debt 10, scar 0)");
+
+        Debug.Log("[T] --- Restore groceries halfway (to 105) ---");
+        RestoreCategoryProvision(ExpenseCategory.Groceries, 105f);
+        Debug.Log($"[T] FamilyMorale = {pdm.FamilyMorale:F1} (expect -6.25 = -10 +3.75)");
+        Debug.Log($"[T] cut=${g.cutAmount:F0} debt={g.accruedMoraleDebt:F1} scar={g.scar:F1} (expect cut 35, debt 5.0, scar 1.25)");
+
+        Debug.Log("[T] --- Restore groceries fully (to 140) ---");
+        RestoreCategoryProvision(ExpenseCategory.Groceries, 140f);
+        Debug.Log($"[T] FamilyMorale = {pdm.FamilyMorale:F1} (expect -2.5 = -6.25 +3.75)");
+        Debug.Log($"[T] cut=${g.cutAmount:F0} debt={g.accruedMoraleDebt:F1} scar={g.scar:F1} (expect cut 0, debt 0, scar 2.5)");
+
+        Debug.Log("===== BUDGET SYSTEMS TEST COMPLETE =====");
+        IsHeadlessSimulation = false;
+
+        Debug.Log("[T] --- Boost groceries +28 (immediate, absorbs scar 2.5) ---");
+        SetCategoryBoost(ExpenseCategory.Groceries, 28f);
+        Debug.Log($"[T] FamilyMorale = {pdm.FamilyMorale:F1} (expect -1.0 = -2.5 +1.5)");
+        Debug.Log($"[T] boost=${g.boostAmount:F0} cycle={g.boostMonthsInCycle} scar={g.scar:F1} (expect boost 28, cycle 0, scar 0)");
+
+        Debug.Log("[T] --- Simulate 3 months sustained ---");
+        ProcessBudgetBoosts();
+        ProcessBudgetBoosts();
+        ProcessBudgetBoosts();
+        Debug.Log($"[T] FamilyMorale = {pdm.FamilyMorale:F1} (expect +3.0 = -1.0 +4.0)");
+        Debug.Log($"[T] cycle={g.boostMonthsInCycle} (expect 0 after payout)");
+
+        Debug.Log("[T] --- Drop groceries boost (1/3 consolation) ---");
+        SetCategoryBoost(ExpenseCategory.Groceries, 0f);
+        Debug.Log($"[T] FamilyMorale = {pdm.FamilyMorale:F1} (expect +4.3 = +3.0 +1.33)");
+        Debug.Log("[T] === FAMILY PROMPTS (Transport) ===");
+
+        Debug.Log("[T] --- Cut transport to floor (25) ---");
+        SetCategoryProvision(ExpenseCategory.Transport, 25f);
+        var t = GetCategoryState(ExpenseCategory.Transport);
+        float before = pdm.FamilyMorale;
+        Debug.Log($"[T] originalCutHit={t.originalCutHit:F1} (expect 10.0), morale={before:F1}");
+
+        Debug.Log("[T] --- Family raises, player declines (nag #1) ---");
+        RaiseCategory(ExpenseCategory.Transport, 2);
+        Debug.Log($"[T] morale={pdm.FamilyMorale:F1} (expect {before - 3.0f:F1}), timesRaised={t.timesRaised} (expect 1)");
+
+        Debug.Log("[T] --- Decline again (nag #2) ---");
+        RaiseCategory(ExpenseCategory.Transport, 2);
+        Debug.Log($"[T] morale={pdm.FamilyMorale:F1} (expect {before - 7.0f:F1}), timesRaised={t.timesRaised} (expect 2)");
+
+        Debug.Log("[T] --- Decline again (nag #3) ---");
+        RaiseCategory(ExpenseCategory.Transport, 2);
+        Debug.Log($"[T] morale={pdm.FamilyMorale:F1} (expect {before - 12.0f:F1}), timesRaised={t.timesRaised} (expect 3)");
+
+        Debug.Log("[T] --- Family gives up (4th raise ignored) ---");
+        bool raised = RaiseCategory(ExpenseCategory.Transport, 2);
+        Debug.Log($"[T] raised={raised} (expect False), morale={pdm.FamilyMorale:F1} (unchanged)");
     }
 #endif
 }

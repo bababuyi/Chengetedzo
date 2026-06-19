@@ -47,6 +47,7 @@ public class SetupPanelController : MonoBehaviour
     public GameObject nextButton;
     public GameObject backButton;
     public GameObject confirmAndStartButton;
+    public GameObject confirmAdjustmentButton;
 
     [Header("Panels")]
     public ExpensesPanelController expensesPanelController;
@@ -160,6 +161,7 @@ public class SetupPanelController : MonoBehaviour
         hasMotorToggle.interactable = false;
         hasCropsToggle.interactable = false;
     }
+
     public void ShowStep(int step)
     {
         incomeSection.SetActive(step == 1);
@@ -171,6 +173,8 @@ public class SetupPanelController : MonoBehaviour
         nextButton.SetActive(step < 4);
         if (confirmAndStartButton != null)
             confirmAndStartButton.SetActive(step == 4);
+        if (confirmAdjustmentButton != null)
+            confirmAdjustmentButton.SetActive(false);
 
         currentStep = step;
 
@@ -695,5 +699,37 @@ public class SetupPanelController : MonoBehaviour
             reflectionLineText.text = GetReflectionLine(setup.isIncomeStable, setup.hasSchoolFees, surplus);
 
         budgetPieChart?.Render(averageIncome, housing, groceries, transport, utilities, fees, savingsAmount);
+    }
+
+    private bool isExpenseAdjustmentMode = false;
+
+    public void EnterExpenseAdjustmentMode()
+    {
+        isExpenseAdjustmentMode = true;
+
+        incomeSection.SetActive(false);
+        expensesSection.SetActive(true);
+        savingsSection.SetActive(false);
+        reviewSection.SetActive(false);
+
+        backButton.SetActive(false);
+        nextButton.SetActive(false);
+
+        if (confirmAndStartButton != null) confirmAndStartButton.SetActive(false);
+        if (confirmAdjustmentButton != null) confirmAdjustmentButton.SetActive(true);
+
+        expensesPanelController.Init();
+        expensesPanelController.EnterAdjustmentMode();
+        LockSetupUI();
+    }
+
+    public void ConfirmExpenseAdjustment()
+    {
+        if (!isExpenseAdjustmentMode) return;
+        isExpenseAdjustmentMode = false;
+
+        expensesPanelController.ConfirmAdjustment();
+
+        if (confirmAdjustmentButton != null) confirmAdjustmentButton.SetActive(false);
     }
 }
