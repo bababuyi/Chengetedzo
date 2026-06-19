@@ -2147,6 +2147,61 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    public struct BudgetBarState
+    {
+        public float cap;
+        public float baseLine;
+        public float current;
+        public float underProvision;
+        public float survivingBoost;
+        public float eventEaten;
+        public bool atCap;
+    }
+
+    public BudgetBarState GetBudgetBarState(float groceriesProvision, float transportProvision, float utilitiesProvision)
+    {
+        float housing = financeManager.GetHousingCost();
+        float school = 0f;
+        if (setupData.hasSchoolFees)
+        {
+            int childCount = Mathf.Max(0, PlayerDataManager.Instance?.Children ?? 0);
+            school = ((setupData.schoolFeesAmount * childCount) * 3f) / 12f;
+        }
+
+        float baseLine = housing + school
+            + GetCategoryBaseline(ExpenseCategory.Groceries)
+            + GetCategoryBaseline(ExpenseCategory.Transport)
+            + GetCategoryBaseline(ExpenseCategory.Utilities);
+
+        float eventInflation =
+            GetCategoryEventInflation(ExpenseCategory.Groceries)
+            + GetCategoryEventInflation(ExpenseCategory.Transport)
+            + GetCategoryEventInflation(ExpenseCategory.Utilities);
+
+        float current = housing + school + eventInflation
+            + groceriesProvision + transportProvision + utilitiesProvision;
+
+        float over = current - baseLine;
+        float under = Mathf.Max(0f, -over);
+        float aboveBase = Mathf.Max(0f, over);
+
+        float eventEaten = Mathf.Min(aboveBase, eventInflation);
+        float survivingBoost = Mathf.Max(0f, aboveBase - eventEaten);
+
+        float cap = GetAverageIncome() * BudgetBoostCeilingFraction;
+
+        return new BudgetBarState
+        {
+            cap = cap,
+            baseLine = baseLine,
+            current = current,
+            underProvision = under,
+            survivingBoost = survivingBoost,
+            eventEaten = eventEaten,
+            atCap = current >= cap - 0.01f
+        };
+    }
+
     public void LoadFromSave(GameSaveData save)
     {
         if (loanManager != null)
@@ -2997,6 +3052,36 @@ public class GameManager : MonoBehaviour
         Debug.Log($"[FQ] declined → morale {before:F1} → {pdm.FamilyMorale:F1} (expect -3.0 change), timesRaised={t.timesRaised} (expect 1)");
 
         Debug.Log("===== FAMILY PROMPT QUEUE TEST COMPLETE =====");
+        IsHeadlessSimulation = false;
+    }
+
+    [ContextMenu("DEBUG_TestBudgetBar")]
+    public void DEBUG_TestBudgetBar()
+    {
+        const string NAME = "BudgetBar";
+        if (!StressTestPreCheck(NAME)) return;
+        ApplyProfile(ProfileType.Formal);
+
+        Debug.Log("===== BUDGET BAR TEST =====");
+
+        var a = GetBudgetBarState(140, 50, 40);
+        Debug.Log($"[BB] A base={a.baseLine:F0} current={a.current:F0} cap={a.cap:F0} under={a.underProvision:F0} dGreen={a.survivingBoost:F0} lGreen={a.eventEaten:F0} atCap={a.atCap}");
+        Debug.Log($"[BB] A expect base=420 current=420 cap≈508 under=0 dGreen=0 lGreen=0");
+
+        var b = GetBudgetBarState(100, 50, 40);
+        Debug.Log($"[BB] B current={b.current:F0} under={b.underProvision:F0} (expect current 380, under 40)");
+
+        var c = GetBudgetBarState(180, 50, 40);
+        Debug.Log($"[BB] C current={c.current:F0} dGreen={c.survivingBoost:F0} lGreen={c.eventEaten:F0} (expect current 460, dGreen 40, lGreen 0)");
+
+        ApplyExpenseEffect(ExpenseCategory.Groceries, 25f, 2);
+        var d = GetBudgetBarState(180, 50, 40);
+        Debug.Log($"[BB] D current={d.current:F0} dGreen={d.survivingBoost:F0} lGreen={d.eventEaten:F0} (expect current 485, lGreen 25, dGreen 40)");
+
+        var e = GetBudgetBarState(300, 50, 40);
+        Debug.Log($"[BB] E current={e.current:F0} cap={e.cap:F0} atCap={e.atCap} (expect current>cap, atCap True)");
+
+        Debug.Log("===== BUDGET BAR TEST COMPLETE =====");
         IsHeadlessSimulation = false;
     }
 #endif
