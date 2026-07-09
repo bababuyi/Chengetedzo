@@ -1,0 +1,8 @@
+<View className="share_02">
+  <Image className="img_share_02" style="" src="{{imagePath}}"/>
+  <View className="obj_FillRect_white" style=""></View>
+  <View className="obj_FillRect_black" style=""></View>
+  <Image className="img_user_icon_player" style="" src="{{FBInstant.player.photo}}"/>
+  <Text className="txt_share_bestscore_num" style="" content="{{score}}"/>
+  <Text className="txt_share_bestscore" style="" content="Best Score"/>
+</View>

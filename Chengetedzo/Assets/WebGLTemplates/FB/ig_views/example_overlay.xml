@@ -1,0 +1,10 @@
+<View>
+<Text content="hello" />
+<Text content="{{id}}" />
+<Text content="{{isVIP}}" />
+<Text content="{{player_name}}" />
+<Text content="{{player_data}}" />
+<Text content="{{player_data.head}}" />
+<Text content="{{player_data.body}}" />
+<Text content="{{player_data.legs}}" />
+</View>

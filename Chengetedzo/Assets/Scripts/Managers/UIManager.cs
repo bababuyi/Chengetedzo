@@ -29,11 +29,11 @@ public class UIManager : MonoBehaviour
     public GameObject forecastPanel;
 
     [Header("Simulation HUD")]
-    public GameObject topHUD; // month + money bar
-    public GameObject financialHUD; // month + money + action buttons
+    public GameObject topHUD;
+    public GameObject financialHUD;
 
     [Header("Persistent Navigation")]
-    public GameObject exitButtonHUD; // exit/back/settings button only
+    public GameObject exitButtonHUD;
 
     [Header("Other Screens")]
     public GameObject endOfYearScreen;
@@ -232,8 +232,12 @@ public class UIManager : MonoBehaviour
         HideSavingsTopButton();
     }
 
-    private void Start()
+    private async void Start()
     {
+#if UNITY_WEBGL && !UNITY_EDITOR
+    await Meta.InstantGames.FBInstant.InitializeAsync();
+    await Meta.InstantGames.FBInstant.StartGameAsync();
+#endif
         SwitchPanel(UIPanelState.MainMenu);
     }
 
