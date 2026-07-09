@@ -4,6 +4,7 @@ using System.Globalization;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Threading.Tasks;
 using static GameManager;
 
 public class UIManager : MonoBehaviour
@@ -224,6 +225,8 @@ public class UIManager : MonoBehaviour
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
 
+        HideAllPanels();
+
         eventPopup?.SetActive(false);
         mentorPopup?.SetActive(false);
         choiceEventPopup?.SetActive(false);
@@ -235,13 +238,22 @@ public class UIManager : MonoBehaviour
     private async void Start()
     {
 #if UNITY_WEBGL && !UNITY_EDITOR
-    await Meta.InstantGames.FBInstant.InitializeAsync();
-    await Meta.InstantGames.FBInstant.StartGameAsync();
+    try
+    {
+        var initTask = Meta.InstantGames.FBInstant.InitializeAsync();
+        if (await Task.WhenAny(initTask, Task.Delay(5000)) == initTask)
+            await Meta.InstantGames.FBInstant.StartGameAsync();
+        else
+            Debug.LogWarning("[UIManager] FBInstant init timed out — continuing anyway.");
+    }
+    catch (System.Exception ex)
+    {
+        Debug.LogError($"[UIManager] FBInstant init failed: {ex.Message}");
+    }
 #endif
         SwitchPanel(UIPanelState.MainMenu);
     }
 
-    // Test if this works for blackbars
     void ApplySafeArea(RectTransform panel)
     {
         Rect safeArea = Screen.safeArea;
