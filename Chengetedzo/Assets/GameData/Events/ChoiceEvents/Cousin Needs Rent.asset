@@ -27,6 +27,7 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   - label: Send half ($50)
     resultDescription: "I can send $50. It's all I have right now \u2014 use it wisely."
     moneyChange: -50
@@ -37,6 +38,7 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   - label: I'm not able to help this month
     resultDescription: I'm sorry, I genuinely don't have anything to spare right
       now.
@@ -48,13 +50,15 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   eventName: Cousin Needs Rent
-  description: "Your cousin calls \u2014 their landlord is threatening to evict them.
-    They need rent money urgently."
+  description: The landlord's given me until Friday or I'm out. I hate to ask, but
+    is there any way you can help with rent this week?
   financialLesson: 
   category: 3
   pool: 6
   requiredAsset: 0
+  destroysAsset: 0
   icon: {fileID: 0}
   probability: 14
   weight: 10
@@ -84,5 +88,5 @@ MonoBehaviour:
   borrowingPowerChange: 0
   startsChain: 0
   followUpEvents: []
-  followUpChance: 0.5
-  followUpDelay: 1
+  followUpChance: 0
+  followUpDelay: 0

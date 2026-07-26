@@ -26,6 +26,7 @@ MonoBehaviour:
     incomeEffectMonths: 2
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   - label: Negotiate lighter hours
     resultDescription: I'll do it but I need to limit the hours.
     moneyChange: 0
@@ -36,6 +37,7 @@ MonoBehaviour:
     incomeEffectMonths: 1
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   - label: Pass on it this time
     resultDescription: "Not this time \u2014 family needs me more."
     moneyChange: 0
@@ -46,13 +48,15 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   eventName: Side Hustle Opportunity
-  description: "Someone contacts you about a small side contract \u2014 weekend work,
-    decent pay, but it will cost you time with family."
+  description: "I've got weekend work going if you're interested \u2014 decent pay,
+    but it'll eat into your weekend. Let me know."
   financialLesson: 
   category: 3
   pool: 6
   requiredAsset: 0
+  destroysAsset: 0
   icon: {fileID: 0}
   probability: 8
   weight: 8
@@ -82,5 +86,5 @@ MonoBehaviour:
   borrowingPowerChange: 0
   startsChain: 0
   followUpEvents: []
-  followUpChance: 0.5
-  followUpDelay: 1
+  followUpChance: 0
+  followUpDelay: 0

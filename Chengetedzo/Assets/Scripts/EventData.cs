@@ -26,6 +26,7 @@ public class EventData : ScriptableObject
         public int incomeEffectMonths;
         public bool affectsLoan;
         public float borrowingPowerChange;
+        public string grantsAsset;
     }
 
     [Header("Basic Info")]
@@ -42,6 +43,7 @@ public class EventData : ScriptableObject
     public EventPool pool;
 
     public AssetRequirement requiredAsset;
+    public AssetRequirement destroysAsset = AssetRequirement.None;
 
     [Header("UI Icon")]
     public Sprite icon;

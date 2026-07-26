@@ -53,8 +53,47 @@ public class ExpensesPanelController : MonoBehaviour
     public TMP_Text incomeRangeText;
     public TMP_Text expensesTotalText;
 
+    [Header("Budget Bar")]
+    public GameObject budgetBarContainer; // parent of the whole budget-bar visual â€” shown/hidden by Enter/ExitAdjustmentMode
+    public RectTransform budgetBarFill;
+    public RectTransform belowBaseSegment;
+    public RectTransform aboveBaseSegment;
+    public RectTransform baseLineMarker;
+    public Button confirmAdjustmentButton;
+
+    [Header("Per-Category Baseline Ticks (optional)")]
+    public RectTransform groceriesBaselineTick;
+    public RectTransform transportBaselineTick;
+    public RectTransform utilitiesBaselineTick;
+
+    private void PositionBaselineTick(RectTransform tick, Slider slider, float baseline)
+    {
+        if (tick == null || slider == null) return;
+
+        RectTransform track = slider.fillRect != null
+            ? slider.fillRect.parent as RectTransform
+            : slider.GetComponent<RectTransform>();
+        if (track == null) return;
+
+        float range = slider.maxValue - slider.minValue;
+        if (range <= 0f) return;
+
+        float fraction = Mathf.Clamp01((baseline - slider.minValue) / range);
+        float trackWidth = track.rect.width;
+
+        tick.anchoredPosition = new Vector2(fraction * trackWidth, tick.anchoredPosition.y);
+    }
+
     private const float MIN_HOUSE_COST = 15000f;
     private bool isAdjustmentMode = false;
+
+    // Normal-setup slider configuration, cached on EnterAdjustmentMode so ExitAdjustmentMode
+    // can restore it exactly rather than guessing at defaults.
+    private struct SliderRange { public float min; public float max; public float value; }
+    private SliderRange _groceriesNormalRange;
+    private SliderRange _transportNormalRange;
+    private SliderRange _utilitiesNormalRange;
+    private bool _normalRangeCached = false;
 
     public void EnterAdjustmentMode()
     {
@@ -65,15 +104,67 @@ public class ExpensesPanelController : MonoBehaviour
         if (houseCostInputGroup != null) houseCostInputGroup.SetActive(false);
         if (schoolFeesToggle != null) schoolFeesToggle.gameObject.SetActive(false);
 
-        SetupAdjustSlider(groceriesSlider, ExpenseCategory.Groceries);
-        SetupAdjustSlider(transportSlider, ExpenseCategory.Transport);
-        SetupAdjustSlider(utilitiesSlider, ExpenseCategory.Utilities);
+        if (budgetBarContainer != null) budgetBarContainer.SetActive(true);
+        if (incomeRangeText != null) incomeRangeText.gameObject.SetActive(true);
+        if (expensesTotalText != null) expensesTotalText.gameObject.SetActive(true);
+
+        CacheNormalSliderRanges();
+
+        SetupAdjustSlider(groceriesSlider, ExpenseCategory.Groceries, groceriesBaselineTick);
+        SetupAdjustSlider(transportSlider, ExpenseCategory.Transport, transportBaselineTick);
+        SetupAdjustSlider(utilitiesSlider, ExpenseCategory.Utilities, utilitiesBaselineTick);
 
         RefreshAll();
         RefreshBudgetReadout();
     }
 
-    private void SetupAdjustSlider(Slider slider, ExpenseCategory cat)
+    // Exact mirror of EnterAdjustmentMode: hides the budget bar and floor markers, hides the
+    // adjustment readouts, and restores the sliders to their normal setup configuration.
+    // Called from every path back into normal setup (SetupPanelController.OnPanelOpened,
+    // JumpToReviewStep, ConfirmExpenseAdjustment) so adjustment-mode UI can't linger.
+    public void ExitAdjustmentMode()
+    {
+        isAdjustmentMode = false;
+        var gm = GameManager.Instance;
+
+        bool hasHouse = gm != null && gm.financeManager != null && gm.financeManager.assets.hasHouse;
+        SetHousingMode(hasHouse);
+        if (schoolFeesToggle != null) schoolFeesToggle.gameObject.SetActive(true);
+
+        if (budgetBarContainer != null) budgetBarContainer.SetActive(false);
+        if (groceriesBaselineTick != null) groceriesBaselineTick.gameObject.SetActive(false);
+        if (transportBaselineTick != null) transportBaselineTick.gameObject.SetActive(false);
+        if (utilitiesBaselineTick != null) utilitiesBaselineTick.gameObject.SetActive(false);
+
+        if (incomeRangeText != null) incomeRangeText.gameObject.SetActive(false);
+        if (expensesTotalText != null) expensesTotalText.gameObject.SetActive(false);
+
+        if (_normalRangeCached)
+        {
+            RestoreSliderRange(groceriesSlider, _groceriesNormalRange);
+            RestoreSliderRange(transportSlider, _transportNormalRange);
+            RestoreSliderRange(utilitiesSlider, _utilitiesNormalRange);
+            _normalRangeCached = false;
+        }
+    }
+
+    private void CacheNormalSliderRanges()
+    {
+        _groceriesNormalRange = new SliderRange { min = groceriesSlider.minValue, max = groceriesSlider.maxValue, value = groceriesSlider.value };
+        _transportNormalRange = new SliderRange { min = transportSlider.minValue, max = transportSlider.maxValue, value = transportSlider.value };
+        _utilitiesNormalRange = new SliderRange { min = utilitiesSlider.minValue, max = utilitiesSlider.maxValue, value = utilitiesSlider.value };
+        _normalRangeCached = true;
+    }
+
+    private void RestoreSliderRange(Slider slider, SliderRange range)
+    {
+        if (slider == null) return;
+        slider.minValue = range.min;
+        slider.maxValue = range.max;
+        slider.SetValueWithoutNotify(range.value);
+    }
+
+    private void SetupAdjustSlider(Slider slider, ExpenseCategory cat, RectTransform baselineTick = null)
     {
         if (slider == null) return;
         var gm = GameManager.Instance;
@@ -82,8 +173,11 @@ public class ExpensesPanelController : MonoBehaviour
         float current = gm.GetCategoryEffective(cat);
 
         slider.minValue = floor;
-        slider.maxValue = baseline;
-        slider.SetValueWithoutNotify(Mathf.Clamp(current, floor, baseline));
+        slider.maxValue = baseline * 2f;
+        slider.SetValueWithoutNotify(Mathf.Clamp(current, floor, baseline * 2f));
+
+        if (baselineTick != null) baselineTick.gameObject.SetActive(true);
+        PositionBaselineTick(baselineTick, slider, baseline);
     }
 
     private void RefreshBudgetReadout()
@@ -100,7 +194,7 @@ public class ExpensesPanelController : MonoBehaviour
             float hi = setup.maxIncome > 0 ? setup.maxIncome : lo;
             incomeRangeText.text = setup.isIncomeStable
                 ? $"Your income is about ${lo:F0} / month"
-                : $"Your income is usually ${lo:F0} – ${hi:F0} / month";
+                : $"Your income is usually ${lo:F0} ï¿½ ${hi:F0} / month";
         }
 
         if (expensesTotalText != null)
@@ -119,6 +213,40 @@ public class ExpensesPanelController : MonoBehaviour
 
             expensesTotalText.text = $"Planned spending: ${planned:F0} / month";
         }
+
+        RefreshBudgetBar();
+    }
+
+    private void RefreshBudgetBar()
+    {
+        if (budgetBarFill == null) return;
+
+        var gm = GameManager.Instance;
+        var bar = gm.GetBudgetBarState(groceriesSlider.value, transportSlider.value, utilitiesSlider.value);
+
+        float totalWidth = budgetBarFill.rect.width;
+        float scale = bar.cap > 0f ? totalWidth / bar.cap : 0f;
+        float baseLineX = bar.baseLine * scale;
+
+        if (baseLineMarker != null)
+            baseLineMarker.anchoredPosition = new Vector2(baseLineX, baseLineMarker.anchoredPosition.y);
+
+        if (belowBaseSegment != null)
+        {
+            float belowWidth = bar.belowBase * scale;
+            belowBaseSegment.sizeDelta = new Vector2(belowWidth, belowBaseSegment.sizeDelta.y);
+            belowBaseSegment.anchoredPosition = new Vector2(baseLineX - belowWidth, belowBaseSegment.anchoredPosition.y);
+        }
+
+        if (aboveBaseSegment != null)
+        {
+            float aboveWidth = bar.aboveBase * scale;
+            aboveBaseSegment.sizeDelta = new Vector2(aboveWidth, aboveBaseSegment.sizeDelta.y);
+            aboveBaseSegment.anchoredPosition = new Vector2(baseLineX, aboveBaseSegment.anchoredPosition.y);
+        }
+
+        if (confirmAdjustmentButton != null)
+            confirmAdjustmentButton.interactable = !bar.atCap;
     }
 
     public void ConfirmAdjustment()
@@ -250,7 +378,7 @@ public class ExpensesPanelController : MonoBehaviour
         }
         else
         {
-            houseCostValueText.text = "$—";
+            houseCostValueText.text = "$ï¿½";
             houseCostWarningText.gameObject.SetActive(false);
         }
     }
@@ -270,7 +398,7 @@ public class ExpensesPanelController : MonoBehaviour
             return;
         }
 
-        // HOUSE OWNED — value is for insurance ONLY
+        // HOUSE OWNED ï¿½ value is for insurance ONLY
         if (finance.assets.hasHouse)
         {
             if (float.TryParse(houseCostInput.text, NumberStyles.Float, CultureInfo.InvariantCulture, out float houseValue))
@@ -336,4 +464,17 @@ public class ExpensesPanelController : MonoBehaviour
     public float GetGroceriesCost() => groceriesSlider.value;
     public float GetTransportCost() => transportSlider.value;
     public float GetUtilitiesCost() => utilitiesSlider.value;
+
+    public void ResetCategoryToBaseline(ExpenseCategory cat)
+    {
+        var gm = GameManager.Instance;
+        float baseline = gm.GetCategoryBaseline(cat);
+
+        switch (cat)
+        {
+            case ExpenseCategory.Groceries: groceriesSlider.value = baseline; break;
+            case ExpenseCategory.Transport: transportSlider.value = baseline; break;
+            case ExpenseCategory.Utilities: utilitiesSlider.value = baseline; break;
+        }
+    }
 }

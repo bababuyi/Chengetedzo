@@ -26,6 +26,7 @@ MonoBehaviour:
     incomeEffectMonths: 2
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   - label: Negotiate a better price
     resultDescription: I can do $300 or I wait for the market.
     moneyChange: 300
@@ -36,6 +37,7 @@ MonoBehaviour:
     incomeEffectMonths: 1
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   - label: Wait for proper market price
     resultDescription: I'll wait. The market price is better.
     moneyChange: 0
@@ -46,13 +48,15 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   eventName: Buyer Offers Early Cash
-  description: "A buyer arrives at your farm offering cash for your crops right now
-    \u2014 but below market price."
+  description: I'll take the crop off your hands today, cash in hand. It's below
+    market, but it's certain and it's now.
   financialLesson: 
   category: 3
   pool: 6
   requiredAsset: 5
+  destroysAsset: 0
   icon: {fileID: 0}
   probability: 10
   weight: 8
@@ -82,5 +86,5 @@ MonoBehaviour:
   borrowingPowerChange: 0
   startsChain: 0
   followUpEvents: []
-  followUpChance: 0.5
-  followUpDelay: 1
+  followUpChance: 0
+  followUpDelay: 0

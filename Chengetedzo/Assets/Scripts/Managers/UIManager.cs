@@ -15,6 +15,11 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI monthText;
     public TextMeshProUGUI moneyText;
 
+    [Header("Personal Goal")]
+    // Optional — small line under the balance, e.g. "Her own market stall: $240 / $500".
+    // Safe to leave unassigned; UpdateGoalProgressText no-ops if null.
+    public TextMeshProUGUI goalProgressText;
+
     [Header("Top HUD Buttons")]
     public GameObject loanButton;
     public GameObject savingsButton;
@@ -113,6 +118,7 @@ public class UIManager : MonoBehaviour
         _budgetAdjustOnDone = onDone;
         SwitchPanel(UIPanelState.Setup);
         setupPanel.GetComponent<SetupPanelController>()?.EnterExpenseAdjustmentMode();
+        TutorialManager.Instance?.OnFirstBudgetCut();
     }
 
     public void OnBudgetAdjustmentConfirmed()
@@ -238,17 +244,29 @@ public class UIManager : MonoBehaviour
     private async void Start()
     {
 #if UNITY_WEBGL && !UNITY_EDITOR
-    try
+    // UNITY_WEBGL covers every WebGL host (Facebook, itch.io, etc. are all the same Unity
+    // platform) — this runtime check is what actually tells them apart. Only Facebook's own
+    // template loads window.FBInstant; calling into it anywhere else throws a ReferenceError
+    // that happens inside a native dynCall and is NOT catchable here, so it must be skipped
+    // before ever touching FBInstant, not caught after the fact.
+    if (WebGLBridge.IsAvailable())
     {
-        var initTask = Meta.InstantGames.FBInstant.InitializeAsync();
-        if (await Task.WhenAny(initTask, Task.Delay(5000)) == initTask)
-            await Meta.InstantGames.FBInstant.StartGameAsync();
-        else
-            Debug.LogWarning("[UIManager] FBInstant init timed out — continuing anyway.");
+        try
+        {
+            var initTask = Meta.InstantGames.FBInstant.InitializeAsync();
+            if (await Task.WhenAny(initTask, Task.Delay(5000)) == initTask)
+                await Meta.InstantGames.FBInstant.StartGameAsync();
+            else
+                Debug.LogWarning("[UIManager] FBInstant init timed out — continuing anyway.");
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"[UIManager] FBInstant init failed: {ex.Message}");
+        }
     }
-    catch (System.Exception ex)
+    else
     {
-        Debug.LogError($"[UIManager] FBInstant init failed: {ex.Message}");
+        Debug.Log("[UIManager] FBInstant not present on this host — skipping Facebook init.");
     }
 #endif
         SwitchPanel(UIPanelState.MainMenu);
@@ -309,6 +327,283 @@ public class UIManager : MonoBehaviour
         moneyText.text = $"Balance: {GameUtils.FormatMoney(amount)}";
     }
 
+    public void UpdateGoalProgressText()
+    {
+        if (goalProgressText == null) return;
+        string line = GameManager.Instance?.GetGoalProgressLine() ?? "";
+        goalProgressText.gameObject.SetActive(!string.IsNullOrEmpty(line));
+        if (!string.IsNullOrEmpty(line))
+            goalProgressText.text = line;
+    }
+
+    // Silent variant for the month ticker — called every frame while lerping,
+    // so no Debug.Log (it would flood the console).
+    private void SetMoneyDisplay(float amount)
+    {
+        if (moneyText != null)
+            moneyText.text = $"Balance: {GameUtils.FormatMoney(amount)}";
+    }
+
+    // ---------------- Month Ticker ----------------
+    // Plays the month's pre-event ledger as a watched sequence: balance resets to
+    // the opening amount, income lands, then each expense drains it — with the
+    // current line item shown in simTickerText. Events fire only after it finishes.
+    // Uses only HUD text, never the popup system.
+
+    [Header("Month Ticker")]
+    public TextMeshProUGUI simTickerText;      // optional — ticker still works (silently) if unassigned
+    public Image tickerIcon;                   // optional — money icon shown beside the ticker line
+    public Sprite tickerIncomeSprite;          // shown for entries that add money
+    public Sprite tickerExpenseSprite;         // shown for entries that remove money
+    public float tickerCountSeconds = 0.30f;   // lerp time per entry
+    public float tickerHoldSeconds = 0.30f;    // pause on each entry after the lerp
+
+    private static bool IsTickerEntry(FinancialEntry.EntryType t) => t switch
+    {
+        // Event outcomes are revealed by their popups, not spoiled by the ticker.
+        FinancialEntry.EntryType.EventReward => false,
+        FinancialEntry.EntryType.EventLoss => false,
+        FinancialEntry.EntryType.InsurancePayout => false,
+        _ => true
+    };
+
+    public void PlayMonthTicker(MonthlyFinancialLedger ledger, System.Action onComplete)
+    {
+        if (ledger == null || ledger.EntryCount == 0)
+        {
+            onComplete?.Invoke();
+            return;
+        }
+        StartCoroutine(MonthTickerRoutine(ledger, onComplete));
+    }
+
+    private bool tickerPaused;
+    private float tickerRunningBalance;
+    private float cashAtPause;
+    private float tickerCurrentTarget;
+
+    public void PauseMonthTicker()
+    {
+        tickerPaused = true;
+        cashAtPause = GameManager.Instance.financeManager.CashOnHand;
+        SetMoneyDisplay(cashAtPause);
+        if (simTickerText != null) simTickerText.text = "End of month balance";
+    }
+
+    public void ResumeMonthTicker()
+    {
+        float delta = GameManager.Instance.financeManager.CashOnHand - cashAtPause;
+        tickerRunningBalance += delta;
+        tickerCurrentTarget += delta;
+        tickerPaused = false;
+    }
+
+    private IEnumerator MonthTickerRoutine(MonthlyFinancialLedger ledger, System.Action onComplete)
+    {
+        var entries = new List<FinancialEntry>();
+        foreach (var e in ledger.Entries)
+            if (IsTickerEntry(e.entryType))
+                entries.Add(e);
+
+        if (entries.Count == 0)
+        {
+            onComplete?.Invoke();
+            yield break;
+        }
+
+        // Busy months tighten up so the sequence never drags.
+        float count = tickerCountSeconds;
+        float hold = tickerHoldSeconds;
+        if (entries.Count > 8) { count *= 0.6f; hold *= 0.6f; }
+
+        RectTransform tickerRect = null;
+        Vector2 tickerBasePos = Vector2.zero;
+        if (simTickerText != null)
+        {
+            tickerRect = simTickerText.rectTransform;
+            tickerBasePos = tickerRect.anchoredPosition;
+            simTickerText.gameObject.SetActive(true);
+            simTickerText.text = "";
+            simTickerText.alpha = 0f;
+        }
+        if (tickerIcon != null)
+            tickerIcon.gameObject.SetActive(false); // shown once the first entry lands
+
+        tickerRunningBalance = ledger.OpeningBalance;
+        SetMoneyDisplay(tickerRunningBalance);
+        yield return new WaitForSeconds(0.35f);
+
+        var gm = GameManager.Instance;
+        int lastWeek = 0;
+
+        for (int i = 0; i < entries.Count; i++)
+        {
+            var entry = entries[i];
+            float signed = entry.SignedAmount();
+            tickerCurrentTarget = tickerRunningBalance + signed;
+
+            // Week counter woven into the month text: "January — Week 2"
+            if (gm != null && monthText != null && entries.Count > 0)
+            {
+                int week = 1 + Mathf.Min(3, (i * 4) / entries.Count);
+                if (week != lastWeek)
+                {
+                    lastWeek = week;
+                    int displayMonth = ((gm.currentMonth - 1) % 12) + 1;
+                    string monthName = System.Globalization.CultureInfo
+                        .CurrentCulture.DateTimeFormat.GetMonthName(displayMonth);
+                    monthText.text = $"{monthName} — Week {week}";
+                }
+            }
+
+            if (simTickerText != null)
+            {
+                string sign = signed >= 0f ? "+" : "-";
+                simTickerText.text = $"{entry.description}   {sign}${Mathf.Abs(signed):F0}";
+            }
+
+            if (tickerIcon != null)
+            {
+                Sprite s = signed >= 0f ? tickerIncomeSprite : tickerExpenseSprite;
+                tickerIcon.sprite = s;
+                tickerIcon.gameObject.SetActive(s != null);
+            }
+
+            if (signed >= 0f) AudioManager.Instance?.OnMoneyGain();
+            else AudioManager.Instance?.OnMoneyLoss();
+
+            float total = count + hold;
+            float t = 0f;
+            while (t < total)
+            {
+                while (tickerPaused) yield return null;
+                t += Time.deltaTime;
+                SetMoneyDisplay(Mathf.Lerp(tickerRunningBalance, tickerCurrentTarget, Mathf.Clamp01(t / count)));
+
+                if (tickerRect != null)
+                {
+                    float p = Mathf.Clamp01(t / total);
+                    float fadeIn = Mathf.Clamp01(t / 0.12f);
+                    float fadeOut = Mathf.Clamp01((1f - p) / 0.30f);
+                    float a = Mathf.Min(fadeIn, fadeOut);
+
+                    simTickerText.alpha = a;
+                    tickerRect.anchoredPosition = tickerBasePos + new Vector2(0f, 14f * p);
+
+                    if (tickerIcon != null && tickerIcon.gameObject.activeSelf)
+                    {
+                        var c = tickerIcon.color;
+                        c.a = a;
+                        tickerIcon.color = c;
+                    }
+                }
+                yield return null;
+            }
+            tickerRunningBalance = tickerCurrentTarget;
+            SetMoneyDisplay(tickerRunningBalance);
+        }
+
+        while (tickerPaused) yield return null;
+        yield return new WaitForSeconds(0.2f);
+        if (simTickerText != null)
+        {
+            simTickerText.gameObject.SetActive(false);
+            simTickerText.alpha = 1f;
+            if (tickerRect != null) tickerRect.anchoredPosition = tickerBasePos;
+        }
+        if (tickerIcon != null)
+        {
+            tickerIcon.gameObject.SetActive(false);
+            var ic = tickerIcon.color;
+            ic.a = 1f;
+            tickerIcon.color = ic;
+        }
+        if (gm != null && monthText != null)
+            UpdateMonthText(gm.currentMonth, gm.totalMonths);
+
+        while (tickerPaused) yield return null;
+        onComplete?.Invoke();
+    }
+
+    public void PlayMoneyBeat(string label, float signedAmount, float fromBalance, System.Action onDone)
+    {
+        StartCoroutine(MoneyBeatRoutine(label, signedAmount, fromBalance, onDone));
+    }
+
+    private IEnumerator MoneyBeatRoutine(string label, float signedAmount, float fromBalance, System.Action onDone)
+    {
+        float target = fromBalance + signedAmount;
+
+        RectTransform tickerRect = null;
+        Vector2 tickerBasePos = Vector2.zero;
+        if (simTickerText != null)
+        {
+            tickerRect = simTickerText.rectTransform;
+            tickerBasePos = tickerRect.anchoredPosition;
+            simTickerText.gameObject.SetActive(true);
+            string sign = signedAmount >= 0f ? "+" : "-";
+            simTickerText.text = $"{label}   {sign}${Mathf.Abs(signedAmount):F0}";
+            simTickerText.alpha = 0f;
+        }
+
+        if (tickerIcon != null)
+        {
+            Sprite s = signedAmount >= 0f ? tickerIncomeSprite : tickerExpenseSprite;
+            tickerIcon.sprite = s;
+            tickerIcon.gameObject.SetActive(s != null);
+        }
+
+        if (signedAmount >= 0f) AudioManager.Instance?.OnMoneyGain();
+        else AudioManager.Instance?.OnMoneyLoss();
+
+        float count = tickerCountSeconds;
+        float hold = tickerHoldSeconds;
+        float total = count + hold;
+        float t = 0f;
+        while (t < total)
+        {
+            t += Time.deltaTime;
+            SetMoneyDisplay(Mathf.Lerp(fromBalance, target, Mathf.Clamp01(t / count)));
+
+            if (tickerRect != null)
+            {
+                float p = Mathf.Clamp01(t / total);
+                float fadeIn = Mathf.Clamp01(t / 0.12f);
+                float fadeOut = Mathf.Clamp01((1f - p) / 0.30f);
+                float a = Mathf.Min(fadeIn, fadeOut);
+
+                simTickerText.alpha = a;
+                tickerRect.anchoredPosition = tickerBasePos + new Vector2(0f, 14f * p);
+
+                if (tickerIcon != null && tickerIcon.gameObject.activeSelf)
+                {
+                    var c = tickerIcon.color;
+                    c.a = a;
+                    tickerIcon.color = c;
+                }
+            }
+            yield return null;
+        }
+
+        SetMoneyDisplay(target);
+
+        if (simTickerText != null)
+        {
+            simTickerText.gameObject.SetActive(false);
+            simTickerText.alpha = 1f;
+            if (tickerRect != null) tickerRect.anchoredPosition = tickerBasePos;
+        }
+        if (tickerIcon != null)
+        {
+            tickerIcon.gameObject.SetActive(false);
+            var ic = tickerIcon.color;
+            ic.a = 1f;
+            tickerIcon.color = ic;
+        }
+
+        onDone?.Invoke();
+    }
+
     private void HideAllPanels()
     {
         if (setupPanel != null) setupPanel.SetActive(false);
@@ -360,7 +655,7 @@ public class UIManager : MonoBehaviour
         if (currentPanelState == newState)
             return;
         //------------------------------------//
-        // FUTURE BARAKA. BE VERY CAREFUL WITH EVENT AND MENTOR POPUPS. YOU WILL REGRET TOUCHING ANYTHING. DOUBLE CHECK STATES IF YOU DO. CRASH OUT COUNT = 9
+        // FUTURE BARAKA. BE VERY CAREFUL WITH EVENT AND MENTOR POPUPS. YOU WILL REGRET TOUCHING ANYTHING. DOUBLE CHECK STATES IF YOU DO. CRASH OUT COUNT = 13
         //-----------------------------------//
         if (IsPopupActive)
         {
@@ -554,7 +849,6 @@ public class UIManager : MonoBehaviour
     {
         if (eventNotificationRect == null) yield break;
 
-        // Get the resting Y from the rect's current anchored position
         float restY = eventNotificationRect.anchoredPosition.y;
         float offscreenY = restY + 600f;
 
@@ -1069,49 +1363,118 @@ public class UIManager : MonoBehaviour
         SwitchPanel(UIPanelState.ProfileSelect);
     }
 
+    // Per-profile save slots — no global Continue button. Clicking a profile (or Free
+    // Mode) checks that slot: if it has a save, offer "Continue (Month N)" / "Start
+    // over" before doing anything else; if empty, go straight to the normal fresh flow.
+    // `profile` is ignored by SaveSystem when guided=false (Free Mode is one shared slot).
+    private void HandleProfileOrFreeModeSelection(GameManager.ProfileType profile, bool guided, System.Action startFreshAction)
+    {
+        if (SaveSystem.SaveExists(profile, guided))
+        {
+            // Load once here, for both the "Month N" label and (if they pick Continue)
+            // the actual resume — SaveSystem.LoadGame isn't called a second time.
+            GameSaveData peek = SaveSystem.LoadGame(profile, guided);
+            if (peek == null)
+            {
+                // SaveExists said yes but the file didn't read cleanly — don't strand
+                // the player on a dead click.
+                startFreshAction?.Invoke();
+                return;
+            }
+
+            var choices = new List<EventData.ChoiceOption>
+            {
+                new EventData.ChoiceOption
+                {
+                    label = $"Continue (Month {peek.currentMonth})",
+                    resultDescription = $"Loading your save from Month {peek.currentMonth}..."
+                },
+                new EventData.ChoiceOption
+                {
+                    label = "Start over (erases this save)",
+                    resultDescription = "Save erased. Starting fresh..."
+                }
+            };
+
+            ShowChoicePopup(
+                "Welcome back",
+                $"You have a save for this profile at Month {peek.currentMonth}. Continue where you left off, or start over?",
+                "", "",
+                choices,
+                index =>
+                {
+                    if (index == 0)
+                        GameManager.Instance.ContinueFromSave(peek);
+                    else
+                    {
+                        SaveSystem.DeleteSave(profile, guided);
+                        startFreshAction?.Invoke();
+                    }
+                }
+            );
+            return;
+        }
+
+        startFreshAction?.Invoke();
+    }
+
     public void OnSelectInformalWorker()
     {
         if (GameManager.Instance == null) return;
 
-        GameManager.Instance.ApplyProfile(GameManager.ProfileType.Informal);
+        HandleProfileOrFreeModeSelection(GameManager.ProfileType.Informal, true, () =>
+        {
+            GameManager.Instance.ApplyProfile(GameManager.ProfileType.Informal);
 
-        if (TutorialManager.Instance != null)
-            TutorialManager.Instance.OnProfileSelected(GameManager.ProfileType.Informal);
-        else
-            ShowSetupPanelAtReview();
+            if (TutorialManager.Instance != null)
+                TutorialManager.Instance.OnProfileSelected(GameManager.ProfileType.Informal);
+            else
+                ShowSetupPanelAtReview();
+        });
     }
 
     public void OnSelectFormalWorker()
     {
         if (GameManager.Instance == null) return;
 
-        GameManager.Instance.ApplyProfile(GameManager.ProfileType.Formal);
+        HandleProfileOrFreeModeSelection(GameManager.ProfileType.Formal, true, () =>
+        {
+            GameManager.Instance.ApplyProfile(GameManager.ProfileType.Formal);
 
-        if (TutorialManager.Instance != null)
-            TutorialManager.Instance.OnProfileSelected(GameManager.ProfileType.Formal);
-        else
-            ShowSetupPanelAtReview();
+            if (TutorialManager.Instance != null)
+                TutorialManager.Instance.OnProfileSelected(GameManager.ProfileType.Formal);
+            else
+                ShowSetupPanelAtReview();
+        });
     }
 
     public void OnSelectFarmer()
     {
         if (GameManager.Instance == null) return;
 
-        GameManager.Instance.ApplyProfile(GameManager.ProfileType.Farmer);
+        HandleProfileOrFreeModeSelection(GameManager.ProfileType.Farmer, true, () =>
+        {
+            GameManager.Instance.ApplyProfile(GameManager.ProfileType.Farmer);
 
-        if (TutorialManager.Instance != null)
-            TutorialManager.Instance.OnProfileSelected(GameManager.ProfileType.Farmer);
-        else
-            ShowSetupPanelAtReview();
+            if (TutorialManager.Instance != null)
+                TutorialManager.Instance.OnProfileSelected(GameManager.ProfileType.Farmer);
+            else
+                ShowSetupPanelAtReview();
+        });
     }
 
     public void OnFreeModeClicked()
     {
-        TutorialManager.Instance?.OnFreeModeSelected();
-        GameManager.Instance.ClearProfile();
-        SwitchPanel(UIPanelState.Setup);
+        if (GameManager.Instance == null) return;
 
-        TutorialManager.Instance?.OnFreeSetupOpened();
+        HandleProfileOrFreeModeSelection(GameManager.ProfileType.Informal, false, () =>
+        {
+            TutorialManager.Instance?.OnFreeModeSelected();
+            GameManager.Instance.ClearProfile();
+            SwitchPanel(UIPanelState.Setup);
+
+            TutorialManager.Instance?.OnFreeSetupOpened();
+        });
     }
 
     public void QuitGame()
@@ -1176,9 +1539,11 @@ public class UIManager : MonoBehaviour
         var p = PlayerDataManager.Instance;
         if (p == null) return "";
 
+        var gm = GameManager.Instance;
+
         float momentum = p.FinancialMomentum;
         float morale = p.CompositeMorale;
-        float score = p.FinalScore;
+        float score = p.FinalScore + (gm != null ? gm.GetGoalScoreBonus() : 0f);
 
         string grade = GetGrade(score);
         string overallLabel = GetScoreLabel(score);
@@ -1189,8 +1554,30 @@ public class UIManager : MonoBehaviour
         text += $"Grade: <b>{grade}</b>\n\n";
         text += $"Financial Discipline:  {momentum:+0;-0}  ({momentumWord})\n";
         text += $"Family & Community:  {morale:+0;-0}  ({moraleWord})\n\n";
+
+        string goalLine = BuildGoalSummaryLine(gm);
+        if (!string.IsNullOrEmpty(goalLine))
+            text += $"{goalLine}\n\n";
+
         text += $"<i>{overallLabel}</i>\n\n";
         return text;
+    }
+
+    private string BuildGoalSummaryLine(GameManager gm)
+    {
+        if (gm == null) return "";
+        float target = GoalDefs.GetActiveGoalTarget();
+        if (target <= 0f) return "";
+
+        string title = GoalDefs.GetActiveGoalTitle();
+
+        if (gm.GoalBuilt)
+            return $"<b>Goal:</b> You built {title} in Month {gm.GoalBuiltMonth}. It earned for you every month after.";
+
+        if (gm.HasGoalBeenReached)
+            return $"<b>Goal:</b> The {title} money sat safe — but it was never built.";
+
+        return $"<b>Goal:</b> The {title} fund ended at {GameUtils.FormatMoney(gm.financeManager.generalSavingsBalance)} of {GameUtils.FormatMoney(target)}. The dream waits.";
     }
 
     private string GetGrade(float score)

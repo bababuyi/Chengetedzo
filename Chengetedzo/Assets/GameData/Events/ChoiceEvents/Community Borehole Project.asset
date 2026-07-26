@@ -26,6 +26,7 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   - label: Give what I can ($40)
     resultDescription: I can manage $40. It's all I can spare right now.
     moneyChange: -40
@@ -36,6 +37,7 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   - label: I can't contribute this time
     resultDescription: "I'm sorry \u2014 I genuinely don't have anything to give
       right now."
@@ -47,13 +49,15 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   eventName: Community Borehole Project
-  description: "The ward chairman calls a meeting \u2014 the community is raising
-    funds for a borehole. Every household is expected to contribute."
+  description: "We're raising funds for the borehole \u2014 every household's expected
+    to put something in. What can you manage?"
   financialLesson: 
   category: 3
   pool: 6
   requiredAsset: 0
+  destroysAsset: 0
   icon: {fileID: 0}
   probability: 14
   weight: 10
@@ -83,5 +87,5 @@ MonoBehaviour:
   borrowingPowerChange: 0
   startsChain: 0
   followUpEvents: []
-  followUpChance: 0.5
-  followUpDelay: 1
+  followUpChance: 0
+  followUpDelay: 0

@@ -26,6 +26,7 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   - label: Do a temporary fix with second-hand parts ($120)
     resultDescription: This will hold for now. I'll do a proper fix when I have more
       money.
@@ -37,6 +38,7 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   - label: Keep driving and hope for the best
     resultDescription: I'll take the risk for now.
     moneyChange: 0
@@ -47,13 +49,15 @@ MonoBehaviour:
     incomeEffectMonths: 2
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   eventName: Car Breaks Down
-  description: Your car develops a serious fault on the way to work. A mechanic says
-    it needs immediate repairs or it will not be roadworthy.
+  description: "Won't get far like this \u2014 something's seriously wrong under
+    the hood. I wouldn't risk driving it again until it's fixed properly."
   financialLesson: 
   category: 3
   pool: 6
   requiredAsset: 2
+  destroysAsset: 0
   icon: {fileID: 0}
   probability: 10
   weight: 10
@@ -83,5 +87,5 @@ MonoBehaviour:
   borrowingPowerChange: 0
   startsChain: 0
   followUpEvents: []
-  followUpChance: 0.5
-  followUpDelay: 1
+  followUpChance: 0
+  followUpDelay: 0

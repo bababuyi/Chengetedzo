@@ -26,6 +26,7 @@ MonoBehaviour:
     incomeEffectMonths: 1
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   - label: Take some overtime
     resultDescription: I can manage a few extra hours. Count me in.
     moneyChange: 0
@@ -36,6 +37,7 @@ MonoBehaviour:
     incomeEffectMonths: 1
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   - label: I need to pass this time
     resultDescription: I appreciate the offer, but I can't take it this month.
     moneyChange: 0
@@ -46,13 +48,15 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   eventName: Overtime Offered
-  description: "Your supervisor calls you aside \u2014 there's extra work this month
-    and they're offering overtime."
+  description: We've got extra work on this month and I need hands. You interested
+    in picking up some overtime?
   financialLesson: 
   category: 3
   pool: 6
   requiredAsset: 0
+  destroysAsset: 0
   icon: {fileID: 0}
   probability: 12
   weight: 10
@@ -82,5 +86,5 @@ MonoBehaviour:
   borrowingPowerChange: 0
   startsChain: 0
   followUpEvents: []
-  followUpChance: 0.5
-  followUpDelay: 1
+  followUpChance: 0
+  followUpDelay: 0

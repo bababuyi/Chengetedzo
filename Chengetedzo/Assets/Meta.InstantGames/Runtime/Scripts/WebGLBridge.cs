@@ -34,6 +34,7 @@ public class WebGLBridge : MonoBehaviour
     [DllImport("__Internal")] private static extern void FBInstant_getScreenshot(int callbackId, IntPtr callbackPtr, int successCode, int errorCode);
     [DllImport("__Internal")] private static extern void FBInstant_getCanvasRect(int callbackId, IntPtr callbackPtr, int successCode, int errorCode);
     [DllImport("__Internal")] private static extern void FBInstant_testCallback();
+    [DllImport("__Internal")] private static extern int FBInstant_isAvailable();
 
     // Status codes for JavaScript interop
     private const int STATUS_CODE_SUCCESS = 200;
@@ -55,6 +56,22 @@ public class WebGLBridge : MonoBehaviour
     /// Gets the number of pending callbacks waiting for responses.
     /// </summary>
     public static int PendingCallbackCount => _pendingCallbacks.Count;
+
+    /// <summary>
+    /// True if the real Facebook Instant Games JS SDK (window.FBInstant) is present in the
+    /// page. False on any WebGL host that isn't Facebook's own template/iframe — e.g. itch.io —
+    /// since those never load fbinstant.js. Callers must check this before calling any other
+    /// FBInstant_* bridge function; the rest all assume FBInstant exists and will throw a
+    /// ReferenceError (uncatchable from C#, since it happens inside a native dynCall) otherwise.
+    /// </summary>
+    public static bool IsAvailable()
+    {
+#if UNITY_WEBGL && !UNITY_EDITOR
+        return FBInstant_isAvailable() != 0;
+#else
+        return false;
+#endif
+    }
 
     // Persistent callbacks
     private static Dictionary<string, Action<string>> _persistentCallbackDictionary = new Dictionary<string, Action<string>>();

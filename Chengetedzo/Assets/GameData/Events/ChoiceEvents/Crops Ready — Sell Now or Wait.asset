@@ -26,6 +26,7 @@ MonoBehaviour:
     incomeEffectMonths: 1
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   - label: Wait for the local market to open
     resultDescription: Patience pays. The local price will be fair.
     moneyChange: 0
@@ -36,6 +37,7 @@ MonoBehaviour:
     incomeEffectMonths: 2
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   - label: Sell to a local middleman now ($150)
     resultDescription: Cash now is worth more than waiting.
     moneyChange: 150
@@ -46,6 +48,7 @@ MonoBehaviour:
     incomeEffectMonths: 2
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   eventName: "Crops Ready \u2014 Sell Now or Wait"
   description: Your harvest is ready but the main market doesn't open for two more
     weeks. Each option has a trade-off.
@@ -53,6 +56,7 @@ MonoBehaviour:
   category: 3
   pool: 6
   requiredAsset: 5
+  destroysAsset: 0
   icon: {fileID: 0}
   probability: 12
   weight: 8
@@ -82,5 +86,5 @@ MonoBehaviour:
   borrowingPowerChange: 0
   startsChain: 0
   followUpEvents: []
-  followUpChance: 0.5
-  followUpDelay: 1
+  followUpChance: 0
+  followUpDelay: 0

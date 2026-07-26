@@ -26,6 +26,7 @@ MonoBehaviour:
     incomeEffectMonths: -1
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   - label: Apply without the course first
     resultDescription: I'll apply and see what happens before spending money.
     moneyChange: 0
@@ -36,6 +37,7 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   - label: Stick with what I have
     resultDescription: It's a risk I can't take right now. Maybe next time.
     moneyChange: 0
@@ -46,13 +48,15 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   eventName: Better Job Offer
-  description: "A former colleague sends a message \u2014 there's an opening at a
-    better company, but you'd need to pay for a short certification course first."
+  description: "There's an opening at my company \u2014 better pay, better hours.
+    Only catch is you'd need to do a short certification first. Worth looking into?"
   financialLesson: 
   category: 3
   pool: 6
   requiredAsset: 0
+  destroysAsset: 0
   icon: {fileID: 0}
   probability: 6
   weight: 6
@@ -82,5 +86,5 @@ MonoBehaviour:
   borrowingPowerChange: 0
   startsChain: 0
   followUpEvents: []
-  followUpChance: 0.5
-  followUpDelay: 1
+  followUpChance: 0
+  followUpDelay: 0

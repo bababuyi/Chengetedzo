@@ -26,6 +26,7 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   - label: Join for just a bit ($20)
     resultDescription: "I'll come for a bit \u2014 just one round."
     moneyChange: -20
@@ -36,6 +37,7 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   - label: "A friend offers to cover you \u2014 go anyway"
     resultDescription: Are you sure? I'll get you back next time. Thank you.
     moneyChange: 0
@@ -46,6 +48,7 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   - label: Stay home this time
     resultDescription: "Not this time \u2014 next time for sure though."
     moneyChange: 0
@@ -56,13 +59,15 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   eventName: Friends Night Out
-  description: "Your friends are going out to celebrate a birthday. They're asking
-    you to join \u2014 it won't be cheap."
+  description: "We're all going out for the birthday tonight \u2014 you coming? Won't
+    be cheap but it'll be worth it."
   financialLesson: 
   category: 3
   pool: 6
   requiredAsset: 0
+  destroysAsset: 0
   icon: {fileID: 0}
   probability: 14
   weight: 10
@@ -92,5 +97,5 @@ MonoBehaviour:
   borrowingPowerChange: 0
   startsChain: 0
   followUpEvents: []
-  followUpChance: 0.5
-  followUpDelay: 1
+  followUpChance: 0
+  followUpDelay: 0

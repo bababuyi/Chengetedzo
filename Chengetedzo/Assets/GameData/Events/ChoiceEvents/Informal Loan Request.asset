@@ -26,6 +26,7 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   - label: Lend a smaller amount ($60)
     resultDescription: I can lend $60. It's all I can risk.
     moneyChange: -60
@@ -36,6 +37,7 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   - label: I can't lend money right now
     resultDescription: "I'm sorry \u2014 my own situation is too tight right now."
     moneyChange: 0
@@ -46,13 +48,15 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   eventName: Informal Loan Request
-  description: "A friend messages asking if you can lend them money \u2014 they'll
-    pay it back by month end."
+  description: "Sorry to ask \u2014 I'm short this month. Any chance you could lend
+    me something? I'll pay it back by month end, promise."
   financialLesson: 
   category: 3
   pool: 6
   requiredAsset: 0
+  destroysAsset: 0
   icon: {fileID: 0}
   probability: 16
   weight: 10
@@ -82,5 +86,5 @@ MonoBehaviour:
   borrowingPowerChange: 0
   startsChain: 0
   followUpEvents: []
-  followUpChance: 0.5
-  followUpDelay: 1
+  followUpChance: 0
+  followUpDelay: 0

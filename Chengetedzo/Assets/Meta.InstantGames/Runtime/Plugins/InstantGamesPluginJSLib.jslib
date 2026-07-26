@@ -11,6 +11,14 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. */
 
 mergeInto(LibraryManager.library, {
+    // typeof never throws, even on an undefined global — safe to call on any WebGL host
+    // (Facebook injects window.FBInstant via its template's script tag; plain WebGL hosts
+    // like itch.io do not). Callers must check this before touching FBInstant directly,
+    // since every other function below assumes it already exists and will throw otherwise.
+    FBInstant_isAvailable: function() {
+        return (typeof FBInstant !== 'undefined' && FBInstant !== null) ? 1 : 0;
+    },
+
     FBInstant_init_callbacks: async function(callbackId,callbackPtr,successCode){
 
         FBInstant.onPause(()=>{

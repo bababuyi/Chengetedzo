@@ -1,9 +1,44 @@
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 
+// Per-profile save slots — one file per guided profile plus one shared Free Mode slot,
+// so a player can park Formal mid-game, play Informal, and come back to either.
+// Files live in Application.persistentDataPath (not PlayerPrefs — PlayerPrefs held the
+// old single-slot save; see CleanupLegacySingleSlotSave).
 public static class SaveSystem
 {
-    private const string SAVE_KEY = "GameSaveData";
+    private const string LEGACY_SAVE_KEY = "GameSaveData";
+    private const string LEGACY_CLEANED_FLAG = "SaveSystem_LegacyKeyCleaned";
+
+    static SaveSystem()
+    {
+        CleanupLegacySingleSlotSave();
+    }
+
+    // One-time cleanup, no migration — the old single-slot save can't be mapped to a
+    // profile slot reliably, so it's just discarded the first time this class runs.
+    private static void CleanupLegacySingleSlotSave()
+    {
+        if (PlayerPrefs.GetInt(LEGACY_CLEANED_FLAG, 0) == 1) return;
+
+        if (PlayerPrefs.HasKey(LEGACY_SAVE_KEY))
+        {
+            PlayerPrefs.DeleteKey(LEGACY_SAVE_KEY);
+            Debug.Log("[SaveSystem] Cleared legacy single-slot save (pre-per-profile-slots).");
+        }
+
+        PlayerPrefs.SetInt(LEGACY_CLEANED_FLAG, 1);
+        PlayerPrefs.Save();
+    }
+
+    // guided=false always resolves to the shared Free Mode slot regardless of `p` —
+    // the profile argument only matters when guided=true.
+    private static string PathFor(GameManager.ProfileType p, bool guided)
+    {
+        string fileName = guided ? $"save_{p.ToString().ToLower()}.json" : "save_free.json";
+        return Path.Combine(Application.persistentDataPath, fileName);
+    }
 
     public static void SaveGame(GameManager gm)
     {
@@ -50,8 +85,59 @@ public static class SaveSystem
         data.monthsSinceMajorEvent = gm.monthsSinceMajorEvent;
         data.eventPressure = gm.eventManager.GetEventPressure();
         data.burialSocietyUnlocked = gm.BurialSocietyUnlocked;
+        data.isGuidedMode = gm.IsGuidedMode;
+        data.profileType = (int)gm.CurrentProfileType;
+
+        data.goalBuilt = gm.GoalBuilt;
+        data.goalReachedOnce = gm.HasGoalBeenReached;
+        data.goalMonthsSinceOffer = gm.GoalMonthsSinceOffer;
+        data.goalMilestoneReached = gm.GoalMilestoneReached;
+        data.freeGoalIndex = gm.FreeGoalIndex;
+        data.freeGoalTarget = gm.FreeGoalTarget;
+        data.goalBuiltMonth = gm.GoalBuiltMonth;
+
+        data.mentorMemory_familyStrainStreak = gm.MentorMemory_FamilyStrainStreak;
+        data.mentorMemory_familyStrainMentioned = gm.MentorMemory_FamilyStrainMentioned;
+        data.mentorMemory_communityHighMentioned = gm.MentorMemory_CommunityHighMentioned;
+        data.mentorMemory_communityLowMentioned = gm.MentorMemory_CommunityLowMentioned;
+        data.mentorMemory_goalBuiltMentioned = gm.MentorMemory_GoalBuiltMentioned;
+        data.mentorMemory_scarAckPending = gm.MentorMemory_ScarAckPending;
 
         data.originalAdults = PlayerDataManager.Instance.OriginalAdults;
+        data.currentAdults = PlayerDataManager.Instance.RawAdults;
+        data.currentChildren = PlayerDataManager.Instance.Children;
+
+        // Setup block — REQUIRED for Free Mode resume (setupData/financeManager's base
+        // fields live in plain fields that don't survive an app restart on their own;
+        // resume never re-runs ApplyProfile/ConfirmAndStart to repopulate them).
+        var setup = gm.setupData;
+        var fm = gm.financeManager;
+        data.setupAdults = setup.adults;
+        data.setupChildren = setup.children;
+        data.setupIsIncomeStable = setup.isIncomeStable;
+        data.setupHousing = (int)setup.housing;
+        data.setupOwnsCar = setup.ownsCar;
+        data.setupHasSchoolFees = setup.hasSchoolFees;
+        data.setupSchoolFeesAmount = setup.schoolFeesAmount;
+        data.setupMinIncome = setup.minIncome;
+        data.setupMaxIncome = setup.maxIncome;
+        data.setupHouseValue = setup.houseValue;
+
+        data.financeRentCost = fm.rentCost;
+        data.financeHouseMaintenanceCost = fm.houseMaintenanceCost;
+        data.financeGroceries = fm.groceries;
+        data.financeTransport = fm.transport;
+        data.financeUtilities = fm.utilities;
+
+        data.assetHasHouse = fm.assets.hasHouse;
+        data.assetHasMotor = fm.assets.hasMotor;
+        data.assetHasCrops = fm.assets.hasCrops;
+        data.assetHasLivestock = fm.assets.hasLivestock;
+        data.houseInsuredValue = fm.houseInsuredValue;
+        data.motorInsuredValue = fm.motorInsuredValue;
+        data.cropsInsuredValue = fm.cropsInsuredValue;
+        data.livestockInsuredValue = fm.livestockInsuredValue;
+
         data.categoryStates = new List<GameManager.CategoryState>(gm.ActiveCategoryStates);
         data.insurancePlans = new List<GameSaveData.InsurancePlanSaveData>();
         foreach (var plan in gm.insuranceManager.allPlans)
@@ -65,7 +151,7 @@ public static class SaveSystem
                 missedPayments = plan.missedPayments
             });
         }
-        
+
         data.incomeEffects = new List<GameSaveData.IncomeEffectSaveData>();
         foreach (var effect in gm.ActiveIncomeEffects)
         {
@@ -75,7 +161,7 @@ public static class SaveSystem
                 remainingMonths = effect.remainingMonths
             });
         }
-        
+
         data.expenseEffects = new List<GameSaveData.ExpenseEffectSaveData>();
         foreach (var effect in gm.ActiveExpenseEffects)
         {
@@ -102,44 +188,39 @@ public static class SaveSystem
             });
 
         string json = JsonUtility.ToJson(data, false);
-        PlayerPrefs.SetString(SAVE_KEY, json);
-        PlayerPrefs.Save();
-        Debug.Log("Game Saved");
+        string path = PathFor(gm.CurrentProfileType, gm.IsGuidedMode);
+        File.WriteAllText(path, json);
+        Debug.Log($"Game Saved → {path}");
     }
 
-    public static GameSaveData LoadGame()
+    public static GameSaveData LoadGame(GameManager.ProfileType p, bool guided)
     {
-        string json = PlayerPrefs.GetString(SAVE_KEY, "");
-        if (string.IsNullOrEmpty(json)) return null;
-        Debug.Log("Game Loaded");
+        string path = PathFor(p, guided);
+        if (!File.Exists(path)) return null;
+
+        string json = File.ReadAllText(path);
+        Debug.Log($"Game Loaded ← {path}");
         return JsonUtility.FromJson<GameSaveData>(json);
     }
 
-    public static void DeleteSave()
+    public static bool SaveExists(GameManager.ProfileType p, bool guided)
     {
-        PlayerPrefs.DeleteKey(SAVE_KEY);
-        PlayerPrefs.Save();
+        return File.Exists(PathFor(p, guided));
     }
 
-    /*
-    public static GameSaveData LoadGame()
+    public static void DeleteSave(GameManager.ProfileType p, bool guided)
     {
-        if (!File.Exists(SavePath))
-            return null;
-
-        string json = File.ReadAllText(SavePath);
-
-        GameSaveData data = JsonUtility.FromJson<GameSaveData>(json);
-
-        Debug.Log("Game Loaded");
-
-        return data;
+        string path = PathFor(p, guided);
+        if (File.Exists(path)) File.Delete(path);
     }
-    
-    public static void DeleteSave()
+
+    // Used by DEV_FullReset / FullRestart — a full reset clears every profile's slot,
+    // not just the one currently active.
+    public static void DeleteAllSaves()
     {
-        if (File.Exists(SavePath))
-            File.Delete(SavePath);
+        DeleteSave(GameManager.ProfileType.Informal, true);
+        DeleteSave(GameManager.ProfileType.Formal, true);
+        DeleteSave(GameManager.ProfileType.Farmer, true);
+        DeleteSave(GameManager.ProfileType.Informal, false); // profile arg ignored for Free Mode — see PathFor
     }
-    */
 }

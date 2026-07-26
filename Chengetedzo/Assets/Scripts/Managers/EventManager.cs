@@ -117,6 +117,7 @@ public class EventManager : MonoBehaviour
 
         foreach (var ev in eligibleEvents)
         {
+            if (eventsTriggeredThisYear.Contains(ev)) continue;
             if (!pools.ContainsKey(ev.pool))
                 pools[ev.pool] = new List<EventData>();
 
@@ -137,13 +138,9 @@ public class EventManager : MonoBehaviour
         {
             EventData ev = GetWeightedEvent(pool.Value);
             if (ev == null) continue;
-
-            Debug.Log($"[EVENT] {ev.eventName} | Severity: {ev.severity} | Pool: {ev.pool}");
-
+            
             if (eventsTriggeredThisYear.Contains(ev)) continue;
             if (GetEventCost(ev) > remainingEventBudget) continue;
-
-            eventsTriggeredThisYear.Add(ev);
 
             float pressureMultiplier = Mathf.Lerp(1f, 1.6f, eventPressure / maxPressure);
             float adjustedProbability = ev.probability * pressureMultiplier;
@@ -177,12 +174,17 @@ public class EventManager : MonoBehaviour
                 GameManager.AssetRequirement.Crops => GameManager.Instance.financeManager.assets.hasCrops,
                 GameManager.AssetRequirement.Livestock => GameManager.Instance.financeManager.assets.hasLivestock,
                 GameManager.AssetRequirement.CropsOrLivestock =>
-                    GameManager.Instance.financeManager.assets.hasCrops ||
-                    GameManager.Instance.financeManager.assets.hasLivestock,
+                GameManager.Instance.financeManager.assets.hasCrops ||
+                GameManager.Instance.financeManager.assets.hasLivestock,
+                GameManager.AssetRequirement.NoMotor =>
+                !GameManager.Instance.financeManager.assets.hasMotor,
                 _ => false
             };
 
             if (!ownsRequiredAsset) continue;
+
+            eventsTriggeredThisYear.Add(ev);
+            Debug.Log($"[EVENT-CANDIDATE] {ev.eventName} | Severity: {ev.severity} | Pool: {ev.pool}");
 
             passedEvents.Add(ev);
         }
@@ -274,7 +276,9 @@ public class EventManager : MonoBehaviour
                     choices = ev.choices,
                     pool = ev.pool,
                     senderName = ev.senderName,
-                    senderRelation = ev.senderRelation
+                    senderRelation = ev.senderRelation,
+                    moneyChange = gained,
+                    isReward = true
                 });
 
                 continue;
@@ -297,7 +301,11 @@ public class EventManager : MonoBehaviour
 
             if (ev.insuranceType != InsuranceType.None)
             {
-                if (GameManager.Instance.insuranceManager.CanClaimForEvent(ev.insuranceType))
+                // Only route to the claim-decision popup when there's an actual loss to
+                // decide about — a near-zero rolled loss (e.g. a Minor illness that
+                // rounds to $0) has nothing to claim, so asking "claim or cover yourself?"
+                // for $0 just confuses the player.
+                if (intendedLoss > 0.5f && GameManager.Instance.insuranceManager.CanClaimForEvent(ev.insuranceType))
                 {
                     var (claimPayout, claimDeductible) = GameManager.Instance.insuranceManager.CalculateClaim(ev.insuranceType, intendedLoss);
 
@@ -599,7 +607,7 @@ public class EventManager : MonoBehaviour
 
         intendedLoss = Mathf.Max(0f, intendedLoss);
 
-        if (GameManager.Instance.insuranceManager.CanClaimForEvent(ev.insuranceType))
+        if (intendedLoss > 0.5f && GameManager.Instance.insuranceManager.CanClaimForEvent(ev.insuranceType))
         {
             var (claimPayout, claimDeductible) = GameManager.Instance.insuranceManager.CalculateClaim(ev.insuranceType, intendedLoss);
 
@@ -717,6 +725,8 @@ public class EventManager : MonoBehaviour
             GameManager.AssetRequirement.CropsOrLivestock =>
                 GameManager.Instance.financeManager.assets.hasCrops ||
                 GameManager.Instance.financeManager.assets.hasLivestock,
+            GameManager.AssetRequirement.NoMotor =>
+                !GameManager.Instance.financeManager.assets.hasMotor,
 
             _ => false
         };

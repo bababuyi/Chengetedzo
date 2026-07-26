@@ -1,0 +1,95 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
+  m_Name: A Car Within Reach
+  m_EditorClassIdentifier: 
+  hasChoices: 1
+  senderName: Mai Chiweshe
+  senderRelation: Community
+  choices:
+  - label: Pay for it outright
+    resultDescription: You hand over the money in one go. The car is yours, and there
+      is nothing owed to anyone. Your savings look thin for a while.
+    moneyChange: -2500
+    momentumChange: -1
+    moraleChange: 3
+    moraleType: Family
+    incomePercentChange: 0
+    incomeEffectMonths: 0
+    affectsLoan: 0
+    borrowingPowerChange: 0
+    grantsAsset: Motor
+  - label: Take it on terms
+    resultDescription: "You put down a deposit and agree to pay the rest over time.
+      You drive away today \u2014 but a portion of what you can borrow is now spoken
+      for."
+    moneyChange: -900
+    momentumChange: -2
+    moraleChange: 2
+    moraleType: Family
+    incomePercentChange: 0
+    incomeEffectMonths: 0
+    affectsLoan: 1
+    borrowingPowerChange: -2100
+    grantsAsset: Motor
+  - label: Leave it
+    resultDescription: You let it go. The fare still costs what it costs, but nothing
+      new is owed.
+    moneyChange: 0
+    momentumChange: 1
+    moraleChange: -2
+    moraleType: Family
+    incomePercentChange: 0
+    incomeEffectMonths: 0
+    affectsLoan: 0
+    borrowingPowerChange: 0
+    grantsAsset: 
+  eventName: A Car Within Reach
+  description: Someone at church is selling their car. It runs, the papers are clean,
+    and they want it gone this month. You have seen what the fare does to your money
+    every day.
+  financialLesson: 
+  category: 3
+  pool: 6
+  requiredAsset: 6
+  destroysAsset: 0
+  icon: {fileID: 0}
+  probability: 8
+  weight: 6
+  minLossPercent: 0
+  maxLossPercent: 0
+  affectsIncome: 0
+  incomePercentChange: 0
+  incomeEffectMonths: 0
+  insuranceType: 0
+  outcomeType: 0
+  cashReward: 0
+  momentumReward: 0
+  season: 0
+  signal: 0
+  severity: 1
+  affectsHousehold: 0
+  adultsLost: 0
+  childrenLost: 0
+  familyMemberType: 0
+  affectsExpenses: 0
+  expenseCategory: 0
+  expenseFlatChange: 0
+  expenseEffectMonths: 0
+  lossType: 0
+  fixedLossAmount: 0
+  affectsLoan: 0
+  borrowingPowerChange: 0
+  startsChain: 0
+  followUpEvents: []
+  followUpChance: 0
+  followUpDelay: 0

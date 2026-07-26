@@ -24,6 +24,7 @@ MonoBehaviour:
   category: 0
   pool: 3
   requiredAsset: 0
+  destroysAsset: 0
   icon: {fileID: 0}
   probability: 2
   weight: 5
@@ -55,5 +56,5 @@ MonoBehaviour:
   followUpEvents:
   - {fileID: 11400000, guid: 6d1286b357621fa499ed5b66213435d9, type: 2}
   - {fileID: 11400000, guid: 4e95f3b78ae8a8a47b018044fc04244f, type: 2}
-  followUpChance: 1
-  followUpDelay: 2
+  followUpChance: 0
+  followUpDelay: 0

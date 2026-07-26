@@ -1,0 +1,94 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
+  m_Name: Double Your Money
+  m_EditorClassIdentifier: 
+  hasChoices: 1
+  senderName: +263 77 ___ ____
+  senderRelation: Unknown
+  choices:
+  - label: Invest big ($100)
+    resultDescription: The number stops replying after two weeks. The 'office' was
+      never there. The money is gone.
+    moneyChange: -100
+    momentumChange: -3
+    moraleChange: -2
+    moraleType: Self
+    incomePercentChange: 0
+    incomeEffectMonths: 0
+    affectsLoan: 0
+    borrowingPowerChange: 0
+    grantsAsset: 
+  - label: Test it with $40
+    resultDescription: "A small 'return' arrives \u2014 then the scheme vanishes
+      with the rest. That first payout was the bait, not the profit."
+    moneyChange: -40
+    momentumChange: -2
+    moraleChange: -1
+    moraleType: Self
+    incomePercentChange: 0
+    incomeEffectMonths: 0
+    affectsLoan: 0
+    borrowingPowerChange: 0
+    grantsAsset: 
+  - label: Guaranteed? Nothing is. Delete.
+    resultDescription: "Guaranteed returns, pressure to act today, recruit your friends
+      \u2014 three warnings in one message. Your money stays yours."
+    moneyChange: 0
+    momentumChange: 3
+    moraleChange: 0
+    moraleType: None
+    incomePercentChange: 0
+    incomeEffectMonths: 0
+    affectsLoan: 0
+    borrowingPowerChange: 0
+    grantsAsset: 
+  eventName: Double Your Money
+  description: "Invest today and DOUBLE your money in two weeks. Guaranteed!! Bring
+    a friend and you get a bonus \U0001F381 Ask anyone, people are already getting
+    paid. Spaces limited."
+  financialLesson: 
+  category: 3
+  pool: 6
+  requiredAsset: 0
+  destroysAsset: 0
+  icon: {fileID: 0}
+  probability: 10
+  weight: 10
+  minLossPercent: 0
+  maxLossPercent: 0
+  affectsIncome: 0
+  incomePercentChange: 0
+  incomeEffectMonths: 0
+  insuranceType: 0
+  outcomeType: 0
+  cashReward: 0
+  momentumReward: 0
+  season: 0
+  signal: 0
+  severity: 1
+  affectsHousehold: 0
+  adultsLost: 0
+  childrenLost: 0
+  familyMemberType: 0
+  affectsExpenses: 0
+  expenseCategory: 0
+  expenseFlatChange: 0
+  expenseEffectMonths: 0
+  lossType: 0
+  fixedLossAmount: 0
+  affectsLoan: 0
+  borrowingPowerChange: 0
+  startsChain: 0
+  followUpEvents: []
+  followUpChance: 0
+  followUpDelay: 0

@@ -6,8 +6,10 @@ public class ResolvedEvent
 {
     public string title;
     public string description;
+    public GameManager.AssetRequirement destroysAsset;
 
     public float moneyChange;
+    public bool isReward;
     public float incomePercentChange;
     public int incomeDurationMonths;
 
@@ -34,4 +36,6 @@ public class ResolvedEvent
     public EventPool pool;
     public bool isFamilyPrompt;
     public ExpenseCategory familyPromptCategory;
+
+    public bool isGoalPrompt;
 }

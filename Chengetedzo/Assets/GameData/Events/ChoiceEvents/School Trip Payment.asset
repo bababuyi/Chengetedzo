@@ -26,6 +26,7 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   - label: This month I can't afford it
     resultDescription: I'm so sorry my child. I'll make it up to you next time.
     moneyChange: 0
@@ -36,13 +37,15 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   eventName: School Trip Payment
-  description: "Your child's teacher sends a note \u2014 there's a school trip next
-    week and fees are due by Friday."
+  description: Reminder that the school trip fee is due by Friday. Please send payment
+    with your child or drop it at the office.
   financialLesson: 
   category: 3
   pool: 6
   requiredAsset: 0
+  destroysAsset: 0
   icon: {fileID: 0}
   probability: 16
   weight: 12
@@ -72,5 +75,5 @@ MonoBehaviour:
   borrowingPowerChange: 0
   startsChain: 0
   followUpEvents: []
-  followUpChance: 0.5
-  followUpDelay: 1
+  followUpChance: 0
+  followUpDelay: 0

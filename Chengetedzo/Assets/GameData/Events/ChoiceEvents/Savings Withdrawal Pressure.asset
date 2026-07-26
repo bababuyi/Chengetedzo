@@ -26,6 +26,7 @@ MonoBehaviour:
     incomeEffectMonths: 2
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   - label: Test it with a small amount ($80)
     resultDescription: I'll risk only what I can afford to lose.
     moneyChange: -80
@@ -36,6 +37,7 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   - label: Decline and keep saving
     resultDescription: "If it sounds too good to be true \u2014 it usually is."
     moneyChange: 0
@@ -46,13 +48,15 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   eventName: Savings Withdrawal Pressure
-  description: A friend says they have a sure-thing investment and urges you to withdraw
-    your savings before tonight's deadline.
+  description: "I've got a sure thing lined up but the window closes tonight \u2014
+    you need to pull your savings out now if you want in. Trust me on this one."
   financialLesson: 
   category: 3
   pool: 6
   requiredAsset: 0
+  destroysAsset: 0
   icon: {fileID: 0}
   probability: 10
   weight: 8
@@ -82,5 +86,5 @@ MonoBehaviour:
   borrowingPowerChange: 0
   startsChain: 0
   followUpEvents: []
-  followUpChance: 0.5
-  followUpDelay: 1
+  followUpChance: 0
+  followUpDelay: 0

@@ -26,6 +26,10 @@ public class MonthlyReportPanel : MonoBehaviour
     public MonthlyBarChart barChart;
     public TMP_Text savingsBalanceText;
 
+    [Header("Personal Goal")]
+    // Optional â€” one line below the savings balance, e.g. "Her own market stall: $240 / $500".
+    public TMP_Text goalProgressText;
+
     [Header("Layout")]
     [SerializeField] private RectTransform leftColumnRect;
 
@@ -153,6 +157,15 @@ public class MonthlyReportPanel : MonoBehaviour
             savingsBalanceText.gameObject.SetActive(savingsBalance > 0.01f);
             savingsBalanceText.text = $"Savings balance: {GameUtils.FormatMoney(savingsBalance)}";
         }
+
+        if (goalProgressText != null)
+        {
+            string goalLine = GameManager.Instance?.GetGoalProgressLine() ?? "";
+            goalProgressText.gameObject.SetActive(!string.IsNullOrEmpty(goalLine));
+            if (!string.IsNullOrEmpty(goalLine))
+                goalProgressText.text = goalLine;
+        }
+
         StartCoroutine(ForceLayoutRebuild());
     }
 
@@ -276,13 +289,13 @@ public class MonthlyReportPanel : MonoBehaviour
         if (dashIndex > 0)
             return description.Substring(0, dashIndex);
 
-        dashIndex = description.IndexOf(" — ");
+        dashIndex = description.IndexOf(" ï¿½ ");
         if (dashIndex > 0)
             return description.Substring(0, dashIndex);
 
         const int maxLen = 40;
         if (description.Length > maxLen)
-            return description.Substring(0, maxLen) + "…";
+            return description.Substring(0, maxLen) + "ï¿½";
 
         return description;
     }

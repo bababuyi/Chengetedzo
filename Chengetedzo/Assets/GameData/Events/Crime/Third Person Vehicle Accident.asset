@@ -23,6 +23,7 @@ MonoBehaviour:
   category: 3
   pool: 4
   requiredAsset: 2
+  destroysAsset: 0
   icon: {fileID: 0}
   probability: 6
   weight: 9

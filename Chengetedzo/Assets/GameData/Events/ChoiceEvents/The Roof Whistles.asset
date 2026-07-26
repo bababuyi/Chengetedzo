@@ -1,0 +1,80 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
+  m_Name: The Roof Whistles
+  m_EditorClassIdentifier: 
+  hasChoices: 1
+  senderName: Baba Josphat
+  senderRelation: Fundi
+  choices:
+  - label: Fix it now ($35)
+    resultDescription: An afternoon's work and the whistle is gone. When the rains
+      come, they will stay outside.
+    moneyChange: -35
+    momentumChange: 2
+    moraleChange: 1
+    moraleType: Family
+    incomePercentChange: 0
+    incomeEffectMonths: 0
+    affectsLoan: 0
+    borrowingPowerChange: 0
+    grantsAsset: 
+  - label: It can wait
+    resultDescription: The whistle stays. Every grey cloud is a question now.
+    moneyChange: 0
+    momentumChange: -1
+    moraleChange: -1
+    moraleType: Family
+    incomePercentChange: 0
+    incomeEffectMonths: 0
+    affectsLoan: 0
+    borrowingPowerChange: 0
+    grantsAsset: 
+  eventName: The Roof Whistles
+  description: "A soft whistle in the roof when the wind blows \u2014 a lifted sheet.
+    The fundi can fix it cheap now. The rains will not be so cheap."
+  financialLesson: 
+  category: 5
+  pool: 6
+  requiredAsset: 0
+  destroysAsset: 0
+  icon: {fileID: 0}
+  probability: 12
+  weight: 10
+  minLossPercent: 0
+  maxLossPercent: 0
+  affectsIncome: 0
+  incomePercentChange: 0
+  incomeEffectMonths: 0
+  insuranceType: 0
+  outcomeType: 0
+  cashReward: 0
+  momentumReward: 0
+  season: 0
+  signal: 0
+  severity: 0
+  affectsHousehold: 0
+  adultsLost: 0
+  childrenLost: 0
+  familyMemberType: 0
+  affectsExpenses: 0
+  expenseCategory: 0
+  expenseFlatChange: 0
+  expenseEffectMonths: 0
+  lossType: 0
+  fixedLossAmount: 0
+  affectsLoan: 0
+  borrowingPowerChange: 0
+  startsChain: 0
+  followUpEvents: []
+  followUpChance: 0
+  followUpDelay: 0

@@ -26,6 +26,7 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   - label: Rent it out ($80)
     resultDescription: "Sure \u2014 $80 for the week. Fair deal."
     moneyChange: 80
@@ -36,6 +37,7 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   - label: Sorry, I need it myself
     resultDescription: I'd love to help but I need it this week myself.
     moneyChange: 0
@@ -46,13 +48,15 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   eventName: Neighbour Wants Equipment
-  description: "Your neighbour comes to the gate \u2014 their tractor broke down
-    and they need to borrow yours for the week."
+  description: My tractor's given out and the fields need working. Any chance I could
+    borrow yours for the week?
   financialLesson: 
   category: 3
   pool: 6
   requiredAsset: 5
+  destroysAsset: 0
   icon: {fileID: 0}
   probability: 10
   weight: 8
@@ -82,5 +86,5 @@ MonoBehaviour:
   borrowingPowerChange: 0
   startsChain: 0
   followUpEvents: []
-  followUpChance: 0.5
-  followUpDelay: 1
+  followUpChance: 0
+  followUpDelay: 0

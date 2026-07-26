@@ -26,6 +26,7 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   - label: Take to public clinic ($15)
     resultDescription: We'll queue. It takes time but it gets the job done.
     moneyChange: -15
@@ -36,6 +37,7 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   - label: Treat at home with available medicine ($10)
     resultDescription: I'll try what we have first and see how they go.
     moneyChange: -10
@@ -46,6 +48,7 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   eventName: Sick Child Needs Treatment
   description: Your child has been running a fever for two days. They need to see
     a doctor but the private clinic is expensive and the public clinic queues are
@@ -54,6 +57,7 @@ MonoBehaviour:
   category: 0
   pool: 6
   requiredAsset: 0
+  destroysAsset: 0
   icon: {fileID: 0}
   probability: 16
   weight: 12
@@ -83,5 +87,5 @@ MonoBehaviour:
   borrowingPowerChange: 0
   startsChain: 0
   followUpEvents: []
-  followUpChance: 0.5
-  followUpDelay: 1
+  followUpChance: 0
+  followUpDelay: 0

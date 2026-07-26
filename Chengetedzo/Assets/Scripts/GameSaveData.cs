@@ -35,6 +35,26 @@ public class GameSaveData
     public bool loanUnlocked;
     public bool burialSocietyUnlocked;
 
+    public bool isGuidedMode;
+    public int profileType;   // (int)GameManager.ProfileType — which family's voices to use
+
+    public bool goalBuilt;
+    public bool goalReachedOnce;
+    public int goalMonthsSinceOffer;
+    public int goalMilestoneReached;
+    public int freeGoalIndex;
+    public float freeGoalTarget;
+    public int goalBuiltMonth;
+
+    // Mentor-memory flags — flavour only, but without persistence they re-fire after
+    // every resume.
+    public int mentorMemory_familyStrainStreak;
+    public bool mentorMemory_familyStrainMentioned;
+    public bool mentorMemory_communityHighMentioned;
+    public bool mentorMemory_communityLowMentioned;
+    public bool mentorMemory_goalBuiltMentioned;
+    public bool mentorMemory_scarAckPending;
+
     public int savingsStreak;
     public int overBudgetStreak;
     public bool patternWarningIssued;
@@ -45,6 +65,40 @@ public class GameSaveData
     public float eventPressure;
 
     public int originalAdults;
+
+    // Current household size (A3.6, pre-existing bug fix) — distinct from
+    // originalAdults; without this a resumed game resurrects dead family members.
+    public int currentAdults;
+    public int currentChildren;
+
+    // Setup block (A3.5) — REQUIRED for Free Mode resume (setupData/financeManager's
+    // base fields are plain fields that don't survive an app restart on their own);
+    // also makes guided resumes self-sufficient without re-running ApplyProfile.
+    public int setupAdults;
+    public int setupChildren;
+    public bool setupIsIncomeStable;
+    public int setupHousing;   // (int)HousingType
+    public bool setupOwnsCar;
+    public bool setupHasSchoolFees;
+    public float setupSchoolFeesAmount;
+    public float setupMinIncome;
+    public float setupMaxIncome;
+    public float setupHouseValue;
+
+    public float financeRentCost;
+    public float financeHouseMaintenanceCost;
+    public float financeGroceries;
+    public float financeTransport;
+    public float financeUtilities;
+
+    public bool assetHasHouse;
+    public bool assetHasMotor;
+    public bool assetHasCrops;
+    public bool assetHasLivestock;
+    public float houseInsuredValue;
+    public float motorInsuredValue;
+    public float cropsInsuredValue;
+    public float livestockInsuredValue;
 
     public List<InsurancePlanSaveData> insurancePlans = new List<InsurancePlanSaveData>();
     public List<IncomeEffectSaveData> incomeEffects = new List<IncomeEffectSaveData>();

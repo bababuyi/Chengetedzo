@@ -62,7 +62,8 @@ public class SetupPanelController : MonoBehaviour
 
     private void Start()
     {
-        ShowStep(1);
+        if (!isExpenseAdjustmentMode && currentMode != SetupMode.ReviewFromProfile)
+            ShowStep(1);
 
         stableIncomeToggle.onValueChanged.RemoveAllListeners();
         stableIncomeToggle.onValueChanged.AddListener(OnStableIncomeToggled);
@@ -354,6 +355,8 @@ public class SetupPanelController : MonoBehaviour
         gm.setupData.maxIncome = float.Parse(maxIncomeInput.text);
         gm.setupData.isIncomeStable = stableIncomeToggle.isOn;
 
+        gm.RollFreeGoalIfNeeded(); // no-op for guided profiles; picks the Free Mode goal now income is known
+
         int totalAdults = 1;
         int totalChildren = 0;
         if (!int.TryParse(adultsInput.text, out totalAdults) || totalAdults < 1)
@@ -414,7 +417,7 @@ public class SetupPanelController : MonoBehaviour
 
         string summary = "<b>Your Starting Situation</b>\n\n";
 
-        summary += $"Income Range: ${minIncome:F0} – ${maxIncome:F0}\n";
+        summary += $"Income Range: ${minIncome:F0} ï¿½ ${maxIncome:F0}\n";
         summary += $"Estimated Monthly Income: ${averageIncome:F0}\n\n";
 
         summary += $"Living Expenses: -${monthlyExpenses:F0}\n";
@@ -536,6 +539,10 @@ public class SetupPanelController : MonoBehaviour
 
     public void OnPanelOpened()
     {
+        isExpenseAdjustmentMode = false;
+        if (confirmAdjustmentButton != null) confirmAdjustmentButton.SetActive(false);
+        expensesPanelController?.ExitAdjustmentMode();
+
         UnlockSetupUI();
         ShowStep(1);
     }
@@ -586,6 +593,10 @@ public class SetupPanelController : MonoBehaviour
 
     public void JumpToReviewStep()
     {
+        isExpenseAdjustmentMode = false;
+        if (confirmAdjustmentButton != null) confirmAdjustmentButton.SetActive(false);
+        expensesPanelController?.ExitAdjustmentMode();
+
         var gm = GameManager.Instance;
         var finance = gm?.financeManager;
         var setup = gm?.setupData;
@@ -627,7 +638,7 @@ public class SetupPanelController : MonoBehaviour
         savingsSlider.SetValueWithoutNotify(profileSavings);
         UpdateSavingsDisplay();
 
-        // Lock toggles — player is not configuring, just reviewing
+        // Lock toggles ï¿½ player is not configuring, just reviewing
         LockSetupUI();
 
         // Show step 4 but use the finance-aware summary builder
@@ -670,7 +681,7 @@ public class SetupPanelController : MonoBehaviour
         float netSurplus = surplus - savingsAmount;
 
         string summary = "<b>Your Financial Baseline</b>\n\n";
-        summary += $"Income Range: ${minIncome:F0} – ${maxIncome:F0}\n";
+        summary += $"Income Range: ${minIncome:F0} ï¿½ ${maxIncome:F0}\n";
         summary += $"Estimated Monthly Income: ${averageIncome:F0}\n\n";
         summary += $"Housing: -${housing:F0}\n";
         summary += $"Food: -${groceries:F0}\n";
@@ -731,5 +742,6 @@ public class SetupPanelController : MonoBehaviour
         expensesPanelController.ConfirmAdjustment();
 
         if (confirmAdjustmentButton != null) confirmAdjustmentButton.SetActive(false);
+        expensesPanelController.ExitAdjustmentMode();
     }
 }

@@ -27,6 +27,7 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   - label: I'll find a free tutor
     resultDescription: "Thank you \u2014 I'll arrange something within the family."
     moneyChange: 0
@@ -37,6 +38,7 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   - label: We'll manage at home
     resultDescription: I appreciate the heads up. We'll work harder at home.
     moneyChange: 0
@@ -47,13 +49,15 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   eventName: Extra Tuition Recommended
-  description: The teacher calls to say your child is struggling and recommends extra
-    tuition classes.
+  description: I wanted to flag that your child's been struggling this term. Extra
+    tuition would help a lot if it's something you can arrange.
   financialLesson: 
   category: 3
   pool: 6
   requiredAsset: 0
+  destroysAsset: 0
   icon: {fileID: 0}
   probability: 10
   weight: 8
@@ -83,5 +87,5 @@ MonoBehaviour:
   borrowingPowerChange: 0
   startsChain: 0
   followUpEvents: []
-  followUpChance: 0.5
-  followUpDelay: 1
+  followUpChance: 0
+  followUpDelay: 0

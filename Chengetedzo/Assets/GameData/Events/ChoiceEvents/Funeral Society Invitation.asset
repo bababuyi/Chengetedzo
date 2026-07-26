@@ -26,6 +26,7 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   - label: I already have funeral cover
     resultDescription: "I'm sorted on that front \u2014 but thank you Ambuya. Good
       to know it's there."
@@ -37,6 +38,7 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   - label: Not for me right now
     resultDescription: "I appreciate it \u2014 maybe another time."
     moneyChange: 0
@@ -47,15 +49,16 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   eventName: Funeral Society Invitation
-  description: "Ambuya Chigwanda stops you after church. She runs a burial society
-    that has been going for twelve years \u2014 small monthly contributions pooled
-    to cover any member's family funeral costs. She says there is still space if
-    you are interested."
+  description: "I run a burial society \u2014 twelve years now, small monthly contributions,
+    and if anything happens the whole group covers the funeral costs. There's still
+    space, if you're interested."
   financialLesson: 
   category: 3
   pool: 6
   requiredAsset: 0
+  destroysAsset: 0
   icon: {fileID: 0}
   probability: 15
   weight: 8
@@ -85,5 +88,5 @@ MonoBehaviour:
   borrowingPowerChange: 0
   startsChain: 0
   followUpEvents: []
-  followUpChance: 0.5
-  followUpDelay: 1
+  followUpChance: 0
+  followUpDelay: 0

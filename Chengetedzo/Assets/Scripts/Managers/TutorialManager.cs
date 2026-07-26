@@ -22,6 +22,9 @@ public class TutorialManager : MonoBehaviour
     private const string KEY_FREE_INSURANCE = "Tut_InsuranceSeen";
     private const string KEY_FREE_SETUP = "Tut_FreeSetupSeen";
     private const string KEY_DEDUCTIBLE_SEEN = "Tut_DeductibleSeen";
+    private const string KEY_GOAL_SEEN = "Tut_GoalSeen";
+    private const string KEY_FAMILY_PROMPT_SEEN = "Tut_FamilyPromptSeen";
+    private const string KEY_CUT_SEEN = "Tut_CutSeen";
 
     public static bool HasAttemptedGuided
     {
@@ -48,7 +51,10 @@ public class TutorialManager : MonoBehaviour
     private bool _isGuidedMode;
     private Coroutine _pulseCoroutine;
     private RectTransform _currentlyPulsing;
-
+    private readonly HashSet<ProfileType> _introShownThisRun = new HashSet<ProfileType>();
+    public void ResetRunState() => _introShownThisRun.Clear();
+    private bool _skipRequested = false;
+    public void SkipCurrentSequence() => _skipRequested = true;
 
     private void Awake()
     {
@@ -64,15 +70,6 @@ public class TutorialManager : MonoBehaviour
         HasAttemptedGuided = true;
         GameManager.Instance?.SetMentorSpokeThisMonth(true);
 
-        string key = profile switch
-        {
-            ProfileType.Informal => KEY_INFORMAL_SEEN,
-            ProfileType.Formal => KEY_FORMAL_SEEN,
-            ProfileType.Farmer => KEY_FARMER_SEEN,
-            _ => KEY_INFORMAL_SEEN
-        };
-
-        // Always hide profile select immediately
         UIManager.Instance.SwitchPanel(UIManager.UIPanelState.None);
 
         System.Action showSetup = () =>
@@ -85,7 +82,7 @@ public class TutorialManager : MonoBehaviour
             UIManager.Instance.ShowSetupPanelAtReview();
         };
 
-        if (Seen(key))
+        if (_introShownThisRun.Contains(profile))
         {
             showSetup();
             return;
@@ -93,7 +90,7 @@ public class TutorialManager : MonoBehaviour
 
         ShowProfileIntroSequence(profile, () =>
         {
-            Mark(key);
+            _introShownThisRun.Add(profile);
             showSetup();
         });
     }
@@ -166,10 +163,10 @@ public class TutorialManager : MonoBehaviour
     /// Call from GameManager.ProcessNextEvent when the very first event is about to show.
     /// Pass the actual ShowEvent call as the callback so it fires after the tutorial closes.
     /// </summary>
-    public void OnFirstEvent(bool hadInsurance, float insurancePayout, System.Action showEventCallback)
+    public void OnFirstEvent(bool isReward, bool hadInsurance, float insurancePayout, System.Action showEventCallback)
     {
         if (Seen(KEY_EVENT_SEEN)) { showEventCallback?.Invoke(); return; }
-        ShowEventIntroSequence(hadInsurance, insurancePayout, () =>
+        ShowEventIntroSequence(isReward, hadInsurance, insurancePayout, () =>
         {
             Mark(KEY_EVENT_SEEN);
             showEventCallback?.Invoke();
@@ -186,6 +183,58 @@ public class TutorialManager : MonoBehaviour
         });
     }
 
+    /// <summary>
+    /// Call once, right after the simulation-start tutorial (or as soon as the goal HUD
+    /// text first has something to show). Fires once per save profile via KEY_GOAL_SEEN;
+    /// harmless to call every month since Seen() short-circuits after the first time.
+    /// </summary>
+    public void OnGoalIntro(string goalTitle, System.Action onComplete)
+    {
+        if (Seen(KEY_GOAL_SEEN) || string.IsNullOrEmpty(goalTitle))
+        {
+            onComplete?.Invoke();
+            return;
+        }
+
+        ShowSequence(new[]
+        {
+            $"One more thing before the months start moving. See '{goalTitle}' under your balance? " +
+            "That's not just a number — it's the reason for all of this. Every dollar you save walks " +
+            "toward it. Every dollar you pull back out walks away."
+        }, () => { Mark(KEY_GOAL_SEEN); onComplete?.Invoke(); },
+        new[] { topHUDMoneyArea });
+    }
+
+    /// <summary>
+    /// Call from GameManager.ShowOrChooseEvent's isFamilyPrompt branch, before showing
+    /// the first family-prompt choice popup. Pass the actual popup-show call as the
+    /// callback, same pattern as OnFirstEvent.
+    /// </summary>
+    public void OnFirstFamilyPrompt(System.Action showPopupCallback)
+    {
+        if (Seen(KEY_FAMILY_PROMPT_SEEN)) { showPopupCallback?.Invoke(); return; }
+
+        ShowSequence(new[]
+        {
+            "Before you answer — understand something. Your family notices what you do with this " +
+            "budget, and they remember. Say 'not now' and they carry it. Put things back and most " +
+            "of the hurt heals. Most. Some marks only generosity can remove."
+        }, () => { Mark(KEY_FAMILY_PROMPT_SEEN); showPopupCallback?.Invoke(); });
+    }
+
+    /// <summary>Call when the expense adjustment screen opens for the first time.</summary>
+    public void OnFirstBudgetCut()
+    {
+        if (Seen(KEY_CUT_SEEN)) return;
+
+        ShowSequence(new[]
+        {
+            "Cutting back can save the month — sometimes it must be done. But know the cost: going " +
+            "back to normal later doesn't undo the strain at home. If you cut, cut with a plan to " +
+            "make it up to them."
+        }, () => Mark(KEY_CUT_SEEN));
+    }
+
 
 
     //For testing
@@ -197,6 +246,7 @@ public class TutorialManager : MonoBehaviour
             KEY_FORECAST_SEEN, KEY_INSURANCE_SEEN, KEY_SIM_START_SEEN, KEY_LOAN_SEEN,
             KEY_EVENT_SEEN, KEY_REPORT_SEEN, KEY_COMPLETE_SEEN,
             KEY_FREE_FORECAST, KEY_FREE_INSURANCE, KEY_FREE_SETUP, KEY_DEDUCTIBLE_SEEN,
+            KEY_GOAL_SEEN, KEY_FAMILY_PROMPT_SEEN, KEY_CUT_SEEN,
             "Tut_FreeForeSeen", "Tut_FreeInsSeen" // legacy keys — clear old saves
         };
         foreach (var k in keys) PlayerPrefs.DeleteKey(k);
@@ -332,8 +382,19 @@ public class TutorialManager : MonoBehaviour
         new[] { loanTopButton, loanTopButton, loanTopButton, loanTopButton });
     }
 
-    private void ShowEventIntroSequence(bool hadInsurance, float payout, System.Action onComplete)
+    private void ShowEventIntroSequence(bool isReward, bool hadInsurance, float payout, System.Action onComplete)
     {
+        if (isReward)
+        {
+            ShowSequence(new[]
+            {
+                "Something happened this month. The popup below will show you the event — this one worked in your favour.",
+                "Not every event is a cost. Some are opportunities: support that arrives, a bit of luck, a good decision paying off. Take it, but don't plan around it — the unfavourable months are the ones that test you.",
+            }, onComplete,
+            new[] { null, eventPopupRoot });
+            return;
+        }
+
         if (hadInsurance && payout > 0f)
         {
             ShowSequence(new[]
@@ -399,7 +460,7 @@ public class TutorialManager : MonoBehaviour
                               RectTransform[] pulseTargets = null)
     {
         if (messages == null || messages.Length == 0) { onComplete?.Invoke(); return; }
-        if (_isSequenceRunning) return; // ← add this
+        if (_isSequenceRunning) return;
 
         _isSequenceRunning = true;
         var msgList = new List<string>(messages);
@@ -410,6 +471,14 @@ public class TutorialManager : MonoBehaviour
     private void ShowSequenceStep(List<string> messages, List<RectTransform> pulses, System.Action onComplete)
     {
         Debug.Log($"[TUTORIAL] ShowSequenceStep — remaining={messages.Count}");
+
+        if (_skipRequested)
+        {
+            _skipRequested = false;
+            StopPulse();
+            onComplete?.Invoke();
+            return;
+        }
 
         if (GameManager.Instance != null)
             GameManager.Instance.SetMentorSpokeThisMonth(true);

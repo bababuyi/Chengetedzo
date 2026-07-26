@@ -26,6 +26,7 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   - label: Buy just enough to get through ($20)
     resultDescription: A small top-up for now. I'll be more careful.
     moneyChange: -20
@@ -36,6 +37,7 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   - label: Manage without power for now
     resultDescription: Candles and a brazier. It's not ideal but we'll cope.
     moneyChange: 0
@@ -46,13 +48,15 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   eventName: ZESA Tokens Run Out
-  description: Your prepaid electricity balance hits zero two weeks before payday.
-    You need power for cooking and the children's schoolwork.
+  description: 'ZESA ALERT: Your prepaid balance is now $0.00. Recharge now to restore
+    your electricity supply.'
   financialLesson: 
   category: 3
   pool: 6
   requiredAsset: 0
+  destroysAsset: 0
   icon: {fileID: 0}
   probability: 25
   weight: 12
@@ -82,5 +86,5 @@ MonoBehaviour:
   borrowingPowerChange: 0
   startsChain: 0
   followUpEvents: []
-  followUpChance: 0.5
-  followUpDelay: 1
+  followUpChance: 0
+  followUpDelay: 0

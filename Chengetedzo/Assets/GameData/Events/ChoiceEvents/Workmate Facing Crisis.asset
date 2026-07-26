@@ -26,6 +26,7 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   - label: Contribute a small amount ($20)
     resultDescription: I can't give much but I'll add something.
     moneyChange: -20
@@ -36,6 +37,7 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   - label: Skip this time
     resultDescription: I'm stretched too thin this month.
     moneyChange: 0
@@ -46,13 +48,15 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   eventName: Workmate Facing Crisis
-  description: A colleague's home was damaged in a storm and your workplace group
-    chat is asking everyone to chip in for emergency repairs.
+  description: "Storm damage at Tapiwa's place last night \u2014 roof and a wall
+    down. We're collecting for emergency repairs, whatever you can spare helps."
   financialLesson: 
   category: 3
   pool: 6
   requiredAsset: 0
+  destroysAsset: 0
   icon: {fileID: 0}
   probability: 14
   weight: 10
@@ -82,5 +86,5 @@ MonoBehaviour:
   borrowingPowerChange: 0
   startsChain: 0
   followUpEvents: []
-  followUpChance: 0.5
-  followUpDelay: 1
+  followUpChance: 0
+  followUpDelay: 0

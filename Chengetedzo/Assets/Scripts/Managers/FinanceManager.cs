@@ -99,7 +99,8 @@ public class FinanceManager : MonoBehaviour
         Debug.Log("Starting cash: " + cashOnHand);
 
         UpdateHUD();
-        // ---- Auto-calculate asset values ----
+
+        RecalculateAssetValues();
 
         // House: value comes from player setup
         houseInsuredValue = (setup.housing == HousingType.OwnsHouse) ? setup.houseValue : 0f;
@@ -124,6 +125,29 @@ public class FinanceManager : MonoBehaviour
         Debug.Log($"[Assets] House:${houseInsuredValue:F0} Motor:${motorInsuredValue:F0} " +
                   $"Livestock:${livestockInsuredValue:F0} Crops:${cropsInsuredValue:F0} " +
                   $"(commercial:{isCommercial})");
+    }
+
+    public void RecalculateAssetValues()
+    {
+        var setup = GameManager.Instance.setupData;
+
+        houseInsuredValue = (setup.housing == HousingType.OwnsHouse) ? setup.houseValue : 0f;
+
+        float avgIncome = (minIncome + maxIncome) / 2f;
+        motorInsuredValue = assets.hasMotor
+            ? (avgIncome >= 1500f ? 50000f : avgIncome >= 500f ? 12000f : 2000f)
+            : 0f;
+
+        bool isCommercial = assets.hasCrops && assets.hasLivestock;
+        livestockInsuredValue = assets.hasLivestock
+            ? (isCommercial ? 750f : 300f) * (isCommercial ? 15 : 3)
+            : 0f;
+
+        cropsInsuredValue = assets.hasCrops
+            ? avgIncome * (isCommercial ? 2f : 1.5f)
+            : 0f;
+
+        Debug.Log($"[Assets] House:${houseInsuredValue:F0} Motor:${motorInsuredValue:F0} " +$"Livestock:${livestockInsuredValue:F0} Crops:${cropsInsuredValue:F0} "+$"(commercial:{isCommercial})");
     }
 
     public void ApplyCashDelta(float amount)
@@ -342,15 +366,22 @@ public class FinanceManager : MonoBehaviour
             return;
         }
 
-        float variance = isIncomeStable ? 0.1f : 0.3f;
         float range = maxIncome - minIncome;
 
-        float fluctuation = Random.Range(-range * variance, range * variance);
-        currentIncome = Mathf.Clamp(
-            Random.Range(minIncome, maxIncome) + fluctuation,
-            minIncome,
-            maxIncome
-        );
+        if (isIncomeStable)
+        {
+            float salary = (minIncome + maxIncome) * 0.5f;
+            currentIncome = salary + Random.Range(-salary * 0.05f, salary * 0.05f);
+        }
+        else
+        {
+            float fluctuation = Random.Range(-range * 0.3f, range * 0.3f);
+            currentIncome = Mathf.Clamp(
+                Random.Range(minIncome, maxIncome) + fluctuation,
+                minIncome,
+                maxIncome
+            );
+        }
 
         // Farming households earn seasonally rather than evenly
         if (HasFarmingIncome())

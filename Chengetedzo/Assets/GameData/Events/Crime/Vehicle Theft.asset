@@ -17,11 +17,14 @@ MonoBehaviour:
   senderRelation: 
   choices: []
   eventName: Vehicle Theft
-  description: Your vehicle is stolen overnight from outside your home.
-  financialLesson: Vehicle theft can cause major financial loss.
+  description: "Your car was taken overnight from outside the house. Your bags and
+    tools were still inside \u2014 whatever was in the boot went with it."
+  financialLesson: When a vehicle is stolen you lose more than the vehicle. Cover
+    protects the car; the contents are usually your own loss.
   category: 4
   pool: 4
   requiredAsset: 2
+  destroysAsset: 2
   icon: {fileID: 0}
   probability: 3
   weight: 6
@@ -50,6 +53,7 @@ MonoBehaviour:
   affectsLoan: 0
   borrowingPowerChange: 0
   startsChain: 0
-  followUpEvents: []
+  followUpEvents:
+  - {fileID: 11400000, guid: 94558b366a34e4d43abed3aedda54a26, type: 2}
   followUpChance: 0
   followUpDelay: 0

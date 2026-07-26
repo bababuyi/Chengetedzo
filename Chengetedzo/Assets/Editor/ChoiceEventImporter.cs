@@ -97,6 +97,9 @@ public static class ChoiceEventImporter
                 current.weight = ParseInt(cols[9]);
                 current.severity = ParseSeverity(cols[10].Trim());
 
+                current.followUpChance = cols.Length > 11 ? ParseFloat(cols[11]) : 0f;
+                current.followUpDelay = cols.Length > 12 ? ParseInt(cols[12]) : 0;
+
                 // Fixed values for all choice events
                 current.hasChoices = true;
                 current.outcomeType = EventOutcomeType.Negative;
@@ -134,6 +137,7 @@ public static class ChoiceEventImporter
                     incomeEffectMonths = ParseInt(cols[8]),
                     affectsLoan = cols[9].Trim().Equals("Yes", StringComparison.OrdinalIgnoreCase),
                     borrowingPowerChange = ParseFloat(cols[10]),
+                    grantsAsset = cols.Length > 11 ? cols[11].Trim() : "",
                 });
             }
         }
@@ -180,12 +184,13 @@ public static class ChoiceEventImporter
 
     private static GameManager.AssetRequirement ParseAssetRequirement(string s) => s.ToLower() switch
     {
-        "house"            => GameManager.AssetRequirement.House,
-        "motor"            => GameManager.AssetRequirement.Motor,
-        "crops"            => GameManager.AssetRequirement.Crops,
-        "livestock"        => GameManager.AssetRequirement.Livestock,
+        "house" => GameManager.AssetRequirement.House,
+        "motor" => GameManager.AssetRequirement.Motor,
+        "crops" => GameManager.AssetRequirement.Crops,
+        "livestock" => GameManager.AssetRequirement.Livestock,
         "cropsorlivestock" => GameManager.AssetRequirement.CropsOrLivestock,
-        _                  => GameManager.AssetRequirement.None,
+        "nomotor" => GameManager.AssetRequirement.NoMotor,
+        _ => GameManager.AssetRequirement.None,
     };
 
     private static EventSeverity ParseSeverity(string s) => s.ToLower() switch

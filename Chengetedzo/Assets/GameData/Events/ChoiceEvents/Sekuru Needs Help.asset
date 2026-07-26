@@ -27,6 +27,7 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   - label: Send what I can ($60)
     resultDescription: I can only spare $60 right now, Sekuru. I'm sorry I can't
       do more.
@@ -38,6 +39,7 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   - label: I genuinely can't help right now
     resultDescription: I'm really sorry Sekuru. Things are very tight this month.
       I'll help when I can.
@@ -49,13 +51,15 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
+    grantsAsset: 
   eventName: Sekuru Needs Help
-  description: Your elderly uncle messages asking for help with unexpected medical
-    bills at the clinic.
+  description: "I'm at the clinic \u2014 the treatment is costing more than I have
+    on me. If you're able to help, I'd be so grateful, mwanangu."
   financialLesson: 
   category: 0
   pool: 6
   requiredAsset: 0
+  destroysAsset: 0
   icon: {fileID: 0}
   probability: 12
   weight: 10
@@ -85,5 +89,5 @@ MonoBehaviour:
   borrowingPowerChange: 0
   startsChain: 0
   followUpEvents: []
-  followUpChance: 0.5
-  followUpDelay: 1
+  followUpChance: 0
+  followUpDelay: 0

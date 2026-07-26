@@ -44,6 +44,16 @@ public class PlayerDataManager : MonoBehaviour
         originalAdults = Mathf.Max(1, value);
     }
 
+    // Restores CURRENT household size on load — distinct from SetInitialHousehold,
+    // which also resets originalAdults. Allows 0 adults (matches RemoveAdult's
+    // permissiveness — a household can be fully wiped out).
+    public void SetCurrentHousehold(int adultCount, int childCount)
+    {
+        adults = Mathf.Max(0, adultCount);
+        children = Mathf.Max(0, childCount);
+        Debug.Log($"[Household] Current restored — adults: {adults}, children: {children}");
+    }
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
