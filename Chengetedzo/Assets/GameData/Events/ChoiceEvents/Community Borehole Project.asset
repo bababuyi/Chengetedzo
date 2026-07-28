@@ -39,8 +39,7 @@ MonoBehaviour:
     borrowingPowerChange: 0
     grantsAsset: 
   - label: I can't contribute this time
-    resultDescription: "I'm sorry \u2014 I genuinely don't have anything to give
-      right now."
+    resultDescription: I'm sorry, I genuinely don't have anything to give right now.
     moneyChange: 0
     momentumChange: 1
     moraleChange: -2
@@ -51,8 +50,8 @@ MonoBehaviour:
     borrowingPowerChange: 0
     grantsAsset: 
   eventName: Community Borehole Project
-  description: "We're raising funds for the borehole \u2014 every household's expected
-    to put something in. What can you manage?"
+  description: We're raising funds for the borehole, every household's expected to
+    put something in. What can you manage?
   financialLesson: 
   category: 3
   pool: 6

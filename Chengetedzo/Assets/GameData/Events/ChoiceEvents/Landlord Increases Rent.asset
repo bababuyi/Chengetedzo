@@ -38,7 +38,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
-  - label: "Give notice \u2014 start looking for cheaper accommodation"
+  - label: Give notice, start looking for cheaper accommodation
     resultDescription: This is unsustainable. I'll look for something affordable.
     moneyChange: 0
     momentumChange: 2
@@ -50,8 +50,8 @@ MonoBehaviour:
     borrowingPowerChange: 0
     grantsAsset: 
   eventName: Landlord Increases Rent
-  description: "Rent's going up $80 from next month \u2014 costs have gone up on
-    my end too. Let me know within the week how you'd like to proceed."
+  description: Rent's going up $80 from next month, costs have gone up on my end
+    too. Let me know within the week how you'd like to proceed.
   financialLesson: 
   category: 3
   pool: 6

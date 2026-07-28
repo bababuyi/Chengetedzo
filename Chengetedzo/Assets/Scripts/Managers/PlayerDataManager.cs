@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 public class PlayerDataManager : MonoBehaviour
 {
@@ -36,7 +36,7 @@ public class PlayerDataManager : MonoBehaviour
         adults = Mathf.Max(1, adultCount);
         children = Mathf.Max(0, childCount);
         originalAdults = adults;
-        Debug.Log($"[Household] Initial set — adults: {adults}, children: {children}, originalAdults: {originalAdults}");
+        Debug.Log($"[Household] Initial set - adults: {adults}, children: {children}, originalAdults: {originalAdults}");
     }
 
     public void SetOriginalAdults(int value)
@@ -44,14 +44,14 @@ public class PlayerDataManager : MonoBehaviour
         originalAdults = Mathf.Max(1, value);
     }
 
-    // Restores CURRENT household size on load — distinct from SetInitialHousehold,
+    // Restores CURRENT household size on load - distinct from SetInitialHousehold,
     // which also resets originalAdults. Allows 0 adults (matches RemoveAdult's
-    // permissiveness — a household can be fully wiped out).
+    // permissiveness - a household can be fully wiped out).
     public void SetCurrentHousehold(int adultCount, int childCount)
     {
         adults = Mathf.Max(0, adultCount);
         children = Mathf.Max(0, childCount);
-        Debug.Log($"[Household] Current restored — adults: {adults}, children: {children}");
+        Debug.Log($"[Household] Current restored - adults: {adults}, children: {children}");
     }
 
     private void Awake()

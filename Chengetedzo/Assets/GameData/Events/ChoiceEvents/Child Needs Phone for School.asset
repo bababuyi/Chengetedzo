@@ -38,7 +38,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
-  - label: "Not right now \u2014 we'll find another way"
+  - label: Not right now, we'll find another way
     resultDescription: We'll figure something out. Maybe the school library can help.
     moneyChange: 0
     momentumChange: 1

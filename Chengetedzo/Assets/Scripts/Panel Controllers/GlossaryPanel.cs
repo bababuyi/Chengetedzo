@@ -22,7 +22,7 @@ public class GlossaryPanel : MonoBehaviour
          "The months you must pay premiums before you can make a claim. Subscribing early means you are protected sooner."),
 
         ("Lapsed Policy",
-         "Insurance that has been cancelled because premiums were missed. A lapsed policy offers no cover — even if you paid for months before."),
+         "Insurance that has been cancelled because premiums were missed. A lapsed policy offers no cover, even if you paid for months before."),
 
         ("Deductible",
          "The portion of a loss you pay yourself before insurance covers the rest. For example: if your deductible is $500 and your claim is $2,000, you pay $500 and insurance covers $1,500."),
@@ -31,7 +31,7 @@ public class GlossaryPanel : MonoBehaviour
          "The maximum amount your insurer will pay for a single claim. Losses above this limit come out of your own pocket."),
 
         ("Third-Party Motor",
-         "Insurance that covers damage you cause to others in a road accident — not your own vehicle. Required by law in Zimbabwe."),
+         "Insurance that covers damage you cause to others in a road accident, not your own vehicle. Required by law in Zimbabwe."),
 
         ("Funeral Cover",
          "Insurance that pays out when a family member dies, to help cover burial costs. Waiting periods apply."),
@@ -52,7 +52,7 @@ public class GlossaryPanel : MonoBehaviour
          "Covers the cost of repairing or rebuilding your home after damage from fire, flooding, or storms."),
 
         ("Beneficiary",
-         "The person who receives the insurance payout — usually a family member named when you take out the policy."),
+         "The person who receives the insurance payout, usually a family member named when you take out the policy."),
 
         ("Insured Value",
          "The amount your asset is covered for. For a home this is usually its replacement cost, not its market price."),
@@ -61,7 +61,7 @@ public class GlossaryPanel : MonoBehaviour
          "Money set aside regularly so you have a buffer for unexpected costs. Your first line of defence before insurance."),
 
         ("Emergency Fund",
-         "A savings reserve kept specifically for unexpected expenses — medical bills, job loss, or urgent repairs."),
+         "A savings reserve kept specifically for unexpected expenses, medical bills, job loss, or urgent repairs."),
 
         ("Borrowing Power",
          "In this game: the maximum amount you are allowed to borrow based on your savings history."),

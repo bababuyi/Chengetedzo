@@ -25,18 +25,20 @@ public class GameSaveData
     public float totalInsurancePayoutAmount;
     public int forcedLoanCount;
     public int monthsUnderFinancialPressure;
-    public float loanBalance;
-    public float borrowingPower;
-    public float totalContributed;
-    public int monthsContributed;
-    public float repaymentRate;
-    public int missedPayments;
-    public int onTimePayments;
+
+    // Two-channel loan system: Moneylender (Ndlovu, always available, expensive) and
+    // Mukando (cheap, requires 3 months of contribution to build borrowing power).
+    public LoanAccount moneylender;
+    public LoanAccount mukando;
     public bool loanUnlocked;
+    public bool mukandoJoined;
+    public int mukandoConsecutiveMisses;
+    public int mukandoRecoveryMonthsNeeded;
+
     public bool burialSocietyUnlocked;
 
     public bool isGuidedMode;
-    public int profileType;   // (int)GameManager.ProfileType — which family's voices to use
+    public int profileType;
 
     public bool goalBuilt;
     public bool goalReachedOnce;
@@ -46,10 +48,9 @@ public class GameSaveData
     public float freeGoalTarget;
     public int goalBuiltMonth;
 
-    // Mentor-memory flags — flavour only, but without persistence they re-fire after
-    // every resume.
     public int mentorMemory_familyStrainStreak;
     public bool mentorMemory_familyStrainMentioned;
+    public bool mentorMemory_bufferLineShown;
     public bool mentorMemory_communityHighMentioned;
     public bool mentorMemory_communityLowMentioned;
     public bool mentorMemory_goalBuiltMentioned;
@@ -66,18 +67,13 @@ public class GameSaveData
 
     public int originalAdults;
 
-    // Current household size (A3.6, pre-existing bug fix) — distinct from
-    // originalAdults; without this a resumed game resurrects dead family members.
     public int currentAdults;
     public int currentChildren;
 
-    // Setup block (A3.5) — REQUIRED for Free Mode resume (setupData/financeManager's
-    // base fields are plain fields that don't survive an app restart on their own);
-    // also makes guided resumes self-sufficient without re-running ApplyProfile.
     public int setupAdults;
     public int setupChildren;
     public bool setupIsIncomeStable;
-    public int setupHousing;   // (int)HousingType
+    public int setupHousing;
     public bool setupOwnsCar;
     public bool setupHasSchoolFees;
     public float setupSchoolFeesAmount;
@@ -104,6 +100,7 @@ public class GameSaveData
     public List<IncomeEffectSaveData> incomeEffects = new List<IncomeEffectSaveData>();
     public List<ExpenseEffectSaveData> expenseEffects = new List<ExpenseEffectSaveData>();
     public List<GameManager.CategoryState> categoryStates = new();
+    public List<IncomeBenefitSaveData> incomeBenefits = new List<IncomeBenefitSaveData>();
 
     [Serializable]
     public class IncomeEffectSaveData
@@ -113,9 +110,16 @@ public class GameSaveData
     }
 
     [Serializable]
+    public class IncomeBenefitSaveData
+    {
+        public float amount;
+        public int remainingMonths;
+    }
+
+    [Serializable]
     public class ExpenseEffectSaveData
     {
-        public int category; // store as int to avoid enum serialization issues
+        public int category;
         public float flatIncrease;
         public int remainingMonths;
     }

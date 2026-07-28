@@ -20,7 +20,7 @@ MonoBehaviour:
   description: The main earner dies unexpectedly in an accident, leaving the household
     without its primary income.
   financialLesson: Personal Accident Cover pays a lump sum when the breadwinner dies
-    \u2014 it gives the family time to recover financially.
+    - it gives the family time to recover financially.
   category: 0
   pool: 3
   requiredAsset: 0

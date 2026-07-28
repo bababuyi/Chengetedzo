@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using static GameManager;
@@ -54,7 +54,12 @@ public class TutorialManager : MonoBehaviour
     private readonly HashSet<ProfileType> _introShownThisRun = new HashSet<ProfileType>();
     public void ResetRunState() => _introShownThisRun.Clear();
     private bool _skipRequested = false;
-    public void SkipCurrentSequence() => _skipRequested = true;
+    
+    public void SkipCurrentSequence()
+    {
+        _skipRequested = true;
+        UIManager.Instance?.CloseActivePopup();
+    }
 
     private void Awake()
     {
@@ -108,8 +113,8 @@ public class TutorialManager : MonoBehaviour
         {
             "Welcome to free mode. Here you define your own financial situation from scratch.",
             "Start with your income range. If your earnings vary month to month, enter a minimum and maximum. If they're stable, toggle that on and enter a single figure.",
-            "Then set your living expenses — rent or house value, food, transport, and utilities. Try to be realistic. The game will use these numbers to simulate your actual monthly position.",
-            "Finally, tell us about your household — how many adults and children depend on this income — and which assets you own. Assets determine which insurance products you can access.",
+            "Then set your living expenses: rent or house value, food, transport, and utilities. Try to be realistic. The game will use these numbers to simulate your actual monthly position.",
+            "Finally, tell us about your household: how many adults and children depend on this income, and which assets you own. Assets determine which insurance products you can access.",
             "When you're ready, move through the steps and confirm. The year begins after that.",
         }, () => Mark(KEY_FREE_SETUP),
         new[] { null, null, null, null, budgetConfirmButton });
@@ -199,7 +204,7 @@ public class TutorialManager : MonoBehaviour
         ShowSequence(new[]
         {
             $"One more thing before the months start moving. See '{goalTitle}' under your balance? " +
-            "That's not just a number — it's the reason for all of this. Every dollar you save walks " +
+            "That's not just a number. It is the reason for all of this. Every dollar you save walks " +
             "toward it. Every dollar you pull back out walks away."
         }, () => { Mark(KEY_GOAL_SEEN); onComplete?.Invoke(); },
         new[] { topHUDMoneyArea });
@@ -216,7 +221,7 @@ public class TutorialManager : MonoBehaviour
 
         ShowSequence(new[]
         {
-            "Before you answer — understand something. Your family notices what you do with this " +
+            "Before you answer, understand something. Your family notices what you do with this " +
             "budget, and they remember. Say 'not now' and they carry it. Put things back and most " +
             "of the hurt heals. Most. Some marks only generosity can remove."
         }, () => { Mark(KEY_FAMILY_PROMPT_SEEN); showPopupCallback?.Invoke(); });
@@ -229,7 +234,7 @@ public class TutorialManager : MonoBehaviour
 
         ShowSequence(new[]
         {
-            "Cutting back can save the month — sometimes it must be done. But know the cost: going " +
+            "Cutting back can save the month, and sometimes it must be done. But know the cost: going " +
             "back to normal later doesn't undo the strain at home. If you cut, cut with a plan to " +
             "make it up to them."
         }, () => Mark(KEY_CUT_SEEN));
@@ -247,7 +252,7 @@ public class TutorialManager : MonoBehaviour
             KEY_EVENT_SEEN, KEY_REPORT_SEEN, KEY_COMPLETE_SEEN,
             KEY_FREE_FORECAST, KEY_FREE_INSURANCE, KEY_FREE_SETUP, KEY_DEDUCTIBLE_SEEN,
             KEY_GOAL_SEEN, KEY_FAMILY_PROMPT_SEEN, KEY_CUT_SEEN,
-            "Tut_FreeForeSeen", "Tut_FreeInsSeen" // legacy keys — clear old saves
+            "Tut_FreeForeSeen", "Tut_FreeInsSeen" // legacy keys - clear old saves
         };
         foreach (var k in keys) PlayerPrefs.DeleteKey(k);
         PlayerPrefs.Save();
@@ -285,7 +290,7 @@ public class TutorialManager : MonoBehaviour
             case ProfileType.Informal:
                 msgs = new[]
                 {
-                    "You are Tendai — an informal trader working the markets in Mbare, Harare. Your income varies from week to week. Some months the stall does well. Others, the margins barely cover what you owe.",
+                    "You are Tendai, an informal trader working the markets in Mbare, Harare. Your income varies from week to week. Some months the stall does well. Others, the margins barely cover what you owe.",
                     $"You have {children} children and rent a room in a shared house. Your income ranges from ${minIncome:F0} to ${maxIncome:F0} a month. Rent is ${rent:F0}, groceries ${groceries:F0}, transport ${transport:F0}. You are starting with ${startCash:F0}.",
                     "You have no vehicle and no property. What you do have is resourcefulness. The next 24 months will test how well you can protect the small margin between you and an empty pocket.",
                     "Each month you will see your income arrive, your expenses leave, and sometimes an unexpected event will take something you weren't prepared to lose. Insurance, savings, and loans are your tools. Learn when to use them.",
@@ -296,10 +301,10 @@ public class TutorialManager : MonoBehaviour
             case ProfileType.Formal:
                 msgs = new[]
                 {
-                    "You are Chido — an accounts clerk at a logistics company in Harare. You earn a fixed monthly salary, which puts you ahead of many. But steady income also means steady obligations.",
-                    $"You have {children} {(children == 1 ? "child" : "children")} in school, and rent a house. Your salary runs ${minIncome:F0}–${maxIncome:F0} a month. Rent is ${rent:F0}, school fees ${schoolFees:F0}, groceries ${groceries:F0}. You are starting with ${startCash:F0}.",
-                    "As a vehicle owner, third-party motor insurance is required by law in Zimbabwe. It is not optional — you will see it listed on the insurance screen. Not carrying it is not a choice you have.",
-                    "Your income stability is your greatest advantage. The risk is complacency. Formal workers often underinsure because things feel manageable — until they aren't.",
+                    "You are Chido, an accounts clerk at a logistics company in Harare. You earn a fixed monthly salary, which puts you ahead of many. But steady income also means steady obligations.",
+                    $"You have {children} {(children == 1 ? "child" : "children")} in school, and rent a house. Your salary runs ${minIncome:F0} to ${maxIncome:F0} a month. Rent is ${rent:F0}, school fees ${schoolFees:F0}, groceries ${groceries:F0}. You are starting with ${startCash:F0}.",
+                    "As a vehicle owner, third-party motor insurance is required by law in Zimbabwe. It is not optional. You will see it listed on the insurance screen. Not carrying it is not a choice you have.",
+                    "Your income stability is your greatest advantage. The risk is complacency. Formal workers often underinsure because things feel manageable, until they aren't.",
                 };
                 pulses = new[] { null, topHUDMoneyArea, insuranceToggleContainer, null };
                 break;
@@ -308,9 +313,9 @@ public class TutorialManager : MonoBehaviour
             default:
                 msgs = new[]
                 {
-                    "You are Sekuru Moyo — a smallholder farmer in Mashonaland. You grow maize and keep cattle. You own your land and your home, which many do not. That security has a cost: when the land suffers, you suffer with it.",
-                    $"Your income swings with the seasons — anywhere from ${minIncome:F0} to ${maxIncome:F0}. Monthly costs include groceries (${groceries:F0}), transport (${transport:F0}), and school fees (${schoolFees:F0}). You are starting with ${startCash:F0}.",
-                    "Agriculture carries risks that most insurance products only partially cover. Pay close attention to the Monthly News forecast each month. A drought warning or disease alert is not just a headline — it is a signal.",
+                    "You are Sekuru Moyo, a smallholder farmer in Mashonaland. You grow maize and keep cattle. You own your land and your home, which many do not. That security has a cost: when the land suffers, you suffer with it.",
+                    $"Your income swings with the seasons, anywhere from ${minIncome:F0} to ${maxIncome:F0}. Monthly costs include groceries (${groceries:F0}), transport (${transport:F0}), and school fees (${schoolFees:F0}). You are starting with ${startCash:F0}.",
+                    "Agriculture carries risks that most insurance products only partially cover. Pay close attention to the Monthly News forecast each month. A drought warning or disease alert is not just a headline. It is a signal.",
                     "Your home is an asset, your livestock is an asset, your crops are an asset. Each one is exposed to a different kind of risk. You will not be able to insure everything. Choose carefully.",
                 };
                 pulses = new[] { null, topHUDMoneyArea, forecastListParent, insuranceToggleContainer };
@@ -324,8 +329,8 @@ public class TutorialManager : MonoBehaviour
     {
         ShowSequence(new[]
         {
-            "This is the Monthly News — your window into what the coming month may hold.",
-            "These headlines are signals, not certainties. A disease warning doesn't mean your livestock will fall ill — but it means the risk is elevated. A drought warning doesn't guarantee crop failure — but it raises the probability.",
+            "This is the Monthly News: your window into what the coming month may hold.",
+            "These headlines are signals, not certainties. A disease warning doesn't mean your livestock will fall ill, but it means the risk is elevated. A drought warning doesn't guarantee crop failure, but it raises the probability.",
             "Read the headlines carefully. Then decide what protection you want to carry before the month begins. The cost of insurance is small. The cost of being uninsured when something happens is not.",
             "Once you continue past this screen, you will move to insurance selection. You cannot come back to the forecast after that.",
         }, onComplete,
@@ -336,7 +341,7 @@ public class TutorialManager : MonoBehaviour
     {
         var msgs = new List<string>
         {
-            "Insurance is a monthly payment — called a premium — that you make in exchange for financial protection when something goes wrong.",
+            "Insurance is a monthly payment, called a premium, that you make in exchange for financial protection when something goes wrong.",
         };
 
         if (hasMotor)
@@ -345,9 +350,10 @@ public class TutorialManager : MonoBehaviour
         }
 
         msgs.AddRange(new[]
-        {
+{
             "Most plans have a waiting period. This means you must pay the premium for a set number of months before you can make a claim. The earlier you start, the sooner that protection becomes active.",
-            "Each plan shows its monthly cost, what it covers, and what its coverage limit is. Look at what risks you face based on the news you just read — and choose accordingly.",
+            "A deductible is the amount you pay yourself before insurance covers the rest. If your deductible is $500 and your claim is $2,000, you pay $500 and insurance covers $1,500.",
+            "Each plan shows its monthly cost, what it covers, and what its coverage limit is. Look at what risks you face based on the news you just read, and choose accordingly.",
             "You do not need every plan. But some cover is always better than none. A single serious event without insurance can cost more than months of premiums combined.",
         });
 
@@ -362,12 +368,10 @@ public class TutorialManager : MonoBehaviour
     {
         ShowSequence(new[]
         {
-            "The month begins now. Your income will arrive, your expenses will leave, and any events that occur will be presented as popups.",
-            "If something happens — a medical cost, a theft, storm damage — you will see a popup telling you what occurred and what it cost. If you have insurance that covers it, the payout will be shown there too.",
+            "If something happens, whether a medical cost, a theft or storm damage, you will see a popup telling you what occurred and what it cost. If you have insurance that covers it, the payout will be shown there too.",
             "At the end of each month, you will see a financial report summarising everything that moved. Pay attention to it. That report is your feedback.",
-            "Good luck.",
         }, onComplete,
-        new[] { topHUDMoneyArea, eventPopupRoot, reportPanelRoot, null });
+        new[] { eventPopupRoot, reportPanelRoot });
     }
 
     private void ShowLoanIntroSequence(System.Action onComplete)
@@ -376,7 +380,7 @@ public class TutorialManager : MonoBehaviour
         {
             "You have contributed consistently to your savings pool. That consistency has unlocked access to borrowing.",
             "A loan gives you cash now when you need it. In return, a portion of your loan balance is repaid automatically each month until it is cleared.",
-            "Miss a repayment and the repayment rate rises. Miss several in a row and the debt compounds faster than you can manage. Forced loans — taken automatically when your cash runs out — carry a momentum penalty.",
+            "Miss a repayment and the repayment rate rises. Miss several in a row and the debt compounds faster than you can manage. Forced loans, taken automatically when your cash runs out, carry a momentum penalty.",
             "Loans are for genuine emergencies. They are not a substitute for savings or insurance. Use them carefully, and pay them back as quickly as you can.",
         }, onComplete,
         new[] { loanTopButton, loanTopButton, loanTopButton, loanTopButton });
@@ -388,8 +392,8 @@ public class TutorialManager : MonoBehaviour
         {
             ShowSequence(new[]
             {
-                "Something happened this month. The popup below will show you the event — this one worked in your favour.",
-                "Not every event is a cost. Some are opportunities: support that arrives, a bit of luck, a good decision paying off. Take it, but don't plan around it — the unfavourable months are the ones that test you.",
+                "Something happened this month. The popup below will show you the event: this one worked in your favour.",
+                "Not every event is a cost. Some are opportunities: support that arrives, a bit of luck, a good decision paying off. Take it, but don't plan around it. The unfavourable months are the ones that test you.",
             }, onComplete,
             new[] { null, eventPopupRoot });
             return;
@@ -421,7 +425,7 @@ public class TutorialManager : MonoBehaviour
     {
         ShowSequence(new[]
         {
-            "This is your monthly financial report. It shows everything that moved this month — income received, expenses paid, insurance premiums, any event losses, and what you saved.",
+            "This is your monthly financial report. It shows everything that moved this month: income received, expenses paid, insurance premiums, any event losses, and what you saved.",
             "The closing balance is what you carry into next month. If it is lower than expected, look at where the gap appeared. If it is higher, consider whether more could have been put aside.",
             "This report is your feedback. The next forecast is your next opportunity to respond.",
         }, onComplete,
@@ -432,12 +436,12 @@ public class TutorialManager : MonoBehaviour
     {
         ShowSequence(new[]
         {
-            "You have now seen the main mechanics. Forecasts, insurance, events, loans, reports — none of these should surprise you the same way again.",
-            "From here, I will step back. But I will still check in when something worth noting happens — when patterns form, when you recover from a difficult stretch, or when a choice deserves reflection.",
+            "You have now seen the main mechanics. Forecasts, insurance, events, loans, reports. None of these should surprise you the same way again.",
+            "From here, I will step back. But I will still check in when something worth noting happens: when patterns form, when you recover from a difficult stretch, or when a choice deserves reflection.",
             "The decisions are yours now. Make them count.",
         }, null, new RectTransform[] { null, null, null });
     }
-
+    /*
     public void TriggerTutorial(string key)
     {
         Debug.Log($"[TUTORIAL-TRIGGER] TriggerTutorial called with key='{key}'");
@@ -453,7 +457,7 @@ public class TutorialManager : MonoBehaviour
             );
         }
     }
-
+    */
     private bool _isSequenceRunning = false;
 
     private void ShowSequence(string[] messages, System.Action onComplete,
@@ -470,7 +474,7 @@ public class TutorialManager : MonoBehaviour
 
     private void ShowSequenceStep(List<string> messages, List<RectTransform> pulses, System.Action onComplete)
     {
-        Debug.Log($"[TUTORIAL] ShowSequenceStep — remaining={messages.Count}");
+        Debug.Log($"[TUTORIAL] ShowSequenceStep - remaining={messages.Count}");
 
         if (_skipRequested)
         {

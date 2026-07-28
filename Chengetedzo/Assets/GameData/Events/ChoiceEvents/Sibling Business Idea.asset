@@ -51,8 +51,8 @@ MonoBehaviour:
     borrowingPowerChange: 0
     grantsAsset: 
   eventName: Sibling Business Idea
-  description: "I've got something lined up that could really pay off. I want to
-    start it properly and I need a partner \u2014 you in?"
+  description: I've got something lined up that could really pay off. I want to start
+    it properly and I need a partner, you in?
   financialLesson: 
   category: 3
   pool: 6

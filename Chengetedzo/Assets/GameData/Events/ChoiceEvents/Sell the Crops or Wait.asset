@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
-  m_Name: "Crops Ready \u2014 Sell Now or Wait"
+  m_Name: Sell the Crops or Wait
   m_EditorClassIdentifier: 
   hasChoices: 1
   senderName: Buyer Makore
@@ -49,7 +49,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
-  eventName: "Crops Ready \u2014 Sell Now or Wait"
+  eventName: Sell the Crops or Wait
   description: Your harvest is ready but the main market doesn't open for two more
     weeks. Each option has a trade-off.
   financialLesson: 

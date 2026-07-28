@@ -29,8 +29,8 @@ MonoBehaviour:
     borrowingPowerChange: 0
     grantsAsset: 
   - label: Test it with $40
-    resultDescription: "A small 'return' arrives \u2014 then the scheme vanishes
-      with the rest. That first payout was the bait, not the profit."
+    resultDescription: A small 'return' arrives, then the scheme vanishes with the
+      rest. That first payout was the bait, not the profit.
     moneyChange: -40
     momentumChange: -2
     moraleChange: -1
@@ -41,8 +41,8 @@ MonoBehaviour:
     borrowingPowerChange: 0
     grantsAsset: 
   - label: Guaranteed? Nothing is. Delete.
-    resultDescription: "Guaranteed returns, pressure to act today, recruit your friends
-      \u2014 three warnings in one message. Your money stays yours."
+    resultDescription: 'Guaranteed returns, pressure to act today, recruit your friends:
+      three warnings in one message. Your money stays yours.'
     moneyChange: 0
     momentumChange: 3
     moraleChange: 0

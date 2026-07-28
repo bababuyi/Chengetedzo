@@ -17,8 +17,7 @@ MonoBehaviour:
   senderRelation: Buyer
   choices:
   - label: Sell it ($35)
-    resultDescription: "Cash today \u2014 but now every trip costs a fare or a long
-      walk."
+    resultDescription: Cash today, but now every trip costs a fare or a long walk.
     moneyChange: 35
     momentumChange: 0
     moraleChange: -1

@@ -455,7 +455,7 @@ public static class ForecastLines
             ForecastManager.ForecastSignal.EconomicStress,
             ForecastIntensity.Warning,
             "Fuel Price Surge Affecting All Sectors",
-            "Rising fuel costs are flowing through into transport, food, and utility prices simultaneously — squeezing household budgets from every direction."
+            "Rising fuel costs are flowing through into transport, food, and utility prices simultaneously, squeezing household budgets from every direction."
         ),
         new ForecastLine(
             ForecastManager.ForecastSignal.EconomicStress,

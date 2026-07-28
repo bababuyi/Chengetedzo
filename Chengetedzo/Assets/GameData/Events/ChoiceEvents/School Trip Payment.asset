@@ -17,7 +17,7 @@ MonoBehaviour:
   senderRelation: Education
   choices:
   - label: Pay the full fee ($80)
-    resultDescription: "Paid. You're going on that trip \u2014 enjoy every moment."
+    resultDescription: Paid. You're going on that trip, enjoy every moment.
     moneyChange: -80
     momentumChange: -1
     moraleChange: 3

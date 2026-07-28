@@ -20,7 +20,7 @@ MonoBehaviour:
   description: The main earner suffers a serious injury at work and cannot return
     for two months.
   financialLesson: Personal accident cover pays a lump sum when the breadwinner can
-    no longer work \u2014 it keeps the household going.
+    no longer work - it keeps the household going.
   category: 0
   pool: 3
   requiredAsset: 0

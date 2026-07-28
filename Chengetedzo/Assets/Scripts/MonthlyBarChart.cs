@@ -87,7 +87,7 @@ public class MonthlyBarChart : MonoBehaviour
         if (leftoverColumn.valueText != null)
             leftoverColumn.valueText.text = GameUtils.FormatMoney(leftover);
 
-        // Legend rows — name + amount together
+        // Legend rows: name + amount together
         SetLegendRow(housingLegend, housingLegendValue, HousingColor, "Housing", housing);
         SetLegendRow(groceriesLegend, groceriesLegendValue, GroceriesColor, "Groceries", groceries);
         SetLegendRow(transportLegend, transportLegendValue, TransportColor, "Transport", transport);

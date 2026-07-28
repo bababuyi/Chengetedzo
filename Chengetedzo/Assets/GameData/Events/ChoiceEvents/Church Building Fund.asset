@@ -50,8 +50,8 @@ MonoBehaviour:
     borrowingPowerChange: 0
     grantsAsset: 
   eventName: Church Building Fund
-  description: "The roof fund is still short \u2014 every household is asked to give
-    what they can this month."
+  description: The roof fund is still short, every household is asked to give what
+    they can this month.
   financialLesson: 
   category: 3
   pool: 6

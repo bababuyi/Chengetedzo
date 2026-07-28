@@ -1,134 +1,262 @@
 using UnityEngine;
 
+// Two independent borrowing channels, per the design brief:
+// - Moneylender ("Ndlovu"): always available, no waiting period, expensive (25% interest,
+//   max 6-month term).
+// - Mukando: cheap (5% interest, max 12-month term, extendable to 18 on missed payments),
+//   but requires 3 months of contribution before any borrowing power exists.
+// Term-based instalment model: borrowing at a chosen term fixes a flat monthly instalment
+// that actually pays the loan off in that many months, instead of a percentage-of-balance
+// repayment that asymptotes and never clears.
+// Forced loans draw from Mukando first, then fall back to the Moneylender, at whichever
+// account's maximum term (the player isn't present to choose).
+[System.Serializable]
+public class LoanAccount
+{
+    public string label;             // "Moneylender" / "Mukando"
+    public float balance;
+    public float borrowingPower;
+    public int maxTermMonths;        // Mukando 12, Moneylender 6
+    public float interestRate;       // Mukando 0.05, Moneylender 0.25
+    public int termMonths;           // months remaining on the current schedule
+    public float monthlyInstalment;  // fixed, recomputed whenever balance/term changes
+    public int missedPayments;
+    public int onTimePayments;
+    public float totalContributed;   // Mukando only
+    public int monthsContributed;    // Mukando only
+}
+
 public class LoanManager : MonoBehaviour
 {
-    [Header("Contribution")]
-    public float contribution = 50f;  // Monthly pool contribution
-    public float totalContributed;
-    public int monthsContributed = 0;
+    [Header("Mukando Contribution")]
+    public float contribution = 50f;
+    public bool mukandoJoined = false;
 
-    [Header("Loan State")]
-    public float loanBalance;
-    public float borrowingPower = 0f;
+    [Header("Loan Accounts")]
+    public LoanAccount moneylender = new LoanAccount { label = "Moneylender" };
+    public LoanAccount mukando = new LoanAccount { label = "Mukando" };
 
-    [Header("Repayment Settings")]
-    [Range(0.05f, 0.5f)]
-    public float repaymentRate = 0.1f; // 5%–50%
+    [Header("Terms and Interest")]
+    public int moneylenderMaxTermMonths = 6;
+    public float moneylenderInterestRate = 0.25f;
+    public int mukandoMaxTermMonths = 12;
+    public float mukandoInterestRate = 0.05f;
+    public int mukandoTermHardCap = 18;
 
-    [Header("Default Tracking")]
-    public int missedPayments = 0;
-    public int onTimePayments = 0;
+    [Header("Moneylender Cap")]
+    // 3x current monthly income, rounded to the nearest $50 - scales across profiles
+    // instead of being generous to a high earner and out of reach for a low one.
+    public float moneylenderCapIncomeMultiplier = 3f;
+    public float moneylenderCapRounding = 50f;
+
+    // Consecutive missed Mukando contributions and the standing-recovery mechanic.
+    // "Missing mukando contributions while opted in damages standing, it does not raise
+    // the rate. Real savings groups suspend you, they do not charge you more."
+    private int mukandoConsecutiveMisses = 0;
+    private int mukandoRecoveryMonthsNeeded = 0;
+    public int MukandoConsecutiveMisses => mukandoConsecutiveMisses;
+    public int MukandoRecoveryMonthsNeeded => mukandoRecoveryMonthsNeeded;
 
     private bool loanUnlocked = false;
     public bool IsLoanUnlocked => loanUnlocked;
-    public bool CanForceLoan
-    {
-        get
-        {
-            if (GameManager.Instance != null &&
-                GameManager.Instance.IsHeadlessSimulation)
-            {
-                return borrowingPower > 0f;
-            }
 
-            return loanUnlocked && borrowingPower > 0f;
-        }
-    }
+    public bool CanForceLoan =>
+        moneylender.borrowingPower > 0f || mukando.borrowingPower > 0f;
 
     public bool ContributedThisMonth { get; private set; }
     public bool RepaidThisMonth { get; private set; }
-
     public bool BorrowedThisMonth { get; private set; }
-    //public bool IsLoanUnlocked => borrowingPower > 0f;
-    //public bool CanForceLoan => IsLoanUnlocked && borrowingPower > 0f;
+
+    private void Awake()
+    {
+        ApplyAccountConfig();
+    }
+
+    private void ApplyAccountConfig()
+    {
+        moneylender.label = "Moneylender";
+        moneylender.maxTermMonths = moneylenderMaxTermMonths;
+        moneylender.interestRate = moneylenderInterestRate;
+
+        mukando.label = "Mukando";
+        mukando.maxTermMonths = mukandoMaxTermMonths;
+        mukando.interestRate = mukandoInterestRate;
+    }
+
+    // Called once from GameManager.ResetForNewGame after TutorialManager.ResetRunState,
+    // so the "seen it before" flag TutorialManager checks is already cleared for a fresh run.
+    // Ndlovu is available from month 1, so this just reveals the loan UI and shows the
+    // one-time intro - it no longer gates any actual borrowing power.
+    public void AnnounceLoanSystem()
+    {
+        loanUnlocked = true;
+        UIManager.Instance.ShowLoanTopButton();
+        TutorialManager.Instance?.OnLoanUnlocked();
+    }
+
+    public void JoinMukando()
+    {
+        mukandoJoined = true;
+    }
+
+    // Opting out stops the monthly contribution but does not clear existing Mukando
+    // borrowing power or balance - opting back in resumes building on top of what's there.
+    public void LeaveMukando()
+    {
+        mukandoJoined = false;
+        mukandoConsecutiveMisses = 0;
+    }
 
     public void ProcessContribution()
     {
-        if (GameManager.Instance.financeManager.CashOnHand < contribution)
+        if (!mukandoJoined)
         {
             ContributedThisMonth = false;
             return;
         }
 
+        if (GameManager.Instance.financeManager.CashOnHand < contribution)
+        {
+            ContributedThisMonth = false;
+            MissedMukandoContribution();
+            return;
+        }
+
         GameManager.Instance.ApplyMoneyChange(
-        FinancialEntry.EntryType.LoanContribution,
-        "Loan Pool Contribution",
-        contribution,
-        false
+            FinancialEntry.EntryType.LoanContribution,
+            "Mukando Contribution",
+            contribution,
+            false
         );
         ContributedThisMonth = true;
 
-        totalContributed += contribution;
-        monthsContributed++;
-        UpdateBorrowingPower();
+        mukando.totalContributed += contribution;
+        mukando.monthsContributed++;
+        mukandoConsecutiveMisses = 0;
+
+        if (mukandoRecoveryMonthsNeeded > 0)
+        {
+            mukandoRecoveryMonthsNeeded--;
+            if (mukandoRecoveryMonthsNeeded > 0)
+            {
+                // Still rebuilding standing - borrowing power stays suppressed until
+                // two consecutive contributions land.
+                return;
+            }
+        }
+
+        UpdateMukandoBorrowingPower();
     }
 
-    public bool Borrow(float amount)
+    private void MissedMukandoContribution()
+    {
+        mukandoConsecutiveMisses++;
+
+        if (mukandoRecoveryMonthsNeeded > 0)
+        {
+            // Broke the recovery streak - the two-month rebuild has to start over.
+            mukandoRecoveryMonthsNeeded = 2;
+            Debug.Log("[Loan] Mukando recovery streak broken by another missed contribution. Restarting.");
+            return;
+        }
+
+        if (mukandoConsecutiveMisses >= 3)
+        {
+            mukando.borrowingPower = 0f;
+            mukandoRecoveryMonthsNeeded = 2;
+            Debug.Log("[Loan] Mukando standing damaged - three consecutive missed contributions. Borrowing power suspended until two months of contributions resume.");
+        }
+    }
+
+    // Shared by voluntary Borrow and ForceBorrow. Applies interest to the new amount,
+    // adds it to whatever balance already exists, and recomputes a single instalment
+    // across the chosen term rather than stacking two separate schedules.
+    private void ApplyBorrowToAccount(LoanAccount account, float amount, int chosenTerm)
+    {
+        int term = Mathf.Clamp(chosenTerm, 1, account.maxTermMonths);
+        float owed = amount * (1f + account.interestRate);
+
+        account.balance += owed;
+        account.termMonths = term;
+        account.monthlyInstalment = account.balance / term;
+        account.borrowingPower = Mathf.Max(0f, account.borrowingPower - amount);
+    }
+
+    // Voluntary borrow from a specific account, at a term the player chose (1..maxTermMonths).
+    public bool Borrow(float amount, LoanAccount account, int chosenTerm)
     {
         var phase = GameManager.Instance.CurrentPhase;
 
         if (phase != GameManager.GamePhase.Simulation &&
             phase != GameManager.GamePhase.Loan)
             return false;
+
         if (BorrowedThisMonth)
         {
             Debug.Log("Already borrowed this month.");
             return false;
         }
 
-        if (amount > borrowingPower)
+        if (account == null || amount <= 0f || amount > account.borrowingPower)
         {
-            Debug.Log("Not enough borrowing power!");
+            Debug.Log($"Not enough borrowing power from {(account != null ? account.label : "that source")}!");
             return false;
         }
 
-        loanBalance += amount;
-        GameManager.Instance.ApplyMoneyChange(
-        FinancialEntry.EntryType.LoanBorrow,
-        "Loan Borrowed",
-        amount,
-        true
-        );
-        borrowingPower -= amount;
+        ApplyBorrowToAccount(account, amount, chosenTerm);
         BorrowedThisMonth = true;
 
-        Debug.Log($"Borrowed GameUtils.FormatMoney(amount). Remaining power: ${borrowingPower}");
+        GameManager.Instance.ApplyMoneyChange(
+            FinancialEntry.EntryType.LoanBorrow,
+            $"{account.label} Loan Borrowed",
+            amount,
+            true
+        );
+
+        Debug.Log($"Borrowed {GameUtils.FormatMoney(amount)} from {account.label} over {account.termMonths} months. Instalment: ${account.monthlyInstalment:F2}/month.");
         return true;
     }
 
     public void UpdateLoans()
     {
-        RepaidThisMonth = false;
+        bool moneylenderRepaid = ProcessRepayment(moneylender);
+        bool mukandoRepaid = ProcessRepayment(mukando);
+        RepaidThisMonth = moneylenderRepaid || mukandoRepaid;
+    }
 
-        if (loanBalance <= 0f)
-            return;
+    private bool ProcessRepayment(LoanAccount account)
+    {
+        if (account.balance <= 0f)
+            return false;
 
-        float repayment = loanBalance * repaymentRate;
+        float repayment = Mathf.Min(account.monthlyInstalment, account.balance);
 
         if (GameManager.Instance.financeManager.CashOnHand >= repayment)
         {
             GameManager.Instance.ApplyMoneyChange(
                 FinancialEntry.EntryType.LoanRepayment,
-                "Loan Repayment",
+                $"{account.label} Repayment",
                 repayment,
                 false
             );
 
-            loanBalance -= repayment;
-            loanBalance = Mathf.Max(0f, loanBalance);
+            account.balance = Mathf.Max(0f, account.balance - repayment);
+            account.termMonths = Mathf.Max(0, account.termMonths - 1);
+            account.onTimePayments++;
 
-            onTimePayments++;
-            if (missedPayments == 0 && onTimePayments % 3 == 0)
+            if (account.missedPayments > 0)
+                account.missedPayments--;
+
+            if (account.balance <= 0.01f)
             {
-                repaymentRate = Mathf.Max(minRepaymentRate, repaymentRate - 0.05f);
-                Debug.Log($"[Loan] Good streak — repayment rate reduced to {repaymentRate * 100f}%");
+                account.balance = 0f;
+                account.termMonths = 0;
+                account.monthlyInstalment = 0f;
             }
-            RepaidThisMonth = true;
 
-            if (missedPayments > 0)
-                missedPayments--;
+            Debug.Log($"[Loan] {account.label} instalment paid: ${repayment:F0}. Remaining balance: ${account.balance:F0}");
 
-            if (onTimePayments == 2 && !GameManager.Instance.HasMentorSpokenThisMonth())
+            if (account.onTimePayments == 2 && !GameManager.Instance.HasMentorSpokenThisMonth())
             {
                 UIManager.Instance.ShowMentorMessage(
                     MentorLines.LoanRecovery[Random.Range(0, MentorLines.LoanRecovery.Length)]
@@ -136,88 +264,43 @@ public class LoanManager : MonoBehaviour
                 GameManager.Instance.SetMentorSpokeThisMonth(true);
             }
 
-            Debug.Log($"[Loan] Repayment: ${repayment:F0}");
+            if (account == mukando)
+                UpdateMukandoBorrowingPower();
+            else
+                UpdateMoneylenderBorrowingPower();
 
-            // Recalculate now that loanBalance has changed
-            UpdateBorrowingPower();
+            return true;
+        }
+
+        MissedRepayment(account);
+        return false;
+    }
+
+    // Moneylender: a missed instalment adds a 10% penalty to the outstanding balance and
+    // recomputes the instalment over the remaining term.
+    // Mukando: no monetary penalty - missing a repayment extends the remaining term by one
+    // month (spreading the same balance thinner) up to a hard cap of 18 months, after which
+    // it starts behaving like the Moneylender (10% penalty) instead.
+    private void MissedRepayment(LoanAccount account)
+    {
+        account.missedPayments++;
+        PlayerDataManager.Instance.ModifyMomentum(-4f);
+
+        if (account == mukando && mukando.termMonths < mukandoTermHardCap)
+        {
+            mukando.termMonths = Mathf.Min(mukandoTermHardCap, mukando.termMonths + 1);
+            mukando.monthlyInstalment = mukando.balance / Mathf.Max(1, mukando.termMonths);
+            Debug.Log($"[Loan] Missed Mukando instalment - term extended to {mukando.termMonths} months. New instalment: ${mukando.monthlyInstalment:F2}");
         }
         else
         {
-            MissedPayment();
-        }
-    }
-
-    private void UpdateBorrowingPower()
-    {
-        if (monthsContributed < 3)
-        {
-            borrowingPower = 0f;
-            return;
+            account.balance *= 1.10f;
+            account.monthlyInstalment = account.balance / Mathf.Max(1, account.termMonths);
+            string reason = account == mukando ? "at 18-month cap, now penalized like the Moneylender" : "10% penalty";
+            Debug.Log($"[Loan] Missed {account.label} instalment - {reason}. New balance: ${account.balance:F0}, instalment: ${account.monthlyInstalment:F2}");
         }
 
-        float gross = monthsContributed switch
-        {
-            3 => totalContributed,
-            4 => totalContributed * 1.5f,
-            _ => totalContributed * 2f
-        };
-
-        borrowingPower = Mathf.Max(0f, gross - loanBalance);
-
-        if (!loanUnlocked && borrowingPower > 0f)
-        {
-            loanUnlocked = true;
-            UIManager.Instance.ShowLoanTopButton();
-            TutorialManager.Instance?.OnLoanUnlocked();
-        }
-    }
-
-    public void ResetMonthlyFlags()
-    {
-        ContributedThisMonth = false;
-        RepaidThisMonth = false;
-        BorrowedThisMonth = false;
-    }
-
-    public void ForceBorrow(float requiredAmount)
-    {
-        if (!IsLoanUnlocked || borrowingPower <= 0f)
-            return;
-
-        float amount = Mathf.Min(requiredAmount, borrowingPower);
-
-        loanBalance += amount;
-        borrowingPower -= amount;
-        GameManager.Instance.ApplyMoneyChange(
-        FinancialEntry.EntryType.LoanBorrow,
-        "Forced Loan",
-        amount,
-        true
-        );
-
-        Debug.Log($"[Loan] FORCED loan issued: ${amount:F0}");
-
-        if (!GameManager.Instance.HasMentorSpokenThisMonth())
-        {
-            UIManager.Instance.ShowMentorMessage(
-                "Taking on debt is sometimes necessary, but always have a repayment plan. " +
-                "Missing payments can damage your financial momentum."
-            );
-            GameManager.Instance.SetMentorSpokeThisMonth(true);
-        }
-    }
-
-    private void MissedPayment()
-    {
-        missedPayments++;
-
-        repaymentRate = Mathf.Min(repaymentRate + 0.10f, 0.50f);
-
-        PlayerDataManager.Instance.ModifyMomentum(-4f);
-
-        Debug.Log($"[Loan] Missed payment. Repayment rate now {repaymentRate * 100f}%");
-
-        if (missedPayments == 3)
+        if (account.missedPayments == 3)
         {
             PlayerDataManager.Instance.ModifyMomentum(-6f);
             if (!GameManager.Instance.HasMentorSpokenThisMonth())
@@ -230,47 +313,160 @@ public class LoanManager : MonoBehaviour
         }
     }
 
-    [Header("Repayment Limits")]
-    public float minRepaymentRate = 0.05f;
-    public float maxRepaymentRate = 0.50f;
-
-    public void SetRepaymentRate(float value)
+    private void UpdateMukandoBorrowingPower()
     {
-        repaymentRate = Mathf.Clamp(value, minRepaymentRate, maxRepaymentRate);
+        if (mukando.monthsContributed < 3)
+        {
+            mukando.borrowingPower = 0f;
+            return;
+        }
+
+        float gross = mukando.monthsContributed switch
+        {
+            3 => mukando.totalContributed,
+            4 => mukando.totalContributed * 1.5f,
+            _ => mukando.totalContributed * 2f
+        };
+
+        mukando.borrowingPower = Mathf.Max(0f, gross - mukando.balance);
     }
 
+    private void UpdateMoneylenderBorrowingPower()
+    {
+        float cap = GetMoneylenderCap();
+        moneylender.borrowingPower = Mathf.Max(0f, cap - moneylender.balance);
+    }
+
+    // 3x current monthly income, rounded to the nearest $50.
+    public float GetMoneylenderCap()
+    {
+        float income = GameManager.Instance != null && GameManager.Instance.financeManager != null
+            ? GameManager.Instance.financeManager.currentIncome
+            : 0f;
+
+        float raw = income * moneylenderCapIncomeMultiplier;
+        return Mathf.Round(raw / moneylenderCapRounding) * moneylenderCapRounding;
+    }
+
+    public void ResetMonthlyFlags()
+    {
+        ContributedThisMonth = false;
+        RepaidThisMonth = false;
+        BorrowedThisMonth = false;
+    }
+
+    // Forced/emergency borrowing. Draws from Mukando first (the cheap channel you built
+    // by saving), then falls back to the Moneylender for whatever's left. The player isn't
+    // present to choose a term, so each draw uses that account's maximum term.
+    public void ForceBorrow(float requiredAmount)
+    {
+        float remaining = Mathf.Max(0f, requiredAmount);
+        if (remaining <= 0f) return;
+
+        float fromMukando = 0f;
+        if (mukando.borrowingPower > 0f)
+        {
+            fromMukando = Mathf.Min(remaining, mukando.borrowingPower);
+            ApplyBorrowToAccount(mukando, fromMukando, mukando.maxTermMonths);
+            remaining -= fromMukando;
+
+            GameManager.Instance.ApplyMoneyChange(
+                FinancialEntry.EntryType.LoanBorrow,
+                "Mukando Forced Loan",
+                fromMukando,
+                true
+            );
+            Debug.Log($"[Loan] FORCED loan drawn from Mukando: ${fromMukando:F0} over {mukando.maxTermMonths} months.");
+        }
+
+        float fromMoneylender = 0f;
+        if (remaining > 0.01f && moneylender.borrowingPower > 0f)
+        {
+            fromMoneylender = Mathf.Min(remaining, moneylender.borrowingPower);
+            ApplyBorrowToAccount(moneylender, fromMoneylender, moneylender.maxTermMonths);
+            remaining -= fromMoneylender;
+
+            GameManager.Instance.ApplyMoneyChange(
+                FinancialEntry.EntryType.LoanBorrow,
+                "Moneylender Forced Loan",
+                fromMoneylender,
+                true
+            );
+            Debug.Log($"[Loan] FORCED loan drawn from Moneylender: ${fromMoneylender:F0} over {moneylender.maxTermMonths} months.");
+        }
+
+        if (fromMukando <= 0f && fromMoneylender <= 0f)
+        {
+            Debug.LogWarning("[Loan] Forced loan requested but no borrowing power available from either account.");
+            return;
+        }
+
+        if (!GameManager.Instance.HasMentorSpokenThisMonth())
+        {
+            UIManager.Instance.ShowMentorMessage(
+                "Taking on debt is sometimes necessary, but always have a repayment plan. " +
+                "Missing payments can damage your financial momentum."
+            );
+            GameManager.Instance.SetMentorSpokeThisMonth(true);
+        }
+    }
+
+    // Some event choices nudge the player's borrowing standing. Mukando is the channel
+    // that's about community trust/reputation, so that's what this affects - the
+    // Moneylender's cap is derived from income and doesn't move with events.
     public void ModifyBorrowingPower(float amount)
     {
-        borrowingPower = Mathf.Max(0f, borrowingPower + amount);
-        Debug.Log($"[Loan] Borrowing power changed by ${amount:F0}. Now: ${borrowingPower:F0}");
+        mukando.borrowingPower = Mathf.Max(0f, mukando.borrowingPower + amount);
+        Debug.Log($"[Loan] Mukando borrowing power changed by ${amount:F0}. Now: ${mukando.borrowingPower:F0}");
+    }
+
+    // Restores both accounts from a save. Falls back to fresh accounts if a field is
+    // missing (loading a save from before this system existed isn't supported - saves
+    // break across this change by design - but this keeps a null from propagating).
+    public void RestoreFromSave(
+        LoanAccount savedMoneylender, LoanAccount savedMukando,
+        bool unlocked, bool joined,
+        int consecutiveMisses, int recoveryMonthsNeeded)
+    {
+        moneylender = savedMoneylender ?? new LoanAccount { label = "Moneylender" };
+        mukando = savedMukando ?? new LoanAccount { label = "Mukando" };
+
+        // Term/interest config is a live balance parameter, not player state - always take
+        // the current Inspector values rather than whatever was saved.
+        ApplyAccountConfig();
+
+        loanUnlocked = unlocked;
+        mukandoJoined = joined;
+        mukandoConsecutiveMisses = consecutiveMisses;
+        mukandoRecoveryMonthsNeeded = recoveryMonthsNeeded;
     }
 
     public void ForceUnlock(float baseAmount = 150f)
     {
-        monthsContributed = 3;
-        totalContributed = baseAmount;
-        borrowingPower = baseAmount;
+        mukando.monthsContributed = 3;
+        mukando.totalContributed = baseAmount;
+        mukando.borrowingPower = baseAmount;
         loanUnlocked = true;
     }
 
     public void ResetAll()
     {
         contribution = 50f;
-        totalContributed = 0f;
-        monthsContributed = 0;
+        mukandoJoined = false;
 
-        loanBalance = 0f;
-        borrowingPower = 0f;
+        moneylender = new LoanAccount { label = "Moneylender" };
+        mukando = new LoanAccount { label = "Mukando" };
+        ApplyAccountConfig();
 
-        repaymentRate = 0.1f;
+        // Ndlovu has no waiting period - his borrowing power is live immediately.
+        UpdateMoneylenderBorrowingPower();
 
-        missedPayments = 0;
-        onTimePayments = 0;
+        mukandoConsecutiveMisses = 0;
+        mukandoRecoveryMonthsNeeded = 0;
 
         ContributedThisMonth = false;
         RepaidThisMonth = false;
         BorrowedThisMonth = false;
-
         loanUnlocked = false;
     }
 }

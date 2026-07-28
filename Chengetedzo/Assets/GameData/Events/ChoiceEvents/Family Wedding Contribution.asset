@@ -51,8 +51,8 @@ MonoBehaviour:
     borrowingPowerChange: 0
     grantsAsset: 
   eventName: Family Wedding Contribution
-  description: "Sisi's wedding is next month \u2014 every household is putting something
-    in. What can you manage this time?"
+  description: Sisi's wedding is next month, every household is putting something
+    in. What can you manage this time?
   financialLesson: 
   category: 3
   pool: 6

@@ -6,17 +6,17 @@ public class UIAnimator : MonoBehaviour
     public static UIAnimator Instance;
 
     [Header("Panel Fades")]
-    [Tooltip("Standard panel fade-in duration. Keep short — this game is information-dense.")]
+    [Tooltip("Standard panel fade-in duration. Keep short. This game is information-dense.")]
     public float panelFadeDuration = 0.15f;
     public float panelFadeOutDuration = 0.10f;
 
-    [Header("Event Popup — Neutral Alert Card")]
+    [Header("Event Popup: Neutral Alert Card")]
     [Tooltip("The event popup fades in and settles very slightly downward. No bounce.")]
     public float eventPopupFadeDuration = 0.20f;
     [Tooltip("How far above resting position the popup starts (canvas units). Keep small.")]
     public float eventPopupDropAmount = 10f;
 
-    [Header("Mentor / Loan Chat — Slide Up from Bottom")]
+    [Header("Mentor / Loan Chat: Slide Up from Bottom")]
     [Tooltip("Chat-style panels slide up from below, like a messaging notification.")]
     public float chatSlideDuration = 0.22f;
     [Tooltip("How far below resting the panel starts (canvas units).")]
@@ -31,7 +31,7 @@ public class UIAnimator : MonoBehaviour
     public float forecastSlideOffsetX = 70f;
 
     [Header("Money Text Punch")]
-    [Tooltip("Scale up briefly when money changes. Keep subtle — 1.12 max.")]
+    [Tooltip("Scale up briefly when money changes. Keep subtle, 1.12 max.")]
     public float moneyPunchDuration = 0.22f;
     [Range(1.02f, 1.15f)]
     public float moneyPunchScale = 1.10f;

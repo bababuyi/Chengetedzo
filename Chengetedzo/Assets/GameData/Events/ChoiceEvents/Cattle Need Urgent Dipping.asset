@@ -50,8 +50,8 @@ MonoBehaviour:
     borrowingPowerChange: 0
     grantsAsset: 
   eventName: Cattle Need Urgent Dipping
-  description: "Tick-borne disease is spreading in the area \u2014 I need you to
-    get your cattle dipped as soon as possible. Don't wait on this one."
+  description: Tick-borne disease is spreading in the area, I need you to get your
+    cattle dipped as soon as possible. Don't wait on this one.
   financialLesson: 
   category: 3
   pool: 6

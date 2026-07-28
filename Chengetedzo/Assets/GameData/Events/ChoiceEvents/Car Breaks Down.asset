@@ -51,8 +51,8 @@ MonoBehaviour:
     borrowingPowerChange: 0
     grantsAsset: 
   eventName: Car Breaks Down
-  description: "Won't get far like this \u2014 something's seriously wrong under
-    the hood. I wouldn't risk driving it again until it's fixed properly."
+  description: Won't get far like this, something's seriously wrong under the hood.
+    I wouldn't risk driving it again until it's fixed properly.
   financialLesson: 
   category: 3
   pool: 6

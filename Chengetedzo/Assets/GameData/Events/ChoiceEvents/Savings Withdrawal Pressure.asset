@@ -39,7 +39,7 @@ MonoBehaviour:
     borrowingPowerChange: 0
     grantsAsset: 
   - label: Decline and keep saving
-    resultDescription: "If it sounds too good to be true \u2014 it usually is."
+    resultDescription: If it sounds too good to be true, it usually is.
     moneyChange: 0
     momentumChange: 4
     moraleChange: 2
@@ -50,8 +50,8 @@ MonoBehaviour:
     borrowingPowerChange: 0
     grantsAsset: 
   eventName: Savings Withdrawal Pressure
-  description: "I've got a sure thing lined up but the window closes tonight \u2014
-    you need to pull your savings out now if you want in. Trust me on this one."
+  description: I've got a sure thing lined up but the window closes tonight, you
+    need to pull your savings out now if you want in. Trust me on this one.
   financialLesson: 
   category: 3
   pool: 6

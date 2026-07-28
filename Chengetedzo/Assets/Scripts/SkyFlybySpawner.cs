@@ -5,7 +5,7 @@ using UnityEngine.UI;
 /// <summary>
 /// Ambient skyline life: an occasional airliner, a rare helicopter, and
 /// birds lifting off the treeline. Runs forever in the background scene.
-/// No prefabs needed — spawns UI Images from assigned sprites at runtime.
+/// No prefabs needed - spawns UI Images from assigned sprites at runtime.
 /// Follows the same canvas-space conventions as CloudSpawner.
 /// </summary>
 public class SkyFlybySpawner : MonoBehaviour
@@ -19,21 +19,21 @@ public class SkyFlybySpawner : MonoBehaviour
     public RectTransform spawnLeft;
     public RectTransform spawnRight;
 
-    [Header("Plane — occasional")]
+    [Header("Plane - occasional")]
     public Vector2 planeIntervalRange = new Vector2(50f, 140f);
     public Vector2 planeSpeedRange = new Vector2(55f, 80f);
     [Range(0f, 1f)] public float planeBandTop = 0.86f;    // fraction of sky height
     [Range(0f, 1f)] public float planeBandBottom = 0.68f;
     public float planeScale = 0.55f;
 
-    [Header("Helicopter — rare (the President is busy)")]
+    [Header("Helicopter - rare (the President is busy)")]
     public Vector2 heliIntervalRange = new Vector2(200f, 480f);
     public Vector2 heliSpeedRange = new Vector2(35f, 55f);
     [Range(0f, 1f)] public float heliBandTop = 0.62f;
     [Range(0f, 1f)] public float heliBandBottom = 0.45f;
     public float heliScale = 0.5f;
 
-    [Header("Birds — from the trees")]
+    [Header("Birds - from the trees")]
     public Vector2 birdIntervalRange = new Vector2(35f, 90f);
     public Vector2 birdSpeedRange = new Vector2(18f, 30f);
     public float birdLifetime = 9f;

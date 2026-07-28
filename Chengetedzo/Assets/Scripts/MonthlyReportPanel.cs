@@ -27,7 +27,7 @@ public class MonthlyReportPanel : MonoBehaviour
     public TMP_Text savingsBalanceText;
 
     [Header("Personal Goal")]
-    // Optional — one line below the savings balance, e.g. "Her own market stall: $240 / $500".
+    // Optional - one line below the savings balance, e.g. "Her own market stall: $240 / $500".
     public TMP_Text goalProgressText;
 
     [Header("Layout")]
@@ -73,6 +73,7 @@ public class MonthlyReportPanel : MonoBehaviour
         float insurance = 0f;
         float eventLosses = 0f;
         float savingsContrib = 0f;
+        float loanContribution = 0f;
 
         var eventLines = new List<(string name, float amount, bool positive)>();
 
@@ -123,11 +124,16 @@ public class MonthlyReportPanel : MonoBehaviour
                 case FinancialEntry.EntryType.SavingsContribution:
                     savingsContrib += abs;
                     break;
+               
+                case FinancialEntry.EntryType.LoanContribution:
+                    loanContribution += abs;
+                    if (abs > 0.01f)
+                        eventLines.Add((entry.description, abs, false));
+                    break;
             }
         }
 
-        float totalExpenses = housing + groceries + transport + utilities
-                              + schoolFees + insurance + eventLosses;
+        float totalExpenses = housing + groceries + transport + utilities + schoolFees + insurance + eventLosses + loanContribution;
         float leftover = Mathf.Max(0f, income - totalExpenses);
 
         if (incomeText != null)
@@ -149,7 +155,7 @@ public class MonthlyReportPanel : MonoBehaviour
         BuildEventRecap(eventLines);
 
         barChart?.Render(income, housing, groceries, transport, utilities,
-                         schoolFees, insurance, eventLosses);
+                 schoolFees, insurance, eventLosses + loanContribution);
 
         float savingsBalance = GameManager.Instance?.financeManager?.generalSavingsBalance ?? 0f;
         if (savingsBalanceText != null)
@@ -289,13 +295,13 @@ public class MonthlyReportPanel : MonoBehaviour
         if (dashIndex > 0)
             return description.Substring(0, dashIndex);
 
-        dashIndex = description.IndexOf(" � ");
+        dashIndex = description.IndexOf(": ");
         if (dashIndex > 0)
             return description.Substring(0, dashIndex);
 
         const int maxLen = 40;
         if (description.Length > maxLen)
-            return description.Substring(0, maxLen) + "�";
+            return description.Substring(0, maxLen) + "...";
 
         return description;
     }

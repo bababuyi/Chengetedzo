@@ -51,8 +51,8 @@ MonoBehaviour:
     borrowingPowerChange: 0
     grantsAsset: 
   eventName: Neighbour's Funeral Costs
-  description: "We're collecting for the funeral \u2014 the family's struggling to
-    cover it. Anything you can give would help."
+  description: We're collecting for the funeral, the family's struggling to cover
+    it. Anything you can give would help.
   financialLesson: 
   category: 0
   pool: 6

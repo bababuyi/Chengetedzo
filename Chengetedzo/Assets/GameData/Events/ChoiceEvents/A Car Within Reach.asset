@@ -29,9 +29,8 @@ MonoBehaviour:
     borrowingPowerChange: 0
     grantsAsset: Motor
   - label: Take it on terms
-    resultDescription: "You put down a deposit and agree to pay the rest over time.
-      You drive away today \u2014 but a portion of what you can borrow is now spoken
-      for."
+    resultDescription: You put down a deposit and agree to pay the rest over time.
+      You drive away today, but a portion of what you can borrow is now spoken for.
     moneyChange: -900
     momentumChange: -2
     moraleChange: 2

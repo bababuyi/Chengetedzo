@@ -29,7 +29,7 @@ MonoBehaviour:
     borrowingPowerChange: 0
     grantsAsset: 
   - label: I'll find a free tutor
-    resultDescription: "Thank you \u2014 I'll arrange something within the family."
+    resultDescription: Thank you, I'll arrange something within the family.
     moneyChange: 0
     momentumChange: 1
     moraleChange: 1

@@ -16,7 +16,7 @@ MonoBehaviour:
   senderName: Ambuya Chigwanda
   senderRelation: Community
   choices:
-  - label: "Tell me more \u2014 I'll check the insurance options"
+  - label: Tell me more, I'll check the insurance options
     resultDescription: I'll have a look this month. Thank you for thinking of me.
     moneyChange: 0
     momentumChange: 1
@@ -28,8 +28,8 @@ MonoBehaviour:
     borrowingPowerChange: 0
     grantsAsset: 
   - label: I already have funeral cover
-    resultDescription: "I'm sorted on that front \u2014 but thank you Ambuya. Good
-      to know it's there."
+    resultDescription: I'm sorted on that front, but thank you Ambuya. Good to know
+      it's there.
     moneyChange: 0
     momentumChange: 1
     moraleChange: 0
@@ -40,7 +40,7 @@ MonoBehaviour:
     borrowingPowerChange: 0
     grantsAsset: 
   - label: Not for me right now
-    resultDescription: "I appreciate it \u2014 maybe another time."
+    resultDescription: I appreciate it, maybe another time.
     moneyChange: 0
     momentumChange: 0
     moraleChange: -1
@@ -51,9 +51,9 @@ MonoBehaviour:
     borrowingPowerChange: 0
     grantsAsset: 
   eventName: Funeral Society Invitation
-  description: "I run a burial society \u2014 twelve years now, small monthly contributions,
+  description: I run a burial society, twelve years now, small monthly contributions,
     and if anything happens the whole group covers the funeral costs. There's still
-    space, if you're interested."
+    space, if you're interested.
   financialLesson: 
   category: 3
   pool: 6

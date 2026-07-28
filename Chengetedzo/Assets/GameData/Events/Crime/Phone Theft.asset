@@ -19,8 +19,8 @@ MonoBehaviour:
   eventName: Phone Theft
   description: Your basic mobile phone was stolen. It was your only means of mobile
     money and communication.
-  financialLesson: A stolen phone disrupts more than communication \u2014 it cuts
-    off financial access.
+  financialLesson: A stolen phone disrupts more than communication - it cuts off
+    financial access.
   category: 4
   pool: 4
   requiredAsset: 0

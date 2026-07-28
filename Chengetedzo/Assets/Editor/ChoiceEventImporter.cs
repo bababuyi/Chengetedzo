@@ -63,25 +63,38 @@ public static class ChoiceEventImporter
 
                 if (cols.Length < 11)
                 {
-                    Debug.LogWarning($"[Importer] Line {i + 1}: EVENT row too short — skipped.");
+                    Debug.LogWarning($"[Importer] Line {i + 1}: EVENT row too short - skipped.");
                     continue;
                 }
 
                 string eventName = cols[1].Trim();
-                string safeName  = eventName.Replace("/", "-").Replace("\\", "-");
+                string safeName = eventName;
+                foreach (char c in Path.GetInvalidFileNameChars())
+                    safeName = safeName.Replace(c, '-');
+                safeName = safeName.Trim();
                 string assetPath = $"{OUTPUT_FOLDER}/{safeName}.asset";
 
                 EventData existing = AssetDatabase.LoadAssetAtPath<EventData>(assetPath);
                 if (existing != null)
                 {
                     current = existing;
-                    Debug.Log($"[Importer] '{eventName}' already exists — overwriting.");
+                    Debug.Log($"[Importer] '{eventName}' already exists - overwriting.");
                     skipped++;
                 }
                 else
                 {
-                    current = ScriptableObject.CreateInstance<EventData>();
-                    AssetDatabase.CreateAsset(current, assetPath);
+                    EventData newAsset = ScriptableObject.CreateInstance<EventData>();
+                    try
+                    {
+                        AssetDatabase.CreateAsset(newAsset, assetPath);
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogError($"[Importer] Line {i + 1}: '{eventName}' - failed to create asset at '{assetPath}': {ex.Message}. Skipping row.");
+                        current = null;
+                        continue;
+                    }
+                    current = newAsset;
                     created++;
                     Debug.Log($"[Importer] Created '{eventName}'");
                 }
@@ -115,13 +128,13 @@ public static class ChoiceEventImporter
             {
                 if (current == null)
                 {
-                    Debug.LogWarning($"[Importer] Line {i + 1}: CHOICE with no preceding EVENT — skipped.");
+                    Debug.LogWarning($"[Importer] Line {i + 1}: CHOICE with no preceding EVENT - skipped.");
                     continue;
                 }
 
                 if (cols.Length < 11)
                 {
-                    Debug.LogWarning($"[Importer] Line {i + 1}: CHOICE row too short — skipped.");
+                    Debug.LogWarning($"[Importer] Line {i + 1}: CHOICE row too short - skipped.");
                     continue;
                 }
 

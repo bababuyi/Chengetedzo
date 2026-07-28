@@ -28,7 +28,7 @@ MonoBehaviour:
     borrowingPowerChange: 0
     grantsAsset: 
   - label: Rent it out ($80)
-    resultDescription: "Sure \u2014 $80 for the week. Fair deal."
+    resultDescription: Sure, $80 for the week. Fair deal.
     moneyChange: 80
     momentumChange: 2
     moraleChange: 0

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -94,7 +94,7 @@ public class InsurancePanel : MonoBehaviour
 
         if (planInfoText != null)
             planInfoText.text = onAssetPage
-                ? "These plans cover your assets — vehicle, home, and farm."
+                ? "These plans cover your assets: vehicle, home, and farm."
                 : "Select one or more insurance plans to see their details.";
 
         if (confirmButton != null)
@@ -103,7 +103,7 @@ public class InsurancePanel : MonoBehaviour
 
             if (!onAssetPage)
             {
-                confirmButton.GetComponentInChildren<TMP_Text>().text = "Next →";
+                confirmButton.GetComponentInChildren<TMP_Text>().text = "Next";
                 confirmButton.onClick.AddListener(AdvanceToAssetPage);
             }
             else
@@ -145,11 +145,15 @@ public class InsurancePanel : MonoBehaviour
             if (!success)
             {
                 ShowPage();
-                planInfoText.text = "Not enough funds to purchase this plan.";
+                bool otherMotorActive = (type == InsuranceType.Motor || type == InsuranceType.MotorComprehensive) &&
+                    insuranceManager.HasActiveMotorCover();
+                planInfoText.text = otherMotorActive
+                    ? "You already have a motor policy active. Cancel it before switching."
+                    : "Not enough funds to purchase this plan.";
                 return;
             }
 
-            TutorialManager.Instance?.TriggerTutorial("insurance_deductible_explainer");
+            //TutorialManager.Instance?.TriggerTutorial("insurance_deductible_explainer");
 
             planInfoText.text =
                 $"<b>{plan.planName}</b>\n\n" +

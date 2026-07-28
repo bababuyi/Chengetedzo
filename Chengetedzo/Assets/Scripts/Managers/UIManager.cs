@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using TMPro;
@@ -16,7 +16,7 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI moneyText;
 
     [Header("Personal Goal")]
-    // Optional — small line under the balance, e.g. "Her own market stall: $240 / $500".
+    // Optional - small line under the balance, e.g. "Her own market stall: $240 / $500".
     // Safe to leave unassigned; UpdateGoalProgressText no-ops if null.
     public TextMeshProUGUI goalProgressText;
 
@@ -190,7 +190,7 @@ public class UIManager : MonoBehaviour
 
     }
 
-    private void CloseActivePopup()
+    public void CloseActivePopup()
     {
         if (!IsPopupActive)
             return;
@@ -245,7 +245,7 @@ public class UIManager : MonoBehaviour
     {
 #if UNITY_WEBGL && !UNITY_EDITOR
     // UNITY_WEBGL covers every WebGL host (Facebook, itch.io, etc. are all the same Unity
-    // platform) — this runtime check is what actually tells them apart. Only Facebook's own
+    // platform) - this runtime check is what actually tells them apart. Only Facebook's own
     // template loads window.FBInstant; calling into it anywhere else throws a ReferenceError
     // that happens inside a native dynCall and is NOT catchable here, so it must be skipped
     // before ever touching FBInstant, not caught after the fact.
@@ -257,7 +257,7 @@ public class UIManager : MonoBehaviour
             if (await Task.WhenAny(initTask, Task.Delay(5000)) == initTask)
                 await Meta.InstantGames.FBInstant.StartGameAsync();
             else
-                Debug.LogWarning("[UIManager] FBInstant init timed out — continuing anyway.");
+                Debug.LogWarning("[UIManager] FBInstant init timed out - continuing anyway.");
         }
         catch (System.Exception ex)
         {
@@ -266,7 +266,7 @@ public class UIManager : MonoBehaviour
     }
     else
     {
-        Debug.Log("[UIManager] FBInstant not present on this host — skipping Facebook init.");
+        Debug.Log("[UIManager] FBInstant not present on this host - skipping Facebook init.");
     }
 #endif
         SwitchPanel(UIPanelState.MainMenu);
@@ -336,7 +336,7 @@ public class UIManager : MonoBehaviour
             goalProgressText.text = line;
     }
 
-    // Silent variant for the month ticker — called every frame while lerping,
+    // Silent variant for the month ticker - called every frame while lerping,
     // so no Debug.Log (it would flood the console).
     private void SetMoneyDisplay(float amount)
     {
@@ -346,13 +346,13 @@ public class UIManager : MonoBehaviour
 
     // ---------------- Month Ticker ----------------
     // Plays the month's pre-event ledger as a watched sequence: balance resets to
-    // the opening amount, income lands, then each expense drains it — with the
+    // the opening amount, income lands, then each expense drains it - with the
     // current line item shown in simTickerText. Events fire only after it finishes.
     // Uses only HUD text, never the popup system.
 
     [Header("Month Ticker")]
-    public TextMeshProUGUI simTickerText;      // optional — ticker still works (silently) if unassigned
-    public Image tickerIcon;                   // optional — money icon shown beside the ticker line
+    public TextMeshProUGUI simTickerText;      // optional - ticker still works (silently) if unassigned
+    public Image tickerIcon;                   // optional - money icon shown beside the ticker line
     public Sprite tickerIncomeSprite;          // shown for entries that add money
     public Sprite tickerExpenseSprite;         // shown for entries that remove money
     public float tickerCountSeconds = 0.30f;   // lerp time per entry
@@ -442,7 +442,7 @@ public class UIManager : MonoBehaviour
             float signed = entry.SignedAmount();
             tickerCurrentTarget = tickerRunningBalance + signed;
 
-            // Week counter woven into the month text: "January — Week 2"
+            // Week counter woven into the month text: "January, Week 2"
             if (gm != null && monthText != null && entries.Count > 0)
             {
                 int week = 1 + Mathf.Min(3, (i * 4) / entries.Count);
@@ -452,7 +452,7 @@ public class UIManager : MonoBehaviour
                     int displayMonth = ((gm.currentMonth - 1) % 12) + 1;
                     string monthName = System.Globalization.CultureInfo
                         .CurrentCulture.DateTimeFormat.GetMonthName(displayMonth);
-                    monthText.text = $"{monthName} — Week {week}";
+                    monthText.text = $"{monthName}, Week {week}";
                 }
             }
 
@@ -1040,10 +1040,10 @@ public class UIManager : MonoBehaviour
             $"<i>{mentorReflection}</i>";
 
         // PART 2
-        // SECTION 0 — Score
+        // SECTION 0 - Score
         yearPartTwoText = BuildScoreSummary();
 
-        // SECTION 1 — Insurance
+        // SECTION 1 - Insurance
         yearPartTwoText += "<b>Insurance</b>\n";
 
         if (gm.YearPremiums == 0f)
@@ -1056,24 +1056,24 @@ public class UIManager : MonoBehaviour
 
             if (gm.TotalInsurancePayoutAmount == 0f)
             {
-                yearPartTwoText += $"You paid {GameUtils.FormatMoney(gm.YearPremiums)} in premiums and made no claims. That's not money wasted — that's the cost of protection you fortunately didn't need.\n\n";
+                yearPartTwoText += $"You paid {GameUtils.FormatMoney(gm.YearPremiums)} in premiums and made no claims. That's not money wasted. That's the cost of protection you fortunately didn't need.\n\n";
             }
             else if (netInsuranceBenefit >= 0f)
             {
-                yearPartTwoText += $"Your insurance paid out {GameUtils.FormatMoney(gm.TotalInsurancePayoutAmount)} against ${gm.YearPremiums:F0} in premiums — a net benefit of ${netInsuranceBenefit:F0}.\n\n";
+                yearPartTwoText += $"Your insurance paid out {GameUtils.FormatMoney(gm.TotalInsurancePayoutAmount)} against ${gm.YearPremiums:F0} in premiums, a net benefit of ${netInsuranceBenefit:F0}.\n\n";
             }
             else
             {
-                yearPartTwoText += $"You paid {GameUtils.FormatMoney(gm.YearPremiums)} in premiums and received {GameUtils.FormatMoney(gm.TotalInsurancePayoutAmount)} back. You came out {GameUtils.FormatMoney(Mathf.Abs(netInsuranceBenefit))} behind — but that coverage was there if something serious had hit.\n\n";
+                yearPartTwoText += $"You paid {GameUtils.FormatMoney(gm.YearPremiums)} in premiums and received {GameUtils.FormatMoney(gm.TotalInsurancePayoutAmount)} back. You came out {GameUtils.FormatMoney(Mathf.Abs(netInsuranceBenefit))} behind, but that coverage was there if something serious had hit.\n\n";
             }
         }
 
-        // SECTION 2 — Resilience
+        // SECTION 2 - Resilience
         yearPartTwoText += "<b>Resilience</b>\n";
         yearPartTwoText += $"You faced {gm.TotalUnexpectedEvents} unexpected events. {gm.InsuredEventsCount} were covered by insurance.\n";
 
         if (gm.ForcedLoanCount > 0)
-            yearPartTwoText += $"You needed emergency loans in {gm.ForcedLoanCount} months — a signal that the gap between income and expenses was too thin.\n";
+            yearPartTwoText += $"You needed emergency loans in {gm.ForcedLoanCount} months, a signal that the gap between income and expenses was too thin.\n";
 
         if (gm.MonthsUnderFinancialPressure > 0)
             yearPartTwoText += $"Your cash went negative in {gm.MonthsUnderFinancialPressure} months.\n";
@@ -1083,7 +1083,7 @@ public class UIManager : MonoBehaviour
 
         yearPartTwoText += "\n";
 
-        // SECTION 3 — One takeaway
+        // SECTION 3 - One takeaway
         yearPartTwoText += "<b>Key Takeaway</b>\n";
 
         float netBenefit = gm.TotalInsurancePayoutAmount - gm.YearPremiums;
@@ -1091,7 +1091,7 @@ public class UIManager : MonoBehaviour
         if (netBenefit > 0f)
             yearPartTwoText += "Insurance paid for itself this year. The lesson: start early, stay consistent.";
         else if (gm.ForcedLoanCount >= 3)
-            yearPartTwoText += "Repeated forced loans point to one gap — an emergency fund of even one month's expenses would have broken the cycle.";
+            yearPartTwoText += "Repeated forced loans point to one gap: an emergency fund of even one month's expenses would have broken the cycle.";
         else if (gm.TotalUnexpectedEvents > 0 && gm.InsuredEventsCount == 0)
             yearPartTwoText += "Every loss this year was uninsured. Even basic cover would have reduced the damage.";
         else if (gm.financeManager.CashOnHand > 0f && gm.ForcedLoanCount == 0)
@@ -1103,7 +1103,7 @@ public class UIManager : MonoBehaviour
         resultsText.text = yearPartOneText;
         resultsText.gameObject.SetActive(true);
         SetEndOfYearButtonPosition(CONTINUE_X);
-        endOfYearContinueButton.GetComponentInChildren<TextMeshProUGUI>().text = "Key Takeaways →";
+        endOfYearContinueButton.GetComponentInChildren<TextMeshProUGUI>().text = "Key Takeaways";
         yearEndGraph?.HideGraph();
         StartCoroutine(RenderGraphNextFrame());
         restartButton.interactable = false;
@@ -1131,7 +1131,7 @@ public class UIManager : MonoBehaviour
                 // If this is a yearly review (not final), wire continue to proceed
                 if (_yearlyReviewOnContinue != null)
                 {
-                    endOfYearContinueButton.GetComponentInChildren<TextMeshProUGUI>().text = "Start Year 2 →";
+                    endOfYearContinueButton.GetComponentInChildren<TextMeshProUGUI>().text = "Start Year 2";
                     restartButton.gameObject.SetActive(false);
                     endOfYearContinueButton.onClick.RemoveAllListeners();
                     endOfYearContinueButton.onClick.AddListener(() =>
@@ -1144,7 +1144,7 @@ public class UIManager : MonoBehaviour
                 }
                 else
                 {
-                    endOfYearContinueButton.GetComponentInChildren<TextMeshProUGUI>().text = "View Graph →";
+                    endOfYearContinueButton.GetComponentInChildren<TextMeshProUGUI>().text = "View Graph";
                     restartButton.interactable = true;
                     SetEndOfYearButtonPosition(CONTINUE_X);
                 }
@@ -1153,7 +1153,7 @@ public class UIManager : MonoBehaviour
             case 2: // Graph
                 resultsText.gameObject.SetActive(false);
                 yearEndGraph?.ShowGraph();
-                endOfYearContinueButton.GetComponentInChildren<TextMeshProUGUI>().text = "← Back";
+                endOfYearContinueButton.GetComponentInChildren<TextMeshProUGUI>().text = "Back";
                 SetEndOfYearButtonPosition(BACK_X);
                 break;
 
@@ -1162,7 +1162,7 @@ public class UIManager : MonoBehaviour
                 resultsText.text = yearPartOneText;
                 resultsText.gameObject.SetActive(true);
                 yearEndGraph?.HideGraph();
-                endOfYearContinueButton.GetComponentInChildren<TextMeshProUGUI>().text = "Key Takeaways →";
+                endOfYearContinueButton.GetComponentInChildren<TextMeshProUGUI>().text = "Key Takeaways";
                 restartButton.interactable = false;
                 SetEndOfYearButtonPosition(CONTINUE_X);
                 break;
@@ -1243,7 +1243,7 @@ public class UIManager : MonoBehaviour
         }
         if (waited >= 8f)
         {
-            Debug.LogWarning("[UI-MENTOR] Timeout waiting for popup — force-clearing IsPopupActive.");
+            Debug.LogWarning("[UI-MENTOR] Timeout waiting for popup - force-clearing IsPopupActive.");
             ForceCloseAllPopups();
         }
         Debug.Log($"[UI-MENTOR] WaitThenShowTransparent now showing: \"{message}\"");
@@ -1363,7 +1363,7 @@ public class UIManager : MonoBehaviour
         SwitchPanel(UIPanelState.ProfileSelect);
     }
 
-    // Per-profile save slots — no global Continue button. Clicking a profile (or Free
+    // Per-profile save slots - no global Continue button. Clicking a profile (or Free
     // Mode) checks that slot: if it has a save, offer "Continue (Month N)" / "Start
     // over" before doing anything else; if empty, go straight to the normal fresh flow.
     // `profile` is ignored by SaveSystem when guided=false (Free Mode is one shared slot).
@@ -1372,11 +1372,11 @@ public class UIManager : MonoBehaviour
         if (SaveSystem.SaveExists(profile, guided))
         {
             // Load once here, for both the "Month N" label and (if they pick Continue)
-            // the actual resume — SaveSystem.LoadGame isn't called a second time.
+            // the actual resume - SaveSystem.LoadGame isn't called a second time.
             GameSaveData peek = SaveSystem.LoadGame(profile, guided);
             if (peek == null)
             {
-                // SaveExists said yes but the file didn't read cleanly — don't strand
+                // SaveExists said yes but the file didn't read cleanly - don't strand
                 // the player on a dead click.
                 startFreshAction?.Invoke();
                 return;
@@ -1521,7 +1521,7 @@ public class UIManager : MonoBehaviour
         SetEndOfYearButtonPosition(CONTINUE_X);
 
         if (endOfYearContinueButton != null)
-            endOfYearContinueButton.GetComponentInChildren<TextMeshProUGUI>().text = "Key Takeaways →";
+            endOfYearContinueButton.GetComponentInChildren<TextMeshProUGUI>().text = "Key Takeaways";
 
         if (restartButton != null)
             restartButton.gameObject.SetActive(false);
@@ -1575,7 +1575,7 @@ public class UIManager : MonoBehaviour
             return $"<b>Goal:</b> You built {title} in Month {gm.GoalBuiltMonth}. It earned for you every month after.";
 
         if (gm.HasGoalBeenReached)
-            return $"<b>Goal:</b> The {title} money sat safe — but it was never built.";
+            return $"<b>Goal:</b> The {title} money sat safe, but it was never built.";
 
         return $"<b>Goal:</b> The {title} fund ended at {GameUtils.FormatMoney(gm.financeManager.generalSavingsBalance)} of {GameUtils.FormatMoney(target)}. The dream waits.";
     }
@@ -1591,7 +1591,7 @@ public class UIManager : MonoBehaviour
 
     private string GetScoreLabel(float score)
     {
-        if (score >= 25f) return "An excellent year — disciplined with money and good to the people around you.";
+        if (score >= 25f) return "An excellent year, disciplined with money and good to the people around you.";
         if (score >= 15f) return "A strong, balanced year. You managed money well and kept your relationships steady.";
         if (score >= 5f) return "A steady year. Room to grow, but you held things together.";
         if (score >= -10f) return "A tough year. The choices were hard, and it showed.";
@@ -1618,13 +1618,13 @@ public class UIManager : MonoBehaviour
             if (gm.TotalInsurancePayoutAmount == 0f)
                 text += $"You paid ${gm.YearPremiums:F0} in premiums with no claims. Protection you didn't need to use.\n\n";
             else if (net >= 0f)
-                text += $"Insurance paid ${gm.TotalInsurancePayoutAmount:F0} against ${gm.YearPremiums:F0} in premiums — net benefit of ${net:F0}.\n\n";
+                text += $"Insurance paid ${gm.TotalInsurancePayoutAmount:F0} against ${gm.YearPremiums:F0} in premiums, net benefit of ${net:F0}.\n\n";
             else
                 text += $"Premiums: ${gm.YearPremiums:F0}. Payouts: ${gm.TotalInsurancePayoutAmount:F0}. Cover was there if something serious had hit.\n\n";
         }
 
         text += "<b>Year 2 Begins Now</b>\n";
-        text += "Your cash balance carries over. Your decisions this year set the foundation — now build on it.";
+        text += "Your cash balance carries over. Your decisions this year set the foundation. Now build on it.";
         return text;
     }
 

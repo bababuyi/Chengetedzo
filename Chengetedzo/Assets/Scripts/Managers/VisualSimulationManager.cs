@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using static GameManager;
 
 public class VisualSimulationManager : MonoBehaviour

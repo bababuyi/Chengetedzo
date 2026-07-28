@@ -19,8 +19,8 @@ MonoBehaviour:
   eventName: Parent Hospitalised
   description: A parent's hospital stay means school fees cannot be paid on time
     this term.
-  financialLesson: Education insurance only pays out on the death of a parent \u2014
-    hospitalisation is not covered. This is why savings matter too.
+  financialLesson: Education insurance only pays out on the death of a parent - hospitalisation
+    is not covered. This is why savings matter too.
   category: 0
   pool: 3
   requiredAsset: 0

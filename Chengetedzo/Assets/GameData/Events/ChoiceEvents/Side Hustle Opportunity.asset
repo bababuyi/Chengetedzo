@@ -39,7 +39,7 @@ MonoBehaviour:
     borrowingPowerChange: 0
     grantsAsset: 
   - label: Pass on it this time
-    resultDescription: "Not this time \u2014 family needs me more."
+    resultDescription: Not this time, family needs me more.
     moneyChange: 0
     momentumChange: 0
     moraleChange: 2
@@ -50,8 +50,8 @@ MonoBehaviour:
     borrowingPowerChange: 0
     grantsAsset: 
   eventName: Side Hustle Opportunity
-  description: "I've got weekend work going if you're interested \u2014 decent pay,
-    but it'll eat into your weekend. Let me know."
+  description: I've got weekend work going if you're interested, decent pay, but
+    it'll eat into your weekend. Let me know.
   financialLesson: 
   category: 3
   pool: 6

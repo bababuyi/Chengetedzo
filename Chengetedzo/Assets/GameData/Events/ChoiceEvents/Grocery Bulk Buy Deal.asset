@@ -50,8 +50,8 @@ MonoBehaviour:
     borrowingPowerChange: 0
     grantsAsset: 
   eventName: Grocery Bulk Buy Deal
-  description: "THREE MONTHS of staple groceries for the price of TWO \u2014 this
-    week only at Mahomed Stores. Stock up and save."
+  description: THREE MONTHS of staple groceries for the price of TWO, this week only
+    at Mahomed Stores. Stock up and save.
   financialLesson: 
   category: 3
   pool: 6

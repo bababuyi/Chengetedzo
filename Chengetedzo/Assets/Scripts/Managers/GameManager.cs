@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -29,6 +29,7 @@ public class GameManager : MonoBehaviour
     private bool mentorMemory_communityLowMentioned = false;  // once per game
     private bool mentorMemory_goalBuiltMentioned = false;     // once per game, fires the month AFTER goalBuiltMonth
     private bool mentorMemory_scarAckPending = false;         // set by RestoreCategoryProvision, delivered next CheckMentorMemory pass
+    private bool mentorMemory_bufferLineShown = false;        // once per game - the low-savings-buffer line fires at most once so the wording never repeats
 
     public int MentorMemory_FamilyStrainStreak => mentorMemory_familyStrainStreak;
     public bool MentorMemory_FamilyStrainMentioned => mentorMemory_familyStrainMentioned;
@@ -36,6 +37,7 @@ public class GameManager : MonoBehaviour
     public bool MentorMemory_CommunityLowMentioned => mentorMemory_communityLowMentioned;
     public bool MentorMemory_GoalBuiltMentioned => mentorMemory_goalBuiltMentioned;
     public bool MentorMemory_ScarAckPending => mentorMemory_scarAckPending;
+    public bool MentorMemory_BufferLineShown => mentorMemory_bufferLineShown;
     private bool burialSocietyUnlocked = false;
     public bool BurialSocietyUnlocked => burialSocietyUnlocked;
 
@@ -72,8 +74,8 @@ public class GameManager : MonoBehaviour
     [Header("Personal Goal")]
     public bool GoalBuilt { get; private set; }
     private bool goalReachedOnce;      // first crossing announced (also drives the +1 "pass but not really" score)
-    private int goalMonthsSinceOffer;  // re-offer pacing — offered again once this hits 2
-    private int goalMilestoneReached;  // 0/25/50/75/100 — highest mentor milestone already fired
+    private int goalMonthsSinceOffer;  // re-offer pacing - offered again once this hits 2
+    private int goalMilestoneReached;  // 0/25/50/75/100 - highest mentor milestone already fired
     private int freeGoalIndex = -1;    // Free Mode pool pick, rolled at setup confirm
     private float freeGoalTarget;
     private int goalBuiltMonth = -1;   // month number GoalBuilt flipped true, for the year-end line
@@ -84,7 +86,7 @@ public class GameManager : MonoBehaviour
     public int GoalBuiltMonth => goalBuiltMonth;
     public int GoalMonthsSinceOffer => goalMonthsSinceOffer;
     public int GoalMilestoneReached => goalMilestoneReached;
-
+    private List<IncomeBenefit> activeIncomeBenefits = new();
     public float YearIncome => yearIncome;
     public float YearExpenses => yearExpenses;
     public float YearPremiums => yearPremiums;
@@ -116,13 +118,14 @@ public class GameManager : MonoBehaviour
     public int SavedLastMomentumZone => lastMomentumZone;
     public float SavedPreviousMomentum => previousMomentum;
     public List<IncomeEffect> ActiveIncomeEffects => activeIncomeEffects;
+    public List<IncomeBenefit> ActiveIncomeBenefits => activeIncomeBenefits;
     public List<ExpenseEffect> ActiveExpenseEffects => activeExpenseEffects;
 
     private const float BudgetBoostCeilingFraction = 0.80f;
     private const int BudgetBoostCycleMonths = 3;
     private const float BudgetBoostEarlyExitFraction = 1f / 3f;
 
-    [ContextMenu("DEV — Full Reset (Save + Prefs)")]
+    [ContextMenu("DEV - Full Reset (Save + Prefs)")]
     public void DEV_FullReset()
     {
         SaveSystem.DeleteAllSaves();
@@ -361,7 +364,7 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-        // No auto-load here — per-profile save slots mean the decision happens per
+        // No auto-load here - per-profile save slots mean the decision happens per
         // profile, not globally. UIManager.HandleProfileOrFreeModeSelection checks
         // SaveSystem.SaveExists(profile, guided) when a profile/Free Mode is clicked
         // and offers Continue/Start-over there. Auto-loading used to run before
@@ -434,6 +437,13 @@ public class GameManager : MonoBehaviour
     }
 
     [System.Serializable]
+    public class IncomeBenefit
+    {
+        public float amount;         // flat $ per month
+        public int remainingMonths;  // -1 = permanent
+    }
+
+    [System.Serializable]
     public class IncomeEffect
     {
         public float reductionPercent;
@@ -442,11 +452,6 @@ public class GameManager : MonoBehaviour
 
     public void StartNewMonth()
     {
-        // Save point. StartNewMonth runs after every checkpoint screen (reports, year
-        // review) with state exactly "new month ready" — so LoadFromSave → StartNewMonth
-        // resumes at precisely the right beat (the forecast right after the last report).
-        // Guarded on currentMonth > 1 so month 1's very first StartNewMonth (before the
-        // player has done anything) doesn't create a save.
         if (!IsHeadlessSimulation && currentMonth > 1)
             SaveSystem.SaveGame(this);
 
@@ -464,6 +469,7 @@ public class GameManager : MonoBehaviour
         loanManager?.ResetMonthlyFlags();
         UpdateIncomeEffects();
         UpdateExpenseEffects();
+        UpdateIncomeBenefits();
         AdvanceCategoryMonths();
         uiManager?.UpdateGoalProgressText();
     }
@@ -511,8 +517,6 @@ public class GameManager : MonoBehaviour
             combined.Insert(insertAt, prompt);
         }
 
-        // Personal Goal: splice in the "build it now?" prompt the first time savings
-        // reach the target, then again every 2 months while still ≥ target and unbuilt.
         float activeGoalTarget = GoalDefs.GetActiveGoalTarget();
         if (!GoalBuilt && activeGoalTarget > 0f &&
             financeManager.generalSavingsBalance >= activeGoalTarget &&
@@ -533,7 +537,7 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        // Play the month as a watched sequence — income lands, expenses drain —
+        // Play the month as a watched sequence - income lands, expenses drain -
         // then the events interrupt. Events wait until the ticker finishes.
         isMonthTickerPlaying = true;
         UpdateTopButtons();
@@ -584,7 +588,7 @@ public class GameManager : MonoBehaviour
     {
         if (!monthResolutionStarted)
         {
-            Debug.LogWarning("[GameManager] OnEventPopupClosed ignored — stale callback.");
+            Debug.LogWarning("[GameManager] OnEventPopupClosed ignored - stale callback.");
             return;
         }
 
@@ -687,12 +691,12 @@ public class GameManager : MonoBehaviour
     {
         if (currentMonth <= 1 || mentorSpokeThisMonth)
         {
-            Debug.Log($"[MENTOR] EvaluateMentor SKIPPED — month={currentMonth}, alreadySpoke={mentorSpokeThisMonth}");
+            Debug.Log($"[MENTOR] EvaluateMentor SKIPPED - month={currentMonth}, alreadySpoke={mentorSpokeThisMonth}");
             return;
         }
 
         float momentum = PlayerDataManager.Instance.FinancialMomentum;
-        Debug.Log($"[MENTOR] EvaluateMentor running — momentum={momentum:F1}");
+        Debug.Log($"[MENTOR] EvaluateMentor running - momentum={momentum:F1}");
 
         string lineToShow = null;
         string reason = "none";
@@ -729,7 +733,7 @@ public class GameManager : MonoBehaviour
 
         if (IsHeadlessSimulation)
         {
-            Debug.Log("[MENTOR] Headless — skipping display");
+            Debug.Log("[MENTOR] Headless - skipping display");
             return;
         }
 
@@ -809,10 +813,10 @@ public class GameManager : MonoBehaviour
         return string.IsNullOrEmpty(goalLine) ? baseLine : $"{baseLine} {goalLine}";
     }
 
-    // Appended to both the mid-year and year-end mentor reflections — a quick
+    // Appended to both the mid-year and year-end mentor reflections - a quick
     // "where's the goal fund at" checkup. Guided profiles only, per spec.
     // Note: titles are quoted rather than following "the {title}" literally, since
-    // "the Her own market stall" / "the A second cow" read wrong — quoting sidesteps
+    // "the Her own market stall" / "the A second cow" read wrong - quoting sidesteps
     // the grammar regardless of which goal is active.
     private string GetGoalCheckupLine()
     {
@@ -828,7 +832,7 @@ public class GameManager : MonoBehaviour
 
         float pct = Mathf.Clamp01(financeManager.generalSavingsBalance / target) * 100f;
         return pct >= 50f
-            ? $"\"{title}\" is within reach — protect that fund."
+            ? $"\"{title}\" is within reach. Protect that fund."
             : $"\"{title}\" is still far off. Small, steady amounts get there; heroic months don't come.";
     }
 
@@ -852,7 +856,7 @@ public class GameManager : MonoBehaviour
 
         Debug.Log($"=== Month {currentMonth} END ===");
 
-        // Save moved to StartNewMonth (see there for rationale) — saving here, before
+        // Save moved to StartNewMonth (see there for rationale) - saving here, before
         // ProcessBudgetBoosts/currentMonth++, meant a resume would replay the finished
         // month and lose boost dividends.
         ProcessBudgetBoosts();
@@ -903,7 +907,7 @@ public class GameManager : MonoBehaviour
         if (finishedMonth >= totalMonths)
         {
             SettleBoostsAtGameEnd();
-            SaveSystem.DeleteSave(CurrentProfileType, IsGuidedMode); // this slot only — other profiles' saves are untouched
+            SaveSystem.DeleteSave(CurrentProfileType, IsGuidedMode); // this slot only - other profiles' saves are untouched
             if (!IsHeadlessSimulation)
                 uiManager.ShowEndOfYearSummary(GetYearEndMentorReflection());
             CurrentLedger = null;
@@ -1049,7 +1053,7 @@ public class GameManager : MonoBehaviour
         if (CurrentLedger == null || !monthResolutionStarted) return;
         if (monthResolutionFinished)
         {
-            Debug.LogWarning("[Month] EndMonthlyResolution called twice — ignoring.");
+            Debug.LogWarning("[Month] EndMonthlyResolution called twice - ignoring.");
             return;
         }
         monthResolutionFinished = true;
@@ -1069,7 +1073,7 @@ public class GameManager : MonoBehaviour
     {
         if (monthResolutionFinished)
         {
-            Debug.LogWarning("[Month] EndMonthlyResolution called twice — ignoring.");
+            Debug.LogWarning("[Month] EndMonthlyResolution called twice - ignoring.");
             return;
         }
         monthResolutionFinished = true;
@@ -1130,7 +1134,7 @@ public class GameManager : MonoBehaviour
     private string PickEventMentorLine()
     {
         if (currentEvent.insurancePayout > 0f)
-            return "Protection reduced the impact. That wasn’t accidental.";
+            return "Protection reduced the impact. That wasn't accidental.";
 
         if (currentEvent.moneyChange < 0f)
             return "Losses rarely arrive alone. Stay aware of the pattern.";
@@ -1140,10 +1144,13 @@ public class GameManager : MonoBehaviour
         ];
     }
 
+    private GamePhase phaseBeforeLoan = GamePhase.Simulation;
+
     public void BeginLoanDecision()
     {
         if (IsLoanDecisionActive)
             return;
+        phaseBeforeLoan = CurrentPhase;
         SetPhase(GamePhase.Loan);
         IsLoanDecisionActive = true;
         if (isMonthTickerPlaying) uiManager.PauseMonthTicker();
@@ -1166,9 +1173,6 @@ public class GameManager : MonoBehaviour
         uiManager.SwitchPanel(UIManager.UIPanelState.None);
         SetPhase(GamePhase.Simulation);
 
-        // Chained after the sim-start tutorial: goal intro, then the month actually
-        // resolves. Both tutorial calls are Seen()-gated internally, so re-running this
-        // every month (which OnInsuranceConfirmed does) is harmless after month 1.
         System.Action afterSimStartTutorial = () =>
         {
             string goalTitle = !IsHeadlessSimulation ? GoalDefs.GetActiveGoalTitle() : "";
@@ -1192,6 +1196,16 @@ public class GameManager : MonoBehaviour
     public void OnLoanDecisionFinished()
     {
         IsLoanDecisionActive = false;
+
+        if (phaseBeforeLoan == GamePhase.Report)
+        {
+            phaseBeforeLoan = GamePhase.Simulation;
+            SetPhase(GamePhase.Report);
+            uiManager.ShowReportPanel(
+                CurrentLedger != null ? CurrentLedger.GetMonthlyBreakdown() : "");
+            return;
+        }
+
         SetPhase(GamePhase.Simulation);
 
         if (isMonthTickerPlaying)
@@ -1278,7 +1292,7 @@ public class GameManager : MonoBehaviour
     private void TriggerDebtSpiralEnding()
     {
         string message = "Three months running, your expenses have outrun your income. " +
-                         "This is the debt spiral — borrowing to survive creates the debt that makes survival harder. " +
+                         "This is the debt spiral. Borrowing to survive creates the debt that makes survival harder. " +
                          "The simulation ends here, but the lesson is the same in real life: the time to act is before the spiral starts.";
         mentorSpokeThisMonth = true;
 
@@ -1299,7 +1313,10 @@ public class GameManager : MonoBehaviour
     private void ApplyEmergencyLoan(float amount)
     {
         if (loanManager == null) return;
-        loanManager.ForceBorrow(loanManager.CanForceLoan ? amount : amount * 0.75f);
+        // ForceBorrow now waterfalls Mukando then Moneylender internally and caps to
+        // whatever's actually available from each, so there's no need to pre-shrink the
+        // request here the way the single-account version did.
+        loanManager.ForceBorrow(amount);
         forcedLoanCount++;
         PlayerDataManager.Instance.ModifyMomentum(-3f);
         Debug.Log($"[Loan] Emergency loan applied: ${amount:F0}");
@@ -1322,13 +1339,13 @@ public class GameManager : MonoBehaviour
         {
             new EventData.ChoiceOption
             {
-                label = $"Borrow ${coverAmount:F0} — just enough",
+                label = $"Borrow ${coverAmount:F0}, just enough",
                 resultDescription = $"Borrowed ${coverAmount:F0}. Covers the gap. Pay it back as fast as you can.",
                 moneyChange = 0f, momentumChange = 0f
             },
             new EventData.ChoiceOption
             {
-                label = $"Borrow ${bufferAmount:F0} — with a buffer",
+                label = $"Borrow ${bufferAmount:F0}, with a buffer",
                 resultDescription = $"Borrowed ${bufferAmount:F0}. More cash now, but more to repay later.",
                 moneyChange = 0f, momentumChange = 0f
             },
@@ -1342,7 +1359,7 @@ public class GameManager : MonoBehaviour
 
         uiManager.ShowChoicePopup(
             "You're short this month.",
-            "Your expenses came to more than you had. A money lender can cover you — but every dollar borrowed comes back with interest. You can also trim your household spending to lean on debt less.",
+            "Your expenses came to more than you had. A money lender can cover you, but every dollar borrowed comes back with interest. You can also trim your household spending to lean on debt less.",
             "Ndlovu",
             "Money Lender",
             choices,
@@ -1398,7 +1415,7 @@ public class GameManager : MonoBehaviour
         else
             mentorMemory_consecutiveLowSavingsMonths = 0;
 
-        // Family strain streak — advances regardless of whether the mentor speaks this
+        // Family strain streak - advances regardless of whether the mentor speaks this
         // month, same as the low-savings counter above.
         if (PlayerDataManager.Instance.FamilyMorale < -10f)
         {
@@ -1407,7 +1424,7 @@ public class GameManager : MonoBehaviour
         else
         {
             mentorMemory_familyStrainStreak = 0;
-            mentorMemory_familyStrainMentioned = false; // stretch over — a future stretch can fire again
+            mentorMemory_familyStrainMentioned = false; // stretch over - a future stretch can fire again
         }
 
         if (mentorSpokeThisMonth) return;
@@ -1416,15 +1433,15 @@ public class GameManager : MonoBehaviour
         // only opens real UI, so it skips in headless the same way CheckGoalMilestone does.
         // (This also fixes a pre-existing gap: the low-savings/18-month checks below had
         // no headless guard before, so stress tests were already popping real mentor
-        // popups — just less often than the goal milestones did.)
+        // popups - just less often than the goal milestones did.)
         if (IsHeadlessSimulation) return;
 
-        if (mentorMemory_consecutiveLowSavingsMonths >= 3)
+        if (mentorMemory_consecutiveLowSavingsMonths >= 3 && !mentorMemory_bufferLineShown)
         {
-            uiManager.ShowMentorMessage(
-                "Three months without a meaningful buffer. That's not bad luck — that's a gap in the plan. Even $20 set aside consistently changes what you can survive.");
+            uiManager.ShowMentorMessage(GetBufferLine(financeManager.CashOnHand));
             mentorSpokeThisMonth = true;
             mentorMemory_consecutiveLowSavingsMonths = 0;
+            mentorMemory_bufferLineShown = true;
             return;
         }
 
@@ -1432,7 +1449,7 @@ public class GameManager : MonoBehaviour
         {
             bool hasInsurance = insuranceManager.allPlans.Exists(p => p.isSubscribed && !p.isLapsed);
             string line = hasInsurance
-                ? "Eighteen months of premiums, no claims. That's not money wasted — that's the cost of protection you were fortunate not to need. Stay consistent."
+                ? "Eighteen months of premiums, no claims. That's not money wasted. That's the cost of protection you were fortunate not to need. Stay consistent."
                 : "Eighteen months in without insurance. Think about what a single serious event would cost you right now with nothing in place.";
             uiManager.ShowMentorMessage(line);
             mentorSpokeThisMonth = true;
@@ -1442,7 +1459,7 @@ public class GameManager : MonoBehaviour
         {
             mentorMemory_familyStrainMentioned = true;
             uiManager.ShowMentorMessage(
-                "The house has been heavy for a while now. Money troubles pass — how you treated people during them is what gets remembered.");
+                "The house has been heavy for a while now. Money troubles pass. How you treated people during them is what gets remembered.");
             mentorSpokeThisMonth = true;
         }
 
@@ -1452,7 +1469,7 @@ public class GameManager : MonoBehaviour
         {
             mentorMemory_communityHighMentioned = true;
             uiManager.ShowMentorMessage(
-                "People speak well of you around here. That goodwill is worth more than it looks — communities carry their own through the hard months.");
+                "People speak well of you around here. That goodwill is worth more than it looks. Communities carry their own through the hard months.");
             mentorSpokeThisMonth = true;
         }
 
@@ -1468,7 +1485,7 @@ public class GameManager : MonoBehaviour
         {
             mentorMemory_goalBuiltMentioned = true;
             uiManager.ShowMentorMessage(
-                "You didn't just save money — you turned it into something that works for you. That's the whole lesson, right there.");
+                "You didn't just save money. You turned it into something that works for you. That's the whole lesson, right there.");
             mentorSpokeThisMonth = true;
         }
 
@@ -1476,12 +1493,31 @@ public class GameManager : MonoBehaviour
         {
             mentorMemory_scarAckPending = false;
             uiManager.ShowMentorMessage(
-                "Things are back to normal at home — on paper. You'll notice it doesn't feel quite like before. Normal isn't the same as mended. Give more than you took, and it can be.");
+                "Things are back to normal at home, on paper. You'll notice it doesn't feel quite like before. Normal isn't the same as mended. Give more than you took, and it can be.");
             mentorSpokeThisMonth = true;
         }
 
         if (!mentorSpokeThisMonth)
             CheckGoalMilestone();
+    }
+
+    // Balance-keyed variant for the once-per-game low-savings-buffer line. Picking the
+    // wording off the live cash position (rather than one fixed string) is what keeps it
+    // from reading as tone-deaf when the player is already negative by the time it fires.
+    private string GetBufferLine(float cashOnHand)
+    {
+        if (cashOnHand < 0f)
+        {
+            return "Three months without a meaningful buffer, and you're already behind. Right now the goal isn't $20 in savings - it's stopping the gap from growing. Look at what's costing more than it's worth.";
+        }
+        else if (cashOnHand < 100f)
+        {
+            return "Three months without a meaningful buffer. You're sitting right at the edge - one surprise expense away from being in the hole. This is the moment to start closing that gap.";
+        }
+        else
+        {
+            return "Three months without a meaningful buffer. That's not bad luck. That's a gap in the plan. Even $20 set aside consistently changes what you can survive.";
+        }
     }
 
     // Fires once per milestone (25/50/75/100%) the first time savings cross it,
@@ -1499,13 +1535,13 @@ public class GameManager : MonoBehaviour
 
         if (IsHeadlessSimulation) return; // state above still advances; only the popup skips
 
-        if (GoalBuilt) return; // already built — the milestone nudge no longer applies
+        if (GoalBuilt) return; // already built - the milestone nudge no longer applies
 
         string title = GoalDefs.GetActiveGoalTitle();
         string line = milestone switch
         {
             25 => $"A quarter of the way to \"{title}\". Most people never start. You did.",
-            50 => "Halfway there. This is where it gets tempting to dip in — don't.",
+            50 => "Halfway there. This is where it gets tempting to dip in. Don't.",
             75 => "So close you can see it. Protect that fund like it's already yours.",
             100 => "The money is sitting there. A dream you don't act on is just a number in a book.",
             _ => null
@@ -1520,7 +1556,7 @@ public class GameManager : MonoBehaviour
     {
         if (CurrentLedger == null)
         {
-            Debug.LogWarning("[Ledger] FinalizeLedgerAndShowReport called with no active ledger — stale callback from a previous game. Ignoring.");
+            Debug.LogWarning("[Ledger] FinalizeLedgerAndShowReport called with no active ledger - stale callback from a previous game. Ignoring.");
             return;
         }
 
@@ -1721,7 +1757,7 @@ public class GameManager : MonoBehaviour
     }
 
     // HUD / report line, e.g. "Her own market stall: $240 / $500" or "...: built ✔".
-    // Empty string means no active goal to show (target not yet known — e.g.
+    // Empty string means no active goal to show (target not yet known - e.g.
     // Free Mode before setup confirm).
     public string GetGoalProgressLine()
     {
@@ -1730,7 +1766,7 @@ public class GameManager : MonoBehaviour
 
         string title = GoalDefs.GetActiveGoalTitle();
         if (GoalBuilt)
-            return $"{title}: built ✔";
+            return $"{title}: built";
 
         float current = financeManager != null ? financeManager.generalSavingsBalance : 0f;
         return $"{title}: {GameUtils.FormatMoney(current)} / {GameUtils.FormatMoney(target)}";
@@ -1744,13 +1780,13 @@ public class GameManager : MonoBehaviour
         {
             new EventData.ChoiceOption
             {
-                label = $"Build it now — spend {GameUtils.FormatMoney(target)}",
-                resultDescription = $"It's done. {title} is real now — not just a number in the savings book.",
+                label = $"Build it now, spend {GameUtils.FormatMoney(target)}",
+                resultDescription = $"It's done. {title} is real now, not just a number in the savings book.",
                 moneyChange = 0f, momentumChange = 0f
             },
             new EventData.ChoiceOption
             {
-                label = "Not yet — keep saving",
+                label = "Not yet, keep saving",
                 resultDescription = "The money stays where it is. The dream can wait a little longer.",
                 moneyChange = 0f, momentumChange = 0f
             }
@@ -1758,8 +1794,8 @@ public class GameManager : MonoBehaviour
 
         return new ResolvedEvent
         {
-            title = "You've saved enough — build it now?",
-            description = $"Your savings have reached {GameUtils.FormatMoney(target)} — enough for {title}. " +
+            title = "You've saved enough, build it now?",
+            description = $"Your savings have reached {GameUtils.FormatMoney(target)}, enough for {title}. " +
                            "Building now means it starts earning for you sooner. Waiting costs nothing but time.",
             senderName = "Yourself",
             senderRelation = "Savings goal",
@@ -1789,7 +1825,7 @@ public class GameManager : MonoBehaviour
         else
         {
             goalMonthsSinceOffer = 0;
-            Debug.Log("[Goal] Keep saving — re-offered in 2 months if still above target.");
+            Debug.Log("[Goal] Keep saving - re-offered in 2 months if still above target.");
         }
     }
 
@@ -1861,7 +1897,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // Chido's family — spouse Farai, two kids in school.
+    // Chido's family - spouse Farai, two kids in school.
     private string GetFormalLine(ExpenseCategory cat, int tier)
     {
         switch (cat)
@@ -1886,7 +1922,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // Sekuru Moyo's family — grandson Tapiwa.
+    // Sekuru Moyo's family - grandson Tapiwa.
     private string GetFarmerLine(ExpenseCategory cat, int tier)
     {
         switch (cat)
@@ -1925,7 +1961,7 @@ public class GameManager : MonoBehaviour
         switch (tier)
         {
             case 0: return $"The family has noticed there's less for {thing} lately. They're asking, gently, if things can go back to how they were.";
-            case 1: return $"It's come up again — {thing} has been tight for a while now, and they're really hoping you can restore it.";
+            case 1: return $"It's come up again. {thing} has been tight for a while now, and they're really hoping you can restore it.";
             default: return $"There's tension at home. The cut to {thing} has worn on everyone, and they don't understand why it hasn't been fixed.";
         }
     }
@@ -1957,7 +1993,7 @@ public class GameManager : MonoBehaviour
 
         PlayerDataManager.Instance.ModifyFamilyMorale(recovered);
 
-        // Fully restored but carries a scar — queue the mentor's acknowledgement for
+        // Fully restored but carries a scar - queue the mentor's acknowledgement for
         // next month's CheckMentorMemory pass rather than interrupting this popup flow.
         if (state.cutAmount <= 0.01f && state.scar > 0f)
             mentorMemory_scarAckPending = true;
@@ -2044,7 +2080,7 @@ public class GameManager : MonoBehaviour
         }
         else if (adultsRemaining == 0)
         {
-            Debug.Log("[Death] No adults remain — household on income floor, no recovery.");
+            Debug.Log("[Death] No adults remain - household on income floor, no recovery.");
         }
     }
 
@@ -2063,6 +2099,28 @@ public class GameManager : MonoBehaviour
             reductionPercent = percent,
             remainingMonths = months <= 0 ? -1 : months
         });
+
+        if (percent < 0f)
+        {
+            bool hasAccidentCover =
+                insuranceManager != null &&
+                (insuranceManager.CanClaimForEvent(InsuranceManager.InsuranceType.PersonalAccident) ||
+                 insuranceManager.CanClaimForEvent(InsuranceManager.InsuranceType.Health));
+
+            if (hasAccidentCover)
+            {
+                float lostIncomeEstimate = financeManager.currentIncome * Mathf.Abs(percent) / 100f;
+                float benefitAmount = lostIncomeEstimate * 0.5f;
+
+                activeIncomeBenefits.Add(new IncomeBenefit
+                {
+                    amount = benefitAmount,
+                    remainingMonths = months <= 0 ? -1 : months
+                });
+
+                Debug.Log($"[Insurance] Accident/Health cover registered income benefit: ${benefitAmount:F0}/month for {(months <= 0 ? "permanent" : months + " months")}");
+            }
+        }
 
         Debug.Log(
         $"[Income] Applied income change: {percent:+0;-0}% for " +
@@ -2143,6 +2201,29 @@ public class GameManager : MonoBehaviour
 
             if (activeIncomeEffects[i].remainingMonths <= 0)
                 activeIncomeEffects.RemoveAt(i);
+        }
+    }
+
+    private void UpdateIncomeBenefits()
+    {
+        for (int i = activeIncomeBenefits.Count - 1; i >= 0; i--)
+        {
+            if (activeIncomeBenefits[i].remainingMonths == -1)
+                continue;
+
+            activeIncomeBenefits[i].remainingMonths--;
+
+            if (activeIncomeBenefits[i].remainingMonths <= 0)
+                activeIncomeBenefits.RemoveAt(i);
+        }
+    }
+
+    public void PayActiveIncomeBenefits()
+    {
+        foreach (var benefit in activeIncomeBenefits)
+        {
+            if (benefit.amount > 0.01f)
+                ApplyMoneyChange(FinancialEntry.EntryType.InsurancePayout, "Accident cover benefit", benefit.amount, true);
         }
     }
 
@@ -2425,13 +2506,13 @@ public class GameManager : MonoBehaviour
 
             string label = ForecastCategoryLabel(article.category);
             if (hit != null && hit.insurancePayout > 0.5f)
-                lines.Add($"The warned {label} struck — your cover paid ${hit.insurancePayout:F0}. You saw it coming, and you were ready.");
+                lines.Add($"The warned {label} struck. Your cover paid ${hit.insurancePayout:F0}. You saw it coming, and you were ready.");
             else if (hit != null)
-                lines.Add($"The warned {label} struck with no cover in place — ${Mathf.Abs(hit.moneyChange):F0} out of pocket.");
+                lines.Add($"The warned {label} struck with no cover in place, ${Mathf.Abs(hit.moneyChange):F0} out of pocket.");
             else if (CurrentLedger != null && CurrentLedger.TotalInsurancePremiums > 0.5f)
                 lines.Add($"The warned {label} never came. Premiums buy peace of mind, not refunds.");
             else
-                lines.Add($"The warned {label} never came — this time.");
+                lines.Add($"The warned {label} never came, this time.");
         }
 
         // Hits are the story; misses are the footnote. Cap at two lines.
@@ -2480,16 +2561,16 @@ public class GameManager : MonoBehaviour
             text += $"\n{ev.expenseCategoryName} cost: {sign}${Mathf.Abs(ev.expenseFlatChange):F0} ({duration})";
         }
 
-        // Settle the forecast bet on the spot — this is the payoff moment.
+        // Settle the forecast bet on the spot - this is the payoff moment.
         if (!ev.isFamilyPrompt && (ev.moneyChange < -0.5f || ev.insurancePayout > 0.5f))
         {
             bool warned = WasPoolWarned(ev.pool);
             if (warned && ev.insurancePayout > 0.5f)
-                text += "\n\n<i>The news warned of this — and your cover was ready. That's what planning looks like.</i>";
+                text += "\n\n<i>The news warned of this, and your cover was ready. That's what planning looks like.</i>";
             else if (warned)
                 text += "\n\n<i>The news warned of this one. The forecast is worth a second look next month.</i>";
             else if (ev.insurancePayout > 0.5f)
-                text += "\n\n<i>No warning this time — but your cover caught it anyway.</i>";
+                text += "\n\n<i>No warning this time, but your cover caught it anyway.</i>";
         }
 
         return text;
@@ -2546,7 +2627,7 @@ public class GameManager : MonoBehaviour
                 );
             };
 
-            // Same wrapping pattern as OnFirstEvent — tutorial line closes, then the
+            // Same wrapping pattern as OnFirstEvent - tutorial line closes, then the
             // actual popup shows. Seen()-gated internally so this is a no-op after the first time.
             if (TutorialManager.Instance != null)
                 TutorialManager.Instance.OnFirstFamilyPrompt(showFamilyPromptPopup);
@@ -2630,13 +2711,19 @@ public class GameManager : MonoBehaviour
             Debug.Log("[Insurance] Burial Society unlocked via Funeral Society Invitation.");
         }
 
+        if (ev.title == "Mukando Invitation" && choiceIndex == 0)
+        {
+            loanManager.JoinMukando();
+            Debug.Log("[Loan] Mukando joined via Mukando Invitation.");
+        }
+
         if (choice.moneyChange != 0f)
         {
             bool isCredit = choice.moneyChange > 0f;
             ApplyMoneyChange(
                 isCredit ? FinancialEntry.EntryType.EventReward
                          : FinancialEntry.EntryType.EventLoss,
-                $"{ev.title} — {choice.label}",
+                $"{ev.title}: {choice.label}",
                 Mathf.Abs(choice.moneyChange),
                 isCredit
             );
@@ -2687,6 +2774,13 @@ public class GameManager : MonoBehaviour
 
     private void ShowInsuranceClaimChoice(ResolvedEvent ev)
     {
+        if (ev.intendedLoss < 20f)
+        {
+            ApplyClaimChoice(ev, true);
+            ShowEvent(ev);
+            return;
+        }
+
         string planName = insuranceManager.GetPlan(ev.type)?.planName ?? ev.type.ToString();
         float rawLoss = ev.intendedLoss;
         float payout = ev.claimPayout;
@@ -2697,14 +2791,14 @@ public class GameManager : MonoBehaviour
         new EventData.ChoiceOption
         {
             label = deductible > 0.5f
-                ? $"Claim — pay ${deductible:F0} excess, recover ${payout:F0}"
-                : $"Claim — recover ${payout:F0}",
+                ? $"Claim: pay ${deductible:F0} excess, recover ${payout:F0}"
+                : $"Claim: recover ${payout:F0}",
             resultDescription = $"Claim approved. {planName} covers ${payout:F0} of this loss.",
             moneyChange = 0f, momentumChange = 0f
         },
         new EventData.ChoiceOption
         {
-            label = $"Cover it myself — ${rawLoss:F0} total",
+            label = $"Cover it myself: ${rawLoss:F0} total",
             resultDescription = "No claim made. The full loss comes out of your pocket.",
             moneyChange = 0f, momentumChange = 0f
         }
@@ -2770,7 +2864,7 @@ public class GameManager : MonoBehaviour
             ev.moneyChange = -cappedNetLoss;
             ev.insurancePayout = ev.claimPayout;
             mentorMemory_hasEverClaimed = true;
-            Debug.Log($"[Claim] Player claimed — gross loss recorded: ${grossLossToRecord:F0}, payout: ${ev.claimPayout:F0}, net cash: ${-cappedNetLoss:F0}");
+            Debug.Log($"[Claim] Player claimed - gross loss recorded: ${grossLossToRecord:F0}, payout: ${ev.claimPayout:F0}, net cash: ${-cappedNetLoss:F0}");
         }
         else
         {
@@ -2780,7 +2874,7 @@ public class GameManager : MonoBehaviour
             totalRawEventDamage += cappedLoss;
             ev.moneyChange = -cappedLoss;
             ev.insurancePayout = 0f;
-            Debug.Log($"[Claim] Player declined — full loss: ${cappedLoss:F0}");
+            Debug.Log($"[Claim] Player declined - full loss: ${cappedLoss:F0}");
         }
     }
 
@@ -2837,12 +2931,6 @@ public class GameManager : MonoBehaviour
         };
     }
 
-    // Called from the profile-select "Welcome back" popup's Continue choice. Takes the
-    // already-loaded save (the caller peeked at it once to build the "Continue from
-    // Month N?" label — don't make this reload the file a second time). A resumed
-    // game never passes through profile select or setup — this goes straight to
-    // LoadFromSave, which is self-sufficient now that the setup block is persisted
-    // (see A3.5) and ends with StartNewMonth().
     public void ContinueFromSave(GameSaveData save)
     {
         if (save == null)
@@ -2855,12 +2943,6 @@ public class GameManager : MonoBehaviour
 
     public void LoadFromSave(GameSaveData save)
     {
-        // Setup block restored FIRST, before everything else below. Resume never calls
-        // ApplyProfile/ConfirmAndStart (that's the whole point — no more re-running
-        // profile side effects on a resumed game), so these plain fields on
-        // setupData/financeManager would otherwise sit at their just-launched defaults.
-        // The real cash/savings restores further down intentionally happen AFTER this
-        // block, so they win if anything here and those ever disagree.
         if (setupData != null)
         {
             setupData.adults = save.setupAdults;
@@ -2900,20 +2982,17 @@ public class GameManager : MonoBehaviour
 
             // RollMonthlyIncome() re-rolls currentIncome fresh every month from
             // minIncome/maxIncome/isIncomeStable, so currentIncome itself doesn't need
-            // restoring — but schoolFeesPerTerm does, since nothing else derives it
+            // restoring - but schoolFeesPerTerm does, since nothing else derives it
             // without re-running InitializeFromSetup (which this resume path avoids).
             financeManager.schoolFeesPerTerm = save.setupHasSchoolFees ? save.setupSchoolFeesAmount : 0f;
         }
 
         if (loanManager != null)
         {
-            loanManager.loanBalance = save.loanBalance;
-            loanManager.borrowingPower = save.borrowingPower;
-            loanManager.totalContributed = save.totalContributed;
-            loanManager.monthsContributed = save.monthsContributed;
-            loanManager.SetRepaymentRate(save.repaymentRate);
-            loanManager.missedPayments = save.missedPayments;
-            loanManager.onTimePayments = save.onTimePayments;
+            loanManager.RestoreFromSave(
+                save.moneylender, save.mukando,
+                save.loanUnlocked, save.mukandoJoined,
+                save.mukandoConsecutiveMisses, save.mukandoRecoveryMonthsNeeded);
         }
 
         if (save.insurancePlans != null)
@@ -2965,7 +3044,7 @@ public class GameManager : MonoBehaviour
         PlayerDataManager.Instance.SetFamilyMorale(save.familyMorale);
         PlayerDataManager.Instance.SetSocialMorale(save.socialMorale);
         PlayerDataManager.Instance.SetOriginalAdults(save.originalAdults);
-        // Current household size, not just original — without this a resumed game
+        // Current household size, not just original - without this a resumed game
         // resurrects any adults/children lost to events before the save point.
         PlayerDataManager.Instance.SetCurrentHousehold(save.currentAdults, save.currentChildren);
 
@@ -2995,6 +3074,7 @@ public class GameManager : MonoBehaviour
         mentorMemory_communityLowMentioned = save.mentorMemory_communityLowMentioned;
         mentorMemory_goalBuiltMentioned = save.mentorMemory_goalBuiltMentioned;
         mentorMemory_scarAckPending = save.mentorMemory_scarAckPending;
+        mentorMemory_bufferLineShown = save.mentorMemory_bufferLineShown;
 
         categoryStates.Clear();
         if (save.categoryStates != null)
@@ -3002,9 +3082,16 @@ public class GameManager : MonoBehaviour
                 if (s != null)
                     categoryStates[s.category] = s;
 
-        // Bug fix: these were saved (see SaveSystem.SaveGame) but never restored here —
-        // reloading mid income-effect (e.g. an injury's -25% x3mo) silently dropped it.
         activeIncomeEffects.Clear();
+
+        if (save.incomeBenefits != null)
+            foreach (var b in save.incomeBenefits)
+                activeIncomeBenefits.Add(new IncomeBenefit
+                {
+                    amount = b.amount,
+                    remainingMonths = b.remainingMonths
+                });
+        activeIncomeBenefits.Clear();
         if (save.incomeEffects != null)
             foreach (var e in save.incomeEffects)
                 activeIncomeEffects.Add(new IncomeEffect
@@ -3041,6 +3128,8 @@ public class GameManager : MonoBehaviour
         eventManager?.ResetAll();
         uiManager.UpdateMoneyText(financeManager.CashOnHand);
         loanManager?.ResetAll();
+        loanManager?.AnnounceLoanSystem();
+
         insuranceManager.ResetAll();
         PlayerDataManager.Instance?.ResetPlayerData();
         activeExpenseEffects.Clear();
@@ -3070,6 +3159,15 @@ public class GameManager : MonoBehaviour
 
         currentMonth = 1;
 
+        // Mukando Invitation is scripted-only now (excluded from the random pool in
+        // EventManager), so every reset path that clears pendingEvents must reschedule
+        // it or the player can never be offered Mukando in that playthrough.
+        var mukandoEvent = eventManager?.EventDatabase?.events?.Find(e => e.eventName == "Mukando Invitation");
+        if (mukandoEvent != null)
+            eventManager.ScheduleFollowUp(mukandoEvent, 2);
+        else
+            Debug.LogWarning("[Loan] Mukando Invitation event not found in EventDatabase - opt-in prompt will not fire.");
+
         yearIncome = 0f;
         yearExpenses = 0f;
         yearPremiums = 0f;
@@ -3084,6 +3182,7 @@ public class GameManager : MonoBehaviour
         skipHistory.Clear();
         forcedLoanHistory.Clear();
         activeIncomeEffects.Clear();
+        activeIncomeBenefits.Clear();
 
         mentorSpokeThisMonth = false;
         loanIntroShown = false;
@@ -3099,6 +3198,7 @@ public class GameManager : MonoBehaviour
         mentorMemory_communityLowMentioned = false;
         mentorMemory_goalBuiltMentioned = false;
         mentorMemory_scarAckPending = false;
+        mentorMemory_bufferLineShown = false;
         burialSocietyUnlocked = false;
         isMonthTickerPlaying = false;
         LastMonthForecastReview = "";
@@ -3143,6 +3243,17 @@ public class GameManager : MonoBehaviour
         loanManager?.ResetAll();
         insuranceManager?.ResetAll();
         TutorialManager.Instance?.ResetRunState();
+
+        // Ndlovu (Moneylender) is available from month 1 now - reveal the loan button
+        // and one-time intro right after tutorial state is cleared, not gated behind
+        // months of Mukando saving the way the old single-account system was.
+        loanManager?.AnnounceLoanSystem();
+
+        var mukandoEvent = eventManager?.EventDatabase?.events?.Find(e => e.eventName == "Mukando Invitation");
+        if (mukandoEvent != null)
+            eventManager.ScheduleFollowUp(mukandoEvent, 2);
+        else
+            Debug.LogWarning("[Loan] Mukando Invitation event not found in EventDatabase - opt-in prompt will not fire.");
     }
 
     public bool HasMonthResolutionStarted()
@@ -3152,7 +3263,7 @@ public class GameManager : MonoBehaviour
 
     // Free Mode has no fixed goal def (defs are per guided profile), so the
     // pool pick + target are rolled once income is known. Call this at setup
-    // confirm, after setupData.minIncome/maxIncome are set — guided profiles
+    // confirm, after setupData.minIncome/maxIncome are set - guided profiles
     // no-op since ApplyProfile already gives them a static GoalDefs entry.
     public void RollFreeGoalIfNeeded()
     {
@@ -3411,7 +3522,7 @@ public class GameManager : MonoBehaviour
         uiManager.SwitchPanel(UIManager.UIPanelState.None);
         uiManager.UpdateMoneyText(financeManager.CashOnHand);
 
-        Debug.Log($"✅ {testName} COMPLETE — " +
+        Debug.Log($"✅ {testName} COMPLETE - " +
                   $"Final Cash: ${financeManager.CashOnHand:F0} | " +
                   $"Income: ${yearIncome:F0} | " +
                   $"Expenses: ${yearExpenses:F0} | " +
@@ -3448,6 +3559,7 @@ public class GameManager : MonoBehaviour
         pendingEvents.Clear();
         monthlyEvents.Clear();
         activeIncomeEffects.Clear();
+        activeIncomeBenefits.Clear();
         activeExpenseEffects.Clear();
         categoryStates.Clear();
         savingsStreak = 0;
@@ -3465,6 +3577,7 @@ public class GameManager : MonoBehaviour
         mentorMemory_communityLowMentioned = false;
         mentorMemory_goalBuiltMentioned = false;
         mentorMemory_scarAckPending = false;
+        mentorMemory_bufferLineShown = false;
         burialSocietyUnlocked = false;
         isMonthTickerPlaying = false;
         LastMonthForecastReview = "";
@@ -3483,7 +3596,7 @@ public class GameManager : MonoBehaviour
         yearEventLosses = 0f;
 
         // Without this, GoalBuilt/goalMilestoneReached etc. leak into the next
-        // stress test run in the same play session — e.g. running Informal then
+        // stress test run in the same play session - e.g. running Informal then
         // Formal back-to-back would have Formal start with GoalBuilt already true.
         GoalBuilt = false;
         goalReachedOnce = false;
@@ -3515,10 +3628,10 @@ public class GameManager : MonoBehaviour
         ApplyProfile(profile);
 
         float savedSavings = financeManager.generalSavingsMonthly;
-        // Informal/Formal start at $0/month savings by design (see ApplyProfile) — real
+        // Informal/Formal start at $0/month savings by design (see ApplyProfile) - real
         // gameplay, not a bug. But that means their goal ($500 / $700) would never be
         // reached in a headless run, silently skipping every goal code path this test is
-        // meant to cover. Force a modest contribution here for test purposes only —
+        // meant to cover. Force a modest contribution here for test purposes only -
         // doesn't touch the real profile defaults players see.
         if (savedSavings <= 0f)
             savedSavings = 40f;
@@ -3528,7 +3641,7 @@ public class GameManager : MonoBehaviour
 
         RunHeadlessLoop(testName);
 
-        Debug.Log($"[Goal] {testName} result — Built:{GoalBuilt} ReachedOnce:{HasGoalBeenReached} " +
+        Debug.Log($"[Goal] {testName} result - Built:{GoalBuilt} ReachedOnce:{HasGoalBeenReached} " +
                   $"Milestone:{goalMilestoneReached} BuiltMonth:{goalBuiltMonth} " +
                   $"FinalSavings:${financeManager.generalSavingsBalance:F0} Target:${GoalDefs.GetActiveGoalTarget():F0}");
     }
@@ -3565,7 +3678,7 @@ public class GameManager : MonoBehaviour
     }
 
     // ============================================================
-    // TEST Free Mode Goal — none of the profile/generic stress tests above
+    // TEST Free Mode Goal - none of the profile/generic stress tests above
     // roll a Free Mode goal (they all bypass SetupPanelController.ConfirmAndStart,
     // the only place RollFreeGoalIfNeeded is normally called). These force each
     // pool entry directly so all three get headless coverage.
@@ -3591,18 +3704,18 @@ public class GameManager : MonoBehaviour
         financeManager.utilities = 30f;
 
         // Bypasses RollFreeGoalIfNeeded's randomness so each pool entry gets
-        // deterministic coverage — same math the real roll uses.
+        // deterministic coverage - same math the real roll uses.
         freeGoalIndex = forcedPoolIndex;
         float avgIncome = (setupData.minIncome + setupData.maxIncome) / 2f;
         freeGoalTarget = Mathf.Max(300f, Mathf.Round(avgIncome * 1.5f / 50f) * 50f);
         Debug.Log($"[Goal] Forced Free Mode goal: {GoalDefs.FreeModePool[forcedPoolIndex].title} target ${freeGoalTarget:F0}");
 
         financeManager.InitializeFromSetup();
-        financeManager.generalSavingsMonthly = 40f; // see RunStressTestUsingProfile — same test-only override
+        financeManager.generalSavingsMonthly = 40f; // see RunStressTestUsingProfile - same test-only override
 
         RunHeadlessLoop(testName);
 
-        Debug.Log($"[Goal] {testName} result — Built:{GoalBuilt} ReachedOnce:{HasGoalBeenReached} " +
+        Debug.Log($"[Goal] {testName} result - Built:{GoalBuilt} ReachedOnce:{HasGoalBeenReached} " +
                   $"Milestone:{goalMilestoneReached} BuiltMonth:{goalBuiltMonth} " +
                   $"FinalSavings:${financeManager.generalSavingsBalance:F0} Target:${freeGoalTarget:F0}");
     }
@@ -3626,7 +3739,7 @@ public class GameManager : MonoBehaviour
     }
 
     // ============================================================
-    // TEST 1 — DEFAULT (original middle-class baseline, now fixed)
+    // TEST 1 - DEFAULT (original middle-class baseline, now fixed)
     // ============================================================
     [ContextMenu("DEBUG_StressTest_24Months")]
     public void DEBUG_StressTest_24Months()
@@ -3656,7 +3769,7 @@ public class GameManager : MonoBehaviour
     }
 
     // ============================================================
-    // TEST 2 — ZIMBABWE LOW CLASS
+    // TEST 2 - ZIMBABWE LOW CLASS
     // ============================================================
     [ContextMenu("DEBUG_StressTest_ZW_LowClass")]
     public void DEBUG_StressTest_ZW_LowClass()
@@ -3687,7 +3800,7 @@ public class GameManager : MonoBehaviour
     }
 
     // ============================================================
-    // TEST 3 — ZIMBABWE MIDDLE CLASS
+    // TEST 3 - ZIMBABWE MIDDLE CLASS
     // ============================================================
     [ContextMenu("DEBUG_StressTest_ZW_MiddleClass")]
     public void DEBUG_StressTest_ZW_MiddleClass()
@@ -3723,7 +3836,7 @@ public class GameManager : MonoBehaviour
     }
 
     // ============================================================
-    // TEST 4 — ZIMBABWE HIGH CLASS
+    // TEST 4 - ZIMBABWE HIGH CLASS
     // ============================================================
     [ContextMenu("DEBUG_StressTest_ZW_HighClass")]
     public void DEBUG_StressTest_ZW_HighClass()
@@ -3764,7 +3877,7 @@ public class GameManager : MonoBehaviour
     }
 
     // ============================================================
-    // TEST 5 — BUDGET SYSTEMS
+    // TEST 5 - BUDGET SYSTEMS
     // ============================================================
     [ContextMenu("DEBUG_TestBudgetSystems")]
     public void DEBUG_TestBudgetSystems()
@@ -3860,10 +3973,10 @@ public class GameManager : MonoBehaviour
         var uBefore = GetCategoryState(ExpenseCategory.Utilities);
         float moraleBefore = pdm.FamilyMorale;
 
-        Debug.Log($"[SL] BEFORE — morale={moraleBefore:F2}");
-        Debug.Log($"[SL] BEFORE — Groceries scar={gBefore.scar:F2} cut={gBefore.cutAmount:F0}");
-        Debug.Log($"[SL] BEFORE — Transport cut={tBefore.cutAmount:F0} timesRaised={tBefore.timesRaised} origHit={tBefore.originalCutHit:F1}");
-        Debug.Log($"[SL] BEFORE — Utilities boost={uBefore.boostAmount:F0} cycle={uBefore.boostMonthsInCycle}");
+        Debug.Log($"[SL] BEFORE - morale={moraleBefore:F2}");
+        Debug.Log($"[SL] BEFORE - Groceries scar={gBefore.scar:F2} cut={gBefore.cutAmount:F0}");
+        Debug.Log($"[SL] BEFORE - Transport cut={tBefore.cutAmount:F0} timesRaised={tBefore.timesRaised} origHit={tBefore.originalCutHit:F1}");
+        Debug.Log($"[SL] BEFORE - Utilities boost={uBefore.boostAmount:F0} cycle={uBefore.boostMonthsInCycle}");
 
         SaveSystem.SaveGame(this);
         categoryStates.Clear();
@@ -3878,9 +3991,9 @@ public class GameManager : MonoBehaviour
         var tAfter = GetCategoryState(ExpenseCategory.Transport);
         var uAfter = GetCategoryState(ExpenseCategory.Utilities);
 
-        Debug.Log($"[SL] AFTER — Groceries scar={gAfter.scar:F2} cut={gAfter.cutAmount:F0} (expect scar {gBefore.scar:F2}, cut {gBefore.cutAmount:F0})");
-        Debug.Log($"[SL] AFTER — Transport cut={tAfter.cutAmount:F0} timesRaised={tAfter.timesRaised} origHit={tAfter.originalCutHit:F1} (expect cut {tBefore.cutAmount:F0}, raised {tBefore.timesRaised}, hit {tBefore.originalCutHit:F1})");
-        Debug.Log($"[SL] AFTER — Utilities boost={uAfter.boostAmount:F0} cycle={uAfter.boostMonthsInCycle} (expect boost {uBefore.boostAmount:F0}, cycle {uBefore.boostMonthsInCycle})");
+        Debug.Log($"[SL] AFTER - Groceries scar={gAfter.scar:F2} cut={gAfter.cutAmount:F0} (expect scar {gBefore.scar:F2}, cut {gBefore.cutAmount:F0})");
+        Debug.Log($"[SL] AFTER - Transport cut={tAfter.cutAmount:F0} timesRaised={tAfter.timesRaised} origHit={tAfter.originalCutHit:F1} (expect cut {tBefore.cutAmount:F0}, raised {tBefore.timesRaised}, hit {tBefore.originalCutHit:F1})");
+        Debug.Log($"[SL] AFTER - Utilities boost={uAfter.boostAmount:F0} cycle={uAfter.boostMonthsInCycle} (expect boost {uBefore.boostAmount:F0}, cycle {uBefore.boostMonthsInCycle})");
 
         bool pass =
             Mathf.Approximately(gAfter.scar, gBefore.scar) &&
@@ -3889,7 +4002,7 @@ public class GameManager : MonoBehaviour
             Mathf.Approximately(tAfter.originalCutHit, tBefore.originalCutHit) &&
             Mathf.Approximately(uAfter.boostAmount, uBefore.boostAmount);
 
-        Debug.Log(pass ? "[SL] ✅ PASS — all budget state round-tripped." : "[SL] ❌ FAIL — state mismatch after load.");
+        Debug.Log(pass ? "[SL] ✅ PASS - all budget state round-tripped." : "[SL] ❌ FAIL - state mismatch after load.");
 
         SaveSystem.DeleteSave(CurrentProfileType, IsGuidedMode);
         IsHeadlessSimulation = false;
@@ -3903,10 +4016,10 @@ public class GameManager : MonoBehaviour
 
         ApplyProfile(ProfileType.Informal); // target $500, +8% income benefit when built
 
-        // Fake a mid-goal state without running the full 24-month loop —
+        // Fake a mid-goal state without running the full 24-month loop -
         // same "poke fields directly, save, clear, reload" shape as DEBUG_TestSaveLoadBudget.
         currentMonth = 7;
-        financeManager.generalSavingsBalance = 260f; // 52% of $500 — past the 50% milestone
+        financeManager.generalSavingsBalance = 260f; // 52% of $500 - past the 50% milestone
         goalReachedOnce = true;
         goalMonthsSinceOffer = 1;
         goalMilestoneReached = 50;
@@ -3917,7 +4030,7 @@ public class GameManager : MonoBehaviour
         int milestoneBefore = goalMilestoneReached;
         float balanceBefore = financeManager.generalSavingsBalance;
 
-        Debug.Log($"[SL-Goal] BEFORE — Built:{builtBefore} Reached:{reachedBefore} Offer:{offerBefore} " +
+        Debug.Log($"[SL-Goal] BEFORE - Built:{builtBefore} Reached:{reachedBefore} Offer:{offerBefore} " +
                   $"Milestone:{milestoneBefore} Savings:${balanceBefore:F0}");
 
         SaveSystem.SaveGame(this);
@@ -3945,7 +4058,7 @@ public class GameManager : MonoBehaviour
         goalBuiltMonth = save.goalBuiltMonth;
         financeManager.generalSavingsBalance = save.generalSavingsBalance;
 
-        Debug.Log($"[SL-Goal] AFTER — Built:{GoalBuilt} Reached:{goalReachedOnce} Offer:{goalMonthsSinceOffer} " +
+        Debug.Log($"[SL-Goal] AFTER - Built:{GoalBuilt} Reached:{goalReachedOnce} Offer:{goalMonthsSinceOffer} " +
                   $"Milestone:{goalMilestoneReached} Savings:${financeManager.generalSavingsBalance:F0} " +
                   $"(expect Built:{builtBefore} Reached:{reachedBefore} Offer:{offerBefore} Milestone:{milestoneBefore} Savings:${balanceBefore:F0})");
 
@@ -3956,7 +4069,7 @@ public class GameManager : MonoBehaviour
             goalMilestoneReached == milestoneBefore &&
             Mathf.Approximately(financeManager.generalSavingsBalance, balanceBefore);
 
-        Debug.Log(pass ? "[SL-Goal] ✅ PASS — goal state round-tripped." : "[SL-Goal] ❌ FAIL — state mismatch after load.");
+        Debug.Log(pass ? "[SL-Goal] ✅ PASS - goal state round-tripped." : "[SL-Goal] ❌ FAIL - state mismatch after load.");
 
         SaveSystem.DeleteSave(CurrentProfileType, IsGuidedMode);
         IsHeadlessSimulation = false;
@@ -3980,7 +4093,7 @@ public class GameManager : MonoBehaviour
 
         var prompts = BuildFamilyPrompts();
         Debug.Log($"[FQ] prompts built = {prompts.Count} (expect >=1)");
-        if (prompts.Count == 0) { Debug.Log("[FQ] (RNG didn't fire — re-run; chance is 0.90)"); IsHeadlessSimulation = false; return; }
+        if (prompts.Count == 0) { Debug.Log("[FQ] (RNG didn't fire - re-run; chance is 0.90)"); IsHeadlessSimulation = false; return; }
 
         var p = prompts[0];
         Debug.Log($"[FQ] isFamilyPrompt={p.isFamilyPrompt} cat={p.familyPromptCategory} choices={p.choices.Count} (expect True, Transport, 3)");
@@ -4028,7 +4141,7 @@ public class GameManager : MonoBehaviour
         // not 485. Only inflation exceeding the boost would spill over.
         ApplyExpenseEffect(ExpenseCategory.Groceries, 25f, 2);
         var d = GetBudgetBarState(180, 50, 40);
-        Debug.Log($"[BB] D current={d.current:F0} above={d.aboveBase:F0} (expect current 460, above 40 — event absorbed, no spillover)");
+        Debug.Log($"[BB] D current={d.current:F0} above={d.aboveBase:F0} (expect current 460, above 40 - event absorbed, no spillover)");
 
         var e = GetBudgetBarState(300, 50, 40);
         Debug.Log($"[BB] E current={e.current:F0} cap={e.cap:F0} atCap={e.atCap} (expect current>cap, atCap True)");

@@ -39,8 +39,7 @@ MonoBehaviour:
     borrowingPowerChange: 0
     grantsAsset: 
   - label: Explain that you can't host right now
-    resultDescription: "I'm so sorry \u2014 this month is genuinely impossible for
-      me."
+    resultDescription: I'm so sorry, this month is genuinely impossible for me.
     moneyChange: 0
     momentumChange: 1
     moraleChange: -2
@@ -51,8 +50,8 @@ MonoBehaviour:
     borrowingPowerChange: 0
     grantsAsset: 
   eventName: Unexpected Relatives Visiting
-  description: "Ah, we're here! The children and I will be staying with you this
-    week \u2014 hope that's alright."
+  description: Ah, we're here! The children and I will be staying with you this week,
+    hope that's alright.
   financialLesson: 
   category: 0
   pool: 6

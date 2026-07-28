@@ -54,12 +54,13 @@ public class ExpensesPanelController : MonoBehaviour
     public TMP_Text expensesTotalText;
 
     [Header("Budget Bar")]
-    public GameObject budgetBarContainer; // parent of the whole budget-bar visual — shown/hidden by Enter/ExitAdjustmentMode
+    public GameObject budgetBarContainer; // parent of the whole budget-bar visual - shown/hidden by Enter/ExitAdjustmentMode
     public RectTransform budgetBarFill;
     public RectTransform belowBaseSegment;
     public RectTransform aboveBaseSegment;
     public RectTransform baseLineMarker;
     public Button confirmAdjustmentButton;
+    public TMP_Text budgetCapWarningText;
 
     [Header("Per-Category Baseline Ticks (optional)")]
     public RectTransform groceriesBaselineTick;
@@ -78,10 +79,13 @@ public class ExpensesPanelController : MonoBehaviour
         float range = slider.maxValue - slider.minValue;
         if (range <= 0f) return;
 
+        // Anchor-fraction positioned, same as baseLineMarker in RefreshBudgetBar - no
+        // rect.width read, so this can't drift off the track at any resolution.
         float fraction = Mathf.Clamp01((baseline - slider.minValue) / range);
-        float trackWidth = track.rect.width;
 
-        tick.anchoredPosition = new Vector2(fraction * trackWidth, tick.anchoredPosition.y);
+        tick.anchorMin = new Vector2(fraction, tick.anchorMin.y);
+        tick.anchorMax = new Vector2(fraction, tick.anchorMax.y);
+        tick.anchoredPosition = new Vector2(0f, tick.anchoredPosition.y);
     }
 
     private const float MIN_HOUSE_COST = 15000f;
@@ -194,7 +198,7 @@ public class ExpensesPanelController : MonoBehaviour
             float hi = setup.maxIncome > 0 ? setup.maxIncome : lo;
             incomeRangeText.text = setup.isIncomeStable
                 ? $"Your income is about ${lo:F0} / month"
-                : $"Your income is usually ${lo:F0} � ${hi:F0} / month";
+                : $"Your income is usually ${lo:F0} to ${hi:F0} / month";
         }
 
         if (expensesTotalText != null)
@@ -217,6 +221,23 @@ public class ExpensesPanelController : MonoBehaviour
         RefreshBudgetBar();
     }
 
+    // Drives a segment purely by anchor fractions (0..1 of the parent track), rather than
+    // reading rect.width and setting pixel sizeDelta/anchoredPosition. Clamp01 makes it
+    // mathematically incapable of leaving the track, at any resolution or aspect ratio,
+    // regardless of when layout runs.
+    private static void SetHorizontalFraction(RectTransform rt, float from, float to)
+    {
+        if (rt == null) return;
+        from = Mathf.Clamp01(from);
+        to   = Mathf.Clamp01(to);
+        if (to < from) to = from;
+
+        rt.anchorMin = new Vector2(from, rt.anchorMin.y);
+        rt.anchorMax = new Vector2(to,   rt.anchorMax.y);
+        rt.offsetMin = new Vector2(0f, rt.offsetMin.y);
+        rt.offsetMax = new Vector2(0f, rt.offsetMax.y);
+    }
+
     private void RefreshBudgetBar()
     {
         if (budgetBarFill == null) return;
@@ -224,35 +245,41 @@ public class ExpensesPanelController : MonoBehaviour
         var gm = GameManager.Instance;
         var bar = gm.GetBudgetBarState(groceriesSlider.value, transportSlider.value, utilitiesSlider.value);
 
-        float totalWidth = budgetBarFill.rect.width;
-        float scale = bar.cap > 0f ? totalWidth / bar.cap : 0f;
-        float baseLineX = bar.baseLine * scale;
+        float inv    = bar.cap > 0f ? 1f / bar.cap : 0f;
+        float fBase  = bar.baseLine * inv;
+        float fBelow = bar.belowBase * inv;
+        float fAbove = bar.aboveBase * inv;
+
+        SetHorizontalFraction(belowBaseSegment, fBase - fBelow, fBase);
+        SetHorizontalFraction(aboveBaseSegment, fBase, fBase + fAbove);
 
         if (baseLineMarker != null)
-            baseLineMarker.anchoredPosition = new Vector2(baseLineX, baseLineMarker.anchoredPosition.y);
-
-        if (belowBaseSegment != null)
         {
-            float belowWidth = bar.belowBase * scale;
-            belowBaseSegment.sizeDelta = new Vector2(belowWidth, belowBaseSegment.sizeDelta.y);
-            belowBaseSegment.anchoredPosition = new Vector2(baseLineX - belowWidth, belowBaseSegment.anchoredPosition.y);
-        }
-
-        if (aboveBaseSegment != null)
-        {
-            float aboveWidth = bar.aboveBase * scale;
-            aboveBaseSegment.sizeDelta = new Vector2(aboveWidth, aboveBaseSegment.sizeDelta.y);
-            aboveBaseSegment.anchoredPosition = new Vector2(baseLineX, aboveBaseSegment.anchoredPosition.y);
+            float f = Mathf.Clamp01(fBase);
+            baseLineMarker.anchorMin = new Vector2(f, baseLineMarker.anchorMin.y);
+            baseLineMarker.anchorMax = new Vector2(f, baseLineMarker.anchorMax.y);
+            baseLineMarker.anchoredPosition =
+                new Vector2(0f, baseLineMarker.anchoredPosition.y);
         }
 
         if (confirmAdjustmentButton != null)
             confirmAdjustmentButton.interactable = !bar.atCap;
+        
+        if (budgetCapWarningText != null)
+        {
+            budgetCapWarningText.gameObject.SetActive(bar.atCap);
+            if (bar.atCap)
+                budgetCapWarningText.text = "Spending must be below your income. Reduce by at least $1 to continue.";
+        }
     }
 
-    public void ConfirmAdjustment()
+    // Returns true if the adjustment was actually applied and OnBudgetAdjustmentConfirmed
+    // fired. Returns false if isAdjustmentMode was already false (caller should fire
+    // OnBudgetAdjustmentConfirmed itself in that case rather than leaving the player stuck).
+    public bool ConfirmAdjustment()
     {
         if (!isAdjustmentMode)
-            return;
+            return false;
 
         var gm = GameManager.Instance;
         gm.ApplyProvisionChange(ExpenseCategory.Groceries, groceriesSlider.value);
@@ -261,6 +288,7 @@ public class ExpensesPanelController : MonoBehaviour
 
         isAdjustmentMode = false;
         UIManager.Instance.OnBudgetAdjustmentConfirmed();
+        return true;
     }
 
     public void Init()
@@ -378,7 +406,7 @@ public class ExpensesPanelController : MonoBehaviour
         }
         else
         {
-            houseCostValueText.text = "$�";
+            houseCostValueText.text = "$--";
             houseCostWarningText.gameObject.SetActive(false);
         }
     }
@@ -398,7 +426,7 @@ public class ExpensesPanelController : MonoBehaviour
             return;
         }
 
-        // HOUSE OWNED � value is for insurance ONLY
+        // HOUSE OWNED - value is for insurance ONLY
         if (finance.assets.hasHouse)
         {
             if (float.TryParse(houseCostInput.text, NumberStyles.Float, CultureInfo.InvariantCulture, out float houseValue))

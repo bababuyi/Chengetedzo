@@ -38,6 +38,7 @@ public class FinanceManager : MonoBehaviour
     [Header("School Fees")]
     public float schoolFeesPerTerm;
     private bool schoolFeesOutstanding = false;
+    private int lastSchoolFeesChargedMonth = -1;
 
 
     [Header("Financial State")]
@@ -73,7 +74,7 @@ public class FinanceManager : MonoBehaviour
     public float LastMonthSavingsDelta { get; private set; }
 
     /// <summary>
-    /// Sets the player’s income at game start or during simulation.
+    /// Sets the player's income at game start or during simulation.
     /// </summary>
     /// 
     public void InitializeFromSetup()
@@ -187,7 +188,7 @@ public class FinanceManager : MonoBehaviour
         );
          
         Debug.Log($"[Income] Base: {currentIncome}, Multiplier: {incomeMultiplier:F2}, Effective: {effectiveIncome:F0}");
-
+        GameManager.Instance.PayActiveIncomeBenefits();
         // 2. Fixed expenses
         float housingCost = GetHousingCost();
         float effectiveTransport = transport + GameManager.Instance.GetExpenseModifier(ExpenseCategory.Transport);
@@ -210,8 +211,6 @@ public class FinanceManager : MonoBehaviour
         balance = effectiveIncome - totalExpenses;
         WasOverBudgetThisMonth = balance < 0;
         IncomeCoveredExpensesThisMonth = effectiveIncome >= totalExpenses;
-
-        ProcessSchoolFees(GameManager.Instance.currentMonth);
 
         // 3. General savings (ONLY if affordable)
         LastMonthSavingsDelta = 0f;
@@ -278,7 +277,7 @@ public class FinanceManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Applies player’s chosen budget plan (from BudgetPanel UI),
+    /// Applies player's chosen budget plan (from BudgetPanel UI),
     /// including income, expenses, and allocation totals.
     /// </summary>
 
@@ -294,7 +293,7 @@ public class FinanceManager : MonoBehaviour
             delta >= 0
             );
         UpdateHUD();
-        Debug.Log($"[Finance] Budget Applied — New Balance: ${cashOnHand}");
+        Debug.Log($"[Finance] Budget Applied - New Balance: ${cashOnHand}");
     }
 
     public void AdjustIncome(float percentageChange)
@@ -307,6 +306,7 @@ public class FinanceManager : MonoBehaviour
     public float ProcessSchoolFees(int month)
     {
         if (schoolFeesPerTerm <= 0f) return 0f;
+        if (lastSchoolFeesChargedMonth == month) return 0f;
 
         int normalizedMonth = ((month - 1) % 12) + 1;
         bool isTermStart = (normalizedMonth == 1 || normalizedMonth == 5 || normalizedMonth == 9);
@@ -323,34 +323,34 @@ public class FinanceManager : MonoBehaviour
         {
             GameManager.Instance.ApplyMoneyChange(
                 FinancialEntry.EntryType.Expense, "School Fees", effectiveFees, false);
-            totalSpent += effectiveFees;
             schoolFeesOutstanding = false;
+            lastSchoolFeesChargedMonth = month;
             Debug.Log($"[School Fees] Paid ${effectiveFees} for {childCount} child(ren)");
             return effectiveFees;
         }
 
-        Debug.LogWarning("[School Fees] Unpaid — outstanding!");
+        Debug.LogWarning("[School Fees] Unpaid - outstanding!");
         return 0f;
     }
 
-    // Seasonal income multipliers for farming households, indexed by month-in-year (1–12).
-    // Models Zimbabwe's farming calendar: main maize harvest (months 4–5),
-    // winter crop / livestock sales (months 7–8), pre-rains livestock (month 11),
+    // Seasonal income multipliers for farming households, indexed by month-in-year (1 to 12).
+    // Models Zimbabwe's farming calendar: main maize harvest (months 4 to 5),
+    // winter crop / livestock sales (months 7 to 8), pre-rains livestock (month 11),
     // Sums to ~12.5 so average annual income is roughly preserved.
     private static readonly float[] FarmingSeasonalMultipliers =
     {
-        0.4f, // 1  — lean (planting)
-        0.4f, // 2  — lean
-        0.6f, // 3  — building toward harvest
-        2.6f, // 4  — main harvest
-        2.2f, // 5  — main harvest tail
-        0.5f, // 6  — lean
-        1.6f, // 7  — winter crop / livestock
-        1.3f, // 8  — secondary tail
-        0.5f, // 9  — lean
-        0.5f, // 10 — lean
-        1.4f, // 11 — pre-rains livestock
-        0.5f  // 12 — lean
+        0.4f, // 1 - lean (planting)
+        0.4f, // 2 - lean
+        0.6f, // 3 - building toward harvest
+        2.6f, // 4 - main harvest
+        2.2f, // 5 - main harvest tail
+        0.5f, // 6 - lean
+        1.6f, // 7 - winter crop / livestock
+        1.3f, // 8 - secondary tail
+        0.5f, // 9 - lean
+        0.5f, // 10 - lean
+        1.4f, // 11 - pre-rains livestock
+        0.5f  // 12 - lean
     };
 
     private bool HasFarmingIncome()
@@ -391,7 +391,7 @@ public class FinanceManager : MonoBehaviour
             currentIncome *= seasonalMultiplier;
 
             Debug.Log(
-                $"[Finance] Seasonal income — month {monthInYear + 1}, " +
+                $"[Finance] Seasonal income - month {monthInYear + 1}, " +
                 $"multiplier {seasonalMultiplier:F2}, income {currentIncome:F0}"
             );
         }
@@ -423,6 +423,7 @@ public class FinanceManager : MonoBehaviour
         {
             case InsuranceManager.InsuranceType.Home: return houseInsuredValue;
             case InsuranceManager.InsuranceType.Motor: return motorInsuredValue;
+            case InsuranceManager.InsuranceType.MotorComprehensive: return motorInsuredValue;
             case InsuranceManager.InsuranceType.Crop: return cropsInsuredValue + livestockInsuredValue;
             default: return 0f;
         }
@@ -506,6 +507,7 @@ public class FinanceManager : MonoBehaviour
         IncomeCoveredExpensesThisMonth = true;
 
         schoolFeesOutstanding = false;
+        lastSchoolFeesChargedMonth = -1;
 
         minIncome = 0f;
         maxIncome = 0f;

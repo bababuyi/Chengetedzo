@@ -97,7 +97,7 @@ public class ForecastManager : MonoBehaviour
     private List<ForecastArticle> forecastLibrary;
     private List<ForecastArticle> selectedForecasts = new List<ForecastArticle>();
 
-    /// <summary>The articles shown to the player this month — the "bets" on the table.</summary>
+    /// <summary>The articles shown to the player this month - the "bets" on the table.</summary>
     public IReadOnlyList<ForecastArticle> SelectedArticles => selectedForecasts;
 
     /// <summary>True if this month's news warned about the given risk category.</summary>
@@ -281,7 +281,7 @@ public class ForecastManager : MonoBehaviour
             Destroy(child.gameObject);
 
         // NOTE: previously injected a "Last Month" recap (GameManager.LastMonthForecastReview)
-        // here — pulled per user feedback: the Forecast panel should read as forward-looking
+        // here - pulled per user feedback: the Forecast panel should read as forward-looking
         // news for the coming month, not a report on events the player already lived through.
         // GameManager still computes LastMonthForecastReview; if we want that recap back it
         // belongs on the Report panel instead, not mixed into next month's news feed.

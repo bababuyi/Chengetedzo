@@ -17,8 +17,8 @@ MonoBehaviour:
   senderRelation: Family
   choices:
   - label: Help with the full rent ($100)
-    resultDescription: "I've sent the money. Get it sorted \u2014 let me know when
-      you're settled."
+    resultDescription: I've sent the money. Get it sorted, let me know when you're
+      settled.
     moneyChange: -100
     momentumChange: -2
     moraleChange: 3
@@ -29,7 +29,7 @@ MonoBehaviour:
     borrowingPowerChange: 0
     grantsAsset: 
   - label: Send half ($50)
-    resultDescription: "I can send $50. It's all I have right now \u2014 use it wisely."
+    resultDescription: I can send $50. It's all I have right now, use it wisely.
     moneyChange: -50
     momentumChange: -1
     moraleChange: 1

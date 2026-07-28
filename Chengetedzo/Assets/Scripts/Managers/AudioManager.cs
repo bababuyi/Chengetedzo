@@ -19,66 +19,66 @@ public class AudioManager : MonoBehaviour
     public AudioClip gameEnd;
 
     [Header("Event Popups")]
-    [Tooltip("Small financial hit — clinic fee, transport delay. Soft notification tone.")]
+    [Tooltip("Small financial hit: clinic fee, transport delay. Soft notification tone.")]
     public AudioClip eventMinor;
 
-    [Tooltip("Mid-weight hit — theft, livestock issue. Slightly heavier chime.")]
+    [Tooltip("Mid-weight hit: theft, livestock issue. Slightly heavier chime.")]
     public AudioClip eventModerate;
 
-    [Tooltip("Serious event — house fire, breadwinner death. Low, sombre tone. NOT a dramatic sting.")]
+    [Tooltip("Serious event: house fire, breadwinner death. Low, sombre tone. NOT a dramatic sting.")]
     public AudioClip eventMajor;
 
-    [Tooltip("Reward or opportunity event — bonus, grant. Warm, brief positive tone.")]
+    [Tooltip("Reward or opportunity event: bonus, grant. Warm, brief positive tone.")]
     public AudioClip eventPositive;
 
     [Header("Mentor Chat")]
-    [Tooltip("Mentor message arrives — matches chat/messaging UI aesthetic. Like a WhatsApp chime.")]
+    [Tooltip("Mentor message arrives, matches chat/messaging UI aesthetic. Like a WhatsApp chime.")]
     public AudioClip mentorMessage;
 
     [Header("Loan Chat")]
-    [Tooltip("Loan message arrives — same messaging aesthetic as mentor but slightly more neutral.")]
+    [Tooltip("Loan message arrives, same messaging aesthetic as mentor but slightly more neutral.")]
     public AudioClip loanMessage;
 
     [Tooltip("Loan taken or confirmed.")]
     public AudioClip loanConfirm;
 
     [Header("Insurance Panel")]
-    [Tooltip("Toggle a policy on — subtle, like ticking a form checkbox.")]
+    [Tooltip("Toggle a policy on. Subtle, like ticking a form checkbox.")]
     public AudioClip insuranceToggleOn;
 
-    [Tooltip("Toggle a policy off — slightly softer version of the same.")]
+    [Tooltip("Toggle a policy off, slightly softer version of the same.")]
     public AudioClip insuranceToggleOff;
 
     [Tooltip("Insurance panel confirmed. Brief, reassuring.")]
     public AudioClip insuranceConfirm;
 
     [Header("Navigation")]
-    [Tooltip("Panel opens — very soft, like turning a page.")]
+    [Tooltip("Panel opens. Very soft, like turning a page.")]
     public AudioClip panelOpen;
 
-    [Tooltip("General button click — subtle, not a game-UI click.")]
+    [Tooltip("General button click. Subtle, not a game-UI click.")]
     public AudioClip buttonClick;
 
     [Header("Report Panel")]
-    [Tooltip("Monthly report appears — paper/ledger aesthetic. Subtle rustle or soft thud.")]
+    [Tooltip("Monthly report appears, paper/ledger aesthetic. Subtle rustle or soft thud.")]
     public AudioClip reportAppear;
 
     [Header("Forecast")]
-    [Tooltip("Each forecast card slides in — very quiet, like setting down a card.")]
+    [Tooltip("Each forecast card slides in, very quiet, like setting down a card.")]
     public AudioClip forecastCard;
 
     [Header("Financial Feedback")]
-    [Tooltip("Money gained — warm, brief tone.")]
+    [Tooltip("Money gained: warm, brief tone.")]
     public AudioClip moneyGain;
 
-    [Tooltip("Money lost — low, brief tone.")]
+    [Tooltip("Money lost: low, brief tone.")]
     public AudioClip moneyLoss;
 
     [Tooltip("Savings deposited.")]
     public AudioClip savingsDeposit;
 
     [Header("End of Year")]
-    [Tooltip("Year complete — calm, reflective. Not a fanfare.")]
+    [Tooltip("Year complete: calm, reflective. Not a fanfare.")]
     public AudioClip yearComplete;
 
     [Header("Volume")]

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using static EventManager;
 
@@ -18,7 +18,8 @@ public class InsuranceManager : MonoBehaviour
         Motor,
         Home,
         Crop,
-        BurialSociety
+        BurialSociety,
+        MotorComprehensive // appended at the end - existing assets store this as an int, do not reorder
     }
 
     public bool AnyPremiumPaidThisMonth { get; private set; }
@@ -129,7 +130,7 @@ public class InsuranceManager : MonoBehaviour
             premium = 10f,
             coverageLimit = 450f,
             waitingPeriodMonths = 3,
-            coverageDescription = "A community-run burial society. Monthly contributions are pooled to cover funeral costs for any member's family. Informal but trusted — and available to anyone."
+            coverageDescription = "A community-run burial society. Monthly contributions are pooled to cover funeral costs for any member's family. Informal but trusted, and available to anyone."
         });
 
 
@@ -176,7 +177,7 @@ public class InsuranceManager : MonoBehaviour
 
         allPlans.Add(new InsurancePlan
         {
-            planName = "Motor Insurance (3rd Party)",
+            planName = "Third Party Motor",
             type = InsuranceType.Motor,
             premiumIsAssetBased = false,
             premium = 104f,             // charged every 4 months
@@ -184,7 +185,20 @@ public class InsuranceManager : MonoBehaviour
             coverageLimit = 3000f,
             waitingPeriodMonths = 0,
             requiredAsset = GameManager.AssetRequirement.Motor,
-            coverageDescription = "Covers liability for death, bodily injury, and property damage to others"
+            coverageDescription = "Legally required. Covers liability for death, bodily injury, and property damage to others. Does not pay out if your own vehicle is stolen, damaged, or destroyed."
+        });
+
+        allPlans.Add(new InsurancePlan
+        {
+            planName = "Comprehensive Motor",
+            type = InsuranceType.MotorComprehensive,
+            premiumIsAssetBased = false,
+            premium = 360f,             // charged every 4 months - several times Third Party's rate
+            billingCycleMonths = 4,
+            coverageLimit = 6000f,
+            waitingPeriodMonths = 0,
+            requiredAsset = GameManager.AssetRequirement.Motor,
+            coverageDescription = "Everything Third Party covers, plus theft, fire, and damage to your own vehicle."
         });
 
         allPlans.Add(new InsurancePlan
@@ -219,6 +233,15 @@ public class InsuranceManager : MonoBehaviour
     public InsurancePlan GetPlan(InsuranceType t)
     {
         return allPlans.Find(p => p.type == t);
+    }
+
+    // True if either motor plan (Third Party or Comprehensive) currently has live coverage.
+    public bool HasActiveMotorCover()
+    {
+        var motor = GetPlan(InsuranceType.Motor);
+        var comprehensive = GetPlan(InsuranceType.MotorComprehensive);
+        return (motor != null && motor.coverageMonthsRemaining > 0) ||
+               (comprehensive != null && comprehensive.coverageMonthsRemaining > 0);
     }
     public bool PlayerMeetsRequirement(InsurancePlan plan)
     {
@@ -301,11 +324,24 @@ public class InsuranceManager : MonoBehaviour
 
         var plan = GetPlan(type);
 
-        if (type == InsuranceType.Motor)
+        if (type == InsuranceType.Motor || type == InsuranceType.MotorComprehensive)
         {
             if (plan.coverageMonthsRemaining > 0)
             {
-                Debug.Log("[Insurance] Motor insurance already active.");
+                Debug.Log($"[Insurance] {plan.planName} already active.");
+                return false;
+            }
+
+            // Third Party and Comprehensive cover the same vehicle - only one can be
+            // active at a time. Comprehensive already includes third-party liability.
+            InsuranceType otherType = type == InsuranceType.Motor
+                ? InsuranceType.MotorComprehensive
+                : InsuranceType.Motor;
+            var otherPlan = GetPlan(otherType);
+
+            if (otherPlan != null && otherPlan.coverageMonthsRemaining > 0)
+            {
+                Debug.LogWarning($"[Insurance] Cannot buy {plan.planName}: {otherPlan.planName} is already active. Cancel it first.");
                 return false;
             }
 
@@ -313,7 +349,7 @@ public class InsuranceManager : MonoBehaviour
 
             if (Finance.CashOnHand < cost)
             {
-                Debug.LogWarning("[Insurance] Not enough money for motor insurance.");
+                Debug.LogWarning($"[Insurance] Not enough money for {plan.planName}.");
                 return false;
             }
 
@@ -330,7 +366,7 @@ public class InsuranceManager : MonoBehaviour
             plan.canCancelThisMonth = true;
             plan.monthsPaid = 1;
 
-            Debug.Log("[Insurance] Motor insurance purchased for 4 months.");
+            Debug.Log($"[Insurance] {plan.planName} purchased for 4 months.");
             return true;
         }
 
@@ -393,9 +429,9 @@ public class InsuranceManager : MonoBehaviour
         if (plan == null) return;
         if (!plan.isSubscribed) return;
 
-        if (type == InsuranceType.Motor && !plan.canCancelThisMonth)
+        if ((type == InsuranceType.Motor || type == InsuranceType.MotorComprehensive) && !plan.canCancelThisMonth)
         {
-            Debug.Log("[Insurance] Motor insurance cannot be canceled after month 1.");
+            Debug.Log($"[Insurance] {plan.planName} cannot be canceled after month 1.");
             return;
         }
 
@@ -424,7 +460,7 @@ public class InsuranceManager : MonoBehaviour
 
         foreach (var plan in allPlans)
         {
-            if (plan.type == InsuranceType.Motor)
+            if (plan.type == InsuranceType.Motor || plan.type == InsuranceType.MotorComprehensive)
             {
                 if (plan.coverageMonthsRemaining > 0)
                 {
@@ -439,16 +475,23 @@ public class InsuranceManager : MonoBehaviour
                         plan.isSubscribed = false;
                         plan.isLapsed = false;
 
-                        Debug.Log("[Insurance] Motor insurance expired.");
+                        Debug.Log($"[Insurance] {plan.planName} expired.");
                     }
                 }
-                else if (Finance != null &&
+                // Only roll the "no motor insurance" fine once per month, keyed off the
+                // Motor entry specifically - otherwise Motor and MotorComprehensive would
+                // each roll independently and could double-fine the same uninsured car.
+                // HasActiveMotorCover checks both plans, so Comprehensive coverage still
+                // protects the player from this fine when it's the one actually held.
+                else if (plan.type == InsuranceType.Motor &&
+                         Finance != null &&
                          GameManager.Instance.financeManager.assets.hasMotor &&
+                         !HasActiveMotorCover() &&
                          Random.value < 0.15f)
                 {
                     GameManager.Instance.ApplyMoneyChange(
                         FinancialEntry.EntryType.EventLoss,
-                        "Traffic Fine — No Motor Insurance",
+                        "Traffic Fine: No Motor Insurance",
                         10f,
                         false
                     );
@@ -470,7 +513,7 @@ public class InsuranceManager : MonoBehaviour
                     float fine = UnityEngine.Random.Range(50f, 150f);
                     GameManager.Instance.ApplyMoneyChange(
                         FinancialEntry.EntryType.EventLoss,
-                        "Traffic Fine — No Motor Insurance",
+                        "Traffic Fine: No Motor Insurance",
                         fine,
                         false
                     );
@@ -485,7 +528,7 @@ public class InsuranceManager : MonoBehaviour
 
             if (!isDueThisMonth)
             {
-                // Policy remains active between billing months — no charge
+                // Policy remains active between billing months - no charge
                 continue;
             }
 
@@ -514,7 +557,7 @@ public class InsuranceManager : MonoBehaviour
 
                 if (plan.missedPayments == 1)
                 {
-                    Debug.Log($"[Insurance] {plan.planName} missed payment — grace month.");
+                    Debug.Log($"[Insurance] {plan.planName} missed payment - grace month.");
                 }
                 else if (plan.missedPayments >= 2)
                 {

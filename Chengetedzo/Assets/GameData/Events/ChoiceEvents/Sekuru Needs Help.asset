@@ -53,8 +53,8 @@ MonoBehaviour:
     borrowingPowerChange: 0
     grantsAsset: 
   eventName: Sekuru Needs Help
-  description: "I'm at the clinic \u2014 the treatment is costing more than I have
-    on me. If you're able to help, I'd be so grateful, mwanangu."
+  description: I'm at the clinic. The treatment is costing more than I have on me.
+    If you're able to help, I'd be so grateful, mwanangu.
   financialLesson: 
   category: 0
   pool: 6

@@ -2,24 +2,43 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
+// Two-channel loan panel: Mukando (cheap, contribution-gated, join/leave toggle) and
+// Moneylender/Ndlovu (always available, expensive, no toggle) shown side by side.
+// Term-based instalment model: the player picks an amount and a term (1..maxTermMonths)
+// per channel; the live preview shows both the total repaid and the fixed monthly
+// instalment, since the cost comparison between channels is the entire point.
+//
+// NOTE for the editor pass: the public fields below need UI objects created and wired
+// in the Inspector - amount input, term slider, and preview text per account, plus the
+// Mukando join toggle. There is no longer a repayment-rate slider; rates are fixed per
+// channel and the new term slider replaces it.
 public class LoanPanelController : MonoBehaviour
 {
     [Header("References")]
     public LoanManager loanManager;
 
-    [Header("UI Elements")]
-    public TextMeshProUGUI borrowingPowerText;
-    public TextMeshProUGUI loanBalanceText;
-    public TextMeshProUGUI repaymentAmountText;
+    [Header("Mukando")]
+    public TextMeshProUGUI mukandoBalanceText;
+    public TextMeshProUGUI mukandoPowerText;
+    public TextMeshProUGUI mukandoStatusText; // "Not joined" / "Building standing (1/3 months)" / "Active"
+    public Toggle mukandoJoinToggle;
+    public TMP_InputField mukandoAmountInput;
+    public Slider mukandoTermSlider;
+    public TextMeshProUGUI mukandoTermValueText;   // "8 months"
+    public TextMeshProUGUI mukandoPreviewText;     // "Borrow $600 over 8 months. You repay $787.50 total, $98 a month."
+    public Button mukandoBorrowButton;
 
-    public Slider repaymentSlider;
-    public TextMeshProUGUI repaymentValueText;
+    [Header("Moneylender")]
+    public TextMeshProUGUI moneylenderBalanceText;
+    public TextMeshProUGUI moneylenderPowerText;
+    public TMP_InputField moneylenderAmountInput;
+    public Slider moneylenderTermSlider;
+    public TextMeshProUGUI moneylenderTermValueText;
+    public TextMeshProUGUI moneylenderPreviewText;
+    public Button moneylenderBorrowButton;
 
-    [Header("UI Buttons")]
-    public Button borrow100Button;
-    public Button borrow250Button;
-    public Button borrow500Button;
-
+    [Header("Feedback / Navigation")]
+    public TextMeshProUGUI feedbackText;
     public Button continueButton;
 
     private void Start()
@@ -31,27 +50,24 @@ public class LoanPanelController : MonoBehaviour
             return;
         }
 
-        if (repaymentSlider == null ||
-            borrow100Button == null ||
-            borrow250Button == null ||
-            borrow500Button == null ||
-            continueButton == null)
+        if (continueButton == null)
         {
             Debug.LogError("[LoanPanel] UI references missing.");
             enabled = false;
             return;
         }
 
-        // Slider setup (prefer manager config if available)
-        repaymentSlider.minValue = loanManager.minRepaymentRate;
-        repaymentSlider.maxValue = loanManager.maxRepaymentRate;
-        repaymentSlider.value = loanManager.repaymentRate;
+        if (mukandoJoinToggle != null)
+            mukandoJoinToggle.onValueChanged.AddListener(OnMukandoToggleChanged);
 
-        repaymentSlider.onValueChanged.AddListener(OnRepaymentChanged);
+        SetupAccountControls(
+            loanManager.mukando, mukandoAmountInput, mukandoTermSlider,
+            mukandoTermValueText, mukandoPreviewText, mukandoBorrowButton);
 
-        borrow100Button.onClick.AddListener(() => TryBorrow(100));
-        borrow250Button.onClick.AddListener(() => TryBorrow(250));
-        borrow500Button.onClick.AddListener(() => TryBorrow(500));
+        SetupAccountControls(
+            loanManager.moneylender, moneylenderAmountInput, moneylenderTermSlider,
+            moneylenderTermValueText, moneylenderPreviewText, moneylenderBorrowButton);
+
         continueButton.onClick.AddListener(OnContinueClicked);
 
         RefreshUI();
@@ -59,49 +75,115 @@ public class LoanPanelController : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (repaymentSlider != null)
-            repaymentSlider.onValueChanged.RemoveListener(OnRepaymentChanged);
+        if (mukandoJoinToggle != null)
+            mukandoJoinToggle.onValueChanged.RemoveListener(OnMukandoToggleChanged);
 
-        if (borrow100Button != null)
-            borrow100Button.onClick.RemoveAllListeners();
+        mukandoAmountInput?.onValueChanged.RemoveAllListeners();
+        mukandoTermSlider?.onValueChanged.RemoveAllListeners();
+        mukandoBorrowButton?.onClick.RemoveAllListeners();
 
-        if (borrow250Button != null)
-            borrow250Button.onClick.RemoveAllListeners();
-
-        if (borrow500Button != null)
-            borrow500Button.onClick.RemoveAllListeners();
+        moneylenderAmountInput?.onValueChanged.RemoveAllListeners();
+        moneylenderTermSlider?.onValueChanged.RemoveAllListeners();
+        moneylenderBorrowButton?.onClick.RemoveAllListeners();
 
         if (continueButton != null)
             continueButton.onClick.RemoveListener(OnContinueClicked);
     }
 
-    private void OnRepaymentChanged(float value)
+    private void SetupAccountControls(
+        LoanAccount account, TMP_InputField amountInput, Slider termSlider,
+        TextMeshProUGUI termValueText, TextMeshProUGUI previewText, Button borrowButton)
     {
-        loanManager.SetRepaymentRate(value);
+        if (termSlider != null)
+        {
+            termSlider.minValue = 1;
+            termSlider.maxValue = Mathf.Max(1, account.maxTermMonths);
+            termSlider.wholeNumbers = true;
+            termSlider.value = 1;
+            termSlider.onValueChanged.AddListener(_ => RefreshPreview(account, amountInput, termSlider, termValueText, previewText));
+        }
 
-        repaymentValueText.text =$"Repayment Rate: {loanManager.repaymentRate * 100f:F0}%";
+        if (amountInput != null)
+            amountInput.onValueChanged.AddListener(_ => RefreshPreview(account, amountInput, termSlider, termValueText, previewText));
 
-        UpdateRepaymentPreview();
+        if (borrowButton != null)
+            borrowButton.onClick.AddListener(() => TryBorrow(account, amountInput, termSlider));
 
-        Debug.Log("New repayment rate: " + loanManager.repaymentRate);
+        RefreshPreview(account, amountInput, termSlider, termValueText, previewText);
     }
 
-    private void TryBorrow(float amount)
+    private void OnMukandoToggleChanged(bool isOn)
     {
-        borrow100Button.interactable = false;
-        borrow250Button.interactable = false;
-        borrow500Button.interactable = false;
+        if (loanManager == null) return;
 
-        if (loanManager == null)
+        if (isOn) loanManager.JoinMukando();
+        else loanManager.LeaveMukando();
+
+        RefreshUI();
+    }
+
+    private float GetRequestedAmount(TMP_InputField amountInput, LoanAccount account)
+    {
+        if (amountInput == null) return 0f;
+        if (!float.TryParse(amountInput.text, out float amount)) return 0f;
+        return Mathf.Clamp(amount, 0f, account.borrowingPower);
+    }
+
+    private void RefreshPreview(
+        LoanAccount account, TMP_InputField amountInput, Slider termSlider,
+        TextMeshProUGUI termValueText, TextMeshProUGUI previewText)
+    {
+        int term = termSlider != null ? Mathf.Max(1, (int)termSlider.value) : 1;
+        float amount = GetRequestedAmount(amountInput, account);
+
+        if (termValueText != null)
+            termValueText.text = $"{term} month{(term == 1 ? "" : "s")}";
+
+        if (previewText == null) return;
+
+        if (amount <= 0f)
+        {
+            previewText.text = $"Enter an amount to borrow from {account.label} (up to {GameUtils.FormatMoney(account.borrowingPower)}).";
             return;
+        }
 
-        bool success = loanManager.Borrow(amount);
+        float owed = amount * (1f + account.interestRate);
+        float instalment = owed / term;
+
+        previewText.text =
+            $"Borrow {GameUtils.FormatMoney(amount)} over {term} month{(term == 1 ? "" : "s")}. " +
+            $"You repay {GameUtils.FormatMoney(owed)} total, {GameUtils.FormatMoney(instalment)} a month.";
+    }
+
+    private void TryBorrow(LoanAccount account, TMP_InputField amountInput, Slider termSlider)
+    {
+        if (loanManager == null) return;
+
+        float amount = GetRequestedAmount(amountInput, account);
+        int term = termSlider != null ? Mathf.Max(1, (int)termSlider.value) : 1;
+
+        if (amount <= 0f)
+        {
+            if (feedbackText != null)
+                feedbackText.text = "Enter an amount first.";
+            return;
+        }
+
+        bool success = loanManager.Borrow(amount, account, term);
 
         if (!success)
         {
-            repaymentAmountText.text = "Borrow request denied.";
+            if (feedbackText != null)
+                feedbackText.text = $"Could not borrow from {account.label}.";
+            RefreshUI();
             return;
         }
+
+        if (amountInput != null)
+            amountInput.text = "";
+
+        if (feedbackText != null)
+            feedbackText.text = $"Borrowed {GameUtils.FormatMoney(amount)} from {account.label}.";
 
         RefreshUI();
     }
@@ -111,58 +193,69 @@ public class LoanPanelController : MonoBehaviour
         if (loanManager == null)
             return;
 
-        if (borrowingPowerText != null)
-            borrowingPowerText.text =
-                $"Borrowing Power: ${loanManager.borrowingPower:F0}";
+        RefreshMukando();
+        RefreshMoneylender();
+    }
 
-        if (loanBalanceText != null)
-            loanBalanceText.text =
-                $"Loan Balance: ${loanManager.loanBalance:F0}";
-        bool hasLoan = loanManager.loanBalance > 0f;
-        repaymentSlider.interactable = hasLoan;
+    private void RefreshMukando()
+    {
+        var mukando = loanManager.mukando;
 
+        if (mukandoBalanceText != null)
+            mukandoBalanceText.text = mukando.balance > 0f
+                ? $"Balance: {GameUtils.FormatMoney(mukando.balance)} ({mukando.termMonths} months left, {GameUtils.FormatMoney(mukando.monthlyInstalment)}/month)"
+                : "Balance: none";
 
-        if (borrow100Button != null)
-            borrow100Button.interactable = loanManager.borrowingPower >= 100;
+        if (mukandoPowerText != null)
+            mukandoPowerText.text = $"Available: {GameUtils.FormatMoney(mukando.borrowingPower)}";
 
-        if (borrow250Button != null)
-            borrow250Button.interactable = loanManager.borrowingPower >= 250;
+        if (mukandoJoinToggle != null)
+            mukandoJoinToggle.SetIsOnWithoutNotify(loanManager.mukandoJoined);
 
-        if (borrow500Button != null)
-            borrow500Button.interactable = loanManager.borrowingPower >= 500;
+        if (mukandoStatusText != null)
+        {
+            if (!loanManager.mukandoJoined)
+                mukandoStatusText.text = "Not joined";
+            else if (mukando.monthsContributed < 3)
+                mukandoStatusText.text = $"Building standing ({mukando.monthsContributed}/3 months)";
+            else
+                mukandoStatusText.text = "Active";
+        }
 
-        if (repaymentSlider != null)
-            repaymentSlider.SetValueWithoutNotify(loanManager.repaymentRate);
+        if (mukandoTermSlider != null)
+        {
+            mukandoTermSlider.maxValue = Mathf.Max(1, mukando.maxTermMonths);
+            RefreshPreview(mukando, mukandoAmountInput, mukandoTermSlider, mukandoTermValueText, mukandoPreviewText);
+        }
 
-        if (repaymentValueText != null)
-            repaymentValueText.text =
-                $"Repayment Rate: {loanManager.repaymentRate * 100f:F0}%";
+        if (mukandoBorrowButton != null)
+            mukandoBorrowButton.interactable = mukando.borrowingPower > 0f;
+    }
 
-        UpdateRepaymentPreview();
-        Debug.Log("Loan balance: " + loanManager.loanBalance);
-        Debug.Log("Slider interactable: " + repaymentSlider.interactable);
+    private void RefreshMoneylender()
+    {
+        var moneylender = loanManager.moneylender;
+
+        if (moneylenderBalanceText != null)
+            moneylenderBalanceText.text = moneylender.balance > 0f
+                ? $"Balance: {GameUtils.FormatMoney(moneylender.balance)} ({moneylender.termMonths} months left, {GameUtils.FormatMoney(moneylender.monthlyInstalment)}/month)"
+                : "Balance: none";
+
+        if (moneylenderPowerText != null)
+            moneylenderPowerText.text = $"Available: {GameUtils.FormatMoney(moneylender.borrowingPower)}";
+
+        if (moneylenderTermSlider != null)
+        {
+            moneylenderTermSlider.maxValue = Mathf.Max(1, moneylender.maxTermMonths);
+            RefreshPreview(moneylender, moneylenderAmountInput, moneylenderTermSlider, moneylenderTermValueText, moneylenderPreviewText);
+        }
+
+        if (moneylenderBorrowButton != null)
+            moneylenderBorrowButton.interactable = moneylender.borrowingPower > 0f;
     }
 
     private void OnContinueClicked()
     {
         UIManager.Instance.CloseLoanPanel();
-    }
-
-    private void UpdateRepaymentPreview()
-    {
-        if (loanManager == null)
-            return;
-
-        if (loanManager.loanBalance <= 0f)
-        {
-            repaymentAmountText.text = "No active loan";
-            return;
-        }
-
-        float amount =
-            loanManager.loanBalance * loanManager.repaymentRate;
-
-        repaymentAmountText.text =
-            $"Monthly Repayment ({loanManager.repaymentRate * 100f:F0}%): ${amount:F0}";
     }
 }

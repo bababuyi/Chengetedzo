@@ -1,7 +1,7 @@
-﻿// Place this file in: Chengetedzo/Assets/Editor/RegularEventImporter.cs
+// Place this file in: Chengetedzo/Assets/Editor/RegularEventImporter.cs
 // Usage:
 //   1. Export RegularEvents_Template.xlsx as a CSV (File > Save As > CSV)
-//      OR use an xlsx-reading library — this importer reads the CSV export.
+//      OR use an xlsx-reading library - this importer reads the CSV export.
 //   2. Save the CSV as: Assets/GameData/Events/RegularEvents.csv
 //   3. Unity menu → Tools → Import Regular Events
 //
@@ -109,11 +109,11 @@ public static class EventImporter
             if (string.IsNullOrEmpty(eventName)) continue;
 
             // Skip the example rows by checking for known example names
-            // (they'll be imported if you leave them in — which is fine)
+            // (they'll be imported if you leave them in - which is fine)
 
             if (cols.Length < 20)
             {
-                Debug.LogWarning($"[Importer] Line {i + 1}: '{eventName}' — too few columns ({cols.Length}). Skipped.");
+                Debug.LogWarning($"[Importer] Line {i + 1}: '{eventName}' - too few columns ({cols.Length}). Skipped.");
                 errors++;
                 continue;
             }
@@ -150,7 +150,7 @@ public static class EventImporter
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[Importer] Line {i + 1}: '{eventName}' — {ex.Message}");
+                Debug.LogError($"[Importer] Line {i + 1}: '{eventName}' - {ex.Message}");
                 errors++;
             }
         }
@@ -184,7 +184,7 @@ public static class EventImporter
         ev.signal = ParseSignal(Get(C_SIGNAL));
         ev.severity = ParseSeverity(Get(C_SEVERITY));
 
-        // Choice-related — regular events never have choices
+        // Choice-related - regular events never have choices
         ev.hasChoices = false;
         ev.senderName = string.Empty;
         ev.senderRelation = string.Empty;
@@ -227,7 +227,7 @@ public static class EventImporter
         ev.followUpChance = ParseFloat(Get(C_FOLLOWUP_CHANCE));
         ev.followUpDelay = ParseInt(Get(C_FOLLOWUP_DELAY), 1);
 
-        // Follow-up events list — cleared; wire manually in Inspector
+        // Follow-up events list - cleared; wire manually in Inspector
         if (ev.followUpEvents == null)
             ev.followUpEvents = new List<EventData>();
     }
@@ -275,6 +275,7 @@ public static class EventImporter
         "hospitalcash" => InsuranceManager.InsuranceType.HospitalCash,
         "personalaccident" => InsuranceManager.InsuranceType.PersonalAccident,
         "motor" => InsuranceManager.InsuranceType.Motor,
+        "motorcomprehensive" => InsuranceManager.InsuranceType.MotorComprehensive,
         "home" => InsuranceManager.InsuranceType.Home,
         "crop" => InsuranceManager.InsuranceType.Crop,
         _ => InsuranceManager.InsuranceType.None,

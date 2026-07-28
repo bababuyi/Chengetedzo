@@ -17,8 +17,8 @@ MonoBehaviour:
   senderRelation: 
   choices: []
   eventName: Vehicle Theft
-  description: "Your car was taken overnight from outside the house. Your bags and
-    tools were still inside \u2014 whatever was in the boot went with it."
+  description: Your car was taken overnight from outside the house. Your bags and
+    tools were still inside. Whatever was in the boot went with it.
   financialLesson: When a vehicle is stolen you lose more than the vehicle. Cover
     protects the car; the contents are usually your own loss.
   category: 4
@@ -33,7 +33,7 @@ MonoBehaviour:
   affectsIncome: 0
   incomePercentChange: 0
   incomeEffectMonths: 0
-  insuranceType: 6
+  insuranceType: 10
   outcomeType: 0
   cashReward: 0
   momentumReward: 0

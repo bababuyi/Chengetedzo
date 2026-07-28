@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using static ForecastLines;
 using static GameManager;
@@ -108,6 +108,12 @@ public class EventManager : MonoBehaviour
         var eligibleEvents = eventDatabase.events.FindAll(e =>
         {
             if (e.season != Season.Any && e.season != currentSeason)
+                return false;
+
+            // Mukando Invitation is scripted to fire once via ScheduleFollowUp at month 2
+            // (see GameManager.ResetForNewGame) - it must not also be reachable through the
+            // random pool draw, or it could double-fire or fire before the player is ready.
+            if (e.eventName == "Mukando Invitation")
                 return false;
 
             return true;
@@ -302,7 +308,7 @@ public class EventManager : MonoBehaviour
             if (ev.insuranceType != InsuranceType.None)
             {
                 // Only route to the claim-decision popup when there's an actual loss to
-                // decide about — a near-zero rolled loss (e.g. a Minor illness that
+                // decide about - a near-zero rolled loss (e.g. a Minor illness that
                 // rounds to $0) has nothing to claim, so asking "claim or cover yourself?"
                 // for $0 just confuses the player.
                 if (intendedLoss > 0.5f && GameManager.Instance.insuranceManager.CanClaimForEvent(ev.insuranceType))

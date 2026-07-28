@@ -16,7 +16,7 @@ MonoBehaviour:
   senderName: Colleague Rudo
   senderRelation: Work
   choices:
-  - label: "Go for it \u2014 pay for the course ($200)"
+  - label: Go for it, pay for the course ($200)
     resultDescription: I'm doing it. This is worth the investment.
     moneyChange: -200
     momentumChange: 3
@@ -50,8 +50,8 @@ MonoBehaviour:
     borrowingPowerChange: 0
     grantsAsset: 
   eventName: Better Job Offer
-  description: "There's an opening at my company \u2014 better pay, better hours.
-    Only catch is you'd need to do a short certification first. Worth looking into?"
+  description: There's an opening at my company, better pay, better hours. Only catch
+    is you'd need to do a short certification first. Worth looking into?
   financialLesson: 
   category: 3
   pool: 6

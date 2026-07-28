@@ -17,7 +17,7 @@ MonoBehaviour:
   senderRelation: Social
   choices:
   - label: Lend the full amount ($150)
-    resultDescription: "I trust you. Here it is \u2014 please don't forget."
+    resultDescription: I trust you. Here it is, please don't forget.
     moneyChange: -150
     momentumChange: -2
     moraleChange: 3
@@ -39,7 +39,7 @@ MonoBehaviour:
     borrowingPowerChange: 0
     grantsAsset: 
   - label: I can't lend money right now
-    resultDescription: "I'm sorry \u2014 my own situation is too tight right now."
+    resultDescription: I'm sorry, my own situation is too tight right now.
     moneyChange: 0
     momentumChange: 1
     moraleChange: -1
@@ -50,8 +50,8 @@ MonoBehaviour:
     borrowingPowerChange: 0
     grantsAsset: 
   eventName: Informal Loan Request
-  description: "Sorry to ask \u2014 I'm short this month. Any chance you could lend
-    me something? I'll pay it back by month end, promise."
+  description: Sorry to ask, I'm short this month. Any chance you could lend me something?
+    I'll pay it back by month end, promise.
   financialLesson: 
   category: 3
   pool: 6

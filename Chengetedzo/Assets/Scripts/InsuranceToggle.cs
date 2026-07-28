@@ -29,7 +29,7 @@ public class InsuranceToggleItem : MonoBehaviour
         bool allowed = panel.PlayerMeetsRequirement(plan);
         bool interactable = allowed;
 
-        if (plan.type == InsuranceType.Motor &&
+        if ((plan.type == InsuranceType.Motor || plan.type == InsuranceType.MotorComprehensive) &&
             plan.isSubscribed &&
             !plan.canCancelThisMonth)
         {

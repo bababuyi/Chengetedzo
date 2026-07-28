@@ -1,6 +1,6 @@
 using UnityEngine;
 
-// Personal goal ("the dream") definitions — one per guided profile, plus a
+// Personal goal ("the dream") definitions - one per guided profile, plus a
 // Free Mode pool. Static data + a benefit action per goal. GameManager owns
 // the runtime state (GoalBuilt, freeGoalIndex, etc.); this class only knows
 // what a goal is called, what it costs, and what it does when built.
@@ -68,7 +68,7 @@ public static class GoalDefs
         },
         new FreeGoalDef
         {
-            // No mechanical benefit — the lesson IS the benefit.
+            // No mechanical benefit - the lesson IS the benefit.
             title = "A proper emergency fund",
             Apply = () => PlayerDataManager.Instance.ModifyMomentum(2f)
         }

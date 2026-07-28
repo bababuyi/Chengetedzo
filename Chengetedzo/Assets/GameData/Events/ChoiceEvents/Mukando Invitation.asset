@@ -16,10 +16,9 @@ MonoBehaviour:
   senderName: Mai Dube
   senderRelation: Committee Chair
   choices:
-  - label: Join the round ($40)
-    resultDescription: "You pay in. When your turn comes the pot lands all at once
-      \u2014 saving with witnesses."
-    moneyChange: -40
+  - label: Join the mukando ($50 each month)
+    resultDescription: They write your name in the book. From next month, $50 goes in whether it suits you or not. In three months you can start borrowing against it.
+    moneyChange: 0
     momentumChange: 2
     moraleChange: 2
     moraleType: Social
@@ -27,9 +26,9 @@ MonoBehaviour:
     incomeEffectMonths: 1
     affectsLoan: 0
     borrowingPowerChange: 0
-    grantsAsset: 
-  - label: Save alone instead
-    resultDescription: You prefer your own book. The circle carries on without you.
+    grantsAsset:
+  - label: Not right now
+    resultDescription: You thank them and say maybe later. The book closes. You can join another time, but the clock starts from zero.
     moneyChange: 0
     momentumChange: 1
     moraleChange: 0
@@ -38,10 +37,9 @@ MonoBehaviour:
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
-    grantsAsset: 
+    grantsAsset:
   eventName: Mukando Invitation
-  description: Mai Dube's savings circle has an open seat. Everyone puts in monthly;
-    each month one member takes the whole pot. Your turn would come soon.
+  description: The women from church run a mukando. Everyone puts in the same amount each month, and when you have been paying a while you can borrow from the pot at a fraction of what a moneylender charges. It only works if you keep paying in.
   financialLesson: 
   category: 3
   pool: 6

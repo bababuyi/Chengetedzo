@@ -48,6 +48,7 @@ public class SetupPanelController : MonoBehaviour
     public GameObject backButton;
     public GameObject confirmAndStartButton;
     public GameObject confirmAdjustmentButton;
+    public GameObject cancelAdjustmentButton; // "Leave it as it is"
 
     [Header("Panels")]
     public ExpensesPanelController expensesPanelController;
@@ -417,7 +418,7 @@ public class SetupPanelController : MonoBehaviour
 
         string summary = "<b>Your Starting Situation</b>\n\n";
 
-        summary += $"Income Range: ${minIncome:F0} � ${maxIncome:F0}\n";
+        summary += $"Income Range: ${minIncome:F0} to ${maxIncome:F0}\n";
         summary += $"Estimated Monthly Income: ${averageIncome:F0}\n\n";
 
         summary += $"Living Expenses: -${monthlyExpenses:F0}\n";
@@ -541,6 +542,7 @@ public class SetupPanelController : MonoBehaviour
     {
         isExpenseAdjustmentMode = false;
         if (confirmAdjustmentButton != null) confirmAdjustmentButton.SetActive(false);
+        if (cancelAdjustmentButton != null) cancelAdjustmentButton.SetActive(false);
         expensesPanelController?.ExitAdjustmentMode();
 
         UnlockSetupUI();
@@ -595,6 +597,7 @@ public class SetupPanelController : MonoBehaviour
     {
         isExpenseAdjustmentMode = false;
         if (confirmAdjustmentButton != null) confirmAdjustmentButton.SetActive(false);
+        if (cancelAdjustmentButton != null) cancelAdjustmentButton.SetActive(false);
         expensesPanelController?.ExitAdjustmentMode();
 
         var gm = GameManager.Instance;
@@ -638,7 +641,7 @@ public class SetupPanelController : MonoBehaviour
         savingsSlider.SetValueWithoutNotify(profileSavings);
         UpdateSavingsDisplay();
 
-        // Lock toggles � player is not configuring, just reviewing
+        // Lock toggles - player is not configuring, just reviewing
         LockSetupUI();
 
         // Show step 4 but use the finance-aware summary builder
@@ -681,7 +684,7 @@ public class SetupPanelController : MonoBehaviour
         float netSurplus = surplus - savingsAmount;
 
         string summary = "<b>Your Financial Baseline</b>\n\n";
-        summary += $"Income Range: ${minIncome:F0} � ${maxIncome:F0}\n";
+        summary += $"Income Range: ${minIncome:F0} to ${maxIncome:F0}\n";
         summary += $"Estimated Monthly Income: ${averageIncome:F0}\n\n";
         summary += $"Housing: -${housing:F0}\n";
         summary += $"Food: -${groceries:F0}\n";
@@ -728,10 +731,24 @@ public class SetupPanelController : MonoBehaviour
 
         if (confirmAndStartButton != null) confirmAndStartButton.SetActive(false);
         if (confirmAdjustmentButton != null) confirmAdjustmentButton.SetActive(true);
+        if (cancelAdjustmentButton != null) cancelAdjustmentButton.SetActive(true);
 
         expensesPanelController.Init();
         expensesPanelController.EnterAdjustmentMode();
         LockSetupUI();
+    }
+
+    public void TakeLoanInsteadFromAdjustment()
+    {
+        if (!isExpenseAdjustmentMode) return;
+        isExpenseAdjustmentMode = false;
+
+        if (confirmAdjustmentButton != null) confirmAdjustmentButton.SetActive(false);
+        if (cancelAdjustmentButton != null) cancelAdjustmentButton.SetActive(false);
+        expensesPanelController.ExitAdjustmentMode();
+
+        UIManager.Instance.OnBudgetAdjustmentConfirmed();
+        GameManager.Instance.BeginLoanDecision();
     }
 
     public void ConfirmExpenseAdjustment()
@@ -739,9 +756,28 @@ public class SetupPanelController : MonoBehaviour
         if (!isExpenseAdjustmentMode) return;
         isExpenseAdjustmentMode = false;
 
-        expensesPanelController.ConfirmAdjustment();
+        // ConfirmAdjustment() reports whether it actually fired OnBudgetAdjustmentConfirmed
+        // (it early-returns if ExpensesPanelController's own isAdjustmentMode flag has
+        // drifted out of sync with this one). If it didn't, we fire it here so the player
+        // can never get stuck on this screen.
+        bool applied = expensesPanelController.ConfirmAdjustment();
+        if (!applied)
+            UIManager.Instance.OnBudgetAdjustmentConfirmed();
 
         if (confirmAdjustmentButton != null) confirmAdjustmentButton.SetActive(false);
+        if (cancelAdjustmentButton != null) cancelAdjustmentButton.SetActive(false);
         expensesPanelController.ExitAdjustmentMode();
+    }
+
+    public void CancelExpenseAdjustment()
+    {
+        if (!isExpenseAdjustmentMode) return;
+        isExpenseAdjustmentMode = false;
+
+        if (confirmAdjustmentButton != null) confirmAdjustmentButton.SetActive(false);
+        if (cancelAdjustmentButton  != null) cancelAdjustmentButton.SetActive(false);
+        expensesPanelController.ExitAdjustmentMode();
+
+        UIManager.Instance.OnBudgetAdjustmentConfirmed();
     }
 }

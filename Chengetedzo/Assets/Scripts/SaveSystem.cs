@@ -2,10 +2,6 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
-// Per-profile save slots — one file per guided profile plus one shared Free Mode slot,
-// so a player can park Formal mid-game, play Informal, and come back to either.
-// Files live in Application.persistentDataPath (not PlayerPrefs — PlayerPrefs held the
-// old single-slot save; see CleanupLegacySingleSlotSave).
 public static class SaveSystem
 {
     private const string LEGACY_SAVE_KEY = "GameSaveData";
@@ -16,8 +12,6 @@ public static class SaveSystem
         CleanupLegacySingleSlotSave();
     }
 
-    // One-time cleanup, no migration — the old single-slot save can't be mapped to a
-    // profile slot reliably, so it's just discarded the first time this class runs.
     private static void CleanupLegacySingleSlotSave()
     {
         if (PlayerPrefs.GetInt(LEGACY_CLEANED_FLAG, 0) == 1) return;
@@ -32,8 +26,6 @@ public static class SaveSystem
         PlayerPrefs.Save();
     }
 
-    // guided=false always resolves to the shared Free Mode slot regardless of `p` —
-    // the profile argument only matters when guided=true.
     private static string PathFor(GameManager.ProfileType p, bool guided)
     {
         string fileName = guided ? $"save_{p.ToString().ToLower()}.json" : "save_free.json";
@@ -46,13 +38,12 @@ public static class SaveSystem
         var loan = gm.loanManager;
         if (loan != null)
         {
-            data.loanBalance = loan.loanBalance;
-            data.borrowingPower = loan.borrowingPower;
-            data.totalContributed = loan.totalContributed;
-            data.monthsContributed = loan.monthsContributed;
-            data.repaymentRate = loan.repaymentRate;
-            data.missedPayments = loan.missedPayments;
-            data.onTimePayments = loan.onTimePayments;
+            data.moneylender = loan.moneylender;
+            data.mukando = loan.mukando;
+            data.loanUnlocked = loan.IsLoanUnlocked;
+            data.mukandoJoined = loan.mukandoJoined;
+            data.mukandoConsecutiveMisses = loan.MukandoConsecutiveMisses;
+            data.mukandoRecoveryMonthsNeeded = loan.MukandoRecoveryMonthsNeeded;
         }
         data.currentMonth = gm.currentMonth;
 
@@ -102,14 +93,12 @@ public static class SaveSystem
         data.mentorMemory_communityLowMentioned = gm.MentorMemory_CommunityLowMentioned;
         data.mentorMemory_goalBuiltMentioned = gm.MentorMemory_GoalBuiltMentioned;
         data.mentorMemory_scarAckPending = gm.MentorMemory_ScarAckPending;
+        data.mentorMemory_bufferLineShown = gm.MentorMemory_BufferLineShown;
 
         data.originalAdults = PlayerDataManager.Instance.OriginalAdults;
         data.currentAdults = PlayerDataManager.Instance.RawAdults;
         data.currentChildren = PlayerDataManager.Instance.Children;
 
-        // Setup block — REQUIRED for Free Mode resume (setupData/financeManager's base
-        // fields live in plain fields that don't survive an app restart on their own;
-        // resume never re-runs ApplyProfile/ConfirmAndStart to repopulate them).
         var setup = gm.setupData;
         var fm = gm.financeManager;
         data.setupAdults = setup.adults;
@@ -159,6 +148,16 @@ public static class SaveSystem
             {
                 reductionPercent = effect.reductionPercent,
                 remainingMonths = effect.remainingMonths
+            });
+        }
+
+        data.incomeBenefits = new List<GameSaveData.IncomeBenefitSaveData>();
+        foreach (var benefit in gm.ActiveIncomeBenefits)
+        {
+            data.incomeBenefits.Add(new GameSaveData.IncomeBenefitSaveData
+            {
+                amount = benefit.amount,
+                remainingMonths = benefit.remainingMonths
             });
         }
 
@@ -214,13 +213,13 @@ public static class SaveSystem
         if (File.Exists(path)) File.Delete(path);
     }
 
-    // Used by DEV_FullReset / FullRestart — a full reset clears every profile's slot,
+    // Used by DEV_FullReset / FullRestart - a full reset clears every profile's slot,
     // not just the one currently active.
     public static void DeleteAllSaves()
     {
         DeleteSave(GameManager.ProfileType.Informal, true);
         DeleteSave(GameManager.ProfileType.Formal, true);
         DeleteSave(GameManager.ProfileType.Farmer, true);
-        DeleteSave(GameManager.ProfileType.Informal, false); // profile arg ignored for Free Mode — see PathFor
+        DeleteSave(GameManager.ProfileType.Informal, false);
     }
 }

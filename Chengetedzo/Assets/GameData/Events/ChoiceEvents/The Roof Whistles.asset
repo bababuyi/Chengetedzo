@@ -40,8 +40,8 @@ MonoBehaviour:
     borrowingPowerChange: 0
     grantsAsset: 
   eventName: The Roof Whistles
-  description: "A soft whistle in the roof when the wind blows \u2014 a lifted sheet.
-    The fundi can fix it cheap now. The rains will not be so cheap."
+  description: 'A soft whistle in the roof when the wind blows: a lifted sheet. The
+    fundi can fix it cheap now. The rains will not be so cheap.'
   financialLesson: 
   category: 5
   pool: 6
