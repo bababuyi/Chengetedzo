@@ -27,6 +27,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: Give what I can ($40)
     resultDescription: I can manage $40. It's all I can spare right now.
     moneyChange: -40
@@ -38,6 +39,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: I can't contribute this time
     resultDescription: I'm sorry, I genuinely don't have anything to give right now.
     moneyChange: 0
@@ -49,6 +51,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   eventName: Community Borehole Project
   description: We're raising funds for the borehole, every household's expected to
     put something in. What can you manage?

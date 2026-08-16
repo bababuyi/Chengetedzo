@@ -38,4 +38,16 @@ public class ResolvedEvent
     public ExpenseCategory familyPromptCategory;
 
     public bool isGoalPrompt;
+
+    public bool schoolFeesPrompt;
+
+    // Insurance claim denial, surfaced to the player instead of a silent $0 payout.
+    // Gate any message on the player actually holding the policy (see InsuranceManager.
+    // InsuranceResult.isSubscribed) - these two bools alone are not a safe gate for
+    // waiting period, since an unsubscribed plan can still trip that flag.
+    public bool claimDeniedWaitingPeriod;
+    public bool claimDeniedLapsed;
+    public int monthsPaid;
+    public int waitingPeriodMonths;
+    public string planName;
 }

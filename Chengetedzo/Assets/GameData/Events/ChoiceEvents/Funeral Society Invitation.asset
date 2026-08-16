@@ -27,6 +27,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: I already have funeral cover
     resultDescription: I'm sorted on that front, but thank you Ambuya. Good to know
       it's there.
@@ -39,6 +40,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: Not for me right now
     resultDescription: I appreciate it, maybe another time.
     moneyChange: 0
@@ -50,6 +52,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   eventName: Funeral Society Invitation
   description: I run a burial society, twelve years now, small monthly contributions,
     and if anything happens the whole group covers the funeral costs. There's still

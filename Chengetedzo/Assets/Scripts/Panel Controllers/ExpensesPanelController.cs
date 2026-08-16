@@ -48,6 +48,7 @@ public class ExpensesPanelController : MonoBehaviour
     [Header("School Fees")]
     public Toggle schoolFeesToggle;
     public TMP_InputField schoolFeesInput;
+    public GameObject schoolFeesAmountGroup;   // shown in normal setup, hidden in adjustment mode - the fee amount isn't something you renegotiate mid-term
 
     [Header("Adjustment Readout")]
     public TMP_Text incomeRangeText;
@@ -58,6 +59,7 @@ public class ExpensesPanelController : MonoBehaviour
     public RectTransform budgetBarFill;
     public RectTransform belowBaseSegment;
     public RectTransform aboveBaseSegment;
+    public RectTransform eventSegment;
     public RectTransform baseLineMarker;
     public Button confirmAdjustmentButton;
     public TMP_Text budgetCapWarningText;
@@ -107,6 +109,7 @@ public class ExpensesPanelController : MonoBehaviour
         if (rentSliderGroup != null) rentSliderGroup.SetActive(false);
         if (houseCostInputGroup != null) houseCostInputGroup.SetActive(false);
         if (schoolFeesToggle != null) schoolFeesToggle.gameObject.SetActive(false);
+        if (schoolFeesAmountGroup != null) schoolFeesAmountGroup.SetActive(false);
 
         if (budgetBarContainer != null) budgetBarContainer.SetActive(true);
         if (incomeRangeText != null) incomeRangeText.gameObject.SetActive(true);
@@ -134,6 +137,7 @@ public class ExpensesPanelController : MonoBehaviour
         bool hasHouse = gm != null && gm.financeManager != null && gm.financeManager.assets.hasHouse;
         SetHousingMode(hasHouse);
         if (schoolFeesToggle != null) schoolFeesToggle.gameObject.SetActive(true);
+        if (schoolFeesAmountGroup != null) schoolFeesAmountGroup.SetActive(true);
 
         if (budgetBarContainer != null) budgetBarContainer.SetActive(false);
         if (groceriesBaselineTick != null) groceriesBaselineTick.gameObject.SetActive(false);
@@ -247,11 +251,13 @@ public class ExpensesPanelController : MonoBehaviour
 
         float inv    = bar.cap > 0f ? 1f / bar.cap : 0f;
         float fBase  = bar.baseLine * inv;
-        float fBelow = bar.belowBase * inv;
-        float fAbove = bar.aboveBase * inv;
+        float fRed    = bar.belowBase * inv;                              // your shortfall
+        float fOrange = bar.eventInflation * inv;                         // forced on you
+        float fGreen  = Mathf.Max(0f, bar.aboveBase - bar.eventInflation) * inv;  // cushion you keep
 
-        SetHorizontalFraction(belowBaseSegment, fBase - fBelow, fBase);
-        SetHorizontalFraction(aboveBaseSegment, fBase, fBase + fAbove);
+        SetHorizontalFraction(belowBaseSegment,  fBase - fRed, fBase);                    // left of base
+        SetHorizontalFraction(eventSegment,      fBase,        fBase + fOrange);          // orange
+        SetHorizontalFraction(aboveBaseSegment,  fBase + fOrange, fBase + fOrange + fGreen);
 
         if (baseLineMarker != null)
         {

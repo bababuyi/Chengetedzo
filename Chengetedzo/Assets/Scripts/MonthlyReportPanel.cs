@@ -145,9 +145,21 @@ public class MonthlyReportPanel : MonoBehaviour
             totalExpensesText.text = $"-{GameUtils.FormatMoney(totalExpenses)}";
 
         bool hasSavings = savingsContrib > 0.01f;
-        if (savingsLineRoot != null) savingsLineRoot.SetActive(hasSavings);
-        if (hasSavings && savingsLineText != null)
-            savingsLineText.text = $"+{GameUtils.FormatMoney(savingsContrib)}";
+        // FinanceManager only sets SavingsSkippedThisMonth when the player HAD a nonzero
+        // figure set and the guard skipped it for lack of cash - not when they simply
+        // haven't opted into savings, so this can't fire every month for someone who never
+        // touched the slider.
+        bool savingsSkipped = !hasSavings &&
+            (GameManager.Instance?.financeManager?.SavingsSkippedThisMonth ?? false);
+
+        if (savingsLineRoot != null) savingsLineRoot.SetActive(hasSavings || savingsSkipped);
+        if (savingsLineText != null)
+        {
+            if (hasSavings)
+                savingsLineText.text = $"+{GameUtils.FormatMoney(savingsContrib)}";
+            else if (savingsSkipped)
+                savingsLineText.text = "Savings this month: nothing set aside. There was not enough left after the bills.";
+        }
 
         if (endBalanceText != null)
             endBalanceText.text = GameUtils.FormatMoney(ledger.ClosingBalance);

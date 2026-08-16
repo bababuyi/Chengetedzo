@@ -64,6 +64,9 @@ public static class EventImporter
     private const int C_STARTS_CHAIN = 31;
     private const int C_FOLLOWUP_CHANCE = 32;
     private const int C_FOLLOWUP_DELAY = 33;
+    // Secondary policies this event also touches, pipe-separated (e.g.
+    // "Funeral|PersonalAccident"). See EventData.additionalCoveredBy.
+    private const int C_ADDITIONAL_COVERED = 34;
 
     // ── Menu entry ──────────────────────────────────────────────────────────
     [MenuItem("Tools/Import Events")]
@@ -230,6 +233,9 @@ public static class EventImporter
         // Follow-up events list - cleared; wire manually in Inspector
         if (ev.followUpEvents == null)
             ev.followUpEvents = new List<EventData>();
+
+        // ── Insurance secondaries ─────────────────────────────────────────
+        ev.additionalCoveredBy = ParseInsuranceTypeList(Get(C_ADDITIONAL_COVERED));
     }
 
     // ── Enum parsers ────────────────────────────────────────────────────────
@@ -264,6 +270,7 @@ public static class EventImporter
         "crops" => GameManager.AssetRequirement.Crops,
         "livestock" => GameManager.AssetRequirement.Livestock,
         "cropsorlivestock" => GameManager.AssetRequirement.CropsOrLivestock,
+        "renting" => GameManager.AssetRequirement.Renting,
         _ => GameManager.AssetRequirement.None,
     };
 
@@ -278,8 +285,28 @@ public static class EventImporter
         "motorcomprehensive" => InsuranceManager.InsuranceType.MotorComprehensive,
         "home" => InsuranceManager.InsuranceType.Home,
         "crop" => InsuranceManager.InsuranceType.Crop,
+        "burialsociety" => InsuranceManager.InsuranceType.BurialSociety,
         _ => InsuranceManager.InsuranceType.None,
     };
+
+    // Pipe-separated secondary policies, e.g. "Funeral|PersonalAccident". Empty/blank
+    // entries and unrecognised names collapse to None and are dropped rather than
+    // silently inserted as a phantom None-type secondary.
+    private static List<InsuranceManager.InsuranceType> ParseInsuranceTypeList(string s)
+    {
+        var result = new List<InsuranceManager.InsuranceType>();
+        if (string.IsNullOrWhiteSpace(s)) return result;
+
+        foreach (var token in s.Split('|'))
+        {
+            var trimmed = token.Trim();
+            if (trimmed.Length == 0) continue;
+            var parsed = ParseInsuranceType(trimmed);
+            if (parsed != InsuranceManager.InsuranceType.None)
+                result.Add(parsed);
+        }
+        return result;
+    }
 
     private static EventOutcomeType ParseOutcomeType(string s) =>
         s.Equals("Positive", StringComparison.OrdinalIgnoreCase)

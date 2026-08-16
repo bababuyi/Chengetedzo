@@ -28,6 +28,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: Send what I can ($60)
     resultDescription: I can only spare $60 right now, Sekuru. I'm sorry I can't
       do more.
@@ -40,6 +41,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: I genuinely can't help right now
     resultDescription: I'm really sorry Sekuru. Things are very tight this month.
       I'll help when I can.
@@ -52,6 +54,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   eventName: Sekuru Needs Help
   description: I'm at the clinic. The treatment is costing more than I have on me.
     If you're able to help, I'd be so grateful, mwanangu.

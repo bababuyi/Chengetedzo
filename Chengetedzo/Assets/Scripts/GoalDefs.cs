@@ -11,12 +11,21 @@ public static class GoalDefs
         public string title;
         public float target;
         public System.Action Apply;
+
+        // Complete phrase, not a verb slotted into a shared template - "Buy it now" for
+        // a cow and "Open it now" for a market stall need different verbs, and a shared
+        // template can't tell them apart.
+        public string actionLabel;
+        public string benefitLine;
+        public bool spendsSavings = true;
     }
 
     public static readonly GoalDef Informal = new GoalDef
     {
         title = "Her own market stall",
         target = 500f,
+        actionLabel = "Open it now",
+        benefitLine = "Opening it now means it starts earning for you sooner.",
         Apply = () => GameManager.Instance.ApplyIncomeEffect(8f, -1)
     };
 
@@ -24,6 +33,8 @@ public static class GoalDefs
     {
         title = "Weekend delivery side-business",
         target = 700f,
+        actionLabel = "Start it now",
+        benefitLine = "Starting now means it earns for you sooner.",
         Apply = () => GameManager.Instance.ApplyIncomeEffect(7f, -1)
     };
 
@@ -31,6 +42,8 @@ public static class GoalDefs
     {
         title = "A second cow",
         target = 450f,
+        actionLabel = "Buy her now",
+        benefitLine = "Buying her now means she starts earning for you sooner.",
         Apply = () =>
         {
             GameManager.Instance.ApplyIncomeEffect(6f, -1);
@@ -44,6 +57,10 @@ public static class GoalDefs
     {
         public string title;
         public System.Action Apply;
+
+        public string actionLabel;
+        public string benefitLine;
+        public bool spendsSavings = true;
     }
 
     // target is computed at Free Mode setup confirm (see GameManager.RollFreeGoalIfNeeded)
@@ -52,11 +69,15 @@ public static class GoalDefs
         new FreeGoalDef
         {
             title = "A sewing machine business",
+            actionLabel = "Start it now",
+            benefitLine = "Starting now means it earns for you sooner.",
             Apply = () => GameManager.Instance.ApplyIncomeEffect(6f, -1)
         },
         new FreeGoalDef
         {
             title = "A bicycle for the family",
+            actionLabel = "Buy it now",
+            benefitLine = "It will cut what you spend on transport every month.",
             Apply = () =>
             {
                 var gm = GameManager.Instance;
@@ -68,8 +89,13 @@ public static class GoalDefs
         },
         new FreeGoalDef
         {
-            // No mechanical benefit - the lesson IS the benefit.
+            // No mechanical benefit - the lesson IS the benefit. spendsSavings = false:
+            // this goal IS the savings, so HandleGoalChoice must not deduct target from
+            // generalSavingsBalance, or it would spend the emergency fund to "buy" itself.
             title = "A proper emergency fund",
+            actionLabel = "Leave it be",
+            benefitLine = "",
+            spendsSavings = false,
             Apply = () => PlayerDataManager.Instance.ModifyMomentum(2f)
         }
     };
@@ -112,6 +138,69 @@ public static class GoalDefs
         }
 
         return gm.FreeGoalTarget;
+    }
+
+    public static string GetActiveGoalActionLabel()
+    {
+        var gm = GameManager.Instance;
+        if (gm == null) return "";
+
+        if (gm.IsGuidedMode)
+        {
+            return gm.CurrentProfileType switch
+            {
+                GameManager.ProfileType.Informal => Informal.actionLabel,
+                GameManager.ProfileType.Formal => Formal.actionLabel,
+                GameManager.ProfileType.Farmer => Farmer.actionLabel,
+                _ => ""
+            };
+        }
+
+        int idx = gm.FreeGoalIndex;
+        if (idx < 0 || idx >= FreeModePool.Length) return "";
+        return FreeModePool[idx].actionLabel;
+    }
+
+    public static string GetActiveGoalBenefitLine()
+    {
+        var gm = GameManager.Instance;
+        if (gm == null) return "";
+
+        if (gm.IsGuidedMode)
+        {
+            return gm.CurrentProfileType switch
+            {
+                GameManager.ProfileType.Informal => Informal.benefitLine,
+                GameManager.ProfileType.Formal => Formal.benefitLine,
+                GameManager.ProfileType.Farmer => Farmer.benefitLine,
+                _ => ""
+            };
+        }
+
+        int idx = gm.FreeGoalIndex;
+        if (idx < 0 || idx >= FreeModePool.Length) return "";
+        return FreeModePool[idx].benefitLine;
+    }
+
+    public static bool GetActiveGoalSpendsSavings()
+    {
+        var gm = GameManager.Instance;
+        if (gm == null) return true;
+
+        if (gm.IsGuidedMode)
+        {
+            return gm.CurrentProfileType switch
+            {
+                GameManager.ProfileType.Informal => Informal.spendsSavings,
+                GameManager.ProfileType.Formal => Formal.spendsSavings,
+                GameManager.ProfileType.Farmer => Farmer.spendsSavings,
+                _ => true
+            };
+        }
+
+        int idx = gm.FreeGoalIndex;
+        if (idx < 0 || idx >= FreeModePool.Length) return true;
+        return FreeModePool[idx].spendsSavings;
     }
 
     public static void ApplyActiveGoalBenefit()

@@ -17,8 +17,8 @@ MonoBehaviour:
   senderRelation: Vendor
   choices:
   - label: Put up the float ($50)
-    resultDescription: 'You checked the trade before trusting it. The corner earns:
-      slowly, honestly.'
+    resultDescription: I watched him work a full day before I put anything in. The
+      corner earns slowly, but it's honest money.
     moneyChange: -50
     momentumChange: 2
     moraleChange: 0
@@ -28,9 +28,10 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: Not this time
-    resultDescription: A real chance, but your money has other work to do. Knowing
-      the difference is the skill.
+    resultDescription: It looked like a real chance, but my money has other work
+      to do right now. Knowing the difference is the skill.
     moneyChange: 0
     momentumChange: 1
     moraleChange: 0
@@ -40,6 +41,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   eventName: Airtime Float Offer
   description: Tonderai resells airtime and data at the rank. He'll split his corner
     with you if you put up float money. You watch him work a full day first. The

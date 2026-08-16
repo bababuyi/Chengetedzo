@@ -172,6 +172,20 @@ public static class SaveSystem
             });
         }
 
+        data.pendingEvents = new List<GameSaveData.PendingEventSaveData>();
+        if (gm.eventManager != null)
+        {
+            foreach (var p in gm.eventManager.PendingEventsSnapshot)
+            {
+                if (p.eventData == null) continue;
+                data.pendingEvents.Add(new GameSaveData.PendingEventSaveData
+                {
+                    eventName = p.eventData.eventName,
+                    monthToTrigger = p.monthToTrigger
+                });
+            }
+        }
+
         data.snapshots = new List<GameSaveData.MonthSnapshotSaveData>();
         foreach (var s in gm.monthHistory)
             data.snapshots.Add(new GameSaveData.MonthSnapshotSaveData

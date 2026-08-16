@@ -45,7 +45,7 @@ MonoBehaviour:
   familyMemberType: 0
   affectsExpenses: 1
   expenseCategory: 0
-  expenseFlatChange: -25
+  expenseFlatChange: 10
   expenseEffectMonths: 1
   lossType: 1
   fixedLossAmount: 0

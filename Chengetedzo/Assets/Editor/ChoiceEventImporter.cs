@@ -112,6 +112,9 @@ public static class ChoiceEventImporter
 
                 current.followUpChance = cols.Length > 11 ? ParseFloat(cols[11]) : 0f;
                 current.followUpDelay = cols.Length > 12 ? ParseInt(cols[12]) : 0;
+                // Secondary policies this event also touches, pipe-separated (e.g.
+                // "Funeral|PersonalAccident"). See EventData.additionalCoveredBy.
+                current.additionalCoveredBy = cols.Length > 13 ? ParseInsuranceTypeList(cols[13]) : new List<InsuranceManager.InsuranceType>();
 
                 // Fixed values for all choice events
                 current.hasChoices = true;
@@ -151,6 +154,7 @@ public static class ChoiceEventImporter
                     affectsLoan = cols[9].Trim().Equals("Yes", StringComparison.OrdinalIgnoreCase),
                     borrowingPowerChange = ParseFloat(cols[10]),
                     grantsAsset = cols.Length > 11 ? cols[11].Trim() : "",
+                    coveredBy = cols.Length > 12 ? ParseInsuranceType(cols[12]) : InsuranceManager.InsuranceType.None,
                 });
             }
         }
@@ -203,6 +207,7 @@ public static class ChoiceEventImporter
         "livestock" => GameManager.AssetRequirement.Livestock,
         "cropsorlivestock" => GameManager.AssetRequirement.CropsOrLivestock,
         "nomotor" => GameManager.AssetRequirement.NoMotor,
+        "renting" => GameManager.AssetRequirement.Renting,
         _ => GameManager.AssetRequirement.None,
     };
 
@@ -212,6 +217,40 @@ public static class ChoiceEventImporter
         "major"    => EventSeverity.Major,
         _          => EventSeverity.Minor,
     };
+
+    private static InsuranceManager.InsuranceType ParseInsuranceType(string s) => s.Trim().ToLower() switch
+    {
+        "funeral" => InsuranceManager.InsuranceType.Funeral,
+        "health" => InsuranceManager.InsuranceType.Health,
+        "education" => InsuranceManager.InsuranceType.Education,
+        "hospitalcash" => InsuranceManager.InsuranceType.HospitalCash,
+        "personalaccident" => InsuranceManager.InsuranceType.PersonalAccident,
+        "motor" => InsuranceManager.InsuranceType.Motor,
+        "motorcomprehensive" => InsuranceManager.InsuranceType.MotorComprehensive,
+        "home" => InsuranceManager.InsuranceType.Home,
+        "crop" => InsuranceManager.InsuranceType.Crop,
+        "burialsociety" => InsuranceManager.InsuranceType.BurialSociety,
+        _ => InsuranceManager.InsuranceType.None,
+    };
+
+    // Pipe-separated secondary policies, e.g. "Funeral|PersonalAccident". Empty/blank
+    // entries and unrecognised names collapse to None and are dropped rather than
+    // silently inserted as a phantom None-type secondary.
+    private static List<InsuranceManager.InsuranceType> ParseInsuranceTypeList(string s)
+    {
+        var result = new List<InsuranceManager.InsuranceType>();
+        if (string.IsNullOrWhiteSpace(s)) return result;
+
+        foreach (var token in s.Split('|'))
+        {
+            var trimmed = token.Trim();
+            if (trimmed.Length == 0) continue;
+            var parsed = ParseInsuranceType(trimmed);
+            if (parsed != InsuranceManager.InsuranceType.None)
+                result.Add(parsed);
+        }
+        return result;
+    }
 
     // Handles quoted CSV fields containing commas
     private static string[] ParseCSVLine(string line)

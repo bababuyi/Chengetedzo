@@ -27,6 +27,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: Take some overtime
     resultDescription: I can manage a few extra hours. Count me in.
     moneyChange: 0
@@ -38,6 +39,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: I need to pass this time
     resultDescription: I appreciate the offer, but I can't take it this month.
     moneyChange: 0
@@ -49,6 +51,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   eventName: Overtime Offered
   description: We've got extra work on this month and I need hands. You interested
     in picking up some overtime?

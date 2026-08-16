@@ -37,8 +37,70 @@ public class FinanceManager : MonoBehaviour
 
     [Header("School Fees")]
     public float schoolFeesPerTerm;
-    private bool schoolFeesOutstanding = false;
-    private int lastSchoolFeesChargedMonth = -1;
+
+    // One term's worth of debt at most - it never compounds across terms, per
+    // ProcessSchoolFees below.
+    public float schoolFeesOwed;
+    public int schoolFeesMonthsOverdue;
+
+    // Renamed from childrenOutOfSchool. The school has no lawful power to exclude a
+    // pupil for unpaid fees (Education Act s.68C; Constitution s.75), so the children
+    // never actually stop attending - this just tracks whether the account is far
+    // enough overdue that the pressure has escalated to the rights-based rung.
+    public bool schoolFeesInCrisis;
+
+    [Tooltip("Family morale lost once, the month fees hit the second-notice threshold (overdue == 2).")]
+    public float schoolFeesSecondNoticeMoraleHit = 3f;
+    [Tooltip("Family morale lost every month fees stay unpaid at the withdrawal threshold (overdue >= 3), repeating until paid.")]
+    public float schoolFeesWithdrawalMoraleHit = 5f;
+    [Tooltip("Social morale lost every month fees stay unpaid at the withdrawal threshold (overdue >= 3), repeating until paid - the community-facing cost of the account being in crisis.")]
+    public float schoolFeesSocialHit = 3f;
+
+    private const string SchoolFeesFirstNoticeMessage =
+        "School fees for this term have not been received. Please settle at the bursar's office.";
+    private const string SchoolFeesSecondNoticeMessage =
+        "This is a second notice. Fees remain outstanding. Please make a plan with the school.";
+    private const string SchoolFeesWithdrawalMessage =
+        "We have asked that the children remain at home until the account is settled.";
+    private const string SchoolFeesRightsMessage =
+        "They cannot do that. Section 68C of the Education Act, no pupil may be excluded from school for unpaid fees. The debt is real and you still owe it. But your children go to school tomorrow.";
+    private const string SchoolFeesReturnMessage =
+        "Received, and thank you. I know these last months have not been easy. The account is clear.";
+
+    // Guards against ProcessSchoolFees being invoked twice for the same month from any
+    // future call site - keeps the payment/notice/morale logic idempotent per month.
+    private int lastSchoolFeesProcessedMonth = -1;
+
+    // ProcessSchoolFees runs synchronously inside ProcessMonthlyBudget, deep in
+    // ConfirmMonthAndResolve - before the month's events have even been generated. Showing
+    // a mentor popup directly from here left IsPopupActive true when the ticker tried to
+    // open the first event, which refused to open and stalled the month. So this only
+    // records the message; GameManager flushes and clears it once events are done.
+    public string PendingSchoolFeesMessage { get; private set; }
+
+    // Shown immediately after PendingSchoolFeesMessage, when set - currently only used
+    // for the rights follow-up on rung 3 (see ProcessSchoolFees).
+    public string PendingSchoolFeesFollowUp { get; private set; }
+
+    // Set at term start once a fresh bill is raised. The player resolves it through the
+    // school fees choice event (GameManager.BuildSchoolFeesPromptEvent /
+    // HandleSchoolFeesChoice) rather than an automatic payment here.
+    public bool SchoolFeesPromptDue { get; private set; }
+
+    public void ClearPendingSchoolFeesMessage()
+    {
+        PendingSchoolFeesMessage = null;
+    }
+
+    public void ClearPendingSchoolFeesFollowUp()
+    {
+        PendingSchoolFeesFollowUp = null;
+    }
+
+    public void ClearSchoolFeesPromptDue()
+    {
+        SchoolFeesPromptDue = false;
+    }
 
 
     [Header("Financial State")]
@@ -72,6 +134,12 @@ public class FinanceManager : MonoBehaviour
     public float savingsWithdrawnThisMonth;
 
     public float LastMonthSavingsDelta { get; private set; }
+
+    // True only when the player set a nonzero generalSavingsMonthly and this month's
+    // guard skipped it for lack of cash - not when generalSavingsMonthly is 0 because they
+    // haven't chosen to save. The monthly report reads this to tell the two cases apart;
+    // previously both looked identical (no savings line at all).
+    public bool SavingsSkippedThisMonth { get; private set; }
 
     /// <summary>
     /// Sets the player's income at game start or during simulation.
@@ -126,6 +194,10 @@ public class FinanceManager : MonoBehaviour
         Debug.Log($"[Assets] House:${houseInsuredValue:F0} Motor:${motorInsuredValue:F0} " +
                   $"Livestock:${livestockInsuredValue:F0} Crops:${cropsInsuredValue:F0} " +
                   $"(commercial:{isCommercial})");
+
+        // LoanManager.ResetAll() runs before this method (income is still 0 at that point),
+        // so the Moneylender cap it computed was 3 x 0. Recompute now that income is real.
+        GameManager.Instance.loanManager?.UpdateMoneylenderBorrowingPower();
     }
 
     public void RecalculateAssetValues()
@@ -214,18 +286,30 @@ public class FinanceManager : MonoBehaviour
 
         // 3. General savings (ONLY if affordable)
         LastMonthSavingsDelta = 0f;
+        SavingsSkippedThisMonth = false;
 
-        if (generalSavingsMonthly > 0 && CashOnHand >= generalSavingsMonthly)
+        if (generalSavingsMonthly > 0)
         {
-            GameManager.Instance.ApplyMoneyChange(
-            FinancialEntry.EntryType.SavingsContribution,
-            "Savings Contribution",
-            generalSavingsMonthly,
-            false
-            );
+            if (CashOnHand >= generalSavingsMonthly)
+            {
+                GameManager.Instance.ApplyMoneyChange(
+                FinancialEntry.EntryType.SavingsContribution,
+                "Savings Contribution",
+                generalSavingsMonthly,
+                false
+                );
 
-            generalSavingsBalance += generalSavingsMonthly;
-            LastMonthSavingsDelta = generalSavingsMonthly;
+                generalSavingsBalance += generalSavingsMonthly;
+                LastMonthSavingsDelta = generalSavingsMonthly;
+            }
+            else
+            {
+                // The guard above is correct and stays - this just makes its outcome
+                // visible. Previously a player who couldn't afford their chosen figure
+                // just saw a report with no savings line at all, identical to a player who
+                // never opted into savings in the first place.
+                SavingsSkippedThisMonth = true;
+            }
         }
 
         // 4. Interest (applied to current savings balance after contributions/withdrawals)
@@ -306,30 +390,81 @@ public class FinanceManager : MonoBehaviour
     public float ProcessSchoolFees(int month)
     {
         if (schoolFeesPerTerm <= 0f) return 0f;
-        if (lastSchoolFeesChargedMonth == month) return 0f;
+        if (lastSchoolFeesProcessedMonth == month) return 0f;
+        lastSchoolFeesProcessedMonth = month;
 
         int normalizedMonth = ((month - 1) % 12) + 1;
         bool isTermStart = (normalizedMonth == 1 || normalizedMonth == 5 || normalizedMonth == 9);
-        if (isTermStart) schoolFeesOutstanding = true;
-        if (!schoolFeesOutstanding) return 0f;
 
-        int childCount = Mathf.Max(0, PlayerDataManager.Instance?.Children ?? 0);
-        if (childCount == 0) { schoolFeesOutstanding = false; return 0f; }
+        // Bill a fresh term only if nothing is owed - a term still unpaid caps the debt
+        // at one term forever, it does not add on top. This only raises the bill and
+        // flags it: payment is the player's choice, made through the school fees
+        // prompt event (GameManager.BuildSchoolFeesPromptEvent / HandleSchoolFeesChoice),
+        // not this method.
+        if (isTermStart && schoolFeesOwed <= 0f)
+        {
+            int childCount = Mathf.Max(0, PlayerDataManager.Instance?.Children ?? 0);
+            if (childCount > 0)
+            {
+                schoolFeesOwed = schoolFeesPerTerm * childCount;
+                SchoolFeesPromptDue = true;
+                return 0f;
+            }
+        }
 
-        float effectiveFees = (schoolFeesPerTerm * childCount)
+        if (schoolFeesOwed <= 0f) return 0f;
+
+        float effectiveFees = schoolFeesOwed
             + GameManager.Instance.GetExpenseModifier(ExpenseCategory.SchoolFees);
 
         if (cashOnHand >= effectiveFees)
         {
             GameManager.Instance.ApplyMoneyChange(
                 FinancialEntry.EntryType.Expense, "School Fees", effectiveFees, false);
-            schoolFeesOutstanding = false;
-            lastSchoolFeesChargedMonth = month;
-            Debug.Log($"[School Fees] Paid ${effectiveFees} for {childCount} child(ren)");
+
+            schoolFeesOwed = 0f;
+            schoolFeesMonthsOverdue = 0;
+
+            if (schoolFeesInCrisis)
+            {
+                schoolFeesInCrisis = false;
+                PendingSchoolFeesMessage = SchoolFeesReturnMessage;
+            }
+
+            Debug.Log($"[School Fees] Paid ${effectiveFees}");
             return effectiveFees;
         }
 
-        Debug.LogWarning("[School Fees] Unpaid - outstanding!");
+        // Not affordable. Partial payment is not applied here - it stays fully
+        // outstanding and retries next month. (A genuine partial payment, made through
+        // the school fees choice event, is handled separately in
+        // GameManager.HandleSchoolFeesChoice and does not advance schoolFeesMonthsOverdue.)
+        schoolFeesMonthsOverdue++;
+
+        if (schoolFeesMonthsOverdue == 1)
+        {
+            PendingSchoolFeesMessage = SchoolFeesFirstNoticeMessage;
+        }
+        else if (schoolFeesMonthsOverdue == 2)
+        {
+            PendingSchoolFeesMessage = SchoolFeesSecondNoticeMessage;
+            PlayerDataManager.Instance.ModifyFamilyMorale(-schoolFeesSecondNoticeMoraleHit);
+        }
+        else
+        {
+            // Rung 3 used to pull the children out of school. That is not lawful - the
+            // Education Act (s.68C) bars exclusion for unpaid fees, and the Constitution
+            // (s.75) guarantees basic state-funded education. The debt and the pressure
+            // are both real, but the children keep attending; the mentor follow-up
+            // (PendingSchoolFeesFollowUp) tells the player why, right after the bursar line.
+            schoolFeesInCrisis = true;
+            PendingSchoolFeesMessage = SchoolFeesWithdrawalMessage;
+            PendingSchoolFeesFollowUp = SchoolFeesRightsMessage;
+            PlayerDataManager.Instance.ModifyFamilyMorale(-schoolFeesWithdrawalMoraleHit);
+            PlayerDataManager.Instance.ModifySocialMorale(-schoolFeesSocialHit);
+        }
+
+        Debug.LogWarning($"[School Fees] Unpaid - outstanding! Months overdue: {schoolFeesMonthsOverdue}");
         return 0f;
     }
 
@@ -502,12 +637,18 @@ public class FinanceManager : MonoBehaviour
         generalSavingsBalance = 0f;
         savingsWithdrawnThisMonth = 0f;
         LastMonthSavingsDelta = 0f;
+        SavingsSkippedThisMonth = false;
 
         WasOverBudgetThisMonth = false;
         IncomeCoveredExpensesThisMonth = true;
 
-        schoolFeesOutstanding = false;
-        lastSchoolFeesChargedMonth = -1;
+        schoolFeesOwed = 0f;
+        schoolFeesMonthsOverdue = 0;
+        schoolFeesInCrisis = false;
+        lastSchoolFeesProcessedMonth = -1;
+        ClearPendingSchoolFeesMessage();
+        ClearPendingSchoolFeesFollowUp();
+        ClearSchoolFeesPromptDue();
 
         minIncome = 0f;
         maxIncome = 0f;

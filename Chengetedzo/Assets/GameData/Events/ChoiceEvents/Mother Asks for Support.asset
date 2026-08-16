@@ -27,6 +27,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: Send half ($45)
     resultDescription: I can manage $45 right now, Mai. I'll try to send more soon.
     moneyChange: -45
@@ -38,6 +39,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: I can't help this month
     resultDescription: I'm so sorry Mai. I genuinely don't have anything right now.
     moneyChange: 0
@@ -49,6 +51,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   eventName: Mother Asks for Support
   description: Mwanangu, the ZESA and water bills are due and I'm short this month.
     Is there anything you can send?

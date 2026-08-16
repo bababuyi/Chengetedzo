@@ -27,6 +27,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: Wait for the local market to open
     resultDescription: Patience pays. The local price will be fair.
     moneyChange: 0
@@ -38,6 +39,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: Sell to a local middleman now ($150)
     resultDescription: Cash now is worth more than waiting.
     moneyChange: 150
@@ -49,6 +51,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   eventName: Sell the Crops or Wait
   description: Your harvest is ready but the main market doesn't open for two more
     weeks. Each option has a trade-off.

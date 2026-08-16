@@ -27,6 +27,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: Dip only the most at-risk animals ($50)
     resultDescription: I'll do the older cattle first and the rest next month.
     moneyChange: -50
@@ -38,6 +39,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: Wait and monitor for symptoms
     resultDescription: I'll hold off and see if any actually get sick.
     moneyChange: 0
@@ -49,6 +51,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   eventName: Cattle Need Urgent Dipping
   description: Tick-borne disease is spreading in the area, I need you to get your
     cattle dipped as soon as possible. Don't wait on this one.

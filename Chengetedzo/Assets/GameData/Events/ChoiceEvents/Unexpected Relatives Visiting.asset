@@ -27,6 +27,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: Buy basics and manage ($40)
     resultDescription: Rice and vegetables will do. I'll make it work.
     moneyChange: -40
@@ -38,6 +39,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: Explain that you can't host right now
     resultDescription: I'm so sorry, this month is genuinely impossible for me.
     moneyChange: 0
@@ -49,6 +51,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   eventName: Unexpected Relatives Visiting
   description: Ah, we're here! The children and I will be staying with you this week,
     hope that's alright.

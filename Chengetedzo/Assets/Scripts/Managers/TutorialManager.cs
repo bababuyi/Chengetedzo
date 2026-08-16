@@ -188,11 +188,6 @@ public class TutorialManager : MonoBehaviour
         });
     }
 
-    /// <summary>
-    /// Call once, right after the simulation-start tutorial (or as soon as the goal HUD
-    /// text first has something to show). Fires once per save profile via KEY_GOAL_SEEN;
-    /// harmless to call every month since Seen() short-circuits after the first time.
-    /// </summary>
     public void OnGoalIntro(string goalTitle, System.Action onComplete)
     {
         if (Seen(KEY_GOAL_SEEN) || string.IsNullOrEmpty(goalTitle))
@@ -210,24 +205,18 @@ public class TutorialManager : MonoBehaviour
         new[] { topHUDMoneyArea });
     }
 
-    /// <summary>
-    /// Call from GameManager.ShowOrChooseEvent's isFamilyPrompt branch, before showing
-    /// the first family-prompt choice popup. Pass the actual popup-show call as the
-    /// callback, same pattern as OnFirstEvent.
-    /// </summary>
     public void OnFirstFamilyPrompt(System.Action showPopupCallback)
     {
         if (Seen(KEY_FAMILY_PROMPT_SEEN)) { showPopupCallback?.Invoke(); return; }
 
         ShowSequence(new[]
         {
-            "Before you answer, understand something. Your family notices what you do with this " +
+            "Before you answer, understand something. Your family notices what you do with the " +
             "budget, and they remember. Say 'not now' and they carry it. Put things back and most " +
             "of the hurt heals. Most. Some marks only generosity can remove."
         }, () => { Mark(KEY_FAMILY_PROMPT_SEEN); showPopupCallback?.Invoke(); });
     }
 
-    /// <summary>Call when the expense adjustment screen opens for the first time.</summary>
     public void OnFirstBudgetCut()
     {
         if (Seen(KEY_CUT_SEEN)) return;
@@ -252,16 +241,12 @@ public class TutorialManager : MonoBehaviour
             KEY_EVENT_SEEN, KEY_REPORT_SEEN, KEY_COMPLETE_SEEN,
             KEY_FREE_FORECAST, KEY_FREE_INSURANCE, KEY_FREE_SETUP, KEY_DEDUCTIBLE_SEEN,
             KEY_GOAL_SEEN, KEY_FAMILY_PROMPT_SEEN, KEY_CUT_SEEN,
-            "Tut_FreeForeSeen", "Tut_FreeInsSeen" // legacy keys - clear old saves
+            "Tut_FreeForeSeen", "Tut_FreeInsSeen"
         };
         foreach (var k in keys) PlayerPrefs.DeleteKey(k);
         PlayerPrefs.Save();
         Debug.Log("[Tutorial] All flags reset.");
     }
-
-    // ═════════════════════════════════════════════════════════════════════════
-    //  SEQUENCE BUILDERS  (private content layer)
-    // ═════════════════════════════════════════════════════════════════════════
 
     private void ShowProfileIntroSequence(ProfileType profile, System.Action onComplete)
     {

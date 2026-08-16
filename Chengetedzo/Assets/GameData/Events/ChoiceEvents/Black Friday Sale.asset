@@ -27,6 +27,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: Buy something small ($80)
     resultDescription: Got something small, a reasonable compromise.
     moneyChange: -80
@@ -38,6 +39,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: Close the app and resist
     resultDescription: Nope. Not today. That money stays in my account.
     moneyChange: 0
@@ -49,6 +51,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   eventName: Black Friday Sale
   description: 'BLACK FRIDAY: The TV you''ve been eyeing is now HALF PRICE. Tonight
     only, don''t miss out!'

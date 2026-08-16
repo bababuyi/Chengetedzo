@@ -20,6 +20,10 @@ public class GameManager : MonoBehaviour
     private float previousMomentum = 0f;
     private bool recoveryAcknowledged = false;
     private int lastMomentumZone = int.MinValue;
+    // Set once by TriggerDebtSpiralEnding and never cleared mid-run - guards against the
+    // 3-in-a-row check firing again in a later month and against EndMonthAndAdvance
+    // continuing into the next month once the spiral has actually ended the game.
+    private bool isGameOverFromDebtSpiral = false;
     private bool patternWarningIssued = false;
     private bool mentorMemory_hasEverClaimed = false;
     private int mentorMemory_consecutiveLowSavingsMonths = 0;
@@ -102,7 +106,6 @@ public class GameManager : MonoBehaviour
     public bool IsHeadlessSimulation = false;
     public System.Action OnSeasonChanged;
     private bool mentorSpokeThisMonth = false;
-    private bool loanIntroShown = false;
     private bool monthResolutionStarted = false;
     private Queue<ResolvedEvent> pendingEvents = new();
     private ResolvedEvent currentEvent;
@@ -427,6 +430,11 @@ public class GameManager : MonoBehaviour
         Livestock,
         CropsOrLivestock,
         NoMotor,
+        // Not an owned asset - gates on financeManager.rentCost > 0 rather than a
+        // PlayerAssets flag. assets.hasHouse isn't a safe stand-in: the Farmer profile
+        // owns its house (setupData.housing == OwnsHouse, rentCost = 0) but never sets
+        // hasHouse true, so "!hasHouse" would wrongly call a Farmer a renter.
+        Renting,
     }
 
     public enum ProfileType
@@ -527,6 +535,14 @@ public class GameManager : MonoBehaviour
             combined.Insert(insertAt, BuildGoalPromptEvent(activeGoalTarget));
         }
 
+        // Term-start fee bill takes priority over everything else this month - pushed
+        // to the front rather than shuffled in like the other prompts.
+        if (financeManager.SchoolFeesPromptDue)
+        {
+            combined.Insert(0, BuildSchoolFeesPromptEvent());
+            financeManager.ClearSchoolFeesPromptDue();
+        }
+
         pendingEvents.Clear();
         foreach (var ev in combined)
             pendingEvents.Enqueue(ev);
@@ -602,15 +618,32 @@ public class GameManager : MonoBehaviour
         bool hasMoneyMove = !IsHeadlessSimulation && currentEvent != null &&
             (Mathf.Abs(currentEvent.moneyChange) >= 1f || currentEvent.insurancePayout > 0f);
 
+        // If the claim on this event was denied (waiting period or lapsed), show the
+        // insurer/mentor explanation once the money beat finishes, before moving on -
+        // same chained-message shape as the school fees bursar-to-rights sequence.
+        ResolvedEvent eventForDenialCheck = currentEvent;
+        System.Action advanceToNextEvent = () =>
+        {
+            if (eventForDenialCheck != null &&
+                (eventForDenialCheck.claimDeniedWaitingPeriod || eventForDenialCheck.claimDeniedLapsed))
+            {
+                ShowInsuranceDenialThenContinue(eventForDenialCheck, ProcessNextEvent);
+            }
+            else
+            {
+                ProcessNextEvent();
+            }
+        };
+
         if (hasMoneyMove)
         {
             float delta = currentEvent.moneyChange + currentEvent.insurancePayout;
             float fromBalance = financeManager.CashOnHand - delta;
-            uiManager.PlayMoneyBeat(currentEvent.title, delta, fromBalance, ProcessNextEvent);
+            uiManager.PlayMoneyBeat(currentEvent.title, delta, fromBalance, advanceToNextEvent);
         }
         else
         {
-            ProcessNextEvent();
+            advanceToNextEvent();
         }
         // Remove asset
         if (currentEvent != null && currentEvent.destroysAsset != AssetRequirement.None && financeManager != null)
@@ -866,6 +899,21 @@ public class GameManager : MonoBehaviour
         OnSeasonChanged?.Invoke();
         monthsSinceMajorEvent++;
 
+        // Debt spiral takes priority over every other ending/checkpoint branch below -
+        // it is a hard stop, not a checkpoint. Reuses the same ending mechanics as a
+        // normal finishedMonth >= totalMonths completion (settle boosts, delete save,
+        // show the summary panel, clear the ledger) but never calls StartNewMonth, so
+        // the loop that used to continue past "The simulation ends here" actually stops.
+        if (isGameOverFromDebtSpiral)
+        {
+            SettleBoostsAtGameEnd();
+            SaveSystem.DeleteSave(CurrentProfileType, IsGuidedMode);
+            if (!IsHeadlessSimulation)
+                uiManager.ShowEndOfYearSummary(GetYearEndMentorReflection());
+            CurrentLedger = null;
+            return;
+        }
+
         int half = totalMonths / 2;
         int third = totalMonths / 3;
         int twoThirds = (totalMonths * 2) / 3;
@@ -907,7 +955,7 @@ public class GameManager : MonoBehaviour
         if (finishedMonth >= totalMonths)
         {
             SettleBoostsAtGameEnd();
-            SaveSystem.DeleteSave(CurrentProfileType, IsGuidedMode); // this slot only - other profiles' saves are untouched
+            SaveSystem.DeleteSave(CurrentProfileType, IsGuidedMode);
             if (!IsHeadlessSimulation)
                 uiManager.ShowEndOfYearSummary(GetYearEndMentorReflection());
             CurrentLedger = null;
@@ -1034,6 +1082,17 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        // An unresolved claim decision must go through the claim flow, not straight to
+        // the plain narrative popup. This is what re-shows an interrupted event (e.g.
+        // ProcessNextEvent's isWaitingForEventConfirmation branch, or
+        // OnLoanDecisionFinished after the Loan panel closes) - without this check that
+        // path skipped the claim choice entirely and its money along with it.
+        if (ev.pendingClaimDecision)
+        {
+            ShowEventThenClaim(ev);
+            return;
+        }
+
         string fullText = BuildEventResultText(ev);
         Debug.Log($"[ShowEvent] Calling ShowEventPopup for: {ev.title} | IsPopupActive: {uiManager.IsPopupActive}");
         UIManager.Instance.ShowEventPopup(ev.title, fullText, ev.pool);
@@ -1042,8 +1101,58 @@ public class GameManager : MonoBehaviour
     private IEnumerator WaitAndShowEvent(ResolvedEvent ev)
     {
         yield return new WaitUntil(() => !uiManager.IsPopupActive);
-        string fullText = BuildEventResultText(ev);
-        UIManager.Instance.ShowEventPopup(ev.title, fullText, ev.pool);
+        ShowEvent(ev);
+    }
+
+    // Surfaces a denied insurance claim to the player - insurer line first (with a
+    // sender header naming the actual policy, not a real Zimbabwean brand), then a
+    // mentor follow-up, then continues to whatever the caller was going to do next.
+    // No money moves here - the loss already applied when the event itself resolved.
+    // ev.claimDeniedWaitingPeriod is only ever true when ev's underlying InsuranceResult
+    // had isSubscribed==true, so this never fires for a policy the player never bought.
+    private void ShowInsuranceDenialThenContinue(ResolvedEvent ev, System.Action onDone)
+    {
+        if (IsHeadlessSimulation)
+        {
+            onDone?.Invoke();
+            return;
+        }
+
+        string insurerLine;
+        string mentorLine;
+
+        if (ev.claimDeniedWaitingPeriod)
+        {
+            int activationMonth = currentMonth + (ev.waitingPeriodMonths - ev.monthsPaid);
+            string s = ev.monthsPaid == 1 ? "" : "s";
+            insurerLine = $"We received your claim. {ev.planName} carries a {ev.waitingPeriodMonths} month " +
+                          $"waiting period and your policy is {ev.monthsPaid} month{s} old, so we cannot pay " +
+                          $"this one. Your cover becomes active in month {activationMonth}.";
+            mentorLine = "Waiting periods exist so nobody can buy cover after the bad thing has already " +
+                         "happened. That is what keeps the pool honest for everyone paying in. Buy cover in " +
+                         "the months when you do not need it, and it is there in the month you do.";
+        }
+        else // claimDeniedLapsed
+        {
+            insurerLine = "Your premiums stopped, so the policy lapsed and this claim cannot be paid. You " +
+                          "can restart the cover from the insurance screen, though the waiting period begins " +
+                          "again from the start.";
+            mentorLine = "A policy only works while it is being paid. Missing premiums is not a pause, it is " +
+                         "a cancellation, and starting again means starting the wait again too.";
+        }
+
+        // Was ShowEventPopupWithCallback (the full event card) - two problems with that:
+        // it reads as a second event when the event already had its own card a moment
+        // earlier, and its pool argument picks the header sprite, so a letter declining a
+        // claim was illustrated with a photograph of a clinic. ShowMessagePopup reuses
+        // EventChoicePopup, the correspondence format, which carries senderName/
+        // senderRelation as their own fields - "Your insurer" / planName move there
+        // instead of being folded into the title string. Title is the event's own name
+        // (what this letter is actually about), not new copy.
+        uiManager.ShowMessagePopup(ev.title, insurerLine, "Your insurer", ev.planName, () =>
+        {
+            uiManager.ShowMentorMessage(mentorLine, onDone);
+        });
     }
 
     private bool monthResolutionFinished = false;
@@ -1160,16 +1269,6 @@ public class GameManager : MonoBehaviour
 
     public void OnInsuranceConfirmed()
     {
-        if (!loanIntroShown &&
-            loanManager != null &&
-            loanManager.IsLoanUnlocked)
-        {
-            loanIntroShown = true;
-            SetPhase(GamePhase.Loan);
-            uiManager.ShowLoanPanel();
-            return;
-        }
-
         uiManager.SwitchPanel(UIManager.UIPanelState.None);
         SetPhase(GamePhase.Simulation);
 
@@ -1273,11 +1372,23 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        if (!loanManager.CanForceLoan)
+        {
+            // Nothing left to borrow from either account - offering a "choose how much
+            // to borrow" panel when the true answer is zero is exactly what let months
+            // 8-12 of the Farmer run report loans that never arrived. Nothing to offer;
+            // the deficit carries into next month for real instead of being papered over.
+            Debug.LogWarning($"[Loan] Shortfall of ${shortfall:F0} but no borrowing power available from either account - nothing offered.");
+            FinalizeLedgerAndShowReport();
+            return;
+        }
+
         ShowEmergencyLoanChoicePanel(shortfall);
     }
 
     private bool CheckConsecutiveForcedLoans()
     {
+        if (isGameOverFromDebtSpiral) return true;
         if (forcedLoanHistory.Count < 3) return false;
         var arr = forcedLoanHistory.ToArray();
         int last = arr.Length;
@@ -1291,6 +1402,13 @@ public class GameManager : MonoBehaviour
 
     private void TriggerDebtSpiralEnding()
     {
+        // Fires once. Without this guard the same trailing-3-months check re-fires every
+        // month the window stays all-true, and since nothing previously stopped play,
+        // it could trigger again and again later in the same run (months 3, 4, 9, 10 in
+        // the Farmer playtest) instead of actually ending anything.
+        if (isGameOverFromDebtSpiral) return;
+        isGameOverFromDebtSpiral = true;
+
         string message = "Three months running, your expenses have outrun your income. " +
                          "This is the debt spiral. Borrowing to survive creates the debt that makes survival harder. " +
                          "The simulation ends here, but the lesson is the same in real life: the time to act is before the spiral starts.";
@@ -1310,16 +1428,27 @@ public class GameManager : MonoBehaviour
         });
     }
 
-    private void ApplyEmergencyLoan(float amount)
+    // Returns the amount actually borrowed (0 if nothing was available). Only counts as
+    // a forced loan - logged, counted, and penalized in momentum - if money genuinely
+    // moved; previously this logged success and docked momentum unconditionally even
+    // when ForceBorrow found no borrowing power anywhere and nothing arrived.
+    private float ApplyEmergencyLoan(float amount)
     {
-        if (loanManager == null) return;
+        if (loanManager == null) return 0f;
         // ForceBorrow now waterfalls Mukando then Moneylender internally and caps to
         // whatever's actually available from each, so there's no need to pre-shrink the
         // request here the way the single-account version did.
-        loanManager.ForceBorrow(amount);
+        float borrowed = loanManager.ForceBorrow(amount);
+        if (borrowed <= 0f)
+        {
+            Debug.LogWarning($"[Loan] Emergency loan requested (${amount:F0}) but nothing was borrowed - no borrowing power available.");
+            return 0f;
+        }
+
         forcedLoanCount++;
         PlayerDataManager.Instance.ModifyMomentum(-3f);
-        Debug.Log($"[Loan] Emergency loan applied: ${amount:F0}");
+        Debug.Log($"[Loan] Emergency loan applied: ${borrowed:F0}");
+        return borrowed;
     }
 
     private float RoundLoanAmount(float amount)
@@ -1560,6 +1689,33 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        // School fees notices are queued rather than shown inline inside ProcessMonthlyBudget
+        // (showing them there stalled month 1 - IsPopupActive was already true when the
+        // ticker tried to open the month's first event). All events are resolved by the
+        // time this runs, so flush the queued message now, then continue into the report
+        // once it's dismissed.
+        string pendingFeesMessage = financeManager?.PendingSchoolFeesMessage;
+        if (!string.IsNullOrEmpty(pendingFeesMessage))
+        {
+            financeManager.ClearPendingSchoolFeesMessage();
+            uiManager.ShowMentorMessage(pendingFeesMessage, () =>
+            {
+                // Rung 3 (schoolFeesInCrisis) attaches a mentor follow-up - the rights
+                // explanation - shown immediately after the bursar line, before the report.
+                string followUp = financeManager?.PendingSchoolFeesFollowUp;
+                if (!string.IsNullOrEmpty(followUp))
+                {
+                    financeManager.ClearPendingSchoolFeesFollowUp();
+                    uiManager.ShowMentorMessage(followUp, FinalizeLedgerAndShowReport);
+                }
+                else
+                {
+                    FinalizeLedgerAndShowReport();
+                }
+            });
+            return;
+        }
+
         if (CurrentLedger.IsFinalized())
         {
             Debug.LogWarning("Ledger already finalized. Preventing duplicate year accumulation.");
@@ -1609,6 +1765,10 @@ public class GameManager : MonoBehaviour
 
     private const float BudgetCutMoraleK = 20f;
     private const float BudgetCutFloorFraction = 0.5f;
+
+    [Header("Budget Squeeze")]
+    [Tooltip("Second morale hit applied each month a category has both an active cut and active event inflation, proportional to the inflation. Same starting value as BudgetCutMoraleK, tune separately.")]
+    public float BudgetSqueezeMoraleK = 20f;
 
     public float GetCategoryBaseline(ExpenseCategory cat)
     {
@@ -1747,6 +1907,100 @@ public class GameManager : MonoBehaviour
         };
     }
 
+    // Built once per term, when FinanceManager.SchoolFeesPromptDue is set. The choice
+    // list is dynamic: full payment only if it's affordable, partial only if cash is
+    // above zero but short of the total, and "Not this term" always offered. Index 0
+    // is whichever payment option got built (if any); the last index is always the
+    // decline. HandleSchoolFeesChoice below recomputes the same affordability check to
+    // interpret the click, rather than storing a separate response code on the event.
+    private ResolvedEvent BuildSchoolFeesPromptEvent()
+    {
+        float owed = financeManager.schoolFeesOwed;
+        float cash = financeManager.CashOnHand;
+        bool canPayFull = cash >= owed;
+        bool canPayPartial = !canPayFull && cash > 0f;
+
+        var choices = new List<EventData.ChoiceOption>();
+        if (canPayFull)
+        {
+            choices.Add(new EventData.ChoiceOption
+            {
+                label = $"Pay it in full (${owed:F0})",
+                resultDescription = "Sent in full today. Thank you.",
+                moneyChange = 0f, momentumChange = 0f
+            });
+        }
+        else if (canPayPartial)
+        {
+            choices.Add(new EventData.ChoiceOption
+            {
+                label = $"Pay what I can now (${cash:F0})",
+                resultDescription = $"I can send ${cash:F0} now. The rest by month end, I promise.",
+                moneyChange = 0f, momentumChange = 0f
+            });
+        }
+        choices.Add(new EventData.ChoiceOption
+        {
+            label = "Not this term",
+            resultDescription = "I am sorry, I cannot pay right now.",
+            moneyChange = 0f, momentumChange = 0f
+        });
+
+        return new ResolvedEvent
+        {
+            title = "School fees due",
+            description = $"Term fees are due for both children. The total is ${owed:F0}. Please settle at the office or make an arrangement with us.",
+            senderName = "The Bursar",
+            senderRelation = "School",
+            pool = EventPool.Choice,
+            hasChoices = true,
+            choices = choices,
+            schoolFeesPrompt = true
+        };
+    }
+
+    // response is the clicked choice index. Recomputes the same affordability check
+    // BuildSchoolFeesPromptEvent used to build the list, so index 0 resolves to whichever
+    // payment option was actually offered (or falls through to decline if neither was).
+    // Takes the event itself, not just cash/owed, so "was a payment option offered"
+    // is read from what was actually built into the popup (ev.choices.Count > 1)
+    // rather than recomputed independently here. Recomputing the same condition in
+    // two places is how the zero-cash edge case (e.g. Sekuru Moyo in a lean month,
+    // cash at or below zero at term start) could silently drift out of sync if one
+    // side changes later - with only "Not this term" built, choices.Count == 1, so
+    // index 0 already means decline here, not payment, with no ambiguity.
+    private void HandleSchoolFeesChoice(ResolvedEvent ev, int response)
+    {
+        bool paymentOptionOffered = ev.choices != null && ev.choices.Count > 1;
+        bool pickedPayment = paymentOptionOffered && response == 0;
+
+        if (pickedPayment)
+        {
+            float owed = financeManager.schoolFeesOwed;
+            float cash = Mathf.Max(0f, financeManager.CashOnHand);
+            if (cash >= owed)
+            {
+                ApplyMoneyChange(FinancialEntry.EntryType.Expense, "School Fees", owed, false);
+                financeManager.schoolFeesOwed = 0f;
+                financeManager.schoolFeesMonthsOverdue = 0;
+                Debug.Log($"[School Fees] Paid in full: ${owed:F0}");
+            }
+            else
+            {
+                float amount = Mathf.Min(cash, owed);
+                ApplyMoneyChange(FinancialEntry.EntryType.Expense, "School Fees (partial)", amount, false);
+                financeManager.schoolFeesOwed -= amount;
+                // Falling behind while genuinely paying something is not the same as not
+                // paying - schoolFeesMonthsOverdue does not advance on a partial payment.
+                Debug.Log($"[School Fees] Partial payment: ${amount:F0}, remaining ${financeManager.schoolFeesOwed:F0}");
+            }
+        }
+        else
+        {
+            Debug.Log("[School Fees] Declined this term - overdue ladder begins next month.");
+        }
+    }
+
     // Folded into the year-end score before grading (see UIManager.BuildScoreSummary).
     // Built = full pass, reached-but-never-built = "pass but not really", never reached = 0.
     public float GetGoalScoreBonus()
@@ -1756,9 +2010,6 @@ public class GameManager : MonoBehaviour
         return 0f;
     }
 
-    // HUD / report line, e.g. "Her own market stall: $240 / $500" or "...: built ✔".
-    // Empty string means no active goal to show (target not yet known - e.g.
-    // Free Mode before setup confirm).
     public string GetGoalProgressLine()
     {
         float target = GoalDefs.GetActiveGoalTarget();
@@ -1775,12 +2026,47 @@ public class GameManager : MonoBehaviour
     private ResolvedEvent BuildGoalPromptEvent(float target)
     {
         string title = GoalDefs.GetActiveGoalTitle();
+        bool spendsSavings = GoalDefs.GetActiveGoalSpendsSavings();
+
+        // Emergency fund special case: this goal IS the savings sitting there for a
+        // rainy day, so there's nothing to "buy" and no second choice to decline into -
+        // as written, the normal path below would spend the emergency fund to buy the
+        // emergency fund. Single acknowledgement instead.
+        if (!spendsSavings)
+        {
+            var singleChoice = new List<EventData.ChoiceOption>
+            {
+                new EventData.ChoiceOption
+                {
+                    label = "Leave it be",
+                    resultDescription = "Nothing moves. That is the point of it.",
+                    moneyChange = 0f, momentumChange = 0f
+                }
+            };
+
+            return new ResolvedEvent
+            {
+                title = "You've saved enough",
+                description = $"Your savings have reached {GameUtils.FormatMoney(target)}. That is a real " +
+                               "emergency fund now, sitting there for the month something goes wrong. Leave " +
+                               "it exactly where it is.",
+                senderName = "Yourself",
+                senderRelation = "Savings goal",
+                pool = EventPool.Choice,
+                hasChoices = true,
+                choices = singleChoice,
+                isGoalPrompt = true
+            };
+        }
+
+        string actionLabel = GoalDefs.GetActiveGoalActionLabel();
+        string benefitLine = GoalDefs.GetActiveGoalBenefitLine();
 
         var choices = new List<EventData.ChoiceOption>
         {
             new EventData.ChoiceOption
             {
-                label = $"Build it now, spend {GameUtils.FormatMoney(target)}",
+                label = $"{actionLabel}, spend {GameUtils.FormatMoney(target)}",
                 resultDescription = $"It's done. {title} is real now, not just a number in the savings book.",
                 moneyChange = 0f, momentumChange = 0f
             },
@@ -1794,9 +2080,9 @@ public class GameManager : MonoBehaviour
 
         return new ResolvedEvent
         {
-            title = "You've saved enough, build it now?",
-            description = $"Your savings have reached {GameUtils.FormatMoney(target)}, enough for {title}. " +
-                           "Building now means it starts earning for you sooner. Waiting costs nothing but time.",
+            title = "You've saved enough",
+            description = $"Your savings have reached {GameUtils.FormatMoney(target)}. " +
+                           $"That is enough for {title}. {benefitLine} Waiting costs nothing but time.",
             senderName = "Yourself",
             senderRelation = "Savings goal",
             pool = EventPool.Choice,
@@ -1809,6 +2095,20 @@ public class GameManager : MonoBehaviour
     private void HandleGoalChoice(int choiceIndex)
     {
         float target = GoalDefs.GetActiveGoalTarget();
+        bool spendsSavings = GoalDefs.GetActiveGoalSpendsSavings();
+
+        // Emergency fund: BuildGoalPromptEvent only ever built a single "Leave it be"
+        // choice for this case, so choiceIndex is always 0 here - acknowledge and stop
+        // re-offering, but never touch the balance.
+        if (!spendsSavings)
+        {
+            GoalDefs.ApplyActiveGoalBenefit();
+            GoalBuilt = true;
+            goalBuiltMonth = currentMonth;
+            uiManager?.UpdateGoalProgressText();
+            Debug.Log($"[Goal] Acknowledged: {GoalDefs.GetActiveGoalTitle()} in month {currentMonth}");
+            return;
+        }
 
         if (choiceIndex == 0)
         {
@@ -2038,6 +2338,21 @@ public class GameManager : MonoBehaviour
             {
                 s.monthsSinceCut++;
                 s.monthsSinceLastRaise++;
+
+                // Squeeze: a cut category that's also being hit by event inflation gets
+                // a second, smaller morale bite every month it stays that way - only
+                // bites when there is no cushion absorbing it. If the player is at or
+                // above base, cutAmount is 0 and this never fires, regardless of inflation.
+                float eventInflation = GetCategoryEventInflation(s.category);
+                if (eventInflation > 0.01f)
+                {
+                    float baseline = GetCategoryBaseline(s.category);
+                    if (baseline > 0f)
+                    {
+                        float squeezeHit = (eventInflation / baseline) * BudgetSqueezeMoraleK;
+                        PlayerDataManager.Instance.ModifyFamilyMorale(-squeezeHit);
+                    }
+                }
             }
         }
 
@@ -2060,8 +2375,20 @@ public class GameManager : MonoBehaviour
         var pdm = PlayerDataManager.Instance;
         int originalAdults = pdm.OriginalAdults;
 
+        // -perDeathLoss is a scripted override, not ev.incomePercentChange - the CSV/asset
+        // field is intentionally blank for death rows (see Events.csv comment column and
+        // the death .assets). 80/originalAdults gives -80% for a single-adult household;
+        // flagged as light for a sole earner dying, not changed here - see build chat report.
         float perDeathLoss = 80f / Mathf.Max(1, originalAdults);
-        ApplyIncomeEffect(-perDeathLoss, -1);
+        // Same gate as EventManager.IsHealthRelated - primary type, or the event's own
+        // grantsIncomeBenefit flag (Breadwinner Death's primary cover is Education, so it
+        // needs the flag; Accidental Death of Breadwinner's primary cover already is
+        // PersonalAccident, so the first check alone covers it).
+        bool deathHealthRelated =
+            ev.insuranceType == InsuranceManager.InsuranceType.Health ||
+            ev.insuranceType == InsuranceManager.InsuranceType.PersonalAccident ||
+            ev.grantsIncomeBenefit;
+        ApplyIncomeEffect(-perDeathLoss, -1, deathHealthRelated);
 
         pdm.RemoveAdult();
         int adultsRemaining = pdm.RawAdults;
@@ -2084,7 +2411,12 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void ApplyIncomeEffect(float percent, int months)
+    // A permanent income cut (months <= 0) must not buy a permanent income benefit -
+    // Personal Accident/Health cover pays out for a real loss, not an annuity. Cap
+    // applies only to the benefit's own duration, never to the underlying income effect.
+    private const int MaxHealthIncomeBenefitMonths = 6;
+
+    public void ApplyIncomeEffect(float percent, int months, bool healthRelated = false)
     {
         if (months <= 0 &&
         activeIncomeEffects.Exists(e =>
@@ -2100,7 +2432,12 @@ public class GameManager : MonoBehaviour
             remainingMonths = months <= 0 ? -1 : months
         });
 
-        if (percent < 0f)
+        // healthRelated must be passed explicitly by the caller from the event's own
+        // insuranceType (Health or PersonalAccident) - it is never inferred from the
+        // sign of percent. An income drop caused by a rent hike or interest rate rise
+        // is not an accident or illness, and Personal Accident/Health cover has no
+        // business paying out for it.
+        if (percent < 0f && healthRelated)
         {
             bool hasAccidentCover =
                 insuranceManager != null &&
@@ -2111,14 +2448,15 @@ public class GameManager : MonoBehaviour
             {
                 float lostIncomeEstimate = financeManager.currentIncome * Mathf.Abs(percent) / 100f;
                 float benefitAmount = lostIncomeEstimate * 0.5f;
+                int benefitMonths = months <= 0 ? MaxHealthIncomeBenefitMonths : months;
 
                 activeIncomeBenefits.Add(new IncomeBenefit
                 {
                     amount = benefitAmount,
-                    remainingMonths = months <= 0 ? -1 : months
+                    remainingMonths = benefitMonths
                 });
 
-                Debug.Log($"[Insurance] Accident/Health cover registered income benefit: ${benefitAmount:F0}/month for {(months <= 0 ? "permanent" : months + " months")}");
+                Debug.Log($"[Insurance] Accident/Health cover registered income benefit: ${benefitAmount:F0}/month for {benefitMonths} months");
             }
         }
 
@@ -2130,6 +2468,25 @@ public class GameManager : MonoBehaviour
 
     public void ApplyExpenseEffect(ExpenseCategory category, float increase, int months)
     {
+        // Housing is a dead write: ProcessMonthlyBudget computes housing cost from
+        // rentCost/houseMaintenanceCost directly (FinanceManager.GetHousingCost) and
+        // never calls GetExpenseModifier(Housing), unlike Transport/Groceries/Utilities/
+        // SchoolFees. An effect recorded here would sit in activeExpenseEffects and never
+        // charge anyone. Kept the enum member rather than deleting it - Housing is
+        // ExpenseCategory's 4th value (index 3) and removing it from the middle would
+        // silently renumber SchoolFees (index 4 -> 3), breaking every existing asset/save
+        // that stores expenseCategory as a raw int (e.g. School Fee Crisis.asset already
+        // has expenseCategory: 4). Logging here instead means the mistake surfaces the
+        // moment someone tries it, rather than months from now as an easy-to-miss $0 line.
+        if (category == ExpenseCategory.Housing)
+        {
+            Debug.LogError("[Expense] ApplyExpenseEffect called with ExpenseCategory.Housing - " +
+                            "this is never read by ProcessMonthlyBudget and will silently do nothing. " +
+                            "Use financeManager.rentCost directly instead (see GameManager.ApplyEventChoice's " +
+                            "Landlord Increases Rent handling for the pattern).");
+            return;
+        }
+
         activeExpenseEffects.Add(new ExpenseEffect
         {
             category = category,
@@ -2602,6 +2959,31 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        if (ev.schoolFeesPrompt)
+        {
+            if (IsHeadlessSimulation)
+            {
+                // Decline is always the last choice, whether one or two options were built.
+                HandleSchoolFeesChoice(ev, ev.choices.Count - 1);
+                OnEventPopupClosed();
+                return;
+            }
+
+            UIManager.Instance.ShowChoicePopup(
+                ev.title,
+                ev.description,
+                ev.senderName,
+                ev.senderRelation,
+                ev.choices,
+                index =>
+                {
+                    HandleSchoolFeesChoice(ev, index);
+                    OnEventPopupClosed();
+                }
+            );
+            return;
+        }
+
         if (ev.isFamilyPrompt)
         {
             if (IsHeadlessSimulation)
@@ -2717,21 +3099,80 @@ public class GameManager : MonoBehaviour
             Debug.Log("[Loan] Mukando joined via Mukando Invitation.");
         }
 
+        if (ev.title == "A Number From Ndlovu" && loanManager != null)
+        {
+            loanManager.AnnounceLoanSystem();
+            Debug.Log("[Loan] Loan system revealed via A Number From Ndlovu.");
+        }
+
+        // "Accept and adjust the budget" used to cut income by a flat -8% permanent,
+        // which a Personal Accident/Health payout could turn into a net profit (see
+        // ApplyIncomeEffect's healthRelated gate). A rent increase should raise rent,
+        // not cut income - scale by the player's current rent the way the Free Mode
+        // bicycle goal scales its transport saving, so Informal ($80) and Formal ($150)
+        // both see a proportional bump rather than a fixed amount.
+        //
+        // Note: this sets financeManager.rentCost directly rather than going through
+        // ApplyExpenseEffect(ExpenseCategory.Housing, ...) - ProcessMonthlyBudget's
+        // housing cost (FinanceManager.GetHousingCost) reads rentCost/houseMaintenanceCost
+        // directly and never calls GetExpenseModifier(Housing), so an expense effect on
+        // that category would be recorded but silently never charged.
+        if (ev.title == "Landlord Increases Rent" && choiceIndex == 0 && financeManager != null)
+        {
+            float baseline = financeManager.rentCost;
+            float increase = baseline * 0.20f;
+            financeManager.rentCost += increase;
+            Debug.Log($"[Housing] Rent increase accepted: rentCost ${baseline:F0} -> ${financeManager.rentCost:F0} (+${increase:F0}/month permanent).");
+        }
+
+        float choiceInsurancePayout = 0f;
+
         if (choice.moneyChange != 0f)
         {
             bool isCredit = choice.moneyChange > 0f;
+            float rawAmount = Mathf.Abs(choice.moneyChange);
+
+            // Choice events previously could never claim - the whole payout path lived
+            // in EventManager's non-choice branch. Mirror the same eligibility check it
+            // uses (CanClaimForEvent) before applying the loss.
+            if (!isCredit &&
+                choice.coveredBy != InsuranceManager.InsuranceType.None &&
+                insuranceManager != null &&
+                insuranceManager.CanClaimForEvent(choice.coveredBy))
+            {
+                var (claimPayout, _) = insuranceManager.CalculateClaim(choice.coveredBy, rawAmount);
+                choiceInsurancePayout = claimPayout;
+            }
+
             ApplyMoneyChange(
                 isCredit ? FinancialEntry.EntryType.EventReward
                          : FinancialEntry.EntryType.EventLoss,
                 $"{ev.title}: {choice.label}",
-                Mathf.Abs(choice.moneyChange),
+                rawAmount,
                 isCredit
             );
+
+            if (choiceInsurancePayout > 0f)
+            {
+                ApplyMoneyChange(
+                    FinancialEntry.EntryType.InsurancePayout,
+                    $"{ev.title}: Insurance Payout",
+                    choiceInsurancePayout,
+                    true
+                );
+                insuranceManager.RecordClaimBookkeeping(choice.coveredBy, choiceInsurancePayout);
+                totalInsurancePayoutAmount += choiceInsurancePayout;
+                insuredEventsCount++;
+                mentorMemory_hasEverClaimed = true;
+                Debug.Log($"[Insurance] Choice event claim: {ev.title} covered by {choice.coveredBy}, payout ${choiceInsurancePayout:F0}.");
+            }
+
             totalRawEventDamage += Mathf.Max(0f, -choice.moneyChange);
         }
         // Record on the event itself so OnEventPopupClosed's money beat picks up
         // choice-driven changes (ev.moneyChange otherwise stays 0 for choice events).
-        ev.moneyChange = choice.moneyChange;
+        // Net of any insurance payout, so the beat reflects the actual cash impact.
+        ev.moneyChange = choice.moneyChange + choiceInsurancePayout;
 
         if (choice.momentumChange != 0f)
             PlayerDataManager.Instance.ModifyMomentum(choice.momentumChange);
@@ -2752,7 +3193,12 @@ public class GameManager : MonoBehaviour
         }
 
         if (choice.incomePercentChange != 0f)
-            ApplyIncomeEffect(choice.incomePercentChange, choice.incomeEffectMonths);
+        {
+            bool choiceHealthRelated =
+                choice.coveredBy == InsuranceManager.InsuranceType.Health ||
+                choice.coveredBy == InsuranceManager.InsuranceType.PersonalAccident;
+            ApplyIncomeEffect(choice.incomePercentChange, choice.incomeEffectMonths, choiceHealthRelated);
+        }
 
         if (choice.affectsLoan && loanManager != null)
             loanManager.ModifyBorrowingPower(choice.borrowingPowerChange);
@@ -2885,6 +3331,7 @@ public class GameManager : MonoBehaviour
         public float current;
         public float belowBase;   // one colour: you're providing less than base
         public float aboveBase;   // one colour: you're providing more than base
+        public float eventInflation;   // the raw event-driven cost increase for the month
         public bool atCap;
     }
 
@@ -2920,6 +3367,11 @@ public class GameManager : MonoBehaviour
 
         float cap = GetAverageIncome() * BudgetBoostCeilingFraction;
 
+        float eventInflation =
+            GetCategoryEventInflation(ExpenseCategory.Groceries) +
+            GetCategoryEventInflation(ExpenseCategory.Transport) +
+            GetCategoryEventInflation(ExpenseCategory.Utilities);
+
         return new BudgetBarState
         {
             cap = cap,
@@ -2927,8 +3379,32 @@ public class GameManager : MonoBehaviour
             current = current,
             belowBase = Mathf.Max(0f, baseLine - current),
             aboveBase = Mathf.Max(0f, current - baseLine),
+            eventInflation = eventInflation,
             atCap = current >= cap - 0.01f
         };
+    }
+
+    // Ceiling for the savings slider in the Expenses panel. Average income minus whatever
+    // the player's own plan already commits to housing, school fees, and the three
+    // expense sliders at their CURRENT proposed values - so raising Groceries eats into
+    // how much Savings can claim, same tradeoff the budget bar already enforces for
+    // spending. Deliberately not based on CashOnHand for a single month (that swings with
+    // events); this is what the ongoing plan can sustain, which is what the range needs
+    // to guarantee. Occasional skips from a bad month are still possible and expected -
+    // that's what the monthly report's skip line is for - this just stops the player from
+    // committing to a figure the plan can never pay.
+    public float GetSavingsSliderMax(float groceriesProvision, float transportProvision, float utilitiesProvision)
+    {
+        float housing = financeManager.GetHousingCost();
+        float school = 0f;
+        if (setupData.hasSchoolFees)
+        {
+            int childCount = Mathf.Max(0, PlayerDataManager.Instance?.Children ?? 0);
+            school = ((setupData.schoolFeesAmount * childCount) * 3f) / 12f;
+        }
+
+        float planned = housing + school + groceriesProvision + transportProvision + utilitiesProvision;
+        return Mathf.Max(0f, GetAverageIncome() - planned);
     }
 
     public void ContinueFromSave(GameSaveData save)
@@ -2938,6 +3414,18 @@ public class GameManager : MonoBehaviour
             Debug.LogWarning("[GameManager] ContinueFromSave called with a null save.");
             return;
         }
+
+        // This used to go straight to LoadFromSave with no reset at all, which happened
+        // to work only because a fresh app launch starts every manager empty anyway. It
+        // silently broke the moment a player exited a fresh game (now that Exit preserves
+        // the save instead of wiping it) and then Continued a save for a DIFFERENT
+        // profile in the same session - the abandoned game's leftover insurance/loan/
+        // event state would still be sitting in memory underneath the restore.
+        // ClearManagerStateForNewSession gives the same clean baseline ApplyProfile uses
+        // for a brand new game, but deliberately skips ScheduleNewGameChainEvents - that
+        // reseeds the month 1/2 Mukando/Ndlovu prompts for a NEW run, and LoadFromSave
+        // below restores whatever was genuinely still pending from the save itself.
+        ClearManagerStateForNewSession();
         LoadFromSave(save);
     }
 
@@ -2980,10 +3468,7 @@ public class GameManager : MonoBehaviour
             financeManager.cropsInsuredValue = save.cropsInsuredValue;
             financeManager.livestockInsuredValue = save.livestockInsuredValue;
 
-            // RollMonthlyIncome() re-rolls currentIncome fresh every month from
-            // minIncome/maxIncome/isIncomeStable, so currentIncome itself doesn't need
-            // restoring - but schoolFeesPerTerm does, since nothing else derives it
-            // without re-running InitializeFromSetup (which this resume path avoids).
+
             financeManager.schoolFeesPerTerm = save.setupHasSchoolFees ? save.setupSchoolFeesAmount : 0f;
         }
 
@@ -3005,6 +3490,21 @@ public class GameManager : MonoBehaviour
                 plan.isLapsed = saved.isLapsed;
                 plan.monthsPaid = saved.monthsPaid;
                 plan.missedPayments = saved.missedPayments;
+            }
+        }
+
+        // Scripted follow-ups still queued at save time (e.g. a death event's "New
+        // Income Source" two months out) - ClearManagerStateForNewSession already ran
+        // eventManager.ResetAll() before this, so pendingEvents is empty going in.
+        if (save.pendingEvents != null && eventManager != null)
+        {
+            foreach (var p in save.pendingEvents)
+            {
+                var pendingEv = eventManager.EventDatabase?.events?.Find(e => e.eventName == p.eventName);
+                if (pendingEv != null)
+                    eventManager.ScheduleFollowUp(pendingEv, p.monthToTrigger);
+                else
+                    Debug.LogWarning($"[Load] Pending event '{p.eventName}' not found in EventDatabase - skipped.");
             }
         }
 
@@ -3084,6 +3584,11 @@ public class GameManager : MonoBehaviour
 
         activeIncomeEffects.Clear();
 
+        // Was clearing AFTER the populate loop below, which silently threw away every
+        // restored income benefit (e.g. a PersonalAccident/Health payout mid-payout at
+        // save time) on every single load. Clear first, then populate, matching the
+        // activeIncomeEffects/activeExpenseEffects pattern right below.
+        activeIncomeBenefits.Clear();
         if (save.incomeBenefits != null)
             foreach (var b in save.incomeBenefits)
                 activeIncomeBenefits.Add(new IncomeBenefit
@@ -3091,7 +3596,7 @@ public class GameManager : MonoBehaviour
                     amount = b.amount,
                     remainingMonths = b.remainingMonths
                 });
-        activeIncomeBenefits.Clear();
+
         if (save.incomeEffects != null)
             foreach (var e in save.incomeEffects)
                 activeIncomeEffects.Add(new IncomeEffect
@@ -3116,7 +3621,31 @@ public class GameManager : MonoBehaviour
         StartNewMonth();
     }
 
+    // Ends a session that should be able to come back - the in-game Exit button
+    // (SimulationExitBtn -> UIManager.ReturnToMainMenu) uses this instead of FullRestart.
+    // Resets all in-memory state exactly the same way, but deliberately does not touch
+    // save files. StartNewMonth already writes a save for this profile at the top of
+    // every month; the actual gap was that ReturnToMainMenu used to call FullRestart
+    // directly, which deletes every profile's save on its way out. The per-profile
+    // Continue prompt (UIManager.HandleProfileOrFreeModeSelection) already existed and
+    // already worked, it just never had anything left to find.
+    public void ExitSimulationKeepingSave()
+    {
+        ResetGameStateInternal();
+        Debug.Log("=== EXIT TO MENU COMPLETE (save preserved) ===");
+    }
+
+    // Ends a session that should NOT come back: a completed run's "Play Again", or an
+    // explicit "start over" from the Continue/Start-over prompt. Resets the same
+    // in-memory state as ExitSimulationKeepingSave, then deletes every save on top.
     public void FullRestart()
+    {
+        ResetGameStateInternal();
+        SaveSystem.DeleteAllSaves();
+        Debug.Log("=== GAME RESET COMPLETE ===");
+    }
+
+    private void ResetGameStateInternal()
     {
         Debug.Log("=== FULL GAME RESET ===");
         CurrentLedger = null;
@@ -3128,7 +3657,6 @@ public class GameManager : MonoBehaviour
         eventManager?.ResetAll();
         uiManager.UpdateMoneyText(financeManager.CashOnHand);
         loanManager?.ResetAll();
-        loanManager?.AnnounceLoanSystem();
 
         insuranceManager.ResetAll();
         PlayerDataManager.Instance?.ResetPlayerData();
@@ -3168,6 +3696,16 @@ public class GameManager : MonoBehaviour
         else
             Debug.LogWarning("[Loan] Mukando Invitation event not found in EventDatabase - opt-in prompt will not fire.");
 
+        // Same reasoning as Mukando Invitation above - Ndlovu's intro is scripted-only
+        // (excluded from the random pool in EventManager) so it has to be rescheduled on
+        // every reset path. AnnounceLoanSystem (which reveals the Loans button) now fires
+        // only when this event resolves, not automatically on reset.
+        var ndlovuEvent = eventManager?.EventDatabase?.events?.Find(e => e.eventName == "A Number From Ndlovu");
+        if (ndlovuEvent != null)
+            eventManager.ScheduleFollowUp(ndlovuEvent, 1);
+        else
+            Debug.LogWarning("[Loan] A Number From Ndlovu event not found in EventDatabase - loan intro will not fire.");
+
         yearIncome = 0f;
         yearExpenses = 0f;
         yearPremiums = 0f;
@@ -3185,11 +3723,11 @@ public class GameManager : MonoBehaviour
         activeIncomeBenefits.Clear();
 
         mentorSpokeThisMonth = false;
-        loanIntroShown = false;
         monthResolutionStarted = false;
         monthResolutionFinished = false;
         recoveryAcknowledged = false;
         patternWarningIssued = false;
+        isGameOverFromDebtSpiral = false;
         mentorMemory_hasEverClaimed = false;
         mentorMemory_consecutiveLowSavingsMonths = 0;
         mentorMemory_familyStrainStreak = 0;
@@ -3231,29 +3769,41 @@ public class GameManager : MonoBehaviour
 
         var setup = uiManager.setupPanel.GetComponent<SetupPanelController>();
         setup?.OnPanelOpened();
-
-        SaveSystem.DeleteAllSaves();
-
-        Debug.Log("=== GAME RESET COMPLETE ===");
     }
 
     private void ResetForNewGame()
+    {
+        ClearManagerStateForNewSession();
+        ScheduleNewGameChainEvents();
+    }
+
+    // Split out of ResetForNewGame so a save resume (ContinueFromSave) can get the same
+    // clean baseline without also re-seeding the month 1/2 chain events below, which are
+    // only correct for a genuinely new run.
+    private void ClearManagerStateForNewSession()
     {
         eventManager?.ResetAll();
         loanManager?.ResetAll();
         insuranceManager?.ResetAll();
         TutorialManager.Instance?.ResetRunState();
+    }
 
-        // Ndlovu (Moneylender) is available from month 1 now - reveal the loan button
-        // and one-time intro right after tutorial state is cleared, not gated behind
-        // months of Mukando saving the way the old single-account system was.
-        loanManager?.AnnounceLoanSystem();
-
+    private void ScheduleNewGameChainEvents()
+    {
+        // Ndlovu (Moneylender) is introduced via the "A Number From Ndlovu" scripted
+        // event below, not automatically on reset - AnnounceLoanSystem (which reveals
+        // the Loans button) fires from ApplyEventChoice when that event resolves.
         var mukandoEvent = eventManager?.EventDatabase?.events?.Find(e => e.eventName == "Mukando Invitation");
         if (mukandoEvent != null)
             eventManager.ScheduleFollowUp(mukandoEvent, 2);
         else
             Debug.LogWarning("[Loan] Mukando Invitation event not found in EventDatabase - opt-in prompt will not fire.");
+
+        var ndlovuEvent = eventManager?.EventDatabase?.events?.Find(e => e.eventName == "A Number From Ndlovu");
+        if (ndlovuEvent != null)
+            eventManager.ScheduleFollowUp(ndlovuEvent, 1);
+        else
+            Debug.LogWarning("[Loan] A Number From Ndlovu event not found in EventDatabase - loan intro will not fire.");
     }
 
     public bool HasMonthResolutionStarted()
@@ -3358,7 +3908,7 @@ public class GameManager : MonoBehaviour
                 setupData.housing = HousingType.Renting;
                 setupData.ownsCar = true;
                 setupData.hasSchoolFees = true;
-                setupData.schoolFeesAmount = 80f;
+                setupData.schoolFeesAmount = 150f;
 
                 setupData.minIncome = 420f;
                 setupData.maxIncome = 850f;
@@ -3387,7 +3937,7 @@ public class GameManager : MonoBehaviour
                 setupData.housing = HousingType.OwnsHouse;
                 setupData.ownsCar = false;
                 setupData.hasSchoolFees = true;
-                setupData.schoolFeesAmount = 150f;
+                setupData.schoolFeesAmount = 40f;
 
                 setupData.minIncome = 100f;   // very low months
                 setupData.maxIncome = 650f;  // harvest months
@@ -3553,7 +4103,6 @@ public class GameManager : MonoBehaviour
         forcedLoanThisMonth = false;
         IsLoanDecisionActive = false;
         IsSavingsDecisionActive = false;
-        loanIntroShown = false;
         mentorSpokeThisMonth = false;
         CurrentLedger = null;
         pendingEvents.Clear();
@@ -3569,6 +4118,7 @@ public class GameManager : MonoBehaviour
         previousMomentum = 0f;
         recoveryAcknowledged = false;
         patternWarningIssued = false;
+        isGameOverFromDebtSpiral = false;
         mentorMemory_hasEverClaimed = false;
         mentorMemory_consecutiveLowSavingsMonths = 0;
         mentorMemory_familyStrainStreak = 0;
@@ -3595,9 +4145,6 @@ public class GameManager : MonoBehaviour
         yearPayouts = 0f;
         yearEventLosses = 0f;
 
-        // Without this, GoalBuilt/goalMilestoneReached etc. leak into the next
-        // stress test run in the same play session - e.g. running Informal then
-        // Formal back-to-back would have Formal start with GoalBuilt already true.
         GoalBuilt = false;
         goalReachedOnce = false;
         goalMonthsSinceOffer = 0;
@@ -4148,6 +4695,61 @@ public class GameManager : MonoBehaviour
 
         Debug.Log("===== BUDGET BAR TEST COMPLETE =====");
         IsHeadlessSimulation = false;
+    }
+
+    // Debug hooks for insurance testing (build chat batch, 2026-08-08). The lapse rule
+    // requires two consecutive missed premiums, charged per plan independently, so
+    // reproducing either denial path by play means being broke in a specific cash range
+    // across two months and then drawing a matching event on top of that - three things
+    // lining up on RNG. These make both denial paths a repeatable, ninety-second test.
+    // Not [ContextMenu] like the methods above - ContextMenu can't carry parameters, and
+    // both of these need a name - so call them directly (Inspector debug button, a
+    // temporary script, or the Console via reflection).
+    public void DEBUG_ForcePlanLapsed(string planName)
+    {
+        var plan = insuranceManager?.allPlans?.Find(p =>
+            string.Equals(p.planName, planName, System.StringComparison.OrdinalIgnoreCase));
+        if (plan == null)
+        {
+            string known = insuranceManager?.allPlans != null
+                ? string.Join(", ", insuranceManager.allPlans.ConvertAll(p => p.planName))
+                : "(no plans loaded)";
+            Debug.LogWarning($"[DEBUG] No insurance plan named '{planName}'. Known plans: {known}");
+            return;
+        }
+
+        plan.missedPayments = 2;
+        plan.isLapsed = true;
+        plan.isSubscribed = false;
+        Debug.Log($"[DEBUG] '{plan.planName}' forced lapsed (missedPayments=2, isLapsed=true, isSubscribed=false).");
+    }
+
+    public void DEBUG_ForceEventNextMonth(string eventName)
+    {
+        var ev = eventManager?.EventDatabase?.events?.Find(e => e.eventName == eventName);
+        if (ev == null)
+        {
+            Debug.LogWarning($"[DEBUG] No event named '{eventName}' in EventDatabase.");
+            return;
+        }
+
+        eventManager.ScheduleFollowUp(ev, currentMonth + 1);
+        Debug.Log($"[DEBUG] '{eventName}' scheduled to fire next month (month {currentMonth + 1}).");
+    }
+
+    // The actual "button": right-click the GameManager component's header in the
+    // Inspector (while in Play Mode, mid-run - allPlans/EventDatabase only exist after a
+    // profile is loaded) and this appears in that context menu like the DEBUG_StressTest_
+    // entries above. Wraps the two parameterized hooks above with the specific plan/event
+    // pairing described in the build chat report: Health Insurance forced lapsed, then
+    // Medication Costs (Health, no asset requirement, small fixed loss) forced to fire
+    // next month, which should land on the claimDeniedLapsed branch and route through
+    // ShowMessagePopup.
+    [ContextMenu("DEBUG_ForceLapse_Then_FireHealthEvent")]
+    public void DEBUG_ForceLapse_Then_FireHealthEvent()
+    {
+        DEBUG_ForcePlanLapsed("Health Insurance");
+        DEBUG_ForceEventNextMonth("Medication Costs");
     }
 #endif
 }

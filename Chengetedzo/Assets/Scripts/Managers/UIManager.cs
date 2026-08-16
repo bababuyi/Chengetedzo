@@ -195,6 +195,17 @@ public class UIManager : MonoBehaviour
         if (!IsPopupActive)
             return;
 
+        // Second layer of defence: the choice popup (regular choice events AND the
+        // insurance claim choice, which is shown through this same popup) only applies
+        // its consequence once OnChoiceSelected fires - a generic force-close here would
+        // hide it without ever calling that, silently dropping the decision and its
+        // money. Refuse instead of closing while it's the active popup.
+        if (activePopup == choiceEventPopup)
+        {
+            Debug.LogWarning("[UI] CloseActivePopup refused - choice popup has an unresolved decision.");
+            return;
+        }
+
         activePopup.SetActive(false);
 
         var callback = activeOnClose;
@@ -927,6 +938,70 @@ public class UIManager : MonoBehaviour
         StartCoroutine(EqualizeButtonHeights());
     }
 
+    // Sibling to ShowChoicePopup for a message with no decision to make, only Continue -
+    // insurance denial letters use this instead of ShowEventPopupWithCallback (the full
+    // event card, whose `pool` argument picks a header sprite - wrong for a letter that
+    // isn't illustrating a new event, and reads as a second event when the actual event
+    // already had its own card a moment earlier). Same body as ShowChoicePopup down to
+    // the sender fields, then lines 912-914 above are inverted: buttons off, Continue on,
+    // and the per-choice button loop is skipped entirely.
+    public void ShowMessagePopup(
+    string title,
+    string description,
+    string senderName,
+    string senderRelation,
+    System.Action onClose)
+    {
+        if (IsPopupActive)
+        {
+            Debug.LogWarning("[UI] Message popup requested while another popup is active.");
+            return;
+        }
+
+        choiceTitleText.text = title;
+        choiceDescriptionText.text = description;
+
+        if (choiceSenderNameText != null)
+            choiceSenderNameText.text = senderName;
+
+        if (choiceSenderRelationText != null)
+            choiceSenderRelationText.text = senderRelation;
+
+        choiceResultBubble?.SetActive(false);
+        choiceButtonsContainer?.SetActive(false);
+        choiceContinueButton?.gameObject.SetActive(true);
+
+        ShowPopup(choiceEventPopup, choiceContinueButton, null);
+
+        // ShowPopup just wired continueBtn.onClick to CloseActivePopup, which refuses to
+        // close choiceEventPopup outright (see the guard at the top of CloseActivePopup -
+        // it assumes an unresolved multi-choice decision still needs OnChoiceSelected to
+        // fire). Override with a direct close, the same way ShowChoiceResult overrides it
+        // once a choice is actually picked.
+        choiceContinueButton.onClick.RemoveAllListeners();
+        choiceContinueButton.onClick.AddListener(() => CloseMessagePopup(onClose));
+
+        if (choiceSenderBubbleRect != null)
+            UIAnimator.Instance?.ScaleBubbleIn(choiceSenderBubbleRect);
+    }
+
+    private void CloseMessagePopup(System.Action onClose)
+    {
+        choiceEventPopup.SetActive(false);
+        IsPopupActive = false;
+
+        if (activePopup == choiceEventPopup)
+        {
+            activePopup = null;
+            activeContinueButton = null;
+            activeOnClose = null;
+        }
+
+        if (inputBlockerPanel != null) inputBlockerPanel.SetActive(false);
+
+        onClose?.Invoke();
+    }
+
     private IEnumerator EqualizeButtonHeights()
     {
         yield return null;
@@ -1277,7 +1352,10 @@ public class UIManager : MonoBehaviour
 
     public void OnLoanButtonClicked()
     {
-        GameManager.Instance.BeginLoanDecision();
+        var gm = GameManager.Instance;
+        if (gm == null) return;
+        if (IsPopupActive) return;
+        gm.BeginLoanDecision();
     }
 
     public void CloseLoanPanel()
@@ -1312,7 +1390,10 @@ public class UIManager : MonoBehaviour
 
     public void OnSavingsButtonClicked()
     {
-        GameManager.Instance.BeginSavingsDecision();
+        var gm = GameManager.Instance;
+        if (gm == null) return;
+        if (IsPopupActive) return;
+        gm.BeginSavingsDecision();
     }
 
     public void CloseSavingsPanel()
@@ -1628,9 +1709,43 @@ public class UIManager : MonoBehaviour
         return text;
     }
 
+    // Wired to SimulationExitBtn - the in-game Exit button a player uses to leave mid-
+    // session. Confirms first: exiting mid-month puts the player back at the top of that
+    // month with whatever they did since undone (nothing autosaves mid-month, only at
+    // StartNewMonth), and without a warning that reads as the game eating a turn. Only
+    // proceeds to the save-preserving reset (ExitSimulationKeepingSave) if they confirm -
+    // that's what lets the per-profile Continue prompt (HandleProfileOrFreeModeSelection)
+    // find their save afterward. FullRestart itself is reserved for paths that should
+    // genuinely start over (end-of-run Play Again, explicit Start Over).
     public void ReturnToMainMenu()
     {
-        GameManager.Instance.FullRestart();
+        int leaveMonth = GameManager.Instance != null ? GameManager.Instance.currentMonth : 1;
+
+        var choices = new List<EventData.ChoiceOption>
+        {
+            new EventData.ChoiceOption
+            {
+                label = "Leave",
+                resultDescription = $"Leaving. Month {leaveMonth} will start over next time."
+            },
+            new EventData.ChoiceOption
+            {
+                label = "Keep playing",
+                resultDescription = "Back to it."
+            }
+        };
+
+        ShowChoicePopup(
+            "Leave now?",
+            $"You will start again from the beginning of Month {leaveMonth}. Anything you have done this month will not be saved.",
+            "", "",
+            choices,
+            index =>
+            {
+                if (index == 0)
+                    GameManager.Instance.ExitSimulationKeepingSave();
+            }
+        );
     }
 
     public void OnBackToMenu()

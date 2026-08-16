@@ -27,6 +27,12 @@ public class EventData : ScriptableObject
         public bool affectsLoan;
         public float borrowingPowerChange;
         public string grantsAsset;
+
+        // If set (not None) and the player currently has active, claimable cover of this
+        // type, ApplyEventChoice routes the loss through CalculateClaim before applying
+        // moneyChange, so insurance actually reduces the cost and shows as its own
+        // InsurancePayout ledger line - previously choice events could never claim at all.
+        public InsuranceManager.InsuranceType coveredBy = InsuranceManager.InsuranceType.None;
     }
 
     [Header("Basic Info")]
@@ -69,6 +75,26 @@ public class EventData : ScriptableObject
 
     [Header("Insurance")]
     public InsuranceType insuranceType;
+
+    // Secondary policies this same event also touches, evaluated in order after the
+    // primary. Each gets its own coverage limit, deductible and waiting-period check via
+    // its own InsurancePlan - HandleEvent walks this list. A secondary only pays the
+    // shortfall the primary (and any earlier secondary) left on this event's rawLoss, so
+    // stacked cover never sums past the loss itself. Only the primary is ever a player
+    // claim decision; secondaries resolve silently. Replaces the old hardcoded
+    // Funeral-pays-BurialSociety-too special case in HandleEvent - that pairing is now
+    // just data (see Death of Family Member / Elderly Family Member Death).
+    public List<InsuranceType> additionalCoveredBy = new List<InsuranceType>();
+
+    // Gates the Personal Accident/Health income benefit (see GameManager.ApplyIncomeEffect's
+    // healthRelated parameter) for events whose income loss should count as health-related
+    // even though neither the primary insuranceType nor any additionalCoveredBy entry is
+    // Health/PersonalAccident - e.g. Breadwinner Death, primary cover Education (the $1000
+    // education cap absorbs the lump sum, so PersonalAccident used to be listed in
+    // additionalCoveredBy purely as a side-channel to switch this benefit on, with no
+    // payout of its own). Most events don't need this: if the primary or a secondary cover
+    // actually is Health/PersonalAccident, EventManager.IsHealthRelated already catches it.
+    public bool grantsIncomeBenefit;
 
     [Header("Outcome")]
     public EventOutcomeType outcomeType;

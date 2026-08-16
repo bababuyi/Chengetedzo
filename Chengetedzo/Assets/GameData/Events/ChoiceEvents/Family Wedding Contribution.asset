@@ -27,6 +27,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: Contribute what I can ($60)
     resultDescription: I can only manage $60 this time. I hope it helps.
     moneyChange: -60
@@ -38,6 +39,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: I'll miss this one
     resultDescription: I'm sorry, I won't be able to contribute this time. Things
       are very tight.
@@ -50,6 +52,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   eventName: Family Wedding Contribution
   description: Sisi's wedding is next month, every household is putting something
     in. What can you manage this time?

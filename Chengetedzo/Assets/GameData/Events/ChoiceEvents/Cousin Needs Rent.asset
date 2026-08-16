@@ -28,6 +28,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: Send half ($50)
     resultDescription: I can send $50. It's all I have right now, use it wisely.
     moneyChange: -50
@@ -39,6 +40,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: I'm not able to help this month
     resultDescription: I'm sorry, I genuinely don't have anything to spare right
       now.
@@ -51,6 +53,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   eventName: Cousin Needs Rent
   description: The landlord's given me until Friday or I'm out. I hate to ask, but
     is there any way you can help with rent this week?

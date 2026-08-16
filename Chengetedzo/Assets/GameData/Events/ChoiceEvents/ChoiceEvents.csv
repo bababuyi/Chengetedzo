@@ -1,6 +1,6 @@
 TYPE,F1,F2,F3,F4,F5,F6,F7,F8,F9,F10
 "# EVENT columns: name, description, sender, senderRelation, category, pool, type, requiredAsset, probability, weight, severity",,,,,,,,,,
-"# CHOICE columns: label, response, moneyChange, momentumChange, moraleChange, moraleType, incomePercentChange, incomeEffectMonths, affectsLoan(Yes/No), borrowingPowerChange, grantsAsset",,,,,,,,,,
+"# CHOICE columns: label, response, moneyChange, momentumChange, moraleChange, moraleType, incomePercentChange, incomeEffectMonths, affectsLoan(Yes/No), borrowingPowerChange, grantsAsset, coveredBy",,,,,,,,,,
 # moraleType: Family (weight 0.6) | Social (weight 0.4) | Self (feeds Family) | None,,,,,,,,,,
 EVENT,Sekuru Needs Help,"I'm at the clinic. The treatment is costing more than I have on me. If you're able to help, I'd be so grateful, mwanangu.",Sekuru José,Family,Health,Choice,None,12,10,Moderate
 CHOICE,Send the full amount,"I'll send the full $120 right now, Sekuru. Please get better soon.",-120,-2,4,Family,0,0,No,0
@@ -87,20 +87,20 @@ CHOICE,Give generously ($80),The church has given us so much. I'll give back.,-8
 CHOICE,Give what I can ($30),I'll put in what I can afford right now.,-30,0,2,Social,0,0,No,0
 CHOICE,Skip the offering this week,I'll contribute next time when things are better.,0,1,-1,Social,0,0,No,0
 EVENT,Sick Child Needs Treatment,Your child has been running a fever for two days. They need to see a doctor but the private clinic is expensive and the public clinic queues are very long.,Your Child,Family,Health,Choice,None,16,12,Minor
-CHOICE,Take to private clinic ($80),I'm not gambling with my child's health.,-80,-2,4,Family,0,0,No,0
-CHOICE,Take to public clinic ($15),We'll queue. It takes time but it gets the job done.,-15,0,2,Family,0,0,No,0
+CHOICE,Take to private clinic ($80),I'm not gambling with my child's health.,-80,-2,4,Family,0,0,No,0,,Health
+CHOICE,Take to public clinic ($15),We'll queue. It takes time but it gets the job done.,-15,0,2,Family,0,0,No,0,,Health
 CHOICE,Treat at home with available medicine ($10),I'll try what we have first and see how they go.,-10,1,-1,Family,0,0,No,0
 EVENT,Workmate Facing Crisis,"Storm damage at Tapiwa's place last night, roof and a wall down. We're collecting for emergency repairs, whatever you can spare helps.",Colleague Tapiwanashe,Work,Economic,Choice,None,14,10,Minor
 CHOICE,Contribute generously ($60),They'd do the same for me.,-60,-1,3,Social,0,0,No,0
 CHOICE,Contribute a small amount ($20),I can't give much but I'll add something.,-20,0,1,Social,0,0,No,0
 CHOICE,Skip this time,I'm stretched too thin this month.,0,1,-1,Social,0,0,No,0
-EVENT,Landlord Increases Rent,"Rent's going up $80 from next month, costs have gone up on my end too. Let me know within the week how you'd like to proceed.",Landlord Banda,Housing,Economic,Choice,None,12,10,Moderate
+EVENT,Landlord Increases Rent,"Rent's going up $80 from next month, costs have gone up on my end too. Let me know within the week how you'd like to proceed.",Landlord Banda,Housing,Economic,Choice,Renting,12,10,Moderate
 CHOICE,Accept and adjust the budget,I have no choice right now. I'll make it work.,0,-2,-1,Family,-8,-1,No,0
 CHOICE,Negotiate to delay the increase,Can we phase it in over three months? Give me time to adjust.,0,2,1,Family,-4,3,No,0
 CHOICE,"Give notice, start looking for cheaper accommodation",This is unsustainable. I'll look for something affordable.,0,2,-1,Family,0,0,No,0
 EVENT,Car Breaks Down,"Won't get far like this, something's seriously wrong under the hood. I wouldn't risk driving it again until it's fixed properly.",Mechanic Choto,Work,Economic,Choice,Motor,10,10,Moderate
-CHOICE,Fix it properly at the garage ($300),Better done right. I can't afford to lose my transport.,-300,-1,1,Family,0,0,No,0
-CHOICE,Do a temporary fix with second-hand parts ($120),This will hold for now. I'll do a proper fix when I have more money.,-120,0,0,None,0,0,No,0
+CHOICE,Fix it properly at the garage ($300),Better done right. I can't afford to lose my transport.,-300,-1,1,Family,0,0,No,0,,Motor
+CHOICE,Do a temporary fix with second-hand parts ($120),This will hold for now. I'll do a proper fix when I have more money.,-120,0,0,None,0,0,No,0,,Motor
 CHOICE,Keep driving and hope for the best,I'll take the risk for now.,0,-3,-2,Family,-10,2,No,0
 EVENT,Sell the Crops or Wait,Your harvest is ready but the main market doesn't open for two more weeks. Each option has a trade-off.,Buyer Makore,Work,Economic,Choice,CropsOrLivestock,12,8,Moderate
 CHOICE,Hire transport to the city market now ($80 cost),The city prices will more than cover the transport.,-80,2,0,None,15,1,No,0
@@ -123,23 +123,26 @@ CHOICE,Buy three months of staples now ($270),This will save real money over the
 CHOICE,Buy just one extra month ($100),I'll stock up a little without overcommitting.,-100,1,0,None,3,1,No,0
 CHOICE,Just buy this month as usual,I can't stretch to bulk buying right now.,0,0,0,None,0,0,No,0
 "# -- OPPORTUNITY BATCH - player-initiated risks. Delayed payoffs proxied as income % (choice rows can't schedule chains). --",,,,,,,,,,
-EVENT,Double Your Money,"Invest today and DOUBLE your money in two weeks. Guaranteed!! Bring a friend and you get a bonus 🎁 Ask anyone, people are already getting paid. Spaces limited.",+263 77 ___ ____,Unknown,Economic,Choice,None,10,10,Moderate
-CHOICE,Invest big ($100),The number stops replying after two weeks. The 'office' was never there. The money is gone.,-100,-3,-2,Self,0,0,No,0
-CHOICE,Test it with $40,"A small 'return' arrives, then the scheme vanishes with the rest. That first payout was the bait, not the profit.",-40,-2,-1,Self,0,0,No,0
-CHOICE,"Guaranteed? Nothing is. Delete.","Guaranteed returns, pressure to act today, recruit your friends: three warnings in one message. Your money stays yours.",0,3,0,None,0,0,No,0
+EVENT,Double Your Money,"Invest today and DOUBLE your money in two weeks. Guaranteed!! Bring a friend and you get a bonus. Ask anyone, people are already getting paid. Spaces limited.",+263 77 ___ ____,Unknown,Economic,Choice,None,10,10,Moderate
+CHOICE,Invest big ($100),"I sent the $100. Two weeks later the number stopped replying. There was never an office. That money is gone.",-100,-3,-2,Self,0,0,No,0
+CHOICE,Test it with $40,"I only risked $40. A small payout came back, then the whole thing vanished with the rest. That first payout was the bait, not the profit.",-40,-2,-1,Self,0,0,No,0
+CHOICE,"Guaranteed? Nothing is. Delete.","Guaranteed returns, pressure to act today, recruit your friends - that's three warning signs in one message. I deleted it. My money stays mine.",0,3,0,None,0,0,No,0
 EVENT,Airtime Float Offer,Tonderai resells airtime and data at the rank. He'll split his corner with you if you put up float money. You watch him work a full day first. The numbers are real.,Tonderai,Vendor,Economic,Choice,None,10,8,Minor
-CHOICE,Put up the float ($50),"You checked the trade before trusting it. The corner earns: slowly, honestly.",-50,2,0,Self,4,2,No,0
-CHOICE,Not this time,"A real chance, but your money has other work to do. Knowing the difference is the skill.",0,1,0,None,0,0,No,0
+CHOICE,Put up the float ($50),"I watched him work a full day before I put anything in. The corner earns slowly, but it's honest money.",-50,2,0,Self,4,2,No,0
+CHOICE,Not this time,"It looked like a real chance, but my money has other work to do right now. Knowing the difference is the skill.",0,1,0,None,0,0,No,0
 EVENT,The Roof Whistles,A soft whistle in the roof when the wind blows: a lifted sheet. The fundi can fix it cheap now. The rains will not be so cheap.,Baba Josphat,Fundi,Weather,Choice,None,12,10,Minor
-CHOICE,Fix it now ($35),"An afternoon's work and the whistle is gone. When the rains come, they will stay outside.",-35,2,1,Family,0,0,No,0
-CHOICE,It can wait,The whistle stays. Every grey cloud is a question now.,0,-1,-1,Family,0,0,No,0
+CHOICE,Fix it now ($35),"I called the fundi. An afternoon's work and the whistle's gone. When the rains come, they'll stay outside.",-35,2,1,Family,0,0,No,0
+CHOICE,It can wait,"I'll leave it for now. But every grey cloud is a question these days.",0,-1,-1,Family,0,0,No,0
 EVENT,An Offer for the Bicycle,"A man at the rank offers cash for your old bicycle, today. It still gets the household around when fares are short.",Simba,Buyer,Economic,Choice,None,8,8,Minor
-CHOICE,Sell it ($35),"Cash today, but now every trip costs a fare or a long walk.",35,0,-1,Family,-3,2,No,0
-CHOICE,Keep it,It is not worth much to him. It is worth plenty to you.,0,1,1,Family,0,0,No,0
-EVENT,Mukando Invitation,The women from church run a mukando. Everyone puts in the same amount each month, and when you have been paying a while you can borrow from the pot at a fraction of what a moneylender charges. It only works if you keep paying in.,Mai Dube,Committee Chair,Economic,Choice,None,10,8,Minor
-CHOICE,Join the mukando ($50 each month),They write your name in the book. From next month, $50 goes in whether it suits you or not. In three months you can start borrowing against it.,0,2,2,Social,10,1,No,0
-CHOICE,Not right now,You thank them and say maybe later. The book closes. You can join another time, but the clock starts from zero.,0,1,0,None,0,0,No,0
+CHOICE,Sell it ($35),"I took the cash. But now every trip costs a fare or a long walk.",35,0,-1,Family,-3,2,No,0
+CHOICE,Keep it,"It's not worth much to him. It's worth plenty to me. I'm keeping it.",0,1,1,Family,0,0,No,0
+EVENT,Mukando Invitation,"The women from church run a mukando. Everyone puts in the same amount each month, and when you have been paying a while you can borrow from the pot at a fraction of what a moneylender charges. It only works if you keep paying in.",Mai Dube,Committee Chair,Economic,Choice,None,10,8,Minor
+CHOICE,Join the mukando ($50 each month),"Write my name in the book. From next month, $50 goes in whether it suits me or not. In three months I can start borrowing against it.",0,2,2,Social,10,1,No,0
+CHOICE,Not right now,"Maybe later. I'll join another time, but I know the clock starts from zero when I do.",0,1,0,None,0,0,No,0
+EVENT,A Number From Ndlovu,"Hesi. They gave me your number. I am Ndlovu, I lend money around here. If a month gets tight, come and see me and we can make a plan. I am always around.",Ndlovu,Moneylender,Economic,Choice,None,10,8,Minor
+CHOICE,"Thank you, I will keep it in mind","Thank you Ndlovu. I will keep your number.",0,0,0,None,0,0,No,0
+CHOICE,I will not need it,"I hope I will not need it. But thank you.",0,0,0,None,0,0,No,0
 EVENT,A Car Within Reach,"Someone at church is selling their car. It runs, the papers are clean, and they want it gone this month. You have seen what the fare does to your money every day.",Mai Chiweshe,Community,Economic,Choice,NoMotor,8,6,Moderate
-CHOICE,Pay for it outright,"You hand over the money in one go. The car is yours, and there is nothing owed to anyone. Your savings look thin for a while.",-2500,-1,3,Family,0,0,No,0,Motor
-CHOICE,Take it on terms,"You put down a deposit and agree to pay the rest over time. You drive away today, but a portion of what you can borrow is now spoken for.",-900,-2,2,Family,0,0,Yes,-2100,Motor
-CHOICE,Leave it,"You let it go. The fare still costs what it costs, but nothing new is owed.",0,1,-2,Family,0,0,No,0,
+CHOICE,Pay for it outright,"I paid for it outright. The car is mine, and I owe nothing to anyone. My savings look thin for a while.",-2500,-1,3,Family,0,0,No,0,Motor
+CHOICE,Take it on terms,"I put down a deposit and agreed to pay the rest over time. I'm driving away today, but a portion of what I can borrow is already spoken for.",-900,-2,2,Family,0,0,Yes,-2100,Motor
+CHOICE,Leave it,"I let it go. The fare still costs what it costs, but nothing new is owed.",0,1,-2,Family,0,0,No,0,

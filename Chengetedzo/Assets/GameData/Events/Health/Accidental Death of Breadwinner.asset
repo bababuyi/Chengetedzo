@@ -31,9 +31,10 @@ MonoBehaviour:
   minLossPercent: 0
   maxLossPercent: 0
   affectsIncome: 1
-  incomePercentChange: -60
+  incomePercentChange: 0
   incomeEffectMonths: -1
   insuranceType: 5
+  grantsIncomeBenefit: 0
   outcomeType: 0
   cashReward: 0
   momentumReward: -3

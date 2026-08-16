@@ -27,6 +27,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: Give a smaller amount ($30)
     resultDescription: It's not much but please accept it with our condolences.
     moneyChange: -30
@@ -38,6 +39,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: I can't help right now
     resultDescription: I'm so sorry. I'm in no position to help financially this
       month.
@@ -50,6 +52,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   eventName: Neighbour's Funeral Costs
   description: We're collecting for the funeral, the family's struggling to cover
     it. Anything you can give would help.

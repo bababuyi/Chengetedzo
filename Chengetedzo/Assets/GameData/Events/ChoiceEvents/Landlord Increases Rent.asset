@@ -22,11 +22,12 @@ MonoBehaviour:
     momentumChange: -2
     moraleChange: -1
     moraleType: Family
-    incomePercentChange: -8
-    incomeEffectMonths: -1
+    incomePercentChange: 0
+    incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
-    grantsAsset: 
+    grantsAsset:
+    coveredBy: 0
   - label: Negotiate to delay the increase
     resultDescription: Can we phase it in over three months? Give me time to adjust.
     moneyChange: 0
@@ -38,6 +39,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: Give notice, start looking for cheaper accommodation
     resultDescription: This is unsustainable. I'll look for something affordable.
     moneyChange: 0
@@ -49,13 +51,14 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   eventName: Landlord Increases Rent
   description: Rent's going up $80 from next month, costs have gone up on my end
     too. Let me know within the week how you'd like to proceed.
-  financialLesson: 
+  financialLesson:
   category: 3
   pool: 6
-  requiredAsset: 0
+  requiredAsset: 7
   destroysAsset: 0
   icon: {fileID: 0}
   probability: 12

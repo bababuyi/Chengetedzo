@@ -42,6 +42,21 @@ public class InsuranceManager : MonoBehaviour
         public int billingCycleMonths = 1;
         public int monthsInCycle = 0;
 
+        // Set whenever a premium is actually charged (purchase or monthly billing).
+        // ProcessMonthlyPremiums checks this before charging so a plan bought earlier
+        // in the same month isn't billed a second time in the same ConfirmMonthAndResolve
+        // call, which was also silently double-counting monthsPaid against the waiting
+        // period. -1 means "never charged."
+        public int lastChargedMonth = -1;
+
+        // Cancelling and rebuying inside the same month is a UI correction, not a real
+        // lapse: no month elapsed, the premium was refunded, no risk was carried. These
+        // let BuyInsurance tell that apart from a genuine lapse and restore the waiting
+        // period clock instead of wiping it. -1 means "not currently in a same-month
+        // cancel window."
+        public int cancelledMonth = -1;
+        public int monthsPaidAtCancel = 0;
+
         // Trackers
         public bool isSubscribed = false;
         public bool isLapsed = false;
@@ -107,6 +122,16 @@ public class InsuranceManager : MonoBehaviour
         public bool claimApproved;
         public bool waitingPeriodBlocked;
         public bool lapsedBlocked;
+
+        // Plan context for surfacing the denial to the player (see EventManager's
+        // insurance branches). isSubscribed is the load-bearing field here: a plan
+        // that was never bought can still trip waitingPeriodBlocked (monthsPaid=0 <
+        // waitingPeriodMonths), so callers must gate any player-facing waiting-period
+        // message on isSubscribed==true, not on waitingPeriodBlocked alone.
+        public bool isSubscribed;
+        public string planName;
+        public int monthsPaid;
+        public int waitingPeriodMonths;
     }
 
     private void CreateDefaultPlans()
@@ -407,10 +432,27 @@ public class InsuranceManager : MonoBehaviour
             );
 
             plan.isSubscribed = true;
-            plan.monthsPaid = 1;
+
+            // Cancelling and rebuying within the same month is a UI correction, not a
+            // lapse - no month elapsed, the premium was refunded via CancelInsurance,
+            // no risk was carried. Restore the clock instead of restarting it. A genuine
+            // lapse (handled above) or a cancel from an earlier month still resets it.
+            if (plan.cancelledMonth == GameManager.Instance.currentMonth)
+            {
+                plan.monthsPaid = plan.monthsPaidAtCancel;
+                plan.cancelledMonth = -1;
+                plan.monthsPaidAtCancel = 0;
+                Debug.Log($"[Insurance] {plan.planName} rebought same month as cancel - waiting period clock restored to {plan.monthsPaid}/{plan.waitingPeriodMonths}.");
+            }
+            else
+            {
+                plan.monthsPaid = 1;
+            }
+
             plan.missedPayments = 0;
             plan.isLapsed = false;
             plan.monthsInCycle = 0;
+            plan.lastChargedMonth = GameManager.Instance.currentMonth;
 
             Debug.Log($"[Insurance] Subscribed to {plan.planName}. Charged ${firstPremium:F2}");
             return true;
@@ -443,6 +485,11 @@ public class InsuranceManager : MonoBehaviour
             refund,
             true
         );
+
+        // Stamp the cancel month and the clock it had before wiping monthsPaid, so a
+        // rebuy later in this same month can restore it instead of restarting the wait.
+        plan.cancelledMonth = GameManager.Instance.currentMonth;
+        plan.monthsPaidAtCancel = plan.monthsPaid;
 
         plan.isSubscribed = false;
         plan.isLapsed = false;
@@ -522,6 +569,16 @@ public class InsuranceManager : MonoBehaviour
                 continue;
             }
 
+            // A plan bought earlier this same month was already charged its first
+            // premium in BuyInsurance. Without this guard, ConfirmMonthAndResolve
+            // running ProcessMonthlyPremiums right after would bill it again and bump
+            // monthsPaid a second time in the same month, letting the waiting period
+            // clock run roughly twice as fast as intended for the first cycle.
+            if (plan.lastChargedMonth == GameManager.Instance.currentMonth)
+            {
+                continue;
+            }
+
             // Quarterly billing cycle check
             plan.monthsInCycle++;
             bool isDueThisMonth = plan.monthsInCycle >= plan.billingCycleMonths;
@@ -548,6 +605,7 @@ public class InsuranceManager : MonoBehaviour
 
                 plan.missedPayments = 0;
                 plan.monthsPaid++;
+                plan.lastChargedMonth = GameManager.Instance.currentMonth;
 
                 AnyPremiumPaidThisMonth = true;
             }
@@ -595,7 +653,7 @@ public class InsuranceManager : MonoBehaviour
         totalPayout += payout;
     }
 
-    public InsuranceResult HandleEvent(InsuranceType type, float rawLoss, string eventName = "Unknown Event")
+    public InsuranceResult HandleEvent(InsuranceType type, float rawLoss, string eventName = "Unknown Event", List<InsuranceType> additionalCoveredBy = null)
 
     {
         InsuranceResult result = new InsuranceResult();
@@ -631,6 +689,16 @@ public class InsuranceManager : MonoBehaviour
             {
                 lapsedBlocked = true;
             }
+            else if (!plan.isSubscribed)
+            {
+                // Never bought this cover. Confirmed via the diagnostic log on a real
+                // playthrough: Month 1, Medication Costs (Health) - isSubscribed=False,
+                // monthsPaid=0, waitingPeriodMonths=3 - fell into the check below purely
+                // because 0 < 3 is always true for a plan that was never purchased, and
+                // reported "Claim blocked: waiting period" for cover that didn't exist.
+                // No cover, no claim, and no waiting-period/lapsed flag to report - this
+                // is silently uninsured, not a denial.
+            }
             else if (plan.monthsPaid < plan.waitingPeriodMonths)
             {
                 waitingBlocked = true;
@@ -649,18 +717,39 @@ public class InsuranceManager : MonoBehaviour
             }
         }
 
-        // BurialSociety secondary payout
-        if (type == InsuranceType.Funeral)
+        // Secondary policies (EventData.additionalCoveredBy). Each gets its own
+        // coverage limit, deductible and waiting-period check via CanClaim(), but all of
+        // them are measuring the SAME modeled loss the primary just evaluated - so each
+        // secondary only pays the shortfall still open after the primary and any earlier
+        // secondary, never the full rawLoss again. Without this, two policies covering
+        // the same loss would sum past it into a windfall (this is exactly what the old
+        // hardcoded Funeral->BurialSociety branch got wrong: it computed BurialSociety's
+        // payout against the original rawLoss instead of what was left).
+        // No waitingBlocked/lapsedBlocked reporting for secondaries - only the primary is
+        // ever a player claim decision, secondaries resolve silently either way.
+        if (additionalCoveredBy != null)
         {
-            var burialPlan = GetPlan(InsuranceType.BurialSociety);
-            if (burialPlan != null && burialPlan.CanClaim())
+            foreach (var secondaryType in additionalCoveredBy)
             {
-                float burialDeductible = rawLoss * (burialPlan.deductiblePercent / 100f);
-                float burialInsurable = Mathf.Max(0f, rawLoss - burialDeductible);
-                float burialPayout = Mathf.Min(burialInsurable, burialPlan.coverageLimit);
-                payout += burialPayout;
-                totalPayout += burialPayout;
-                Debug.Log($"[Insurance] BurialSociety secondary payout: ${burialPayout:F2}");
+                float remainingLoss = Mathf.Max(0f, rawLoss - payout);
+                if (remainingLoss <= 0f) break;
+
+                var secondaryPlan = GetPlan(secondaryType);
+                if (secondaryPlan == null || !secondaryPlan.CanClaim()) continue;
+
+                float secondaryDeductible = remainingLoss * (secondaryPlan.deductiblePercent / 100f);
+                float secondaryInsurable = Mathf.Max(0f, remainingLoss - secondaryDeductible);
+                float secondaryCap = secondaryPlan.premiumIsAssetBased
+                    ? Finance.GetAssetValue(secondaryType)
+                    : secondaryPlan.coverageLimit;
+                float secondaryPayout = Mathf.Min(secondaryInsurable, secondaryCap);
+
+                if (secondaryPayout > 0f)
+                {
+                    payout += secondaryPayout;
+                    totalPayout += secondaryPayout;
+                    Debug.Log($"[Insurance] {secondaryPlan.planName} secondary payout: ${secondaryPayout:F2}");
+                }
             }
         }
 
@@ -682,6 +771,10 @@ public class InsuranceManager : MonoBehaviour
         result.claimApproved = payout > 0f;
         result.waitingPeriodBlocked = waitingBlocked;
         result.lapsedBlocked = lapsedBlocked;
+        result.isSubscribed = plan != null && plan.isSubscribed;
+        result.planName = plan != null ? plan.planName : "";
+        result.monthsPaid = plan != null ? plan.monthsPaid : 0;
+        result.waitingPeriodMonths = plan != null ? plan.waitingPeriodMonths : 0;
 
         Debug.Log($"[Insurance] Event {type}: Raw ${rawLoss:F2}, Deductible ${deductibleAmount:F2}, Paid ${payout:F2}, Player ${cappedLoss:F2}");
 
@@ -761,6 +854,21 @@ public class InsuranceManager : MonoBehaviour
             plan.monthsPaid = 0;
             plan.missedPayments = 0;
             plan.monthsInCycle = 0;
+            // These two were missing here, which was the actual cause of insurance
+            // carrying into a new playthrough (e.g. "Third Party Motor already active"
+            // on a fresh restart) - BuyInsurance's re-buy guard checks
+            // coverageMonthsRemaining, not isSubscribed, so leaving it nonzero silently
+            // blocked re-purchasing even though every other flag looked reset.
+            plan.coverageMonthsRemaining = 0;
+            plan.canCancelThisMonth = false;
+            // Reset alongside the rest - a stale lastChargedMonth could coincidentally
+            // match month 1 of a fresh run and wrongly skip that plan's first charge.
+            plan.lastChargedMonth = -1;
+            // Same reasoning as lastChargedMonth: a stale cancelledMonth could
+            // coincidentally match month 1 of a fresh run and wrongly restore a
+            // leftover monthsPaidAtCancel from the previous playthrough.
+            plan.cancelledMonth = -1;
+            plan.monthsPaidAtCancel = 0;
         }
 
         AnyPremiumPaidThisMonth = false;

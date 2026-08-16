@@ -27,6 +27,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: Negotiate a better price
     resultDescription: I can do $300 or I wait for the market.
     moneyChange: 300
@@ -38,6 +39,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: Wait for proper market price
     resultDescription: I'll wait. The market price is better.
     moneyChange: 0
@@ -49,6 +51,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   eventName: Buyer Offers Early Cash
   description: I'll take the crop off your hands today, cash in hand. It's below
     market, but it's certain and it's now.

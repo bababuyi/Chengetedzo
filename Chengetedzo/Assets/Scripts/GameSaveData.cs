@@ -134,6 +134,18 @@ public class GameSaveData
         public int missedPayments;
     }
 
+    // Scripted/chain follow-up events still queued but not yet triggered (e.g. a
+    // death event's "New Income Source" follow-up two months out). Stored by name
+    // rather than a direct EventData reference - see EventManager.PendingEventsSnapshot.
+    public List<PendingEventSaveData> pendingEvents = new List<PendingEventSaveData>();
+
+    [Serializable]
+    public class PendingEventSaveData
+    {
+        public string eventName;
+        public int monthToTrigger;
+    }
+
     public List<MonthSnapshotSaveData> snapshots = new List<MonthSnapshotSaveData>();
 
     [Serializable]

@@ -33,6 +33,8 @@ MonoBehaviour:
   incomePercentChange: 0
   incomeEffectMonths: 0
   insuranceType: 1
+  additionalCoveredBy:
+  - 9
   outcomeType: 0
   cashReward: 0
   momentumReward: 0

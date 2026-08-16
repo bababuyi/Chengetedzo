@@ -27,6 +27,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: This month I can't afford it
     resultDescription: I'm so sorry my child. I'll make it up to you next time.
     moneyChange: 0
@@ -38,6 +39,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   eventName: School Trip Payment
   description: Reminder that the school trip fee is due by Friday. Please send payment
     with your child or drop it at the office.

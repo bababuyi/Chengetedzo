@@ -27,6 +27,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: Negotiate lighter hours
     resultDescription: I'll do it but I need to limit the hours.
     moneyChange: 0
@@ -38,6 +39,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: Pass on it this time
     resultDescription: Not this time, family needs me more.
     moneyChange: 0
@@ -49,6 +51,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   eventName: Side Hustle Opportunity
   description: I've got weekend work going if you're interested, decent pay, but
     it'll eat into your weekend. Let me know.

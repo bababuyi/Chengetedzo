@@ -26,14 +26,16 @@ MonoBehaviour:
   requiredAsset: 0
   destroysAsset: 0
   icon: {fileID: 0}
-  probability: 5
-  weight: 8
+  probability: 100
+  weight: 100
   minLossPercent: 0
   maxLossPercent: 0
   affectsIncome: 0
   incomePercentChange: 0
   incomeEffectMonths: 0
   insuranceType: 2
+  additionalCoveredBy: 
+  grantsIncomeBenefit: 0
   outcomeType: 0
   cashReward: 0
   momentumReward: -2

@@ -27,6 +27,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: Apply without the course first
     resultDescription: I'll apply and see what happens before spending money.
     moneyChange: 0
@@ -38,6 +39,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: Stick with what I have
     resultDescription: It's a risk I can't take right now. Maybe next time.
     moneyChange: 0
@@ -49,6 +51,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   eventName: Better Job Offer
   description: There's an opening at my company, better pay, better hours. Only catch
     is you'd need to do a short certification first. Worth looking into?

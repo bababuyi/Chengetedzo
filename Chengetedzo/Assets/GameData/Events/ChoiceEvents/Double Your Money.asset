@@ -17,8 +17,8 @@ MonoBehaviour:
   senderRelation: Unknown
   choices:
   - label: Invest big ($100)
-    resultDescription: The number stops replying after two weeks. The 'office' was
-      never there. The money is gone.
+    resultDescription: I sent the $100. Two weeks later the number stopped replying.
+      There was never an office. That money is gone.
     moneyChange: -100
     momentumChange: -3
     moraleChange: -2
@@ -28,9 +28,10 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: Test it with $40
-    resultDescription: A small 'return' arrives, then the scheme vanishes with the
-      rest. That first payout was the bait, not the profit.
+    resultDescription: I only risked $40. A small payout came back, then the whole
+      thing vanished with the rest. That first payout was the bait, not the profit.
     moneyChange: -40
     momentumChange: -2
     moraleChange: -1
@@ -40,9 +41,10 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: Guaranteed? Nothing is. Delete.
-    resultDescription: 'Guaranteed returns, pressure to act today, recruit your friends:
-      three warnings in one message. Your money stays yours.'
+    resultDescription: Guaranteed returns, pressure to act today, recruit your friends
+      - that's three warning signs in one message. I deleted it. My money stays mine.
     moneyChange: 0
     momentumChange: 3
     moraleChange: 0
@@ -52,10 +54,11 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   eventName: Double Your Money
-  description: "Invest today and DOUBLE your money in two weeks. Guaranteed!! Bring
-    a friend and you get a bonus \U0001F381 Ask anyone, people are already getting
-    paid. Spaces limited."
+  description: Invest today and DOUBLE your money in two weeks. Guaranteed!! Bring
+    a friend and you get a bonus. Ask anyone, people are already getting paid. Spaces
+    limited.
   financialLesson: 
   category: 3
   pool: 6

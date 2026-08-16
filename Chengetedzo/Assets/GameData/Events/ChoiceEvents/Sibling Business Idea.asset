@@ -27,6 +27,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: Put in a small amount ($80)
     resultDescription: I can put in $80. It's not much but it's my support.
     moneyChange: -80
@@ -38,6 +39,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: I can't invest right now
     resultDescription: I'd love to but my finances can't take that risk right now.
       I'm sorry.
@@ -50,6 +52,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   eventName: Sibling Business Idea
   description: I've got something lined up that could really pay off. I want to start
     it properly and I need a partner, you in?

@@ -27,6 +27,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: Buy just enough to get through ($20)
     resultDescription: A small top-up for now. I'll be more careful.
     moneyChange: -20
@@ -38,6 +39,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: Manage without power for now
     resultDescription: Candles and a brazier. It's not ideal but we'll cope.
     moneyChange: 0
@@ -49,6 +51,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   eventName: ZESA Tokens Run Out
   description: 'ZESA ALERT: Your prepaid balance is now $0.00. Recharge now to restore
     your electricity supply.'

@@ -27,6 +27,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: Buy just one extra month ($100)
     resultDescription: I'll stock up a little without overcommitting.
     moneyChange: -100
@@ -38,6 +39,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: Just buy this month as usual
     resultDescription: I can't stretch to bulk buying right now.
     moneyChange: 0
@@ -49,6 +51,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   eventName: Grocery Bulk Buy Deal
   description: THREE MONTHS of staple groceries for the price of TWO, this week only
     at Mahomed Stores. Stock up and save.

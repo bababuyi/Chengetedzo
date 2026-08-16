@@ -27,6 +27,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: Rent it out ($80)
     resultDescription: Sure, $80 for the week. Fair deal.
     moneyChange: 80
@@ -38,6 +39,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: Sorry, I need it myself
     resultDescription: I'd love to help but I need it this week myself.
     moneyChange: 0
@@ -49,6 +51,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   eventName: Neighbour Wants Equipment
   description: My tractor's given out and the fields need working. Any chance I could
     borrow yours for the week?

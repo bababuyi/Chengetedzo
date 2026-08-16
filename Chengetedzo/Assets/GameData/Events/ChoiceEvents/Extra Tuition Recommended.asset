@@ -28,6 +28,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: I'll find a free tutor
     resultDescription: Thank you, I'll arrange something within the family.
     moneyChange: 0
@@ -39,6 +40,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: We'll manage at home
     resultDescription: I appreciate the heads up. We'll work harder at home.
     moneyChange: 0
@@ -50,6 +52,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   eventName: Extra Tuition Recommended
   description: I wanted to flag that your child's been struggling this term. Extra
     tuition would help a lot if it's something you can arrange.

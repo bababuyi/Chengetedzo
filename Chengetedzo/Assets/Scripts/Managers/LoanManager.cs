@@ -109,6 +109,10 @@ public class LoanManager : MonoBehaviour
 
     public void ProcessContribution()
     {
+        // Moneylender's cap tracks current income, which can move month to month
+        // (income effects/benefits) - keep it current regardless of Mukando membership.
+        UpdateMoneylenderBorrowingPower();
+
         if (!mukandoJoined)
         {
             ContributedThisMonth = false;
@@ -331,7 +335,9 @@ public class LoanManager : MonoBehaviour
         mukando.borrowingPower = Mathf.Max(0f, gross - mukando.balance);
     }
 
-    private void UpdateMoneylenderBorrowingPower()
+    // Public so FinanceManager.InitializeFromSetup can call it once income is actually
+    // known (ResetAll runs before setup, so its own call computes income * multiplier = 0).
+    public void UpdateMoneylenderBorrowingPower()
     {
         float cap = GetMoneylenderCap();
         moneylender.borrowingPower = Mathf.Max(0f, cap - moneylender.balance);
@@ -358,10 +364,12 @@ public class LoanManager : MonoBehaviour
     // Forced/emergency borrowing. Draws from Mukando first (the cheap channel you built
     // by saving), then falls back to the Moneylender for whatever's left. The player isn't
     // present to choose a term, so each draw uses that account's maximum term.
-    public void ForceBorrow(float requiredAmount)
+    // Returns the amount actually borrowed (0 if neither account had any borrowing power)
+    // so the caller can tell a real loan from a no-op instead of assuming success.
+    public float ForceBorrow(float requiredAmount)
     {
         float remaining = Mathf.Max(0f, requiredAmount);
-        if (remaining <= 0f) return;
+        if (remaining <= 0f) return 0f;
 
         float fromMukando = 0f;
         if (mukando.borrowingPower > 0f)
@@ -395,10 +403,12 @@ public class LoanManager : MonoBehaviour
             Debug.Log($"[Loan] FORCED loan drawn from Moneylender: ${fromMoneylender:F0} over {moneylender.maxTermMonths} months.");
         }
 
-        if (fromMukando <= 0f && fromMoneylender <= 0f)
+        float totalBorrowed = fromMukando + fromMoneylender;
+
+        if (totalBorrowed <= 0f)
         {
             Debug.LogWarning("[Loan] Forced loan requested but no borrowing power available from either account.");
-            return;
+            return 0f;
         }
 
         if (!GameManager.Instance.HasMentorSpokenThisMonth())
@@ -409,6 +419,8 @@ public class LoanManager : MonoBehaviour
             );
             GameManager.Instance.SetMentorSpokeThisMonth(true);
         }
+
+        return totalBorrowed;
     }
 
     // Some event choices nudge the player's borrowing standing. Mukando is the channel

@@ -27,6 +27,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 6
   - label: Do a temporary fix with second-hand parts ($120)
     resultDescription: This will hold for now. I'll do a proper fix when I have more
       money.
@@ -39,6 +40,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 6
   - label: Keep driving and hope for the best
     resultDescription: I'll take the risk for now.
     moneyChange: 0
@@ -50,6 +52,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   eventName: Car Breaks Down
   description: Won't get far like this, something's seriously wrong under the hood.
     I wouldn't risk driving it again until it's fixed properly.

@@ -27,6 +27,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: Buy a basic phone ($60)
     resultDescription: It's not the latest model but it'll do the job.
     moneyChange: -60
@@ -38,6 +39,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: Not right now, we'll find another way
     resultDescription: We'll figure something out. Maybe the school library can help.
     moneyChange: 0
@@ -49,6 +51,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   eventName: Child Needs Phone for School
   description: Everyone's submitting homework online now and I don't have a phone
     for it. Can we sort something out?

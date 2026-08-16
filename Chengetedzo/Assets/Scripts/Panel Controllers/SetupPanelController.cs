@@ -68,11 +68,9 @@ public class SetupPanelController : MonoBehaviour
 
         stableIncomeToggle.onValueChanged.RemoveAllListeners();
         stableIncomeToggle.onValueChanged.AddListener(OnStableIncomeToggled);
-        OnStableIncomeToggled(stableIncomeToggle.isOn);
 
         schoolFeesToggle.onValueChanged.RemoveAllListeners();
         schoolFeesToggle.onValueChanged.AddListener(OnSchoolFeesToggled);
-        OnSchoolFeesToggled(schoolFeesToggle.isOn);
 
         hasHouseToggle.onValueChanged.RemoveAllListeners();
         hasLivestockToggle.onValueChanged.RemoveAllListeners();
@@ -86,7 +84,23 @@ public class SetupPanelController : MonoBehaviour
         hasMotorToggle.onValueChanged.AddListener(_ => UpdateAssetsFromToggles());
         hasCropsToggle.onValueChanged.AddListener(_ => UpdateAssetsFromToggles());
 
-        UpdateAssetsFromToggles();
+        // A guided profile (ApplyProfile) has already set setupData and
+        // financeManager.assets correctly before this panel is ever shown. Running these
+        // handlers here with whatever the toggles/inputs currently hold - default or
+        // leftover from a previous session, since the guided flow skips straight to the
+        // review step and never lets the player touch these widgets - would silently
+        // overwrite that correct profile data. This is confirmed as the Farmer bug: his
+        // commercial assets and seasonal (non-stable) income both got wiped this way
+        // before JumpToReviewStep/ConfirmAndStart ever ran. Only run the initial sync for
+        // a genuine fresh setup (Free Mode or normal manual setup), where these widgets
+        // are the actual source of truth and nothing has populated setupData/assets yet.
+        bool isGuidedProfile = GameManager.Instance != null && GameManager.Instance.IsGuidedMode;
+        if (!isGuidedProfile)
+        {
+            OnStableIncomeToggled(stableIncomeToggle.isOn);
+            OnSchoolFeesToggled(schoolFeesToggle.isOn);
+            UpdateAssetsFromToggles();
+        }
 
         minIncomeInput.onValueChanged.AddListener(_ =>
         {
@@ -347,31 +361,45 @@ public class SetupPanelController : MonoBehaviour
             return;
         }
 
-        if (!ValidateFullSetup())
-            return;
-
         GameManager gm = GameManager.Instance;
 
-        gm.setupData.minIncome = float.Parse(minIncomeInput.text);
-        gm.setupData.maxIncome = float.Parse(maxIncomeInput.text);
-        gm.setupData.isIncomeStable = stableIncomeToggle.isOn;
+        // Guided profile review (currentMode == ReviewFromProfile) skips the editable
+        // setup pages entirely - this screen's toggles and inputs are locked read-only
+        // (see JumpToReviewStep/LockSetupUI). setupData and financeManager.assets were
+        // already set correctly by ApplyProfile, so re-parsing them from widget state
+        // here is pure downside: it is exactly how a Start()-time desync between the
+        // widgets and the profile (see Start() above) could silently overwrite the
+        // correct profile values. Skip the whole read-back for a profile review; only a
+        // genuine fresh setup (Free Mode / normal manual setup) needs it.
+        bool isProfileReview = currentMode == SetupMode.ReviewFromProfile;
+
+        if (!isProfileReview)
+        {
+            if (!ValidateFullSetup())
+                return;
+
+            gm.setupData.minIncome = float.Parse(minIncomeInput.text);
+            gm.setupData.maxIncome = float.Parse(maxIncomeInput.text);
+            gm.setupData.isIncomeStable = stableIncomeToggle.isOn;
+
+            int totalAdults = 1;
+            int totalChildren = 0;
+            if (!int.TryParse(adultsInput.text, out totalAdults) || totalAdults < 1)
+                totalAdults = 1;
+            if (!int.TryParse(childrenInput.text, out totalChildren) || totalChildren < 0)
+                totalChildren = 0;
+
+            PlayerDataManager.Instance.SetInitialHousehold(totalAdults, totalChildren);
+
+            gm.setupData.hasSchoolFees = schoolFeesToggle.isOn;
+            if (schoolFeesToggle.isOn)
+                gm.setupData.schoolFeesAmount = float.Parse(schoolFeesAmountInput.text);
+
+            ConfirmSetup();
+        }
 
         gm.RollFreeGoalIfNeeded(); // no-op for guided profiles; picks the Free Mode goal now income is known
 
-        int totalAdults = 1;
-        int totalChildren = 0;
-        if (!int.TryParse(adultsInput.text, out totalAdults) || totalAdults < 1)
-            totalAdults = 1;
-        if (!int.TryParse(childrenInput.text, out totalChildren) || totalChildren < 0)
-            totalChildren = 0;
-
-        PlayerDataManager.Instance.SetInitialHousehold(totalAdults, totalChildren);
-
-        gm.setupData.hasSchoolFees = schoolFeesToggle.isOn;
-        if (schoolFeesToggle.isOn)
-            gm.setupData.schoolFeesAmount = float.Parse(schoolFeesAmountInput.text);
-
-        ConfirmSetup();
         LockSetupUI();
 
         FinanceManager finance = gm.financeManager;

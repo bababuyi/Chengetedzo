@@ -17,7 +17,8 @@ MonoBehaviour:
   senderRelation: Buyer
   choices:
   - label: Sell it ($35)
-    resultDescription: Cash today, but now every trip costs a fare or a long walk.
+    resultDescription: I took the cash. But now every trip costs a fare or a long
+      walk.
     moneyChange: 35
     momentumChange: 0
     moraleChange: -1
@@ -27,8 +28,10 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: Keep it
-    resultDescription: It is not worth much to him. It is worth plenty to you.
+    resultDescription: It's not worth much to him. It's worth plenty to me. I'm keeping
+      it.
     moneyChange: 0
     momentumChange: 1
     moraleChange: 1
@@ -38,6 +41,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   eventName: An Offer for the Bicycle
   description: A man at the rank offers cash for your old bicycle, today. It still
     gets the household around when fares are short.

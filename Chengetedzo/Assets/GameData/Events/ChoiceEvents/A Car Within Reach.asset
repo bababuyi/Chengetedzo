@@ -17,8 +17,8 @@ MonoBehaviour:
   senderRelation: Community
   choices:
   - label: Pay for it outright
-    resultDescription: You hand over the money in one go. The car is yours, and there
-      is nothing owed to anyone. Your savings look thin for a while.
+    resultDescription: I paid for it outright. The car is mine, and I owe nothing
+      to anyone. My savings look thin for a while.
     moneyChange: -2500
     momentumChange: -1
     moraleChange: 3
@@ -28,9 +28,11 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: Motor
+    coveredBy: 0
   - label: Take it on terms
-    resultDescription: You put down a deposit and agree to pay the rest over time.
-      You drive away today, but a portion of what you can borrow is now spoken for.
+    resultDescription: I put down a deposit and agreed to pay the rest over time.
+      I'm driving away today, but a portion of what I can borrow is already spoken
+      for.
     moneyChange: -900
     momentumChange: -2
     moraleChange: 2
@@ -40,8 +42,9 @@ MonoBehaviour:
     affectsLoan: 1
     borrowingPowerChange: -2100
     grantsAsset: Motor
+    coveredBy: 0
   - label: Leave it
-    resultDescription: You let it go. The fare still costs what it costs, but nothing
+    resultDescription: I let it go. The fare still costs what it costs, but nothing
       new is owed.
     moneyChange: 0
     momentumChange: 1
@@ -52,6 +55,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   eventName: A Car Within Reach
   description: Someone at church is selling their car. It runs, the papers are clean,
     and they want it gone this month. You have seen what the fare does to your money

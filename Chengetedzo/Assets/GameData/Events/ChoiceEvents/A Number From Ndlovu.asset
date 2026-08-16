@@ -10,49 +10,47 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a0778e5163d1bda44bfd2ce0e3fb82a4, type: 3}
-  m_Name: The Roof Whistles
+  m_Name: A Number From Ndlovu
   m_EditorClassIdentifier: 
   hasChoices: 1
-  senderName: Baba Josphat
-  senderRelation: Fundi
+  senderName: Ndlovu
+  senderRelation: Moneylender
   choices:
-  - label: Fix it now ($35)
-    resultDescription: I called the fundi. An afternoon's work and the whistle's
-      gone. When the rains come, they'll stay outside.
-    moneyChange: -35
-    momentumChange: 2
-    moraleChange: 1
-    moraleType: Family
-    incomePercentChange: 0
-    incomeEffectMonths: 0
-    affectsLoan: 0
-    borrowingPowerChange: 0
-    grantsAsset: 
-    coveredBy: 0
-  - label: It can wait
-    resultDescription: I'll leave it for now. But every grey cloud is a question
-      these days.
+  - label: Thank you, I will keep it in mind
+    resultDescription: Thank you Ndlovu. I will keep your number.
     moneyChange: 0
-    momentumChange: -1
-    moraleChange: -1
-    moraleType: Family
+    momentumChange: 0
+    moraleChange: 0
+    moraleType: None
     incomePercentChange: 0
     incomeEffectMonths: 0
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
     coveredBy: 0
-  eventName: The Roof Whistles
-  description: 'A soft whistle in the roof when the wind blows: a lifted sheet. The
-    fundi can fix it cheap now. The rains will not be so cheap.'
+  - label: I will not need it
+    resultDescription: I hope I will not need it. But thank you.
+    moneyChange: 0
+    momentumChange: 0
+    moraleChange: 0
+    moraleType: None
+    incomePercentChange: 0
+    incomeEffectMonths: 0
+    affectsLoan: 0
+    borrowingPowerChange: 0
+    grantsAsset: 
+    coveredBy: 0
+  eventName: A Number From Ndlovu
+  description: Hesi. They gave me your number. I am Ndlovu, I lend money around here.
+    If a month gets tight, come and see me and we can make a plan. I am always around.
   financialLesson: 
-  category: 5
+  category: 3
   pool: 6
   requiredAsset: 0
   destroysAsset: 0
   icon: {fileID: 0}
-  probability: 12
-  weight: 10
+  probability: 10
+  weight: 8
   minLossPercent: 0
   maxLossPercent: 0
   affectsIncome: 0

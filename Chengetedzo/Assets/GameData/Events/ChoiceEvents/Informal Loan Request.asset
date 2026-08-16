@@ -27,6 +27,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: Lend a smaller amount ($60)
     resultDescription: I can lend $60. It's all I can risk.
     moneyChange: -60
@@ -38,6 +39,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: I can't lend money right now
     resultDescription: I'm sorry, my own situation is too tight right now.
     moneyChange: 0
@@ -49,6 +51,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   eventName: Informal Loan Request
   description: Sorry to ask, I'm short this month. Any chance you could lend me something?
     I'll pay it back by month end, promise.

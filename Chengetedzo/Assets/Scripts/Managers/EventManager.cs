@@ -26,6 +26,14 @@ public class EventManager : MonoBehaviour
         public int monthToTrigger;
     }
 
+    // For save/load - PendingEvent holds a direct EventData (ScriptableObject)
+    // reference, which JsonUtility can't serialize, so SaveSystem reads this list and
+    // writes out eventName + monthToTrigger pairs instead (see GameSaveData.
+    // PendingEventSaveData). Restoring is just ScheduleFollowUp against a name lookup
+    // in EventDatabase, the same pattern GameManager.ScheduleNewGameChainEvents already
+    // uses for Mukando/Ndlovu.
+    public IReadOnlyList<PendingEvent> PendingEventsSnapshot => pendingEvents;
+
     [SerializeField] private int maxEventsPerMonth=3;
 
     [Header("Possible Events")]
@@ -114,6 +122,11 @@ public class EventManager : MonoBehaviour
             // (see GameManager.ResetForNewGame) - it must not also be reachable through the
             // random pool draw, or it could double-fire or fire before the player is ready.
             if (e.eventName == "Mukando Invitation")
+                return false;
+
+            // Same reasoning: A Number From Ndlovu is scripted to fire once at month 1
+            // and is what now reveals the Loans button (see GameManager.ApplyEventChoice).
+            if (e.eventName == "A Number From Ndlovu")
                 return false;
 
             return true;
@@ -230,6 +243,8 @@ public class EventManager : MonoBehaviour
 
             bool deathHandled = GameManager.Instance.TryHandleAsAdultEarnerDeath(ev, month);
 
+            bool evHealthRelated = IsHealthRelated(ev);
+
             if (!deathHandled && ev.affectsHousehold)
             {
                 for (int i = 0; i < ev.adultsLost; i++)
@@ -271,7 +286,7 @@ public class EventManager : MonoBehaviour
                     PlayerDataManager.Instance.ModifyMomentum(ev.momentumReward);
 
                 if (ev.affectsIncome)
-                    GameManager.Instance.ApplyIncomeEffect(ev.incomePercentChange, ev.incomeEffectMonths);
+                    GameManager.Instance.ApplyIncomeEffect(ev.incomePercentChange, ev.incomeEffectMonths, evHealthRelated);
 
                 results.Add(new ResolvedEvent
                 {
@@ -305,6 +320,11 @@ public class EventManager : MonoBehaviour
             float payout = 0f;
             float finalLoss = intendedLoss;
 
+            // Set only when the insurance branch below actually runs HandleEvent, so the
+            // final ResolvedEvent can carry denial detail without guessing at plan state
+            // for events that never touched insurance.
+            InsuranceManager.InsuranceResult? claimResult = null;
+
             if (ev.insuranceType != InsuranceType.None)
             {
                 // Only route to the claim-decision popup when there's an actual loss to
@@ -317,7 +337,7 @@ public class EventManager : MonoBehaviour
 
                     // affectsExpenses/Household/Loan already applied above in this loop
                     if (!deathHandled && ev.affectsIncome)
-                        GameManager.Instance.ApplyIncomeEffect(ev.incomePercentChange, ev.incomeEffectMonths);
+                        GameManager.Instance.ApplyIncomeEffect(ev.incomePercentChange, ev.incomeEffectMonths, evHealthRelated);
 
                     results.Add(new ResolvedEvent
                     {
@@ -346,10 +366,11 @@ public class EventManager : MonoBehaviour
                 }
 
                 InsuranceManager.InsuranceResult result =
-                    GameManager.Instance.insuranceManager.HandleEvent(ev.insuranceType, intendedLoss, ev.eventName);
+                    GameManager.Instance.insuranceManager.HandleEvent(ev.insuranceType, intendedLoss, ev.eventName, ev.additionalCoveredBy);
 
                 payout += result.payout;
                 finalLoss = result.finalLoss;
+                claimResult = result;
 
                 Debug.Log($"[INSURANCE] Event: {ev.eventName} | Type: {ev.insuranceType} | " +
                           $"Payout: {result.payout:F0} | FinalPlayerLoss: {result.finalLoss:F0}");
@@ -394,7 +415,17 @@ public class EventManager : MonoBehaviour
                 affectsExpenses = ev.affectsExpenses,
                 expenseCategoryName = ev.affectsExpenses ? ev.expenseCategory.ToString() : "",
                 expenseFlatChange = ev.expenseFlatChange,
-                expenseEffectMonths = ev.expenseEffectMonths
+                expenseEffectMonths = ev.expenseEffectMonths,
+                // Waiting-period denial is only real when the player actually holds the
+                // policy - an unsubscribed plan can still trip waitingPeriodBlocked
+                // (monthsPaid=0 < waitingPeriodMonths), so isSubscribed is the gate here,
+                // not the flag alone. Lapsed doesn't need the same gate: a plan can only
+                // reach isLapsed by having been subscribed first.
+                claimDeniedWaitingPeriod = claimResult.HasValue && claimResult.Value.waitingPeriodBlocked && claimResult.Value.isSubscribed,
+                claimDeniedLapsed = claimResult.HasValue && claimResult.Value.lapsedBlocked,
+                monthsPaid = claimResult.HasValue ? claimResult.Value.monthsPaid : 0,
+                waitingPeriodMonths = claimResult.HasValue ? claimResult.Value.waitingPeriodMonths : 0,
+                planName = claimResult.HasValue ? claimResult.Value.planName : ""
             });
 
             Debug.Log($"[FINANCIAL RESULT] Event: {ev.eventName} | PlayerLoss: {finalLoss:F0} | " +
@@ -403,7 +434,7 @@ public class EventManager : MonoBehaviour
             if (!deathHandled) TryScheduleFollowUp(ev, month);
 
             if (!deathHandled && ev.affectsIncome)
-                GameManager.Instance.ApplyIncomeEffect(ev.incomePercentChange, ev.incomeEffectMonths);
+                GameManager.Instance.ApplyIncomeEffect(ev.incomePercentChange, ev.incomeEffectMonths, evHealthRelated);
 
             Debug.Log($"[INCOME EFFECT] Event: {ev.eventName} | " +
                       $"IncomeChange: {ev.incomePercentChange}% | Duration: {ev.incomeEffectMonths} months");
@@ -582,7 +613,8 @@ public class EventManager : MonoBehaviour
             {
                 GameManager.Instance.ApplyIncomeEffect(
                     ev.incomePercentChange,
-                    ev.incomeEffectMonths
+                    ev.incomeEffectMonths,
+                    IsHealthRelated(ev)
                 );
             }
 
@@ -613,14 +645,22 @@ public class EventManager : MonoBehaviour
 
         intendedLoss = Mathf.Max(0f, intendedLoss);
 
-        if (intendedLoss > 0.5f && GameManager.Instance.insuranceManager.CanClaimForEvent(ev.insuranceType))
+        // Guard on insuranceType != None here too, matching GenerateMonthlyEvents -
+        // without it, a None-type event would fall through to CanClaimForEvent(None),
+        // which is harmless (GetPlan(None) is always null) but routes an uninsured
+        // event through insurance machinery it has no business touching.
+        if (ev.insuranceType != InsuranceType.None && intendedLoss > 0.5f && GameManager.Instance.insuranceManager.CanClaimForEvent(ev.insuranceType))
         {
             var (claimPayout, claimDeductible) = GameManager.Instance.insuranceManager.CalculateClaim(ev.insuranceType, intendedLoss);
 
             bool deathHandled = GameManager.Instance.TryHandleAsAdultEarnerDeath(ev, month);
 
             if (!deathHandled && ev.affectsIncome)
-                GameManager.Instance.ApplyIncomeEffect(ev.incomePercentChange, ev.incomeEffectMonths);
+                GameManager.Instance.ApplyIncomeEffect(
+                    ev.incomePercentChange,
+                    ev.incomeEffectMonths,
+                    IsHealthRelated(ev)
+                );
             if (!deathHandled && ev.affectsHousehold)
             {
                 for (int i = 0; i < ev.adultsLost; i++) PlayerDataManager.Instance.RemoveAdult();
@@ -657,9 +697,31 @@ public class EventManager : MonoBehaviour
             return;
         }
 
-        var result = GameManager.Instance.insuranceManager.HandleEvent(ev.insuranceType, intendedLoss, ev.eventName);
-        float payout = result.payout;
-        float finalLoss = result.finalLoss;
+        float payout = 0f;
+        float finalLoss = intendedLoss;
+        InsuranceManager.InsuranceResult? claimResult = null;
+
+        if (ev.insuranceType != InsuranceType.None)
+        {
+            var result = GameManager.Instance.insuranceManager.HandleEvent(ev.insuranceType, intendedLoss, ev.eventName, ev.additionalCoveredBy);
+            payout = result.payout;
+            finalLoss = result.finalLoss;
+            claimResult = result;
+        }
+        else if (finalLoss > 0f)
+        {
+            float cappedLoss = GameManager.Instance.ApplyMonthlyDamage(finalLoss);
+            if (cappedLoss > 0f)
+            {
+                GameManager.Instance.ApplyMoneyChange(
+                    FinancialEntry.EntryType.EventLoss,
+                    ev.eventName,
+                    cappedLoss,
+                    false
+                );
+                finalLoss = cappedLoss;
+            }
+        }
 
         if (payout > 0f)
         {
@@ -683,7 +745,12 @@ public class EventManager : MonoBehaviour
             affectsExpenses = ev.affectsExpenses,
             expenseCategoryName = ev.affectsExpenses ? ev.expenseCategory.ToString() : "",
             expenseFlatChange = ev.expenseFlatChange,
-            expenseEffectMonths = ev.expenseEffectMonths
+            expenseEffectMonths = ev.expenseEffectMonths,
+            claimDeniedWaitingPeriod = claimResult.HasValue && claimResult.Value.waitingPeriodBlocked && claimResult.Value.isSubscribed,
+            claimDeniedLapsed = claimResult.HasValue && claimResult.Value.lapsedBlocked,
+            monthsPaid = claimResult.HasValue ? claimResult.Value.monthsPaid : 0,
+            waitingPeriodMonths = claimResult.HasValue ? claimResult.Value.waitingPeriodMonths : 0,
+            planName = claimResult.HasValue ? claimResult.Value.planName : ""
         });
 
         bool deathHandled2 = GameManager.Instance.TryHandleAsAdultEarnerDeath(ev, month);
@@ -710,6 +777,21 @@ public class EventManager : MonoBehaviour
             GameManager.Instance.loanManager?.ModifyBorrowingPower(ev.borrowingPowerChange);
     }
 
+    // Personal Accident/Health income benefit is opt-in per event, never inferred from
+    // the sign of the income change - a rent hike or interest rate rise is not an
+    // accident or illness. Primary-type check covers ordinary Health/PersonalAccident
+    // events; EventData.grantsIncomeBenefit covers the rest (e.g. Breadwinner Death,
+    // primary cover Education - no lump-sum payout of its own, the flag just switches
+    // this benefit on). Used to also walk additionalCoveredBy for the same purpose, but
+    // that list is for secondary claim payouts, not benefit gating - see EventData.
+    // grantsIncomeBenefit's own comment.
+    private bool IsHealthRelated(EventData ev)
+    {
+        return ev.insuranceType == InsuranceType.Health ||
+               ev.insuranceType == InsuranceType.PersonalAccident ||
+               ev.grantsIncomeBenefit;
+    }
+
     private bool PlayerOwnsRequiredAsset(EventData ev)
     {
         return ev.requiredAsset switch
@@ -733,6 +815,9 @@ public class EventManager : MonoBehaviour
                 GameManager.Instance.financeManager.assets.hasLivestock,
             GameManager.AssetRequirement.NoMotor =>
                 !GameManager.Instance.financeManager.assets.hasMotor,
+
+            GameManager.AssetRequirement.Renting =>
+                GameManager.Instance.financeManager.rentCost > 0f,
 
             _ => false
         };

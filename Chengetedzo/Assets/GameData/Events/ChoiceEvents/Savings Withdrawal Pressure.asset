@@ -27,6 +27,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: Test it with a small amount ($80)
     resultDescription: I'll risk only what I can afford to lose.
     moneyChange: -80
@@ -38,6 +39,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   - label: Decline and keep saving
     resultDescription: If it sounds too good to be true, it usually is.
     moneyChange: 0
@@ -49,6 +51,7 @@ MonoBehaviour:
     affectsLoan: 0
     borrowingPowerChange: 0
     grantsAsset: 
+    coveredBy: 0
   eventName: Savings Withdrawal Pressure
   description: I've got a sure thing lined up but the window closes tonight, you
     need to pull your savings out now if you want in. Trust me on this one.

@@ -20,10 +20,22 @@ public class BudgetPanelController : MonoBehaviour
 
     public TMP_Text savingsBalanceText;
 
-    private FinanceManager finance;
+    [Header("Savings Contribution")]
+    // Savings isn't an expense being cut, it's an amount being chosen - no baseline to
+    // measure against and no floor to protect, so this deliberately does not reuse
+    // ExpensesPanelController's SetupAdjustSlider pattern (that one exists for the
+    // Groceries/Transport/Utilities tradeoff sliders, which do have both). Range is
+    // 0 to whatever GetSavingsSliderMax says the current committed budget can sustain.
+    public Slider contributionSlider;
+    public TMP_InputField contributionValueInput;
+    public TMP_Text contributionValueText;
 
-    private void Start()
+    private FinanceManager finance;
+    private bool _listenersWired = false;
+
+    private void EnsureFinance()
     {
+        if (finance != null) return;
         if (GameManager.Instance == null)
         {
             Debug.LogError("[BudgetPanelController] GameManager not ready.");
@@ -33,21 +45,96 @@ public class BudgetPanelController : MonoBehaviour
         finance = GameManager.Instance.financeManager;
 
         if (finance == null)
-        {
             Debug.LogError("[BudgetPanelController] FinanceManager not ready.");
-            return;
-        }
+    }
+
+    private void Start()
+    {
+        EnsureFinance();
+        if (finance == null) return;
+
+        WireListenersOnce();
+
+        // Covers the case where this component's Start happens to run after the panel's
+        // first OnEnable (Unity normally does OnEnable then Start on first activation, but
+        // don't depend on ordering) - make sure both displays are correct either way.
+        RefreshSavingsDisplay();
+        SetupContributionSlider();
+    }
+
+    // Panel object is toggled active/inactive by UIManager.SwitchPanel rather than being
+    // recreated, so OnEnable - not just Start - is what needs to run every time Baba's
+    // savings/withdraw numbers could have moved since the last visit (interest applied,
+    // a withdrawal happened elsewhere, budget sliders changed on the Expenses panel, etc).
+    private void OnEnable()
+    {
+        EnsureFinance();
+        if (finance == null) return;
+
+        RefreshSavingsDisplay();
+        SetupContributionSlider();
+    }
+
+    private void WireListenersOnce()
+    {
+        if (_listenersWired) return;
+        _listenersWired = true;
 
         if (confirmButton != null)
             confirmButton.onClick.AddListener(OnConfirmPressed);
 
         SetupWithdrawButtons();
-        RefreshSavingsDisplay();
+
+        if (contributionSlider != null)
+            contributionSlider.onValueChanged.AddListener(OnContributionSliderChanged);
+
+        if (contributionValueInput != null)
+            contributionValueInput.onEndEdit.AddListener(OnContributionInputEndEdit);
     }
 
     private void OnConfirmPressed()
     {
+        if (finance != null && contributionSlider != null)
+            finance.generalSavingsMonthly = contributionSlider.value;
+
         UIManager.Instance.CloseSavingsPanel();
+    }
+
+    private void SetupContributionSlider()
+    {
+        if (contributionSlider == null || finance == null) return;
+
+        float max = GameManager.Instance.GetSavingsSliderMax(
+            finance.groceries, finance.transport, finance.utilities);
+
+        contributionSlider.minValue = 0f;
+        contributionSlider.maxValue = max;
+        contributionSlider.SetValueWithoutNotify(
+            Mathf.Clamp(finance.generalSavingsMonthly, 0f, max));
+
+        RefreshContributionText(contributionSlider.value);
+    }
+
+    private void RefreshContributionText(float value)
+    {
+        if (contributionValueText != null)
+            contributionValueText.text = $"{GameUtils.FormatMoney(value)} / month";
+
+        if (contributionValueInput != null && !contributionValueInput.isFocused)
+            contributionValueInput.SetTextWithoutNotify($"{value:F0}");
+    }
+
+    private void OnContributionSliderChanged(float value)
+    {
+        RefreshContributionText(value);
+    }
+
+    private void OnContributionInputEndEdit(string text)
+    {
+        if (contributionSlider == null) return;
+        if (!float.TryParse(text, out float f)) return;
+
+        contributionSlider.value = Mathf.Clamp(f, contributionSlider.minValue, contributionSlider.maxValue);
     }
 
     private void SetupWithdrawButtons()
