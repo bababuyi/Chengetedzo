@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Informal Loan Request
   m_EditorClassIdentifier: 
   hasChoices: 1
-  senderName: Friend Chido
+  senderName: Friend Blessing
   senderRelation: Social
   choices:
   - label: Lend the full amount ($150)

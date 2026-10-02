@@ -30,8 +30,8 @@ MonoBehaviour:
     grantsAsset: 
     coveredBy: 0
   - label: Test it with $40
-    resultDescription: I only risked $40. A small payout came back, then the whole
-      thing vanished with the rest. That first payout was the bait, not the profit.
+    resultDescription: I only risked $40. A small payout came back, then it all
+      vanished. That payout was the bait, not the profit.
     moneyChange: -40
     momentumChange: -2
     moraleChange: -1
@@ -43,8 +43,8 @@ MonoBehaviour:
     grantsAsset: 
     coveredBy: 0
   - label: Guaranteed? Nothing is. Delete.
-    resultDescription: Guaranteed returns, pressure to act today, recruit your friends
-      - that's three warning signs in one message. I deleted it. My money stays mine.
+    resultDescription: Guaranteed returns, pressure to act today, recruit friends,
+      three warning signs. I deleted it. My money stays mine.
     moneyChange: 0
     momentumChange: 3
     moraleChange: 0
@@ -57,8 +57,7 @@ MonoBehaviour:
     coveredBy: 0
   eventName: Double Your Money
   description: Invest today and DOUBLE your money in two weeks. Guaranteed!! Bring
-    a friend and you get a bonus. Ask anyone, people are already getting paid. Spaces
-    limited.
+    a friend, get a bonus. People are already getting paid. Spaces limited.
   financialLesson: 
   category: 3
   pool: 6

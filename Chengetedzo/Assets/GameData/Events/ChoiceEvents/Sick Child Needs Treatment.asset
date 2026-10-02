@@ -53,9 +53,8 @@ MonoBehaviour:
     grantsAsset: 
     coveredBy: 0
   eventName: Sick Child Needs Treatment
-  description: Your child has been running a fever for two days. They need to see
-    a doctor but the private clinic is expensive and the public clinic queues are
-    very long.
+  description: Your child has had a fever for two days. The private clinic is expensive,
+    the public clinic queues are very long.
   financialLesson: 
   category: 0
   pool: 6

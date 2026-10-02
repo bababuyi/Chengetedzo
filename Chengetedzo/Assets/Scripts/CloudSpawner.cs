@@ -1,66 +1,63 @@
 using UnityEngine;
 
+// Summer's discrete drifting clouds. Winter and rainy don't use this at all - winter gets
+// a ScrollingLayer with a wispy cloud sheet, rainy gets a scrolling storm sky instead.
+// SeasonalBackgroundManager turns this component on and off per season/weather; this
+// script itself has no calendar awareness anymore.
+//
+// Replaces the old template-cloning setup entirely. No more scene object templates, no
+// more RectTransform boundary markers - spawns straight from a sprite array onto a
+// reusable prefab, and reads the camera's own edges to know where to spawn and when a
+// cloud has drifted off (see CloudDrift).
 public class CloudSpawner : MonoBehaviour
 {
-    public enum SkySet { Summer, Winter, Rainy }
+    [Header("Source art - the summer cloud sheet, sliced into individual sprites")]
+    public Sprite[] cloudSprites;
 
-    [Header("Cloud Templates (inactive scene objects, one array per season)")]
-    public RectTransform[] summerClouds;
-    public RectTransform[] winterClouds;
-    public RectTransform[] rainyClouds;
+    [Header("Prefab - a plain GameObject with a SpriteRenderer and CloudDrift already on it")]
+    public GameObject cloudPrefab;
 
-    [Header("Spawn Points")]
-    public RectTransform spawnLeft;
-    public RectTransform spawnRight;
+    [Tooltip("Defaults to Camera.main if left empty.")]
+    public Camera targetCamera;
 
     [Header("Spawn Settings")]
     public float minInterval = 2f;
     public float maxInterval = 5f;
 
-    [Header("Cloud Variations")]
-    public float minSpeed = 8f;
-    public float maxSpeed = 20f;
-    [Tooltip("Multiplied onto each template's own scale, so hand-tuned sizes are preserved.")]
+    [Header("Cloud Variations (world units - see Baba's numbers in the report)")]
+    public float minSpeed = 0.5f;
+    public float maxSpeed = 1.5f;
+    [Tooltip("Multiplied onto the prefab's own scale, so a hand-tuned base size is preserved.")]
     public float minScale = 0.85f;
     public float maxScale = 1.25f;
-    [Tooltip("Random vertical offset from the template's own height.")]
-    public float heightJitter = 40f;
+    public float heightJitter = 0.4f;
+    [Tooltip("Vertical spawn band, as a fraction of the camera's half-height above and below its center.")]
+    public float verticalRangeFraction = 0.6f;
 
     [Header("Cloud Limit")]
     public int maxClouds = 10;
     public int cloudCount = 0;
 
-    [Header("State (driven by GameManager each month)")]
-    public SkySet currentSet = SkySet.Summer;
+    [Header("Sorting")]
+    public string cloudsSortingLayer = "Clouds";
 
     private void Awake()
     {
         cloudCount = 0;
+        if (targetCamera == null) targetCamera = Camera.main;
     }
 
-    private void Start()
+    // OnEnable/OnDisable rather than Start, since SeasonalBackgroundManager toggles this
+    // whole component on and off per season by disabling the GameObject.
+    private void OnEnable()
     {
         StartCoroutine(SpawnCloud());
     }
 
-    /// <summary>
-    /// Mirrors SeasonalBackgroundManager.GetSeasonSprite's rules exactly,
-    /// so the clouds always match the background behind them.
-    /// </summary>
-    public void UpdateForMonth(int calendarMonth, bool hasWeatherEvent)
+    private void OnDisable()
     {
-        int month = ((calendarMonth - 1) % 12) + 1;
-        if (month >= 4 && month <= 8) currentSet = SkySet.Winter;
-        else if (hasWeatherEvent) currentSet = SkySet.Rainy;
-        else currentSet = SkySet.Summer;
+        StopAllCoroutines();
     }
-
-    private RectTransform[] ActiveTemplates() => currentSet switch
-    {
-        SkySet.Winter => winterClouds,
-        SkySet.Rainy => rainyClouds,
-        _ => summerClouds
-    };
 
     private System.Collections.IEnumerator SpawnCloud()
     {
@@ -68,40 +65,43 @@ public class CloudSpawner : MonoBehaviour
         {
             yield return new WaitForSeconds(Random.Range(minInterval, maxInterval));
 
-            if (cloudCount >= maxClouds)
-                continue;
+            if (cloudCount >= maxClouds) continue;
+            if (cloudSprites == null || cloudSprites.Length == 0) continue;
+            if (cloudPrefab == null || targetCamera == null) continue;
 
-            var set = ActiveTemplates();
-            if (set == null || set.Length == 0 || spawnLeft == null || spawnRight == null)
-                continue;
-
-            RectTransform prefab = set[Random.Range(0, set.Length)];
-            if (prefab == null)
-                continue;
+            Sprite sprite = cloudSprites[Random.Range(0, cloudSprites.Length)];
+            if (sprite == null) continue;
 
             bool spawnFromLeft = Random.value > 0.5f;
-            RectTransform spawnPoint = spawnFromLeft ? spawnLeft : spawnRight;
 
-            RectTransform cloud = Instantiate(prefab, transform);
-            cloud.gameObject.SetActive(true); // templates stay inactive in the scene
+            float camHalfWidth = targetCamera.orthographicSize * targetCamera.aspect;
+            float camHalfHeight = targetCamera.orthographicSize;
+            float camX = targetCamera.transform.position.x;
+            float camY = targetCamera.transform.position.y;
 
-            // spawn at the boundary, but keep the template's hand-placed height (+ jitter)
-            cloud.anchoredPosition = new Vector2(
-                spawnPoint.anchoredPosition.x,
-                prefab.anchoredPosition.y + Random.Range(-heightJitter, heightJitter));
+            float spawnX = camX + (spawnFromLeft ? -camHalfWidth : camHalfWidth);
+            float spawnY = camY
+                + Random.Range(-camHalfHeight, camHalfHeight) * verticalRangeFraction
+                + Random.Range(-heightJitter, heightJitter);
+
+            GameObject cloud = Instantiate(cloudPrefab, transform);
+            cloud.transform.position = new Vector3(spawnX, spawnY, cloud.transform.position.z);
+            cloud.SetActive(true);
+
+            var sr = cloud.GetComponent<SpriteRenderer>();
+            if (sr == null) sr = cloud.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            if (!string.IsNullOrEmpty(cloudsSortingLayer))
+                sr.sortingLayerName = cloudsSortingLayer;
 
             float scale = Random.Range(minScale, maxScale);
-            cloud.localScale = new Vector3(
-                prefab.localScale.x * scale,
-                prefab.localScale.y * scale, 1f);
+            cloud.transform.localScale = new Vector3(scale, scale, 1f);
 
             CloudDrift mover = cloud.GetComponent<CloudDrift>();
-            if (mover == null)
-                mover = cloud.gameObject.AddComponent<CloudDrift>();
+            if (mover == null) mover = cloud.AddComponent<CloudDrift>();
             mover.speed = Random.Range(minSpeed, maxSpeed);
             mover.moveRight = spawnFromLeft;
-            mover.leftBoundary = spawnLeft;
-            mover.rightBoundary = spawnRight;
+            mover.targetCamera = targetCamera;
             mover.spawner = this;
 
             cloudCount++;

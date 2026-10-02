@@ -31,8 +31,7 @@ MonoBehaviour:
     coveredBy: 0
   - label: Take it on terms
     resultDescription: I put down a deposit and agreed to pay the rest over time.
-      I'm driving away today, but a portion of what I can borrow is already spoken
-      for.
+      I'm driving today, but part of my borrowing power is spoken for.
     moneyChange: -900
     momentumChange: -2
     moraleChange: 2
@@ -57,9 +56,8 @@ MonoBehaviour:
     grantsAsset: 
     coveredBy: 0
   eventName: A Car Within Reach
-  description: Someone at church is selling their car. It runs, the papers are clean,
-    and they want it gone this month. You have seen what the fare does to your money
-    every day.
+  description: Someone at church is selling their car. It runs, papers are clean,
+    they want it gone this month. You've seen what the fare costs you daily.
   financialLesson: 
   category: 3
   pool: 6

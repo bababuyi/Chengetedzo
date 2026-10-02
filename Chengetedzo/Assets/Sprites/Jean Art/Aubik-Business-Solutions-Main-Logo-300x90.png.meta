@@ -1,0 +1,572 @@
+fileFormatVersion: 2
+guid: 879222db02c1dd241a6a9270e0a59a9f
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 5246039099831535701
+    second: Aubik-Business-Solutions-Main-Logo-300x90_0
+  - first:
+      213: -1917257016643083663
+    second: Aubik-Business-Solutions-Main-Logo-300x90_1
+  - first:
+      213: -2008081466118949223
+    second: Aubik-Business-Solutions-Main-Logo-300x90_2
+  - first:
+      213: -1039499582354959704
+    second: Aubik-Business-Solutions-Main-Logo-300x90_3
+  - first:
+      213: 7055216984522540094
+    second: Aubik-Business-Solutions-Main-Logo-300x90_4
+  - first:
+      213: 1542191568028690397
+    second: Aubik-Business-Solutions-Main-Logo-300x90_5
+  - first:
+      213: -2006077451803505203
+    second: Aubik-Business-Solutions-Main-Logo-300x90_6
+  - first:
+      213: 8005208842490636572
+    second: Aubik-Business-Solutions-Main-Logo-300x90_7
+  - first:
+      213: 376476092941395075
+    second: Aubik-Business-Solutions-Main-Logo-300x90_8
+  - first:
+      213: 351613565929316954
+    second: Aubik-Business-Solutions-Main-Logo-300x90_9
+  - first:
+      213: 5249551459884314743
+    second: Aubik-Business-Solutions-Main-Logo-300x90_10
+  - first:
+      213: -306130643017293651
+    second: Aubik-Business-Solutions-Main-Logo-300x90_11
+  - first:
+      213: 1205412244401388348
+    second: Aubik-Business-Solutions-Main-Logo-300x90_12
+  - first:
+      213: 6404631033292641607
+    second: Aubik-Business-Solutions-Main-Logo-300x90_13
+  - first:
+      213: 3860476813803780401
+    second: Aubik-Business-Solutions-Main-Logo-300x90_14
+  - first:
+      213: -4086983069164826404
+    second: Aubik-Business-Solutions-Main-Logo-300x90_15
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Aubik-Business-Solutions-Main-Logo-300x90_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 91
+        height: 90
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 558c44f34ccadc840800000000000000
+      internalID: 5246039099831535701
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Aubik-Business-Solutions-Main-Logo-300x90_1
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 31
+        width: 52
+        height: 50
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1722dd3c6e88465e0800000000000000
+      internalID: -1917257016643083663
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Aubik-Business-Solutions-Main-Logo-300x90_2
+      rect:
+        serializedVersion: 2
+        x: 146
+        y: 30
+        width: 44
+        height: 51
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9963febbb8cd124e0800000000000000
+      internalID: -2008081466118949223
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Aubik-Business-Solutions-Main-Logo-300x90_3
+      rect:
+        serializedVersion: 2
+        x: 194
+        y: 31
+        width: 40
+        height: 50
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8a2d09923a4f291f0800000000000000
+      internalID: -1039499582354959704
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Aubik-Business-Solutions-Main-Logo-300x90_4
+      rect:
+        serializedVersion: 2
+        x: 236
+        y: 64
+        width: 17
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e34c4cf977a29e160800000000000000
+      internalID: 7055216984522540094
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Aubik-Business-Solutions-Main-Logo-300x90_5
+      rect:
+        serializedVersion: 2
+        x: 236
+        y: 31
+        width: 17
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dd7e3fb6f07f66510800000000000000
+      internalID: 1542191568028690397
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Aubik-Business-Solutions-Main-Logo-300x90_6
+      rect:
+        serializedVersion: 2
+        x: 258
+        y: 31
+        width: 42
+        height: 50
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dcdc45daf2bf824e0800000000000000
+      internalID: -2006077451803505203
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Aubik-Business-Solutions-Main-Logo-300x90_7
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 10
+        width: 13
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c1968716707381f60800000000000000
+      internalID: 8005208842490636572
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Aubik-Business-Solutions-Main-Logo-300x90_8
+      rect:
+        serializedVersion: 2
+        x: 108
+        y: 10
+        width: 14
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 384e23a0303893500800000000000000
+      internalID: 376476092941395075
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Aubik-Business-Solutions-Main-Logo-300x90_9
+      rect:
+        serializedVersion: 2
+        x: 121
+        y: 10
+        width: 18
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a52ec6fdcae21e400800000000000000
+      internalID: 351613565929316954
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Aubik-Business-Solutions-Main-Logo-300x90_10
+      rect:
+        serializedVersion: 2
+        x: 139
+        y: 10
+        width: 15
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 770b98c4d372ad840800000000000000
+      internalID: 5249551459884314743
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Aubik-Business-Solutions-Main-Logo-300x90_11
+      rect:
+        serializedVersion: 2
+        x: 153
+        y: 10
+        width: 35
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: da0a7185dc760cbf0800000000000000
+      internalID: -306130643017293651
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Aubik-Business-Solutions-Main-Logo-300x90_12
+      rect:
+        serializedVersion: 2
+        x: 191
+        y: 10
+        width: 29
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c3b737bbc0c7ab010800000000000000
+      internalID: 1205412244401388348
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Aubik-Business-Solutions-Main-Logo-300x90_13
+      rect:
+        serializedVersion: 2
+        x: 219
+        y: 10
+        width: 35
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 745d9d8ddf1d1e850800000000000000
+      internalID: 6404631033292641607
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Aubik-Business-Solutions-Main-Logo-300x90_14
+      rect:
+        serializedVersion: 2
+        x: 253
+        y: 10
+        width: 22
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 139f76e553b239530800000000000000
+      internalID: 3860476813803780401
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Aubik-Business-Solutions-Main-Logo-300x90_15
+      rect:
+        serializedVersion: 2
+        x: 274
+        y: 10
+        width: 26
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cd015676d8e1847c0800000000000000
+      internalID: -4086983069164826404
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Aubik-Business-Solutions-Main-Logo-300x90_0: 5246039099831535701
+      Aubik-Business-Solutions-Main-Logo-300x90_1: -1917257016643083663
+      Aubik-Business-Solutions-Main-Logo-300x90_10: 5249551459884314743
+      Aubik-Business-Solutions-Main-Logo-300x90_11: -306130643017293651
+      Aubik-Business-Solutions-Main-Logo-300x90_12: 1205412244401388348
+      Aubik-Business-Solutions-Main-Logo-300x90_13: 6404631033292641607
+      Aubik-Business-Solutions-Main-Logo-300x90_14: 3860476813803780401
+      Aubik-Business-Solutions-Main-Logo-300x90_15: -4086983069164826404
+      Aubik-Business-Solutions-Main-Logo-300x90_2: -2008081466118949223
+      Aubik-Business-Solutions-Main-Logo-300x90_3: -1039499582354959704
+      Aubik-Business-Solutions-Main-Logo-300x90_4: 7055216984522540094
+      Aubik-Business-Solutions-Main-Logo-300x90_5: 1542191568028690397
+      Aubik-Business-Solutions-Main-Logo-300x90_6: -2006077451803505203
+      Aubik-Business-Solutions-Main-Logo-300x90_7: 8005208842490636572
+      Aubik-Business-Solutions-Main-Logo-300x90_8: 376476092941395075
+      Aubik-Business-Solutions-Main-Logo-300x90_9: 351613565929316954
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

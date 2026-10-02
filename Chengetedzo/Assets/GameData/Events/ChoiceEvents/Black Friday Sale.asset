@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Black Friday Sale
   m_EditorClassIdentifier: 
   hasChoices: 1
-  senderName: Chisamba Electronics
+  senderName: SPAB
   senderRelation: Social
   choices:
   - label: Buy the TV ($300)

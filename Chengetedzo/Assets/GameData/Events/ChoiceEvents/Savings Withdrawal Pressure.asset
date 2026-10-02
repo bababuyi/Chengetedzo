@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Savings Withdrawal Pressure
   m_EditorClassIdentifier: 
   hasChoices: 1
-  senderName: Friend Shingi
+  senderName: Friend Blessing
   senderRelation: Social
   choices:
   - label: Withdraw savings and invest ($200)

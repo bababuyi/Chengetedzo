@@ -384,8 +384,9 @@ public class GameManager : MonoBehaviour
         uiManager.UpdateMonthText(currentMonth, totalMonths);
         visualManager?.UpdateVisuals();
         bool hasWeatherEvent = false;
+        // CloudSpawner no longer takes its own UpdateForMonth call - SeasonalBackgroundManager
+        // turns it on/off (and drives the sky/cloud-layer scrollers) as part of its own call below.
         FindFirstObjectByType<SeasonalBackgroundManager>()?.UpdateForMonth(currentMonth, hasWeatherEvent);
-        FindFirstObjectByType<CloudSpawner>()?.UpdateForMonth(currentMonth, hasWeatherEvent);
     }
 
     private int totalUnexpectedEvents = 0;
@@ -515,7 +516,6 @@ public class GameManager : MonoBehaviour
         monthlyEvents = eventManager.GenerateMonthlyEvents(currentMonth);
         bool hasWeatherEvent = monthlyEvents.Exists(e => e.pool == EventPool.Weather);
         FindFirstObjectByType<SeasonalBackgroundManager>()?.UpdateForMonth(currentMonth, hasWeatherEvent);
-        FindFirstObjectByType<CloudSpawner>()?.UpdateForMonth(currentMonth, hasWeatherEvent);
         Debug.Log($"[Events] Generated: {monthlyEvents.Count} events for month {currentMonth}");
         Debug.Log($"[Background] Month {currentMonth} | Weather Event: {hasWeatherEvent}");
         var combined = new List<ResolvedEvent>(monthlyEvents);

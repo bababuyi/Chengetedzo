@@ -54,9 +54,9 @@ MonoBehaviour:
     grantsAsset: 
     coveredBy: 0
   eventName: Funeral Society Invitation
-  description: I run a burial society, twelve years now, small monthly contributions,
-    and if anything happens the whole group covers the funeral costs. There's still
-    space, if you're interested.
+  description: I run a burial society, twelve years running. Small contributions
+    each month, and the group covers funeral costs if anything happens. Space is
+    open.
   financialLesson: 
   category: 3
   pool: 6

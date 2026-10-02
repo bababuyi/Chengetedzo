@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEditor;
 using UnityEngine.SceneManagement;
+using UnityEditor.SceneManagement;
 using System.IO;
 using System.Text;
 using System.Reflection;
@@ -17,6 +18,10 @@ public class ExportHierarchyToText : EditorWindow
     private string componentFilter = "";
     private bool onlyFlagged = false;
     private bool exportAllScenes = false;
+    private bool exportAllBuildScenes = false;
+
+    private const int MaxExpandDepth = 4;
+    private const int MaxListElements = 50;
 
     private bool showTransform = true;
     private bool showPosition = true;
@@ -55,7 +60,23 @@ public class ExportHierarchyToText : EditorWindow
         scroll = EditorGUILayout.BeginScrollView(scroll);
 
         GUILayout.Label("Scene Scope", EditorStyles.boldLabel);
-        exportAllScenes = EditorGUILayout.Toggle("All Open Scenes", exportAllScenes);
+        bool newAllOpen = EditorGUILayout.Toggle("All Open Scenes", exportAllScenes);
+        if (newAllOpen != exportAllScenes)
+        {
+            exportAllScenes = newAllOpen;
+            if (exportAllScenes) exportAllBuildScenes = false;
+        }
+
+        bool newAllBuild = EditorGUILayout.Toggle("All Scenes in Build Settings", exportAllBuildScenes);
+        if (newAllBuild != exportAllBuildScenes)
+        {
+            exportAllBuildScenes = newAllBuild;
+            if (exportAllBuildScenes) exportAllScenes = false;
+        }
+        if (exportAllBuildScenes)
+            EditorGUILayout.HelpBox(
+                "Opens each enabled Build Settings scene in turn, audits it, then restores your current scene setup. " +
+                "You'll be prompted to save any unsaved changes first.", MessageType.Info);
 
         EditorGUILayout.Space(6);
         GUILayout.Label("Quick Presets", EditorStyles.boldLabel);
@@ -161,6 +182,7 @@ public class ExportHierarchyToText : EditorWindow
     void OpenPreview()
     {
         string content = RunExport(saveToFile: false);
+        if (content == null) return; // user cancelled a build-scenes export
         HierarchyPreviewWindow.Open(content);
     }
 
@@ -171,30 +193,31 @@ public class ExportHierarchyToText : EditorWindow
         auditIssues = new List<string>();
 
         ExportConfig cfg = BuildConfig();
+        StringBuilder body = new StringBuilder();
 
-        List<Scene> scenes = new List<Scene>();
-        if (exportAllScenes)
+        if (exportAllBuildScenes)
         {
-            for (int i = 0; i < SceneManager.sceneCount; i++)
-            {
-                Scene s = SceneManager.GetSceneAt(i);
-                if (s.isLoaded) scenes.Add(s);
-            }
+            if (!TryExportAllBuildScenes(body, cfg))
+                return null; // user cancelled somewhere along the way
         }
         else
         {
-            scenes.Add(SceneManager.GetActiveScene());
-        }
+            List<Scene> scenes = new List<Scene>();
+            if (exportAllScenes)
+            {
+                for (int i = 0; i < SceneManager.sceneCount; i++)
+                {
+                    Scene s = SceneManager.GetSceneAt(i);
+                    if (s.isLoaded) scenes.Add(s);
+                }
+            }
+            else
+            {
+                scenes.Add(SceneManager.GetActiveScene());
+            }
 
-        StringBuilder body = new StringBuilder();
-        foreach (Scene scene in scenes)
-        {
-            body.AppendLine("╔══════════════════════════════════════════╗");
-            body.AppendLine($"  Scene: {scene.name}  ({scene.path})");
-            body.AppendLine("╚══════════════════════════════════════════╝");
-            body.AppendLine();
-            foreach (GameObject go in scene.GetRootGameObjects())
-                AppendObjectAndChildren(go.transform, body, 0, cfg);
+            foreach (Scene scene in scenes)
+                AppendSceneBody(scene, body, cfg);
         }
 
         StringBuilder sb = new StringBuilder();
@@ -221,9 +244,11 @@ public class ExportHierarchyToText : EditorWindow
 
         if (saveToFile)
         {
-            string defaultName = exportAllScenes
-                ? "AllScenes_Hierarchy.txt"
-                : $"{SceneManager.GetActiveScene().name}_Hierarchy.txt";
+            string defaultName = exportAllBuildScenes
+                ? "BuildScenes_Hierarchy.txt"
+                : exportAllScenes
+                    ? "AllScenes_Hierarchy.txt"
+                    : $"{SceneManager.GetActiveScene().name}_Hierarchy.txt";
 
             string path = EditorUtility.SaveFilePanel("Save Hierarchy Text", "", defaultName, "txt");
             if (!string.IsNullOrEmpty(path))
@@ -234,6 +259,69 @@ public class ExportHierarchyToText : EditorWindow
         }
 
         return result;
+    }
+
+    void AppendSceneBody(Scene scene, StringBuilder body, ExportConfig cfg)
+    {
+        body.AppendLine("╔══════════════════════════════════════════╗");
+        body.AppendLine($"  Scene: {scene.name}  ({scene.path})");
+        body.AppendLine("╚══════════════════════════════════════════╝");
+        body.AppendLine();
+        foreach (GameObject go in scene.GetRootGameObjects())
+            AppendObjectAndChildren(go.transform, body, 0, cfg);
+    }
+
+    /// Opens every enabled scene listed in Build Settings, one at a time, audits it, then restores
+    /// whatever scene setup was open before the export started. This is what makes a full-project
+    /// audit possible without manually opening and exporting each scene by hand.
+    bool TryExportAllBuildScenes(StringBuilder body, ExportConfig cfg)
+    {
+        EditorBuildSettingsScene[] buildScenes = EditorBuildSettings.scenes
+            .Where(s => s.enabled)
+            .ToArray();
+
+        if (buildScenes.Length == 0)
+        {
+            EditorUtility.DisplayDialog("Export Hierarchy",
+                "No enabled scenes were found in Build Settings.", "OK");
+            return false;
+        }
+
+        // Give the user a chance to save (or cancel) before we start swapping scenes out from under them.
+        if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+            return false;
+
+        bool proceed = EditorUtility.DisplayDialog(
+            "Export Hierarchy",
+            $"This will open and close {buildScenes.Length} scene(s) from Build Settings to audit them, " +
+            "then restore your current scene setup. Continue?",
+            "Continue", "Cancel");
+        if (!proceed) return false;
+
+        SceneSetup[] originalSetup = EditorSceneManager.GetSceneManagerSetup();
+
+        try
+        {
+            for (int i = 0; i < buildScenes.Length; i++)
+            {
+                string path = buildScenes[i].path;
+                EditorUtility.DisplayProgressBar("Exporting Scenes",
+                    $"{path}  ({i + 1}/{buildScenes.Length})", (float)i / buildScenes.Length);
+
+                Scene scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
+                AppendSceneBody(scene, body, cfg);
+            }
+        }
+        finally
+        {
+            EditorUtility.ClearProgressBar();
+            // If the original scene(s) were never saved, GetSceneManagerSetup() returns an empty
+            // array and there is nothing meaningful to restore back to.
+            if (originalSetup != null && originalSetup.Length > 0)
+                EditorSceneManager.RestoreSceneManagerSetup(originalSetup);
+        }
+
+        return true;
     }
 
     void ApplyPreset(int index)
@@ -376,23 +464,105 @@ public class ExportHierarchyToText : EditorWindow
     static void AppendFields(MonoBehaviour mono, StringBuilder sb, string indent,
                              ExportConfig cfg, List<string> issues)
     {
+        string ownerPath = $"{mono.GetType().Name} @ {GetGameObjectPath(mono.transform)}";
+
         foreach (FieldInfo field in GetAuditableFields(mono, cfg.publicFields, cfg.serializedFields))
         {
             object val = field.GetValue(mono);
-            string valueStr = FormatValue(val);
             string tag = field.IsPublic ? "pub" : "ser";
-            bool isNull = val == null || (val is UnityEngine.Object uo && uo == null);
+            // Fresh "seen" set per top-level field: enough to stop cyclic references within that
+            // field's own object graph without suppressing legitimate repeats across sibling fields.
+            var seen = new HashSet<object>(new ReferenceComparer());
+            AppendValueLine(sb, indent, field.Name, tag, val, cfg, issues, ownerPath, seen, 0);
+        }
+    }
 
-            sb.AppendLine($"{indent}[{tag}] {field.Name} = {valueStr}{(isNull ? "  ⚠ NULL" : "")}");
+    /// Prints one "[tag] name = value" line, then — if the value is a list/array of a custom
+    /// [System.Serializable] type, or a single custom serializable object — recurses into it and
+    /// prints its fields too, instead of collapsing it to "[N elements]" the way the old exporter did.
+    static void AppendValueLine(StringBuilder sb, string indent, string qualifiedName, string tag,
+                                object val, ExportConfig cfg, List<string> issues, string ownerPath,
+                                HashSet<object> seen, int depth)
+    {
+        bool isNullRef = val == null || (val is UnityEngine.Object uo && uo == null);
+        sb.AppendLine($"{indent}[{tag}] {qualifiedName} = {FormatScalar(val)}{(isNullRef ? "  ⚠ NULL" : "")}");
 
-            if (isNull)
-                issues.Add($"Null ref '{field.Name}' on {mono.GetType().Name} @ {GetGameObjectPath(mono.transform)}");
+        if (isNullRef)
+        {
+            issues.Add($"Null ref '{qualifiedName}' on {ownerPath}");
+            return;
+        }
+
+        if (val == null || depth >= MaxExpandDepth) return;
+
+        Type type = val.GetType();
+
+        if (!(val is string) && val is IEnumerable enumerable)
+        {
+            Type elemType = GetElementType(type);
+            if (elemType != null && IsComplexSerializable(elemType))
+            {
+                int totalCount = (val is ICollection col) ? col.Count : -1;
+                int idx = 0;
+                foreach (object elem in enumerable)
+                {
+                    if (idx >= MaxListElements)
+                    {
+                        string remaining = totalCount >= 0 ? $"{totalCount - idx} more" : "additional";
+                        sb.AppendLine($"{indent}    … {remaining} element(s) omitted");
+                        break;
+                    }
+                    sb.AppendLine($"{indent}    [{idx}]");
+                    AppendComplexObject(sb, indent + "        ", elem, $"{qualifiedName}[{idx}]",
+                                        cfg, issues, ownerPath, seen, depth + 1);
+                    idx++;
+                }
+            }
+            return;
+        }
+
+        if (IsComplexSerializable(type))
+            AppendComplexObject(sb, indent + "    ", val, qualifiedName, cfg, issues, ownerPath, seen, depth + 1);
+    }
+
+    static void AppendComplexObject(StringBuilder sb, string indent, object obj, string qualifiedName,
+                                    ExportConfig cfg, List<string> issues, string ownerPath,
+                                    HashSet<object> seen, int depth)
+    {
+        if (obj == null) { sb.AppendLine($"{indent}null"); return; }
+
+        // Structs can't reference themselves (the compiler forbids it), so cycle tracking only
+        // matters for reference types — and only those need to go in the "seen" set.
+        if (!obj.GetType().IsValueType)
+        {
+            if (seen.Contains(obj))
+            {
+                sb.AppendLine($"{indent}(already visited — skipping to avoid a reference cycle)");
+                return;
+            }
+            seen.Add(obj);
+        }
+
+        List<FieldInfo> fields = GetAuditableFieldsForType(obj.GetType(), cfg.publicFields, cfg.serializedFields).ToList();
+        if (fields.Count == 0)
+        {
+            sb.AppendLine($"{indent}(no auditable fields on {obj.GetType().Name})");
+            return;
+        }
+
+        foreach (FieldInfo field in fields)
+        {
+            object val = field.GetValue(obj);
+            string tag = field.IsPublic ? "pub" : "ser";
+            AppendValueLine(sb, indent, $"{qualifiedName}.{field.Name}", tag, val, cfg, issues, ownerPath, seen, depth);
         }
     }
 
     static IEnumerable<FieldInfo> GetAuditableFields(MonoBehaviour mono, bool pub, bool ser)
+        => GetAuditableFieldsForType(mono.GetType(), pub, ser);
+
+    static IEnumerable<FieldInfo> GetAuditableFieldsForType(Type type, bool pub, bool ser)
     {
-        Type type = mono.GetType();
         var result = Enumerable.Empty<FieldInfo>();
 
         if (pub)
@@ -409,7 +579,38 @@ public class ExportHierarchyToText : EditorWindow
         return result;
     }
 
-    static string FormatValue(object value)
+    /// True for a type Unity would actually serialize as a nested value — a plain class or struct
+    /// marked [System.Serializable] — as opposed to a primitive, string, enum, Unity Object reference,
+    /// or a collection (collections are handled separately, by expanding their elements).
+    static bool IsComplexSerializable(Type t)
+    {
+        if (t == null) return false;
+        if (t.IsPrimitive || t == typeof(string) || t.IsEnum) return false;
+        if (typeof(UnityEngine.Object).IsAssignableFrom(t)) return false;
+        if (typeof(IEnumerable).IsAssignableFrom(t)) return false;
+        return Attribute.IsDefined(t, typeof(SerializableAttribute));
+    }
+
+    static Type GetElementType(Type collectionType)
+    {
+        if (collectionType.IsArray) return collectionType.GetElementType();
+
+        if (collectionType.IsGenericType)
+        {
+            Type[] args = collectionType.GetGenericArguments();
+            if (args.Length == 1) return args[0];
+        }
+
+        foreach (Type iface in collectionType.GetInterfaces())
+        {
+            if (iface.IsGenericType && iface.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                return iface.GetGenericArguments()[0];
+        }
+
+        return null;
+    }
+
+    static string FormatScalar(object value)
     {
         if (value == null) return "null";
         Type type = value.GetType();
@@ -418,6 +619,12 @@ public class ExportHierarchyToText : EditorWindow
         if (value is IList list) return $"[{list.Count} elements]";
         if (value is IEnumerable ienu) { int n = 0; foreach (var _ in ienu) n++; return $"[{n} elements]"; }
         return $"({type.Name})";
+    }
+
+    private sealed class ReferenceComparer : IEqualityComparer<object>
+    {
+        public new bool Equals(object x, object y) => ReferenceEquals(x, y);
+        public int GetHashCode(object obj) => obj == null ? 0 : System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(obj);
     }
 
     static string GetGameObjectPath(Transform t)

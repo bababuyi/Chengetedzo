@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Neighbour Wants Equipment
   m_EditorClassIdentifier: 
   hasChoices: 1
-  senderName: Neighbour Zvorwadza
+  senderName: Mai Chiweshe
   senderRelation: Community
   choices:
   - label: Lend it for free

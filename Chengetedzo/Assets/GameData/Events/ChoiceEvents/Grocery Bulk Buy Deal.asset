@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Grocery Bulk Buy Deal
   m_EditorClassIdentifier: 
   hasChoices: 1
-  senderName: Mahomed Stores
+  senderName: SPAB
   senderRelation: Social
   choices:
   - label: Buy three months of staples now ($270)
@@ -54,7 +54,7 @@ MonoBehaviour:
     coveredBy: 0
   eventName: Grocery Bulk Buy Deal
   description: THREE MONTHS of staple groceries for the price of TWO, this week only
-    at Mahomed Stores. Stock up and save.
+    at SPAB. Stock up and save.
   financialLesson: 
   category: 3
   pool: 6

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Extra Tuition Recommended
   m_EditorClassIdentifier: 
   hasChoices: 1
-  senderName: Mr Sibanda
+  senderName: Mrs Chinhamo
   senderRelation: Education
   choices:
   - label: Pay for tuition classes ($100)

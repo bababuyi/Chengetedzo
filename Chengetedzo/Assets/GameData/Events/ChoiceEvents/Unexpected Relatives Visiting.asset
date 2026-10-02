@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Unexpected Relatives Visiting
   m_EditorClassIdentifier: 
   hasChoices: 1
-  senderName: Aunt Chipo
+  senderName: Mainini Grace
   senderRelation: Family
   choices:
   - label: Welcome them properly and stock up ($90)

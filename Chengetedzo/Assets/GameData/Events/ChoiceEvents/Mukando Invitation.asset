@@ -43,10 +43,8 @@ MonoBehaviour:
     grantsAsset: 
     coveredBy: 0
   eventName: Mukando Invitation
-  description: The women from church run a mukando. Everyone puts in the same amount
-    each month, and when you have been paying a while you can borrow from the pot
-    at a fraction of what a moneylender charges. It only works if you keep paying
-    in.
+  description: The women from church run a mukando, a savings group. Pay in monthly,
+    and once you've paid a while you can borrow from the pot cheaply. Interested?
   financialLesson: 
   category: 3
   pool: 6

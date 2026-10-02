@@ -83,9 +83,30 @@ public class UIManager : MonoBehaviour
     public RectTransform eventNotificationRect;
     public float eventSlideDuration = 0.4f;
 
+    // One row per sender name that has portrait art. senderName must match the string
+    // passed into ShowChoicePopup/ShowMessagePopup exactly - this is keyed on sender name
+    // only, never on senderRelation, since two senders can share a relation (e.g. two
+    // "Friend" contacts) but not a portrait.
+    [System.Serializable]
+    public class SenderPortrait
+    {
+        public string senderName;
+        public Sprite icon;
+    }
+
     [Header("Choice Popup")]
     public TextMeshProUGUI choiceSenderNameText;
     public TextMeshProUGUI choiceSenderRelationText;
+
+    // Icon slot at Canvas/PopUpLayer/EventChoicePopup/Icon. senderPortraits is the sender
+    // name -> sprite mapping (fill in the Inspector); defaultSenderIcon is shown for any
+    // sender not in the list - new senders added later, organisations with no art yet, and
+    // the three deliberately-unassigned professionals. Applied fresh on every popup call,
+    // never left over from the previous message.
+    public Image choiceSenderIcon;
+    public List<SenderPortrait> senderPortraits = new List<SenderPortrait>();
+    public Sprite defaultSenderIcon;
+    private Dictionary<string, Sprite> _senderPortraitLookup;
 
     public GameObject choiceResultBubble;
     public TextMeshProUGUI choiceResultText;
@@ -98,6 +119,33 @@ public class UIManager : MonoBehaviour
     public RectTransform choiceSenderBubbleRect;
     public GameObject choiceButtonPrefab;
     public Transform choiceButtonsParent;
+
+    // Built once from senderPortraits on first use. Later duplicate senderName rows are
+    // ignored (first one wins) rather than throwing, so a typo'd duplicate in the Inspector
+    // doesn't take the popup down.
+    private Sprite GetSenderIcon(string senderName)
+    {
+        if (_senderPortraitLookup == null)
+        {
+            _senderPortraitLookup = new Dictionary<string, Sprite>();
+            foreach (var entry in senderPortraits)
+            {
+                if (string.IsNullOrEmpty(entry.senderName) || entry.icon == null) continue;
+                if (!_senderPortraitLookup.ContainsKey(entry.senderName))
+                    _senderPortraitLookup[entry.senderName] = entry.icon;
+            }
+        }
+
+        return _senderPortraitLookup.TryGetValue(senderName, out Sprite sprite) ? sprite : defaultSenderIcon;
+    }
+
+    // Always assigns something (a match or the fallback), so the icon never carries over
+    // from whichever sender was shown last.
+    private void ApplySenderIcon(string senderName)
+    {
+        if (choiceSenderIcon == null) return;
+        choiceSenderIcon.sprite = GetSenderIcon(senderName);
+    }
 
     public bool IsEventPopupShowing()
     {
@@ -909,6 +957,8 @@ public class UIManager : MonoBehaviour
         if (choiceSenderRelationText != null)
             choiceSenderRelationText.text = senderRelation;
 
+        ApplySenderIcon(senderName);
+
         choiceResultBubble?.SetActive(false);
         choiceButtonsContainer?.SetActive(true);
         choiceContinueButton?.gameObject.SetActive(false);
@@ -966,6 +1016,8 @@ public class UIManager : MonoBehaviour
 
         if (choiceSenderRelationText != null)
             choiceSenderRelationText.text = senderRelation;
+
+        ApplySenderIcon(senderName);
 
         choiceResultBubble?.SetActive(false);
         choiceButtonsContainer?.SetActive(false);

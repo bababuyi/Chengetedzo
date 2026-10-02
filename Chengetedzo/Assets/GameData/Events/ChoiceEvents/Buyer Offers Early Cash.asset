@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Buyer Offers Early Cash
   m_EditorClassIdentifier: 
   hasChoices: 1
-  senderName: Mr Chisango
+  senderName: Buyer Makore
   senderRelation: Work
   choices:
   - label: Accept the early offer ($200)

@@ -44,8 +44,7 @@ MonoBehaviour:
     coveredBy: 0
   eventName: Airtime Float Offer
   description: Tonderai resells airtime and data at the rank. He'll split his corner
-    with you if you put up float money. You watch him work a full day first. The
-    numbers are real.
+    if you put up float money. Watch him work a day first, the numbers are real.
   financialLesson: 
   category: 3
   pool: 6

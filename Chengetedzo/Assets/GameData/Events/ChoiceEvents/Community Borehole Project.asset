@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Community Borehole Project
   m_EditorClassIdentifier: 
   hasChoices: 1
-  senderName: Cde Murambwa
+  senderName: Mai Dube
   senderRelation: Community
   choices:
   - label: Contribute fully ($100)

@@ -49,6 +49,7 @@ public class SetupPanelController : MonoBehaviour
     public GameObject confirmAndStartButton;
     public GameObject confirmAdjustmentButton;
     public GameObject cancelAdjustmentButton; // "Leave it as it is"
+    public GameObject takeLoanAdjustmentButton; // "Take Loan" offered during expense adjustment
 
     [Header("Panels")]
     public ExpensesPanelController expensesPanelController;
@@ -84,16 +85,7 @@ public class SetupPanelController : MonoBehaviour
         hasMotorToggle.onValueChanged.AddListener(_ => UpdateAssetsFromToggles());
         hasCropsToggle.onValueChanged.AddListener(_ => UpdateAssetsFromToggles());
 
-        // A guided profile (ApplyProfile) has already set setupData and
-        // financeManager.assets correctly before this panel is ever shown. Running these
-        // handlers here with whatever the toggles/inputs currently hold - default or
-        // leftover from a previous session, since the guided flow skips straight to the
-        // review step and never lets the player touch these widgets - would silently
-        // overwrite that correct profile data. This is confirmed as the Farmer bug: his
-        // commercial assets and seasonal (non-stable) income both got wiped this way
-        // before JumpToReviewStep/ConfirmAndStart ever ran. Only run the initial sync for
-        // a genuine fresh setup (Free Mode or normal manual setup), where these widgets
-        // are the actual source of truth and nothing has populated setupData/assets yet.
+        // A guided profile (ApplyProfile) has already set setupData and financeManager.assets correctly before this panel is ever shown.
         bool isGuidedProfile = GameManager.Instance != null && GameManager.Instance.IsGuidedMode;
         if (!isGuidedProfile)
         {
@@ -363,14 +355,7 @@ public class SetupPanelController : MonoBehaviour
 
         GameManager gm = GameManager.Instance;
 
-        // Guided profile review (currentMode == ReviewFromProfile) skips the editable
-        // setup pages entirely - this screen's toggles and inputs are locked read-only
-        // (see JumpToReviewStep/LockSetupUI). setupData and financeManager.assets were
-        // already set correctly by ApplyProfile, so re-parsing them from widget state
-        // here is pure downside: it is exactly how a Start()-time desync between the
-        // widgets and the profile (see Start() above) could silently overwrite the
-        // correct profile values. Skip the whole read-back for a profile review; only a
-        // genuine fresh setup (Free Mode / normal manual setup) needs it.
+        // Guided profile review (currentMode == ReviewFromProfile) skips the editable setup pages entirely
         bool isProfileReview = currentMode == SetupMode.ReviewFromProfile;
 
         if (!isProfileReview)
@@ -571,6 +556,7 @@ public class SetupPanelController : MonoBehaviour
         isExpenseAdjustmentMode = false;
         if (confirmAdjustmentButton != null) confirmAdjustmentButton.SetActive(false);
         if (cancelAdjustmentButton != null) cancelAdjustmentButton.SetActive(false);
+        if (takeLoanAdjustmentButton != null) takeLoanAdjustmentButton.SetActive(false);
         expensesPanelController?.ExitAdjustmentMode();
 
         UnlockSetupUI();
@@ -626,6 +612,7 @@ public class SetupPanelController : MonoBehaviour
         isExpenseAdjustmentMode = false;
         if (confirmAdjustmentButton != null) confirmAdjustmentButton.SetActive(false);
         if (cancelAdjustmentButton != null) cancelAdjustmentButton.SetActive(false);
+        if (takeLoanAdjustmentButton != null) takeLoanAdjustmentButton.SetActive(false);
         expensesPanelController?.ExitAdjustmentMode();
 
         var gm = GameManager.Instance;
@@ -760,6 +747,7 @@ public class SetupPanelController : MonoBehaviour
         if (confirmAndStartButton != null) confirmAndStartButton.SetActive(false);
         if (confirmAdjustmentButton != null) confirmAdjustmentButton.SetActive(true);
         if (cancelAdjustmentButton != null) cancelAdjustmentButton.SetActive(true);
+        if (takeLoanAdjustmentButton != null) takeLoanAdjustmentButton.SetActive(true);
 
         expensesPanelController.Init();
         expensesPanelController.EnterAdjustmentMode();
@@ -773,6 +761,7 @@ public class SetupPanelController : MonoBehaviour
 
         if (confirmAdjustmentButton != null) confirmAdjustmentButton.SetActive(false);
         if (cancelAdjustmentButton != null) cancelAdjustmentButton.SetActive(false);
+        if (takeLoanAdjustmentButton != null) takeLoanAdjustmentButton.SetActive(false);
         expensesPanelController.ExitAdjustmentMode();
 
         UIManager.Instance.OnBudgetAdjustmentConfirmed();
@@ -785,15 +774,13 @@ public class SetupPanelController : MonoBehaviour
         isExpenseAdjustmentMode = false;
 
         // ConfirmAdjustment() reports whether it actually fired OnBudgetAdjustmentConfirmed
-        // (it early-returns if ExpensesPanelController's own isAdjustmentMode flag has
-        // drifted out of sync with this one). If it didn't, we fire it here so the player
-        // can never get stuck on this screen.
         bool applied = expensesPanelController.ConfirmAdjustment();
         if (!applied)
             UIManager.Instance.OnBudgetAdjustmentConfirmed();
 
         if (confirmAdjustmentButton != null) confirmAdjustmentButton.SetActive(false);
         if (cancelAdjustmentButton != null) cancelAdjustmentButton.SetActive(false);
+        if (takeLoanAdjustmentButton != null) takeLoanAdjustmentButton.SetActive(false);
         expensesPanelController.ExitAdjustmentMode();
     }
 
@@ -804,6 +791,7 @@ public class SetupPanelController : MonoBehaviour
 
         if (confirmAdjustmentButton != null) confirmAdjustmentButton.SetActive(false);
         if (cancelAdjustmentButton  != null) cancelAdjustmentButton.SetActive(false);
+        if (takeLoanAdjustmentButton != null) takeLoanAdjustmentButton.SetActive(false);
         expensesPanelController.ExitAdjustmentMode();
 
         UIManager.Instance.OnBudgetAdjustmentConfirmed();

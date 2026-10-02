@@ -1,0 +1,702 @@
+fileFormatVersion: 2
+guid: 83b054411fd193b4693780cf88e0d3fd
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -784887795804989732
+    second: city_summer_clouds_0
+  - first:
+      213: -2577524034010752056
+    second: city_summer_clouds_1
+  - first:
+      213: 1280306163432367623
+    second: city_summer_clouds_2
+  - first:
+      213: -6704400250675802356
+    second: city_summer_clouds_3
+  - first:
+      213: 7637074025655431333
+    second: city_summer_clouds_4
+  - first:
+      213: 3604783823406304382
+    second: city_summer_clouds_5
+  - first:
+      213: -8418159426539891597
+    second: city_summer_clouds_6
+  - first:
+      213: -1142943825512023507
+    second: city_summer_clouds_7
+  - first:
+      213: 7827495798113964439
+    second: city_summer_clouds_8
+  - first:
+      213: -6089173533446612718
+    second: city_summer_clouds_9
+  - first:
+      213: -6050090165263397754
+    second: city_summer_clouds_10
+  - first:
+      213: -7762862128090302209
+    second: city_summer_clouds_11
+  - first:
+      213: 1358860020315551785
+    second: city_summer_clouds_12
+  - first:
+      213: 1326282463940522239
+    second: city_summer_clouds_13
+  - first:
+      213: -258770671085529955
+    second: city_summer_clouds_14
+  - first:
+      213: -2422352752329297335
+    second: city_summer_clouds_15
+  - first:
+      213: 8411619102450341794
+    second: city_summer_clouds_16
+  - first:
+      213: -138137037529135802
+    second: city_summer_clouds_17
+  - first:
+      213: -7416350743073252698
+    second: city_summer_clouds_18
+  - first:
+      213: 4580772623921982276
+    second: city_summer_clouds_19
+  - first:
+      213: -5065937181392702998
+    second: city_summer_clouds_20
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: city_summer_clouds_0
+      rect:
+        serializedVersion: 2
+        x: 3
+        y: 265
+        width: 155
+        height: 73
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cd6118e45b48b15f0800000000000000
+      internalID: -784887795804989732
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: city_summer_clouds_1
+      rect:
+        serializedVersion: 2
+        x: 198
+        y: 264
+        width: 106
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8cbd1c02c8bca3cd0800000000000000
+      internalID: -2577524034010752056
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: city_summer_clouds_2
+      rect:
+        serializedVersion: 2
+        x: 341
+        y: 265
+        width: 187
+        height: 77
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 706212b1caf84c110800000000000000
+      internalID: 1280306163432367623
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: city_summer_clouds_3
+      rect:
+        serializedVersion: 2
+        x: 588
+        y: 270
+        width: 82
+        height: 52
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c0fcd625e7f25f2a0800000000000000
+      internalID: -6704400250675802356
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: city_summer_clouds_4
+      rect:
+        serializedVersion: 2
+        x: 698
+        y: 266
+        width: 156
+        height: 66
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5a0fd860d565cf960800000000000000
+      internalID: 7637074025655431333
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: city_summer_clouds_5
+      rect:
+        serializedVersion: 2
+        x: 8
+        y: 203
+        width: 75
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e7c0536d9c3c60230800000000000000
+      internalID: 3604783823406304382
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: city_summer_clouds_6
+      rect:
+        serializedVersion: 2
+        x: 134
+        y: 203
+        width: 68
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 374db765a90bc2b80800000000000000
+      internalID: -8418159426539891597
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: city_summer_clouds_7
+      rect:
+        serializedVersion: 2
+        x: 208
+        y: 204
+        width: 28
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d2a312275a27320f0800000000000000
+      internalID: -1142943825512023507
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: city_summer_clouds_8
+      rect:
+        serializedVersion: 2
+        x: 342
+        y: 203
+        width: 68
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 791127fd4f9d0ac60800000000000000
+      internalID: 7827495798113964439
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: city_summer_clouds_9
+      rect:
+        serializedVersion: 2
+        x: 471
+        y: 205
+        width: 112
+        height: 41
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2195433eee8ee7ba0800000000000000
+      internalID: -6089173533446612718
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: city_summer_clouds_10
+      rect:
+        serializedVersion: 2
+        x: 644
+        y: 207
+        width: 69
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 68c0468ac03c90ca0800000000000000
+      internalID: -6050090165263397754
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: city_summer_clouds_11
+      rect:
+        serializedVersion: 2
+        x: 23
+        y: 139
+        width: 67
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ff838de1606c44490800000000000000
+      internalID: -7762862128090302209
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: city_summer_clouds_12
+      rect:
+        serializedVersion: 2
+        x: 142
+        y: 126
+        width: 182
+        height: 58
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 928736a2df3abd210800000000000000
+      internalID: 1358860020315551785
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: city_summer_clouds_13
+      rect:
+        serializedVersion: 2
+        x: 357
+        y: 104
+        width: 258
+        height: 73
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ff0310fbfd6e76210800000000000000
+      internalID: 1326282463940522239
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: city_summer_clouds_14
+      rect:
+        serializedVersion: 2
+        x: 639
+        y: 102
+        width: 174
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d9458a71279a86cf0800000000000000
+      internalID: -258770671085529955
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: city_summer_clouds_15
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 69
+        width: 103
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 942f8b48103126ed0800000000000000
+      internalID: -2422352752329297335
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: city_summer_clouds_16
+      rect:
+        serializedVersion: 2
+        x: 148
+        y: 32
+        width: 168
+        height: 66
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2a7517bc1031cb470800000000000000
+      internalID: 8411619102450341794
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: city_summer_clouds_17
+      rect:
+        serializedVersion: 2
+        x: 361
+        y: 21
+        width: 135
+        height: 57
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 64540c3a81d351ef0800000000000000
+      internalID: -138137037529135802
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: city_summer_clouds_18
+      rect:
+        serializedVersion: 2
+        x: 27
+        y: 16
+        width: 48
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6aa1a6dea44d31990800000000000000
+      internalID: -7416350743073252698
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: city_summer_clouds_19
+      rect:
+        serializedVersion: 2
+        x: 543
+        y: 20
+        width: 68
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 44b24b57e6c229f30800000000000000
+      internalID: 4580772623921982276
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: city_summer_clouds_20
+      rect:
+        serializedVersion: 2
+        x: 657
+        y: 27
+        width: 93
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ae1f4a859fc22b9b0800000000000000
+      internalID: -5065937181392702998
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      city_summer_clouds_0: -784887795804989732
+      city_summer_clouds_1: -2577524034010752056
+      city_summer_clouds_10: -6050090165263397754
+      city_summer_clouds_11: -7762862128090302209
+      city_summer_clouds_12: 1358860020315551785
+      city_summer_clouds_13: 1326282463940522239
+      city_summer_clouds_14: -258770671085529955
+      city_summer_clouds_15: -2422352752329297335
+      city_summer_clouds_16: 8411619102450341794
+      city_summer_clouds_17: -138137037529135802
+      city_summer_clouds_18: -7416350743073252698
+      city_summer_clouds_19: 4580772623921982276
+      city_summer_clouds_2: 1280306163432367623
+      city_summer_clouds_20: -5065937181392702998
+      city_summer_clouds_3: -6704400250675802356
+      city_summer_clouds_4: 7637074025655431333
+      city_summer_clouds_5: 3604783823406304382
+      city_summer_clouds_6: -8418159426539891597
+      city_summer_clouds_7: -1142943825512023507
+      city_summer_clouds_8: 7827495798113964439
+      city_summer_clouds_9: -6089173533446612718
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

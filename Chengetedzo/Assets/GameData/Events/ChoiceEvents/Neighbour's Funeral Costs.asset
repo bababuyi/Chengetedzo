@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Neighbour's Funeral Costs
   m_EditorClassIdentifier: 
   hasChoices: 1
-  senderName: Mrs Dube
+  senderName: Mai Chiweshe
   senderRelation: Community
   choices:
   - label: Help generously ($80)
